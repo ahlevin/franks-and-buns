@@ -533,9 +533,6 @@ function drawBun(b) {
   const bobY=Math.sin(b.bobPhase)*3, x=b.x, y=b.y+bobY;
   const hw=BUN_W/2, hh=BUN_H/2, rc=b.type.color;
   ctx.save(); ctx.translate(x,y);
-  if (b.type.label && b.type.label!=='dog') {
-    ctx.fillStyle='rgba(255,255,255,0.32)'; ctx.font='bold 8px Arial'; ctx.textAlign='center'; ctx.fillText(b.type.label,0,-hh-10);
-  }
   if (b.type.label==='dog') {
     ctx.font='20px Arial'; ctx.textAlign='center'; ctx.fillText('🐕',-hw-16,hh+4);
   }
