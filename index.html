@@ -1,702 +1,171 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Franks & Buns</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body {
-    width: 100%; height: 100%;
-    overflow: hidden;
-    background: #1a1a2e;
-    touch-action: none;
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    user-select: none;
-  }
-  canvas { display: block; margin: 0 auto; background: #2d1b0e; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="google-adsense-account" content="ca-pub-4015428134622878">
+  <meta name="description" content="Franks & Buns — the free browser arcade game where you guide a hot dog into buns, dodge chef forks, and rack up combos. Play free, no download needed.">
+  <title>Franks &amp; Buns — The Hot Dog Arcade Game</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Boogaloo&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#1a0e05; --bg2:#2a1a0a; --orange:#FF6600; --gold:#FFD700;
+      --cream:#fff8ee; --muted:#a08060;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{background:var(--bg);color:var(--cream);font-family:'Nunito',sans-serif;overflow-x:hidden;}
+
+    nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 5vw;height:60px;background:rgba(26,14,5,0.92);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,102,0,0.18);}
+    .nav-logo{font-family:'Boogaloo',cursive;font-size:1.5rem;color:var(--gold);text-decoration:none;letter-spacing:0.03em;}
+    .nav-logo span{color:var(--orange);}
+    nav ul{list-style:none;display:flex;gap:2rem;}
+    nav ul a{color:var(--cream);text-decoration:none;font-weight:600;font-size:0.9rem;letter-spacing:0.05em;text-transform:uppercase;opacity:0.8;transition:opacity 0.2s,color 0.2s;}
+    nav ul a:hover{opacity:1;color:var(--gold);}
+
+    .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 5vw 60px;position:relative;overflow:hidden;}
+    .hero::before{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 34px,rgba(255,255,255,0.025) 34px,rgba(255,255,255,0.025) 35px),repeating-linear-gradient(90deg,transparent,transparent 34px,rgba(255,255,255,0.025) 34px,rgba(255,255,255,0.025) 35px);animation:tilescroll 18s linear infinite;pointer-events:none;}
+    @keyframes tilescroll{from{background-position:0 0;}to{background-position:35px 35px;}}
+    .hero::after{content:'';position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(255,102,0,0.12) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-55%);pointer-events:none;}
+
+    .hero-emoji{font-size:clamp(4rem,12vw,7rem);line-height:1;margin-bottom:1rem;animation:float 3s ease-in-out infinite;position:relative;z-index:1;}
+    @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-14px);}}
+
+    .hero h1{font-family:'Boogaloo',cursive;font-size:clamp(3rem,10vw,6rem);line-height:1;color:var(--gold);text-shadow:0 4px 30px rgba(255,102,0,0.4);position:relative;z-index:1;animation:fadein 0.8s ease both;}
+    .hero h1 span{color:var(--orange);}
+    .hero-tagline{font-size:clamp(1rem,3vw,1.35rem);color:var(--muted);margin:1.2rem 0 2.5rem;max-width:520px;line-height:1.6;position:relative;z-index:1;animation:fadein 0.8s 0.2s ease both;}
+    @keyframes fadein{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+
+    .btn-play{display:inline-block;background:var(--orange);color:#fff;font-family:'Boogaloo',cursive;font-size:1.6rem;letter-spacing:0.06em;padding:0.75em 2.5em;border-radius:50px;text-decoration:none;box-shadow:0 6px 30px rgba(255,102,0,0.45);transition:transform 0.15s,box-shadow 0.15s,background 0.15s;position:relative;z-index:1;animation:fadein 0.8s 0.4s ease both;}
+    .btn-play:hover{transform:translateY(-3px) scale(1.04);box-shadow:0 10px 40px rgba(255,102,0,0.6);background:#ff7722;}
+    .btn-play:active{transform:scale(0.97);}
+    .hero-sub{margin-top:1.2rem;font-size:0.85rem;color:var(--muted);position:relative;z-index:1;animation:fadein 0.8s 0.6s ease both;}
+
+    .section{padding:80px 5vw;max-width:900px;margin:0 auto;}
+    .section-title{font-family:'Boogaloo',cursive;font-size:clamp(1.8rem,5vw,2.8rem);color:var(--gold);text-align:center;margin-bottom:1.5rem;}
+    .section-title span{color:var(--orange);}
+    .divider{width:60px;height:3px;background:linear-gradient(90deg,var(--orange),var(--gold));border-radius:2px;margin:0 auto 3rem;}
+
+    .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2rem;}
+    .step{background:var(--bg2);border:1px solid rgba(255,102,0,0.15);border-radius:16px;padding:2rem 1.5rem;text-align:center;transition:transform 0.2s,border-color 0.2s;}
+    .step:hover{transform:translateY(-4px);border-color:rgba(255,102,0,0.4);}
+    .step-icon{font-size:2.8rem;margin-bottom:0.8rem;}
+    .step h3{font-family:'Boogaloo',cursive;font-size:1.3rem;color:var(--orange);margin-bottom:0.5rem;}
+    .step p{color:var(--muted);font-size:0.95rem;line-height:1.6;}
+
+    .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;}
+    .feature{background:linear-gradient(135deg,var(--bg2),rgba(255,102,0,0.06));border:1px solid rgba(255,215,0,0.12);border-radius:12px;padding:1.5rem;display:flex;align-items:flex-start;gap:1rem;}
+    .feature-icon{font-size:1.8rem;flex-shrink:0;}
+    .feature h4{font-weight:700;color:var(--gold);margin-bottom:0.3rem;font-size:0.95rem;}
+    .feature p{color:var(--muted);font-size:0.85rem;line-height:1.5;}
+
+    .cta-band{background:linear-gradient(135deg,rgba(255,102,0,0.15),rgba(255,215,0,0.08));border-top:1px solid rgba(255,102,0,0.2);border-bottom:1px solid rgba(255,102,0,0.2);text-align:center;padding:60px 5vw;}
+    .cta-band h2{font-family:'Boogaloo',cursive;font-size:clamp(2rem,6vw,3.5rem);color:var(--gold);margin-bottom:1rem;}
+    .cta-band p{color:var(--muted);margin-bottom:2rem;font-size:1.05rem;}
+
+    footer{background:#110a02;border-top:1px solid rgba(255,255,255,0.06);text-align:center;padding:2rem 5vw;color:var(--muted);font-size:0.85rem;}
+    footer a{color:var(--orange);text-decoration:none;}
+    footer a:hover{text-decoration:underline;}
+    .footer-links{margin-bottom:0.75rem;display:flex;justify-content:center;gap:2rem;flex-wrap:wrap;}
+
+    @media(max-width:600px){nav ul{display:none;}.steps{grid-template-columns:1fr;}}
+  </style>
 </head>
 <body>
-<canvas id="game"></canvas>
-<script>
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
 
-function resize() {
-  const dpr = window.devicePixelRatio || 1;
-  const maxW = 420, maxH = 740;
-  let w = Math.min(window.innerWidth, maxW);
-  let h = Math.min(window.innerHeight, maxH);
-  canvas.style.width = w + 'px';
-  canvas.style.height = h + 'px';
-  canvas.width = w * dpr;
-  canvas.height = h * dpr;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  return { w, h };
-}
-let { w: W, h: H } = resize();
-window.addEventListener('resize', () => { ({ w: W, h: H } = resize()); });
+<nav>
+  <a class="nav-logo" href="/">Franks <span>&</span> Buns</a>
+  <ul>
+    <li><a href="#how-to-play">How to Play</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="game.html">Play Now</a></li>
+    <li><a href="privacy.html">Privacy</a></li>
+  </ul>
+</nav>
 
-// --- Audio ---
-let audioCtx = null;
-function ensureAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-}
-function playTone(freq, dur, type = 'square', vol = 0.12) {
-  if (!audioCtx) return;
-  const o = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
-  o.type = type; o.frequency.value = freq;
-  g.gain.setValueAtTime(vol, audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
-  o.connect(g); g.connect(audioCtx.destination);
-  o.start(); o.stop(audioCtx.currentTime + dur);
-}
-function sndFlap()      { playTone(440, 0.06, 'sine', 0.10); }
-function sndLand()      { playTone(880, 0.08, 'sine', 0.15); playTone(1320, 0.12, 'sine', 0.10); }
-function sndSplat()     { playTone(120, 0.25, 'sawtooth', 0.12); }
-function sndBox()       { playTone(660, 0.07, 'square', 0.12); setTimeout(() => playTone(990, 0.1, 'square', 0.14), 80); setTimeout(() => playTone(1320, 0.15, 'sine', 0.12), 160); }
-function sndCondiment() { playTone(1200, 0.06, 'sine', 0.13); setTimeout(() => playTone(1600, 0.1, 'sine', 0.11), 70); }
-function sndStreak()    { playTone(700, 0.04, 'sine', 0.08); }
-function sndGameOver()  { playTone(300, 0.15, 'sawtooth', 0.1); setTimeout(() => playTone(200, 0.2, 'sawtooth', 0.1), 150); setTimeout(() => playTone(120, 0.4, 'sawtooth', 0.08), 350); }
-function sndStart()     { playTone(660, 0.08, 'sine', 0.10); setTimeout(() => playTone(880, 0.12, 'sine', 0.10), 90); }
-function sndFork()      { playTone(900, 0.04, 'sine', 0.08); setTimeout(() => playTone(1100, 0.06, 'sine', 0.07), 40); } // clink sound
+<section class="hero">
+  <div class="hero-emoji">🌭</div>
+  <h1>Franks <span>&</span> Buns</h1>
+  <p class="hero-tagline">The world's most important hot dog arcade game. Tap to launch your frank, dodge the chef's fork, and land perfectly in the bun.</p>
+  <a class="btn-play" href="game.html">&#9654; PLAY FREE</a>
+  <p class="hero-sub">No download &nbsp;·&nbsp; No login &nbsp;·&nbsp; Works on any device</p>
+</section>
 
-// --- State ---
-const STATE = { MENU: 0, PLAYING: 1, GAMEOVER: 2 };
-let state = STATE.MENU;
-let score = 0;
-let bestScore = parseInt(localStorage.getItem('fb_best') || '0');
-let lives = 3, streak = 0, bestStreak = 0;
-let franksLanded = 0, boxFranks = 0, boxesCompleted = 0, boxFlash = 0;
-let scrollSpeed = 2.2, scrollX = 0;
-let tapping = false, frameCount = 0, shakeAmount = 0;
-let streakText = '', streakTimer = 0;
-let splats = [], particles = [], floatingTexts = [], gameOverDelay = 0;
+<section class="section" id="how-to-play">
+  <h2 class="section-title">How to <span>Play</span></h2>
+  <div class="divider"></div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-icon">👆</div>
+      <h3>Tap to Boost</h3>
+      <p>Tap or click to launch your frank upward. Release to let gravity do its thing.</p>
+    </div>
+    <div class="step">
+      <div class="step-icon">🥖</div>
+      <h3>Land in the Bun</h3>
+      <p>Time your drop perfectly to land in the scrolling hot dog rolls. Different locations score different points.</p>
+    </div>
+    <div class="step">
+      <div class="step-icon">🍴</div>
+      <h3>Dodge the Fork</h3>
+      <p>The chef's fork rises between buns without warning. Hit it and lose a life. You only get three.</p>
+    </div>
+    <div class="step">
+      <div class="step-icon">🏆</div>
+      <h3>Beat Your Best</h3>
+      <p>Chain landings for streak multipliers, grab condiment bonuses, and fill boxes for big point bursts.</p>
+    </div>
+  </div>
+</section>
 
-let frank = { x: 70, y: 0, vy: 0, squash: 1, stretch: 1, alive: true };
-const FRANK_W = 40, FRANK_H = 14;
-const GRAVITY = 0.38, FLAP_POWER = -5.5;
+<section class="section" id="features">
+  <h2 class="section-title">What's <span>Inside</span></h2>
+  <div class="divider"></div>
+  <div class="features-grid">
+    <div class="feature">
+      <div class="feature-icon">🟡</div>
+      <div><h4>Condiment Bonuses</h4><p>Mustard, ketchup, relish, cheese, jalapeño — each squeeze bottle multiplies your score.</p></div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">📦</div>
+      <div><h4>Box System</h4><p>Land 8 franks to complete a box, earn a big bonus, and watch the kitchen speed up.</p></div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🔥</div>
+      <div><h4>Streak Multipliers</h4><p>Hit 3, 5, or 10 in a row to unlock On A Roll, Franks On Fire, and Wiener Wizard modes.</p></div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🐕</div>
+      <div><h4>Dog Bun Event</h4><p>A dog trots through with a bun in its mouth. Land in it for a massive bonus score.</p></div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🍴</div>
+      <div><h4>Chef's Fork</h4><p>The chef's arm rises between buns without warning. Dodge the tines or lose a life.</p></div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">📱</div>
+      <div><h4>Play Anywhere</h4><p>Mobile-first design. Tap on phone, click on desktop. No app install required.</p></div>
+    </div>
+  </div>
+</section>
 
-let buns = [], nextBunDist = 0;
-const BUN_W = 60, BUN_H = 26;
+<div class="cta-band">
+  <h2>Ready to get saucy? 🌭</h2>
+  <p>Free to play. Instant start. See how many boxes you can pack.</p>
+  <a class="btn-play" href="game.html">&#9654; PLAY NOW</a>
+</div>
 
-// ============================================================
-// CHEF ARM / FORK OBSTACLES
-// ============================================================
-let forks = [];
-let nextForkDist = 300; // distance until next fork spawns
+<footer>
+  <div class="footer-links">
+    <a href="game.html">Play the Game</a>
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="mailto:contact@franksandbuns.com">Contact</a>
+  </div>
+  <p>&copy; 2025 Franks &amp; Buns. All rights reserved.</p>
+  <p style="margin-top:0.4rem;font-size:0.78rem;">This site uses cookies and Google AdSense to display ads. See our <a href="privacy.html">Privacy Policy</a> for details.</p>
+</footer>
 
-function spawnFork() {
-  // Fork comes from bottom (chef reaches up) or top (reaches down)
-  const fromBottom = Math.random() > 0.35; // mostly from bottom
-  const targetY = fromBottom
-    ? H * 0.45 + Math.random() * H * 0.25   // reaches up into play area
-    : H * 0.15 + Math.random() * H * 0.2;  // reaches down from top
-
-  forks.push({
-    x: W + 50,
-    y: fromBottom ? H + 120 : -120,         // starts off screen
-    targetY: targetY,
-    fromBottom: fromBottom,
-    state: 'entering',   // entering → holding → leaving
-    holdTimer: 55 + Math.floor(Math.random() * 40),
-    phase: 0,            // for wobble
-    warned: false,
-  });
-}
-
-function updateForks() {
-  // Schedule next fork — gets more frequent as difficulty increases
-  nextForkDist -= scrollSpeed;
-  if (nextForkDist <= 0) {
-    spawnFork();
-    const minGap = Math.max(280 - boxesCompleted * 15, 130);
-    nextForkDist = minGap + Math.random() * 200;
-  }
-
-  for (let i = forks.length - 1; i >= 0; i--) {
-    const f = forks[i];
-    f.x -= scrollSpeed;
-    f.phase += 0.06;
-
-    if (f.state === 'entering') {
-      const speed = 4.5 + boxesCompleted * 0.2;
-      if (f.fromBottom) {
-        f.y -= speed;
-        if (f.y <= f.targetY) { f.y = f.targetY; f.state = 'holding'; sndFork(); }
-      } else {
-        f.y += speed;
-        if (f.y >= f.targetY) { f.y = f.targetY; f.state = 'holding'; sndFork(); }
-      }
-    } else if (f.state === 'holding') {
-      // slight wobble while held
-      f.holdTimer--;
-      if (f.holdTimer <= 0) f.state = 'leaving';
-    } else if (f.state === 'leaving') {
-      const speed = 5;
-      if (f.fromBottom) f.y += speed;
-      else              f.y -= speed;
-    }
-
-    // Collision: tines are drawn at y-44 to y-68 (fromBottom) or y+44 to y+68 (fromTop)
-    // Use the midpoint of the tine zone as the hitbox center
-    const tineY = f.fromBottom ? f.y - 56 : f.y + 56;
-    const wobbleX = f.state === 'holding' ? Math.sin(f.phase) * 2.5 : 0;
-    const tineX = f.x + wobbleX;
-    if ((f.state === 'holding' || f.state === 'entering') && frank.alive) {
-      const dx = Math.abs(frank.x - tineX);
-      const dy = Math.abs(frank.y - tineY);
-      if (dx < 18 && dy < 26) {
-        loseLife();
-        forks.splice(i, 1);
-        continue;
-      }
-    }
-
-    // Remove when fully off screen
-    if (f.y > H + 180 || f.y < -180 || f.x < -120) {
-      forks.splice(i, 1);
-    }
-  }
-}
-
-function drawForks() {
-  for (const f of forks) {
-    const wobble = f.state === 'holding' ? Math.sin(f.phase) * 2.5 : 0;
-    const x = f.x + wobble;
-    const y = f.y;
-    const fromBottom = f.fromBottom;
-
-    ctx.save();
-    ctx.translate(x, y);
-    // Flip vertically when coming from top
-    if (!fromBottom) ctx.scale(1, -1);
-
-    // === CHEF SLEEVE (white, coming from bottom) ===
-    // Sleeve — extends downward off screen
-    const sleeveGrad = ctx.createLinearGradient(-16, 0, 16, 0);
-    sleeveGrad.addColorStop(0, '#ddd');
-    sleeveGrad.addColorStop(0.3, '#fff');
-    sleeveGrad.addColorStop(0.7, '#f0f0f0');
-    sleeveGrad.addColorStop(1, '#ccc');
-    ctx.fillStyle = sleeveGrad;
-    ctx.beginPath();
-    ctx.roundRect(-14, 20, 28, 120, 4);
-    ctx.fill();
-    ctx.strokeStyle = '#bbb'; ctx.lineWidth = 1; ctx.stroke();
-
-    // Sleeve cuff
-    ctx.fillStyle = '#e8e8e8';
-    ctx.beginPath();
-    ctx.roundRect(-16, 14, 32, 14, 3);
-    ctx.fill();
-    ctx.strokeStyle = '#ccc'; ctx.lineWidth = 1; ctx.stroke();
-    // Cuff stripe detail
-    ctx.strokeStyle = '#bbb'; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(-14, 18); ctx.lineTo(14, 18); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(-14, 24); ctx.lineTo(14, 24); ctx.stroke();
-
-    // === HAND ===
-    // Palm
-    ctx.fillStyle = '#f5c49a';
-    ctx.beginPath();
-    ctx.ellipse(0, 6, 12, 10, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#d4a070'; ctx.lineWidth = 0.8; ctx.stroke();
-
-    // Thumb
-    ctx.beginPath();
-    ctx.ellipse(-14, 10, 5, 7, -0.4, 0, Math.PI * 2);
-    ctx.fillStyle = '#f5c49a'; ctx.fill(); ctx.stroke();
-
-    // Fingers gripping fork (3 fingers visible)
-    for (let fi = 0; fi < 3; fi++) {
-      ctx.save();
-      ctx.translate(-6 + fi * 6, -4);
-      ctx.rotate(0.05 * (fi - 1));
-      ctx.beginPath();
-      ctx.roundRect(-3.5, -10, 7, 12, 3);
-      ctx.fillStyle = '#f5c49a'; ctx.fill();
-      ctx.strokeStyle = '#d4a070'; ctx.lineWidth = 0.8; ctx.stroke();
-      ctx.restore();
-    }
-
-    // Knuckle highlights
-    ctx.strokeStyle = 'rgba(180,110,50,0.2)'; ctx.lineWidth = 1;
-    for (let fi = 0; fi < 3; fi++) {
-      ctx.beginPath();
-      ctx.arc(-4 + fi * 5, 2, 2.5, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-
-    // === FORK ===
-    // Handle
-    const handleGrad = ctx.createLinearGradient(-3, -10, 3, -10);
-    handleGrad.addColorStop(0, '#999');
-    handleGrad.addColorStop(0.4, '#eee');
-    handleGrad.addColorStop(1, '#888');
-    ctx.fillStyle = handleGrad;
-    ctx.beginPath();
-    ctx.roundRect(-3.5, -30, 7, 26, 2);
-    ctx.fill();
-    ctx.strokeStyle = '#777'; ctx.lineWidth = 0.7; ctx.stroke();
-
-    // Fork neck (narrows before tines)
-    ctx.beginPath();
-    ctx.roundRect(-2.5, -44, 5, 16, 1.5);
-    ctx.fillStyle = '#ddd'; ctx.fill();
-    ctx.strokeStyle = '#aaa'; ctx.lineWidth = 0.6; ctx.stroke();
-
-    // Tines (4 prongs)
-    ctx.strokeStyle = '#ccc'; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
-    const tineOffsets = [-6, -2, 2, 6];
-    for (const tx of tineOffsets) {
-      ctx.beginPath();
-      ctx.moveTo(tx, -44);
-      ctx.lineTo(tx, -68);
-      ctx.strokeStyle = '#ddd'; ctx.stroke();
-      // Tine tip slightly wider
-      ctx.beginPath();
-      ctx.arc(tx, -68, 1.5, 0, Math.PI * 2);
-      ctx.fillStyle = '#eee'; ctx.fill();
-    }
-    // Tine base connector
-    ctx.beginPath();
-    ctx.moveTo(-7, -44);
-    ctx.lineTo(7, -44);
-    ctx.strokeStyle = '#ccc'; ctx.lineWidth = 2; ctx.stroke();
-
-    // Shine on fork
-    ctx.beginPath();
-    ctx.moveTo(-1, -68); ctx.lineTo(-1, -30);
-    ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1; ctx.stroke();
-
-    // Warning flash before it arrives
-    if (f.state === 'entering' && Math.abs(f.y - f.targetY) < 150) {
-      ctx.restore();
-      ctx.save();
-      ctx.globalAlpha = 0.6 + Math.sin(frameCount * 0.35) * 0.4;
-      ctx.fillStyle = '#FF3300';
-      ctx.font = 'bold 13px Arial';
-      ctx.textAlign = 'center';
-      const warnY = fromBottom ? f.y - 85 : f.y + 85;
-      ctx.fillText('⚠️', x, warnY);
-      ctx.restore();
-      continue;
-    }
-
-    ctx.restore();
-  }
-}
-
-// ============================================================
-// BUNS & CONDIMENTS
-// ============================================================
-const bunTypes = [
-  { name: 'counter',  yRange: [0.55, 0.75], label: null,         multiplier: 1,   color: '#c8914a' },
-  { name: 'shelf',    yRange: [0.3,  0.55], label: 'SHELF',      multiplier: 1,   color: '#b8833e' },
-  { name: 'cabinet',  yRange: [0.2,  0.45], label: 'CABINET',    multiplier: 1,   color: '#a87535' },
-  { name: 'oven',     yRange: [0.5,  0.7 ], label: 'OVEN',       multiplier: 1.5, color: '#c8914a' },
-  { name: 'fridge',   yRange: [0.12, 0.25], label: 'FRIDGE TOP', multiplier: 2,   color: '#ddd'    },
-  { name: 'dog',      yRange: [0.65, 0.75], label: 'dog',        multiplier: 2,   color: '#c8914a', moving: true },
-];
-const condiments = [
-  { name: 'mustard',  label: 'MUSTARD',  color: '#FFD700', bottleColor: '#ccaa00', capColor: '#ffee55', multiplier: 2  },
-  { name: 'ketchup',  label: 'KETCHUP',  color: '#DD1111', bottleColor: '#aa0000', capColor: '#ff4444', multiplier: 3  },
-  { name: 'relish',   label: 'RELISH',   color: '#33BB33', bottleColor: '#228822', capColor: '#66dd66', multiplier: 5  },
-  { name: 'cheese',   label: 'CHEESE',   color: '#FFaa00', bottleColor: '#cc7700', capColor: '#ffcc44', multiplier: 5  },
-  { name: 'jalapeno', label: 'JALAPEÑO', color: '#FF4500', bottleColor: '#cc2200', capColor: '#ff7744', multiplier: 10 },
-];
-
-function shiftColor(hex, amt) {
-  const c = hex.replace('#', '');
-  let r = parseInt(c.substring(0,2),16), g = parseInt(c.substring(2,4),16), b = parseInt(c.substring(4,6),16);
-  return '#' + [Math.min(255,Math.max(0,r+amt)), Math.min(255,Math.max(0,g+amt)), Math.min(255,Math.max(0,b+amt))].map(v=>v.toString(16).padStart(2,'0')).join('');
-}
-
-function drawSqueezeBottle(cx, cy, cond, sc) {
-  ctx.save(); ctx.translate(cx, cy); ctx.scale(sc, sc);
-  ctx.beginPath();
-  ctx.moveTo(-5,8); ctx.bezierCurveTo(-7,8,-7,-6,-5,-8); ctx.lineTo(5,-8); ctx.bezierCurveTo(7,-6,7,8,5,8); ctx.closePath();
-  const bg = ctx.createLinearGradient(-7,0,7,0);
-  bg.addColorStop(0, shiftColor(cond.bottleColor,-20)); bg.addColorStop(0.35, cond.bottleColor);
-  bg.addColorStop(0.65, shiftColor(cond.bottleColor,25)); bg.addColorStop(1, shiftColor(cond.bottleColor,-15));
-  ctx.fillStyle = bg; ctx.fill();
-  ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 0.8; ctx.stroke();
-  ctx.beginPath(); ctx.roundRect(-4.5,-3,9,7,1); ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.fill();
-  ctx.beginPath(); ctx.moveTo(-4,-7); ctx.lineTo(-4,5); ctx.strokeStyle = 'rgba(255,255,255,0.30)'; ctx.lineWidth = 1.5; ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(-5,-8); ctx.bezierCurveTo(-5,-11,-2.5,-13,-1.5,-15); ctx.lineTo(1.5,-15); ctx.bezierCurveTo(2.5,-13,5,-11,5,-8);
-  ctx.fillStyle = shiftColor(cond.bottleColor,-10); ctx.fill();
-  ctx.beginPath(); ctx.roundRect(-2,-20,4,6,1.5); ctx.fillStyle = cond.capColor; ctx.fill();
-  ctx.strokeStyle = 'rgba(0,0,0,0.2)'; ctx.lineWidth = 0.6; ctx.stroke();
-  ctx.beginPath(); ctx.arc(0,-22,2,0,Math.PI*2); ctx.fillStyle = cond.color; ctx.fill();
-  ctx.restore();
-}
-
-function spawnBun() {
-  const diff = Math.min(boxesCompleted, 10);
-  const avail = bunTypes.slice(0, Math.min(2 + Math.floor(diff/2), bunTypes.length));
-  const type = avail[Math.floor(Math.random() * avail.length)];
-  const y = type.yRange[0]*H + Math.random()*(type.yRange[1]-type.yRange[0])*H;
-  let condiment = null;
-  if (Math.random() < 0.18 + diff*0.02) {
-    const ac = condiments.slice(0, Math.min(2+Math.floor(diff/2), condiments.length));
-    condiment = ac[Math.floor(Math.random() * ac.length)];
-  }
-  buns.push({
-    x: W+60, y, type, condiment,
-    scored: false, missed: false,
-    bobPhase: Math.random()*Math.PI*2,
-    moveY: type.moving ? y : null, moveDir: 1,
-  });
-}
-
-function resetGame() {
-  frank = { x:70, y:H*0.4, vy:0, squash:1, stretch:1, alive:true };
-  buns=[]; splats=[]; particles=[]; floatingTexts=[]; forks=[];
-  score=0; lives=3; streak=0; bestStreak=0;
-  franksLanded=0; boxFranks=0; boxesCompleted=0; boxFlash=0;
-  scrollSpeed=2.2; scrollX=0; nextBunDist=0;
-  shakeAmount=0; streakText=''; streakTimer=0; gameOverDelay=0;
-  nextForkDist = 320;
-  state = STATE.PLAYING;
-}
-
-// --- Input ---
-function onTap() {
-  ensureAudio();
-  if (state === STATE.MENU)     { sndStart(); resetGame(); return; }
-  if (state === STATE.GAMEOVER) { if (gameOverDelay > 40) resetGame(); return; }
-  tapping = true;
-  if (frank.alive) { frank.vy = FLAP_POWER; frank.squash = 1.3; frank.stretch = 0.7; sndFlap(); }
-}
-function onRelease() { tapping = false; }
-canvas.addEventListener('touchstart', e => { e.preventDefault(); onTap(); });
-canvas.addEventListener('touchend',   e => { e.preventDefault(); onRelease(); });
-canvas.addEventListener('mousedown', onTap);
-canvas.addEventListener('mouseup',   onRelease);
-document.addEventListener('keydown', e => { if (e.code === 'Space') { e.preventDefault(); onTap(); }});
-document.addEventListener('keyup',   e => { if (e.code === 'Space') onRelease(); });
-
-// --- Particles / Splats / Floats ---
-function addParticles(x, y, color, count=8) {
-  for (let i=0; i<count; i++) {
-    const a=Math.random()*Math.PI*2, sp=1.5+Math.random()*3;
-    particles.push({ x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-2, life:30+Math.random()*20, maxLife:50, color, size:2+Math.random()*4 });
-  }
-}
-function addFloatingText(x, y, text, color='#fff', size=20) {
-  floatingTexts.push({ x, y, text, color, size, life:60, vy:-1.5 });
-}
-function addSplat(x, y) {
-  const blobs = [];
-  for (let i=0; i<6+Math.floor(Math.random()*5); i++) {
-    const a=Math.random()*Math.PI*2, d=i===0?0:10+Math.random()*30;
-    blobs.push({ x:x+Math.cos(a)*d, y:y+Math.sin(a)*d, rx:12+Math.random()*24, ry:7+Math.random()*14, rot:Math.random()*Math.PI });
-  }
-  const drips = [];
-  for (let i=0; i<4+Math.floor(Math.random()*4); i++) {
-    drips.push({ x:x+(Math.random()-0.5)*55, y:y+Math.random()*8, len:25+Math.random()*70, w:3+Math.random()*5, speed:0.5+Math.random()*0.9, progress:0 });
-  }
-  splats.push({ x, y, blobs, drips, life:200, maxLife:200 });
-}
-
-// --- Update ---
-function update() {
-  frameCount++;
-  if (state !== STATE.PLAYING) { if (state === STATE.GAMEOVER) gameOverDelay++; return; }
-
-  frank.vy += GRAVITY; frank.y += frank.vy;
-  frank.squash += (1-frank.squash)*0.15;
-  frank.stretch += (1-frank.stretch)*0.15;
-  if (frank.y < 10) { frank.y=10; frank.vy=0.5; }
-  if (frank.y > H-30) { frank.y=H-30; frank.vy=0; loseLife(); }
-
-  scrollX += scrollSpeed;
-  nextBunDist -= scrollSpeed;
-  if (nextBunDist <= 0) {
-    spawnBun();
-    nextBunDist = Math.max(160+Math.random()*100-Math.min(boxesCompleted*5,40), 100);
-  }
-
-  for (let i=buns.length-1; i>=0; i--) {
-    const b = buns[i];
-    b.x -= scrollSpeed; b.bobPhase += 0.04;
-    if (b.type.moving && b.moveY !== null) {
-      b.y += b.moveDir*0.5;
-      if (b.y > b.moveY+20 || b.y < b.moveY-20) b.moveDir *= -1;
-    }
-    if (!b.scored && !b.missed && frank.alive) {
-      const by = b.y + Math.sin(b.bobPhase)*3;
-      if (frank.x>b.x-BUN_W/2-5 && frank.x<b.x+BUN_W/2+5 && frank.y>by-10 && frank.y<by+BUN_H+5 && frank.vy>0) {
-        b.scored = true; landFrank(b);
-      }
-    }
-    if (!b.scored && !b.missed && b.x < frank.x-BUN_W) { b.missed=true; loseLife(); }
-    if (b.x < -100) buns.splice(i, 1);
-  }
-
-  updateForks();
-
-  shakeAmount *= 0.85; if (shakeAmount < 0.5) shakeAmount = 0;
-  if (streakTimer > 0) streakTimer--;
-  if (boxFlash > 0) boxFlash--;
-
-  for (let i=particles.length-1; i>=0; i--) {
-    const p=particles[i]; p.x+=p.vx; p.y+=p.vy; p.vy+=0.1; p.life--;
-    if (p.life<=0) particles.splice(i,1);
-  }
-  for (let i=floatingTexts.length-1; i>=0; i--) {
-    const ft=floatingTexts[i]; ft.y+=ft.vy; ft.life--;
-    if (ft.life<=0) floatingTexts.splice(i,1);
-  }
-  for (let i=splats.length-1; i>=0; i--) {
-    const s=splats[i]; s.life--;
-    for (const d of s.drips) if (d.progress<1) d.progress=Math.min(1,d.progress+d.speed/50);
-    if (s.life<=0) splats.splice(i,1);
-  }
-}
-
-function landFrank(bun) {
-  let mult = bun.type.multiplier||1;
-  if (bun.condiment) { mult *= bun.condiment.multiplier; sndCondiment(); addParticles(bun.x,bun.y,bun.condiment.color,15); }
-  streak++; franksLanded++; if (streak>bestStreak) bestStreak=streak;
-  let sm=1;
-  if      (streak>=10){sm=3;streakText='WIENER WIZARD!';streakTimer=90;sndStreak();}
-  else if (streak>=5) {sm=2;streakText='FRANKS ON FIRE!';streakTimer=60;sndStreak();}
-  else if (streak>=3) {sm=1.5;streakText='ON A ROLL!';streakTimer=45;sndStreak();}
-  const pts=Math.floor(100*mult*sm); score+=pts; sndLand();
-  addParticles(bun.x,bun.y,'#FFD700',10); shakeAmount=bun.condiment?6:3;
-  addFloatingText(bun.x,bun.y-20,'+'+pts+(bun.condiment?' '+bun.condiment.label:''),bun.condiment?bun.condiment.color:'#FFD700',bun.condiment?21:20);
-  boxFranks++;
-  if (boxFranks>=8) {
-    boxFranks=0; boxesCompleted++;
-    const bonus=boxesCompleted*100; score+=bonus; boxFlash=60; sndBox(); shakeAmount=8;
-    addFloatingText(W/2,H/2-40,'BOXED! +'+bonus,'#FF6600',32);
-    scrollSpeed=Math.min(2.2+boxesCompleted*0.3,5.5);
-  }
-  frank.vy=FLAP_POWER*0.7; frank.squash=0.7; frank.stretch=1.4;
-}
-
-function loseLife() {
-  lives--; streak=0; sndSplat();
-  addSplat(frank.x, frank.y);
-  addParticles(frank.x, frank.y, '#CC1111', 18);
-  shakeAmount=8;
-  if (lives<=0) {
-    state=STATE.GAMEOVER; frank.alive=false; sndGameOver();
-    if (score>bestScore) { bestScore=score; localStorage.setItem('fb_best',bestScore.toString()); }
-  } else { frank.y=H*0.35; frank.vy=0; }
-}
-
-// ============================================================
-// DRAW
-// ============================================================
-function drawFrank(x, y, sq, st) {
-  ctx.save(); ctx.translate(x,y); ctx.scale(sq,st);
-  const hw=FRANK_W/2, hh=FRANK_H/2;
-  // shadow
-  ctx.beginPath(); ctx.ellipse(2,hh+3,hw-3,3.5,0,0,Math.PI*2); ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.fill();
-  // body
-  ctx.beginPath();
-  ctx.moveTo(-hw+7,-hh); ctx.lineTo(hw-7,-hh);
-  ctx.bezierCurveTo(hw+3,-hh,hw+6,-hh+4,hw+6,0);
-  ctx.bezierCurveTo(hw+6,hh-4,hw+3,hh,hw-7,hh);
-  ctx.lineTo(-hw+7,hh);
-  ctx.bezierCurveTo(-hw-3,hh,-hw-6,hh-4,-hw-6,0);
-  ctx.bezierCurveTo(-hw-6,-hh+4,-hw-3,-hh,-hw+7,-hh);
-  ctx.closePath();
-  const bg=ctx.createLinearGradient(0,-hh,0,hh);
-  bg.addColorStop(0,'#e8724c'); bg.addColorStop(0.3,'#cc4a26'); bg.addColorStop(0.7,'#a83418'); bg.addColorStop(1,'#8a2010');
-  ctx.fillStyle=bg; ctx.fill();
-  // grill marks
-  ctx.save(); ctx.clip(); ctx.strokeStyle='rgba(50,8,0,0.38)'; ctx.lineWidth=2.2;
-  for (let lx=-12; lx<=12; lx+=8) { ctx.beginPath(); ctx.moveTo(lx-2,-hh+2); ctx.lineTo(lx+2,hh-2); ctx.stroke(); }
-  ctx.restore();
-  // highlight
-  ctx.beginPath(); ctx.ellipse(-1,-hh+2,hw-9,hh/2.2,0,0,Math.PI*2); ctx.fillStyle='rgba(255,210,170,0.25)'; ctx.fill();
-  // face
-  ctx.beginPath(); ctx.arc(-6,-1,1.6,0,Math.PI*2); ctx.fillStyle='#1a0800'; ctx.fill();
-  ctx.beginPath(); ctx.arc(-6.6,-1.6,0.65,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.75)'; ctx.fill();
-  ctx.beginPath(); ctx.arc(-1,-1,1.6,0,Math.PI*2); ctx.fillStyle='#1a0800'; ctx.fill();
-  ctx.beginPath(); ctx.arc(-1.6,-1.6,0.65,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.75)'; ctx.fill();
-  ctx.beginPath(); ctx.arc(-3.5,1.2,3,0.25,Math.PI-0.25); ctx.strokeStyle='#1a0800'; ctx.lineWidth=1.3; ctx.stroke();
-  ctx.restore();
-}
-
-function drawBun(b) {
-  const bobY=Math.sin(b.bobPhase)*3, x=b.x, y=b.y+bobY;
-  const hw=BUN_W/2, hh=BUN_H/2, rc=b.type.color;
-  ctx.save(); ctx.translate(x,y);
-  if (b.type.label && b.type.label!=='dog') {
-    ctx.fillStyle='rgba(255,255,255,0.32)'; ctx.font='bold 8px Arial'; ctx.textAlign='center'; ctx.fillText(b.type.label,0,-hh-10);
-  }
-  if (b.type.label==='dog') {
-    ctx.font='20px Arial'; ctx.textAlign='center'; ctx.fillText('🐕',-hw-16,hh+4);
-  }
-  // bottom half
-  ctx.beginPath(); ctx.moveTo(-hw+7,1); ctx.lineTo(hw-7,1); ctx.bezierCurveTo(hw+5,1,hw+5,hh+5,hw-7,hh+5); ctx.lineTo(-hw+7,hh+5); ctx.bezierCurveTo(-hw-5,hh+5,-hw-5,1,-hw+7,1); ctx.closePath();
-  const bg=ctx.createLinearGradient(0,1,0,hh+5); bg.addColorStop(0,shiftColor(rc,18)); bg.addColorStop(0.5,rc); bg.addColorStop(1,shiftColor(rc,-28));
-  ctx.fillStyle=bg; ctx.shadowColor='rgba(0,0,0,0.28)'; ctx.shadowBlur=5; ctx.shadowOffsetY=2; ctx.fill(); ctx.shadowBlur=0; ctx.shadowOffsetY=0;
-  ctx.beginPath(); ctx.moveTo(-hw+12,3); ctx.lineTo(hw-12,3); ctx.strokeStyle='rgba(255,235,180,0.28)'; ctx.lineWidth=1.5; ctx.stroke();
-  // top half
-  ctx.beginPath(); ctx.moveTo(-hw+7,-1); ctx.lineTo(hw-7,-1); ctx.bezierCurveTo(hw+5,-1,hw+5,-hh-8,hw-7,-hh-8); ctx.lineTo(-hw+7,-hh-8); ctx.bezierCurveTo(-hw-5,-hh-8,-hw-5,-1,-hw+7,-1); ctx.closePath();
-  const tg=ctx.createLinearGradient(0,-hh-8,0,-1); tg.addColorStop(0,shiftColor(rc,-12)); tg.addColorStop(0.3,shiftColor(rc,28)); tg.addColorStop(0.7,rc); tg.addColorStop(1,shiftColor(rc,-8));
-  ctx.fillStyle=tg; ctx.fill();
-  // sesame seeds
-  ctx.fillStyle='#f0e0b0';
-  [[-15,-hh-4,-0.3],[0,-hh-7,0.1],[15,-hh-4,0.25],[-8,-hh-7,-0.1],[8,-hh-7,0.3]].forEach(([sx,sy,rot])=>{
-    ctx.save(); ctx.translate(sx,sy); ctx.rotate(rot); ctx.beginPath(); ctx.ellipse(0,0,2.8,1.3,0,0,Math.PI*2); ctx.fill(); ctx.restore();
-  });
-  ctx.beginPath(); ctx.ellipse(0,-hh-4,hw-14,2.5,0,0,Math.PI*2); ctx.fillStyle='rgba(255,245,210,0.22)'; ctx.fill();
-  // slit
-  ctx.beginPath(); ctx.moveTo(-hw+5,0); ctx.lineTo(hw-5,0); ctx.strokeStyle='rgba(80,35,5,0.55)'; ctx.lineWidth=1.8; ctx.stroke();
-  // condiment bottle
-  if (b.condiment) {
-    ctx.shadowColor=b.condiment.color; ctx.shadowBlur=12+Math.sin(frameCount*0.12)*6;
-    ctx.beginPath(); ctx.arc(0,-hh-8,hw/2+3,Math.PI,Math.PI*2); ctx.strokeStyle=b.condiment.color+'44'; ctx.lineWidth=2; ctx.stroke(); ctx.shadowBlur=0;
-    drawSqueezeBottle(hw-4,-hh-26,b.condiment,1.15);
-  }
-  // scored frank in bun
-  if (b.scored) {
-    ctx.save(); ctx.beginPath(); ctx.rect(-hw,-4,BUN_W,8); ctx.clip();
-    const mg=ctx.createLinearGradient(0,-3,0,3); mg.addColorStop(0,'#e8724c'); mg.addColorStop(1,'#a83418');
-    ctx.fillStyle=mg; ctx.beginPath(); ctx.ellipse(0,0,hw-5,4.5,0,0,Math.PI*2); ctx.fill(); ctx.restore();
-  }
-  ctx.restore();
-}
-
-function drawKitchenBG() {
-  ctx.fillStyle='#4a3728'; ctx.fillRect(0,H-40,W,40);
-  ctx.strokeStyle='#3d2e20'; ctx.lineWidth=1;
-  for (let tx=-scrollX%40; tx<W; tx+=40) { ctx.beginPath(); ctx.moveTo(tx,H-40); ctx.lineTo(tx,H); ctx.stroke(); }
-  const grad=ctx.createLinearGradient(0,0,0,H-40); grad.addColorStop(0,'#5c4033'); grad.addColorStop(1,'#3e2a1c');
-  ctx.fillStyle=grad; ctx.fillRect(0,0,W,H-40);
-  ctx.strokeStyle='rgba(255,255,255,0.04)';
-  const ts=35;
-  for (let ty=0; ty<H-40; ty+=ts) for (let tx=-scrollX%ts; tx<W; tx+=ts) ctx.strokeRect(tx,ty,ts,ts);
-  ctx.fillStyle='#8B7355'; ctx.fillRect(0,H*0.78,W,8);
-  ctx.fillStyle='#6B5340'; ctx.fillRect(0,H*0.78+8,W,H*0.22-48);
-}
-
-function drawSplats() {
-  for (const s of splats) {
-    const t=s.life/s.maxLife, spawnT=t>0.88?(1-t)/0.12:1, alpha=t<0.35?t/0.35:1;
-    ctx.save(); ctx.globalAlpha=alpha*0.92;
-    for (const bl of s.blobs) {
-      ctx.save(); ctx.translate(bl.x,bl.y); ctx.rotate(bl.rot); ctx.scale(spawnT,spawnT);
-      ctx.beginPath(); ctx.ellipse(0,0,bl.rx,bl.ry,0,0,Math.PI*2);
-      const bg=ctx.createRadialGradient(-bl.rx*0.2,-bl.ry*0.2,0,0,0,Math.max(bl.rx,bl.ry));
-      bg.addColorStop(0,'rgba(230,15,15,0.97)'); bg.addColorStop(0.5,'rgba(190,5,5,0.92)'); bg.addColorStop(1,'rgba(110,0,0,0.45)');
-      ctx.fillStyle=bg; ctx.fill();
-      ctx.beginPath(); ctx.ellipse(-bl.rx*0.28,-bl.ry*0.28,bl.rx*0.38,bl.ry*0.32,-0.3,0,Math.PI*2); ctx.fillStyle='rgba(255,120,120,0.22)'; ctx.fill();
-      ctx.restore();
-    }
-    for (const d of s.drips) {
-      const dLen=d.len*d.progress; if (dLen<2) continue;
-      const dg=ctx.createLinearGradient(d.x,d.y,d.x,d.y+dLen); dg.addColorStop(0,'rgba(190,8,8,0.88)'); dg.addColorStop(0.65,'rgba(155,0,0,0.62)'); dg.addColorStop(1,'rgba(110,0,0,0.0)');
-      ctx.beginPath(); ctx.moveTo(d.x,d.y); ctx.lineTo(d.x,d.y+dLen); ctx.strokeStyle=dg; ctx.lineWidth=d.w*(0.35+0.65*d.progress); ctx.lineCap='round'; ctx.stroke();
-      if (d.progress>0.45) { ctx.beginPath(); ctx.arc(d.x,d.y+dLen,d.w*0.65*(d.progress-0.45)*1.8,0,Math.PI*2); ctx.fillStyle=`rgba(155,0,0,${0.55*alpha})`; ctx.fill(); }
-    }
-    ctx.restore();
-  }
-}
-
-function drawParticles() {
-  for (const p of particles) { ctx.fillStyle=p.color; ctx.globalAlpha=p.life/p.maxLife; ctx.beginPath(); ctx.arc(p.x,p.y,p.size*(p.life/p.maxLife),0,Math.PI*2); ctx.fill(); }
-  ctx.globalAlpha=1;
-}
-
-function drawFloatingTexts() {
-  for (const ft of floatingTexts) {
-    ctx.save(); ctx.globalAlpha=Math.min(ft.life/20,1);
-    ctx.font=`bold ${ft.size}px Arial`; ctx.textAlign='center';
-    ctx.strokeStyle='rgba(0,0,0,0.55)'; ctx.lineWidth=3; ctx.strokeText(ft.text,ft.x,ft.y);
-    ctx.fillStyle=ft.color; ctx.fillText(ft.text,ft.x,ft.y);
-    ctx.restore();
-  }
-}
-
-function drawHUD() {
-  ctx.fillStyle='#fff'; ctx.font='bold 18px Arial'; ctx.textAlign='left'; ctx.fillText('Score: '+score,12,28);
-  ctx.font='12px Arial'; ctx.fillStyle='#aaa'; ctx.fillText('Best: '+bestScore,12,44);
-  ctx.textAlign='right'; for (let i=0; i<lives; i++) drawFrank(W-20-i*28,28,0.7,0.7);
-  const bbX=12,bbY=56,bbW=W-24,bbH=16;
-  ctx.fillStyle='rgba(0,0,0,0.4)'; rrect(bbX,bbY,bbW,bbH,4); ctx.fill();
-  const fw=(boxFranks/8)*bbW;
-  const bgrad=ctx.createLinearGradient(bbX,0,bbX+bbW,0); bgrad.addColorStop(0,'#FF6600'); bgrad.addColorStop(1,'#FFaa00');
-  ctx.fillStyle=bgrad; rrect(bbX,bbY,Math.max(fw,0),bbH,4); ctx.fill();
-  ctx.fillStyle='#fff'; ctx.font='bold 10px Arial'; ctx.textAlign='center';
-  ctx.fillText('🌭 '+boxFranks+'/8  |  Boxes: '+boxesCompleted,W/2,bbY+12);
-  if (boxFlash>0) { ctx.fillStyle=`rgba(255,102,0,${boxFlash/60*0.15})`; ctx.fillRect(0,0,W,H); }
-  if (streakTimer>0&&streakText) {
-    ctx.save(); ctx.globalAlpha=Math.min(streakTimer/20,1);
-    ctx.fillStyle=streak>=10?'#FF00FF':streak>=5?'#FF4400':'#FFD700';
-    ctx.font=`bold ${streak>=10?28:streak>=5?24:20}px Arial`; ctx.textAlign='center'; ctx.fillText(streakText,W/2,H/2-60);
-    if (streak>=5) { ctx.font='bold 16px Arial'; ctx.fillText(streak>=10?'3x MULTIPLIER':'2x MULTIPLIER',W/2,H/2-38); }
-    ctx.restore();
-  }
-}
-
-function drawMenu() {
-  ctx.fillStyle='rgba(30,15,5,0.85)'; ctx.fillRect(0,0,W,H);
-  ctx.fillStyle='#FFD700'; ctx.font='bold 38px Arial'; ctx.textAlign='center';
-  ctx.fillText('FRANKS',W/2,H*0.25); ctx.fillText('& BUNS',W/2,H*0.25+42);
-  ctx.font='60px Arial'; ctx.fillText('🌭',W/2,H*0.48);
-  ctx.fillStyle='#ddd'; ctx.font='16px Arial';
-  ctx.fillText('TAP to boost your frank up',W/2,H*0.58);
-  ctx.fillText('RELEASE to let it drop',W/2,H*0.58+24);
-  ctx.fillText('Land in buns to score!',W/2,H*0.58+48);
-  ctx.fillStyle='#FF6600'; ctx.font='bold 22px Arial';
-  ctx.globalAlpha=0.8+Math.sin(frameCount*0.06)*0.2; ctx.fillText('TAP TO START',W/2,H*0.80); ctx.globalAlpha=1;
-  if (bestScore>0) { ctx.fillStyle='#aaa'; ctx.font='14px Arial'; ctx.fillText('Best: '+bestScore,W/2,H*0.88); }
-}
-
-function drawGameOver() {
-  ctx.fillStyle='rgba(30,15,5,0.82)'; ctx.fillRect(0,0,W,H);
-  ctx.fillStyle='#FF4444'; ctx.font='bold 36px Arial'; ctx.textAlign='center'; ctx.fillText('GAME OVER',W/2,H*0.22);
-  ctx.fillStyle='#FFD700'; ctx.font='bold 28px Arial'; ctx.fillText(score.toLocaleString(),W/2,H*0.34);
-  ctx.fillStyle='#aaa'; ctx.font='14px Arial'; ctx.fillText('SCORE',W/2,H*0.34+20);
-  if (score>=bestScore&&score>0) { ctx.fillStyle='#FF6600'; ctx.font='bold 16px Arial'; ctx.fillText('★ NEW BEST! ★',W/2,H*0.34+42); }
-  const sy=H*0.50; ctx.fillStyle='#ddd'; ctx.font='15px Arial';
-  ctx.fillText('Franks Landed: '+franksLanded,W/2,sy); ctx.fillText('Boxes Packed: '+boxesCompleted,W/2,sy+24);
-  ctx.fillText('Best Streak: '+bestStreak,W/2,sy+48); ctx.fillText('Best: '+bestScore.toLocaleString(),W/2,sy+72);
-  if (gameOverDelay>40) { ctx.fillStyle='#FF6600'; ctx.font='bold 20px Arial'; ctx.globalAlpha=0.8+Math.sin(frameCount*0.06)*0.2; ctx.fillText('TAP TO RETRY',W/2,H*0.82); ctx.globalAlpha=1; }
-  const quips=['"You\'re on a roll!"','"No bun intended."','"That was a frank failure."','"Ketchup to the competition!"','"Mustard up more courage!"','"Relish the attempt!"'];
-  ctx.fillStyle='#888'; ctx.font='italic 13px Arial'; ctx.fillText(quips[Math.floor(score/7)%quips.length],W/2,H*0.92);
-}
-
-function rrect(x,y,w,h,r) {
-  if(w<2*r)r=w/2; if(h<2*r)r=h/2;
-  ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
-}
-if (!ctx.roundRect) CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r){rrect(x,y,w,h,r);return this;};
-
-function draw() {
-  ctx.clearRect(0,0,W,H);
-  ctx.save();
-  if (shakeAmount>0) ctx.translate((Math.random()-0.5)*shakeAmount,(Math.random()-0.5)*shakeAmount);
-  drawKitchenBG();
-  drawSplats();
-  for (const b of buns) drawBun(b);
-  drawForks(); // drawn behind frank
-  if (state===STATE.PLAYING&&frank.alive) {
-    drawFrank(frank.x,frank.y,frank.squash,frank.stretch);
-    if (Math.abs(frank.vy)>3) { ctx.globalAlpha=0.25; drawFrank(frank.x,frank.y-frank.vy*1.5,frank.squash*0.9,frank.stretch*0.9); ctx.globalAlpha=1; }
-  }
-  drawParticles(); drawFloatingTexts();
-  if (state===STATE.PLAYING) drawHUD();
-  ctx.restore();
-  if (state===STATE.MENU) drawMenu();
-  if (state===STATE.GAMEOVER) drawGameOver();
-}
-
-function loop() { update(); draw(); requestAnimationFrame(loop); }
-loop();
-</script>
 </body>
 </html>
