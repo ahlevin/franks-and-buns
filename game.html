@@ -291,7 +291,7 @@ function updateGameDogs() {
         score += 1000;
         sndDogReward();
         addParticles(d.x, d.y, '#FFD700', 20);
-        addFloatingText(d.x, d.y - 30, '+1000 🐕', '#FFD700', 26);
+        addFloatingText(d.x, d.y - 30, '+1000 DOG BONUS!', '#FFD700', 26);
         shakeAmount = 4;
       }
     }
@@ -640,7 +640,7 @@ function landFrank(bun) {
     // Unlock gameplay dogs after box 3
     if (boxesCompleted === 3) {
       nextDogDist = 200 + Math.random() * 200;
-      addFloatingText(W/2, H/2-60, '🐕 DOGS UNLEASHED!', '#FFD700', 24);
+      addFloatingText(W/2, H/2-60, 'DOGS UNLEASHED!', '#FFD700', 24);
     }
   }
   frank.vy=FLAP_POWER*0.7; frank.squash=0.7; frank.stretch=1.4;
@@ -697,7 +697,15 @@ function drawBun(b) {
   const hw=BUN_W/2, hh=BUN_H/2, rc=b.type.color;
   ctx.save(); ctx.translate(x,y);
   if (b.type.label==='dog') {
-    ctx.font='20px Arial'; ctx.textAlign='center'; ctx.fillText('🐕',-hw-16,hh+4);
+    const dogImg = getGameDogCanvas();
+    if (dogImg) {
+      ctx.save();
+      ctx.globalAlpha = 0.9;
+      ctx.drawImage(dogImg, -hw - 52, hh - 20, 40, 30);
+      ctx.restore();
+    } else {
+      ctx.font='20px Arial'; ctx.textAlign='center'; ctx.fillText('🐕',-hw-16,hh+4);
+    }
   }
   // bottom half
   ctx.beginPath(); ctx.moveTo(-hw+7,1); ctx.lineTo(hw-7,1); ctx.bezierCurveTo(hw+5,1,hw+5,hh+5,hw-7,hh+5); ctx.lineTo(-hw+7,hh+5); ctx.bezierCurveTo(-hw-5,hh+5,-hw-5,1,-hw+7,1); ctx.closePath();
