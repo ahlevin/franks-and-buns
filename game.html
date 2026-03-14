@@ -40,7 +40,7 @@ const ctx = canvas.getContext('2d');
 
 // --- Preload intro images ---
 const imgs = {};
-['chef','dog','dognodog','hotdog'].forEach(name => {
+['chef','dog','dognodog','hotdog','chefarm'].forEach(name => {
   const img = new Image();
   img.src = name + '.png';
   imgs[name] = img;
@@ -196,128 +196,49 @@ function updateForks() {
 }
 
 function drawForks() {
+  const armImg = imgs.chefarm;
+  const armReady = armImg && armImg.complete && armImg.naturalWidth > 0;
+
   for (const f of forks) {
     const wobble = f.state === 'holding' ? Math.sin(f.phase) * 2.5 : 0;
     const x = f.x + wobble;
     const y = f.y;
     const fromBottom = f.fromBottom;
 
-    ctx.save();
-    ctx.translate(x, y);
-    // Flip vertically when coming from top
-    if (!fromBottom) ctx.scale(1, -1);
-
-    // === CHEF SLEEVE (white, coming from bottom) ===
-    // Sleeve — extends downward off screen
-    const sleeveGrad = ctx.createLinearGradient(-16, 0, 16, 0);
-    sleeveGrad.addColorStop(0, '#ddd');
-    sleeveGrad.addColorStop(0.3, '#fff');
-    sleeveGrad.addColorStop(0.7, '#f0f0f0');
-    sleeveGrad.addColorStop(1, '#ccc');
-    ctx.fillStyle = sleeveGrad;
-    ctx.beginPath();
-    ctx.roundRect(-14, 20, 28, 120, 4);
-    ctx.fill();
-    ctx.strokeStyle = '#bbb'; ctx.lineWidth = 1; ctx.stroke();
-
-    // Sleeve cuff
-    ctx.fillStyle = '#e8e8e8';
-    ctx.beginPath();
-    ctx.roundRect(-16, 14, 32, 14, 3);
-    ctx.fill();
-    ctx.strokeStyle = '#ccc'; ctx.lineWidth = 1; ctx.stroke();
-    // Cuff stripe detail
-    ctx.strokeStyle = '#bbb'; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(-14, 18); ctx.lineTo(14, 18); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(-14, 24); ctx.lineTo(14, 24); ctx.stroke();
-
-    // === HAND ===
-    // Palm
-    ctx.fillStyle = '#f5c49a';
-    ctx.beginPath();
-    ctx.ellipse(0, 6, 12, 10, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#d4a070'; ctx.lineWidth = 0.8; ctx.stroke();
-
-    // Thumb
-    ctx.beginPath();
-    ctx.ellipse(-14, 10, 5, 7, -0.4, 0, Math.PI * 2);
-    ctx.fillStyle = '#f5c49a'; ctx.fill(); ctx.stroke();
-
-    // Fingers gripping fork (3 fingers visible)
-    for (let fi = 0; fi < 3; fi++) {
-      ctx.save();
-      ctx.translate(-6 + fi * 6, -4);
-      ctx.rotate(0.05 * (fi - 1));
-      ctx.beginPath();
-      ctx.roundRect(-3.5, -10, 7, 12, 3);
-      ctx.fillStyle = '#f5c49a'; ctx.fill();
-      ctx.strokeStyle = '#d4a070'; ctx.lineWidth = 0.8; ctx.stroke();
-      ctx.restore();
-    }
-
-    // Knuckle highlights
-    ctx.strokeStyle = 'rgba(180,110,50,0.2)'; ctx.lineWidth = 1;
-    for (let fi = 0; fi < 3; fi++) {
-      ctx.beginPath();
-      ctx.arc(-4 + fi * 5, 2, 2.5, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-
-    // === FORK ===
-    // Handle
-    const handleGrad = ctx.createLinearGradient(-3, -10, 3, -10);
-    handleGrad.addColorStop(0, '#999');
-    handleGrad.addColorStop(0.4, '#eee');
-    handleGrad.addColorStop(1, '#888');
-    ctx.fillStyle = handleGrad;
-    ctx.beginPath();
-    ctx.roundRect(-3.5, -30, 7, 26, 2);
-    ctx.fill();
-    ctx.strokeStyle = '#777'; ctx.lineWidth = 0.7; ctx.stroke();
-
-    // Fork neck (narrows before tines)
-    ctx.beginPath();
-    ctx.roundRect(-2.5, -44, 5, 16, 1.5);
-    ctx.fillStyle = '#ddd'; ctx.fill();
-    ctx.strokeStyle = '#aaa'; ctx.lineWidth = 0.6; ctx.stroke();
-
-    // Tines (4 prongs)
-    ctx.strokeStyle = '#ccc'; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
-    const tineOffsets = [-6, -2, 2, 6];
-    for (const tx of tineOffsets) {
-      ctx.beginPath();
-      ctx.moveTo(tx, -44);
-      ctx.lineTo(tx, -68);
-      ctx.strokeStyle = '#ddd'; ctx.stroke();
-      // Tine tip slightly wider
-      ctx.beginPath();
-      ctx.arc(tx, -68, 1.5, 0, Math.PI * 2);
-      ctx.fillStyle = '#eee'; ctx.fill();
-    }
-    // Tine base connector
-    ctx.beginPath();
-    ctx.moveTo(-7, -44);
-    ctx.lineTo(7, -44);
-    ctx.strokeStyle = '#ccc'; ctx.lineWidth = 2; ctx.stroke();
-
-    // Shine on fork
-    ctx.beginPath();
-    ctx.moveTo(-1, -68); ctx.lineTo(-1, -30);
-    ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1; ctx.stroke();
-
-    // Warning flash before it arrives
+    // Warning flash as it approaches
     if (f.state === 'entering' && Math.abs(f.y - f.targetY) < 150) {
-      ctx.restore();
       ctx.save();
       ctx.globalAlpha = 0.6 + Math.sin(frameCount * 0.35) * 0.4;
-      ctx.fillStyle = '#FF3300';
       ctx.font = 'bold 13px Arial';
       ctx.textAlign = 'center';
-      const warnY = fromBottom ? f.y - 85 : f.y + 85;
+      const warnY = fromBottom ? f.y - 90 : f.y + 90;
       ctx.fillText('⚠️', x, warnY);
       ctx.restore();
-      continue;
+    }
+
+    ctx.save();
+    ctx.translate(x, y);
+    if (!fromBottom) ctx.scale(1, -1); // flip for top-down entry
+
+    if (armReady) {
+      // chefarm.png: fork tines at top ~30%, hand at middle, sleeve at bottom
+      // Draw at w=100, h=240 so it's clearly visible
+      // Anchor: tines sit at about y=-100 relative to f.y (targetY)
+      // Hand/fist centre at about y=-30, sleeve extends below into y=+140
+      const w = 100, h = 240;
+      const drawX = -w / 2;
+      const drawY = -h * 0.42; // positions tines above centre, sleeve below
+      ctx.globalCompositeOperation = 'screen';
+      ctx.drawImage(armImg, drawX, drawY, w, h);
+      ctx.globalCompositeOperation = 'source-over';
+    } else {
+      // Fallback drawn fork while image loads
+      ctx.strokeStyle = '#ccc'; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
+      [-6,-2,2,6].forEach(tx => {
+        ctx.beginPath(); ctx.moveTo(tx, -44); ctx.lineTo(tx, -68); ctx.stroke();
+      });
+      ctx.fillStyle = '#f0f0f0';
+      ctx.beginPath(); ctx.roundRect(-14, 20, 28, 100, 4); ctx.fill();
     }
 
     ctx.restore();
