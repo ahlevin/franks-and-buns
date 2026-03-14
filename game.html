@@ -25,6 +25,14 @@
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
+// --- Preload intro images ---
+const imgs = {};
+['chef','dog','dognodog','hotdog'].forEach(name => {
+  const img = new Image();
+  img.src = name + '.png';
+  imgs[name] = img;
+});
+
 function resize() {
   const dpr = window.devicePixelRatio || 1;
   const maxW = 420, maxH = 740;
@@ -450,14 +458,15 @@ function resetGame() {
 function startIntro() {
   intro = {
     frame: 0,
-    dogX: -80,         // dog starts off LEFT side
+    dogX: -80,
     dogY: H * 0.5,
-    chefX: -240,       // chef starts further left, behind dog
+    chefX: -240,
     frankX: -44,
     frankY: H * 0.5,
     frankVY: -8,
     dogFall: 0,
     frankFlying: false,
+    dogSwapped: false,   // flips to true when chef catches dog
   };
   state = STATE.INTRO;
 }
@@ -553,6 +562,7 @@ function updateIntro() {
     if (f.frame === 93) {
       f.frankFlying = true;
       f.frankVY = -12;
+      f.dogSwapped = true;   // swap dog image instantly
       sndFlap();
     }
     if (f.frankFlying) {
@@ -853,85 +863,33 @@ function rrect(x,y,w,h,r) {
 if (!ctx.roundRect) CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r){rrect(x,y,w,h,r);return this;};
 
 function drawIntroChef(x, y, jabbing) {
+  if (!imgs.chef.complete || imgs.chef.naturalWidth === 0) return;
+  const size = 180;
+  const bob = Math.sin(intro.frame * 0.28) * 4;
+  // Lean forward when jabbing
+  const lean = jabbing ? 0.18 : 0.0;
   ctx.save();
-  ctx.translate(x, y);
-
-  const bob = Math.sin(intro.frame * 0.28) * 3;
-
-  // Chef emoji — big
-  ctx.font = '72px Arial';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('👨‍🍳', 0, bob);
-
-  // Fork held out in front (right side of chef)
-  ctx.save();
-  ctx.translate(44, bob - 8);
-  const forkAngle = jabbing ? 0.15 : 0.45 + Math.sin(intro.frame * 0.18) * 0.08;
-  ctx.rotate(forkAngle);
-
-  // Handle
-  const hg = ctx.createLinearGradient(-3,0,3,0);
-  hg.addColorStop(0,'#999'); hg.addColorStop(0.5,'#eee'); hg.addColorStop(1,'#888');
-  ctx.fillStyle = hg;
-  ctx.beginPath(); ctx.roundRect(-3, 0, 6, 28, 2); ctx.fill();
-  ctx.strokeStyle='#777'; ctx.lineWidth=0.7; ctx.stroke();
-
-  // Neck
-  ctx.beginPath(); ctx.roundRect(-2.5, 27, 5, 10, 1);
-  ctx.fillStyle='#ddd'; ctx.fill();
-
-  // 4 tines
-  ctx.strokeStyle='#ddd'; ctx.lineWidth=2; ctx.lineCap='round';
-  [-5,-1.8,1.8,5].forEach(tx => {
-    ctx.beginPath(); ctx.moveTo(tx, 36); ctx.lineTo(tx, 52); ctx.stroke();
-    ctx.beginPath(); ctx.arc(tx, 52, 1.5, 0, Math.PI*2);
-    ctx.fillStyle='#eee'; ctx.fill();
-  });
-  // Tine base bar
-  ctx.beginPath(); ctx.moveTo(-6,37); ctx.lineTo(6,37);
-  ctx.strokeStyle='#ccc'; ctx.lineWidth=2; ctx.stroke();
-
-  // Shine
-  ctx.beginPath(); ctx.moveTo(-1,1); ctx.lineTo(-1,34);
-  ctx.strokeStyle='rgba(255,255,255,0.35)'; ctx.lineWidth=1.2; ctx.stroke();
-
-  ctx.restore();
+  ctx.translate(x, y + bob);
+  ctx.rotate(lean);
+  ctx.globalCompositeOperation = 'screen'; // knocks out black background
+  ctx.drawImage(imgs.chef, -size * 0.45, -size * 0.85, size, size);
+  ctx.globalCompositeOperation = 'source-over';
   ctx.restore();
 }
 
 function drawIntroDog(x, y, falling) {
-  ctx.save();
-  ctx.translate(x, y);
-
-  // Tumble when hit
-  if (falling > 0) ctx.rotate(falling * Math.PI * 0.65);
-
-  // Bob up/down while running
+  const imgKey = intro.dogSwapped ? 'dognodog' : 'dog';
+  const img = imgs[imgKey];
+  if (!img.complete || img.naturalWidth === 0) return;
+  const size = 160;
   const bob = falling > 0 ? 0 : Math.sin(intro.frame * 0.35) * 4;
-
-  // Flip horizontally so dog faces RIGHT
-  ctx.scale(-1, 1);
-
-  // Dog emoji — large
-  ctx.font = '72px Arial';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('🐕', 0, bob);
-
-  // Flip back to place 🌭 on nose (nose is now on the right after flip)
-  ctx.scale(-1, 1);
-  if (falling < 0.2) {
-    ctx.save();
-    ctx.translate(30, bob - 30);
-    ctx.rotate(-0.25 + Math.sin(intro.frame * 0.1) * 0.07);
-    ctx.font = '30px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('🌭', 0, 0);
-    ctx.restore();
-  }
-
+  ctx.save();
+  ctx.translate(x, y + bob);
+  if (falling > 0) ctx.rotate(falling * Math.PI * 0.65);
+  ctx.globalCompositeOperation = 'screen';
+  // dog.png faces right already; center horizontally on snout side
+  ctx.drawImage(img, -size * 0.55, -size * 0.6, size, size);
+  ctx.globalCompositeOperation = 'source-over';
   ctx.restore();
 }
 
@@ -954,23 +912,26 @@ function drawIntro() {
     drawIntroDog(f.dogX, f.dogY + f.dogFall * H * 0.28, f.dogFall);
   }
 
-  // Draw flying frank (after dog drops it) — use emoji for consistency
+  // Draw flying hotdog image (after dog drops it)
   if (f.frankFlying || f.frame > 92) {
-    ctx.save();
-    ctx.translate(f.frankX, f.frankY);
-    // Spin as it flies
-    ctx.rotate((f.frame - 92) * 0.08);
-    ctx.font = '34px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('🌭', 0, 0);
-    // Motion trail
-    if (Math.abs(f.frankVY) > 3) {
-      ctx.globalAlpha = 0.2;
-      ctx.font = '28px Arial';
-      ctx.fillText('🌭', 0, f.frankVY * 1.2);
+    if (imgs.hotdog.complete && imgs.hotdog.naturalWidth > 0) {
+      const hsize = 120;
+      ctx.save();
+      ctx.translate(f.frankX, f.frankY);
+      ctx.rotate((f.frame - 92) * 0.07); // spin as it flies
+      ctx.globalCompositeOperation = 'screen';
+      ctx.drawImage(imgs.hotdog, -hsize/2, -hsize/2, hsize, hsize);
+      ctx.globalCompositeOperation = 'source-over';
+      // Motion trail
+      if (Math.abs(f.frankVY) > 3) {
+        ctx.globalAlpha = 0.18;
+        ctx.globalCompositeOperation = 'screen';
+        ctx.drawImage(imgs.hotdog, -hsize/2, -hsize/2 + f.frankVY * 1.2, hsize * 0.85, hsize * 0.85);
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalAlpha = 1;
+      }
+      ctx.restore();
     }
-    ctx.restore();
   }
 
   // "TAP TO SKIP" hint
