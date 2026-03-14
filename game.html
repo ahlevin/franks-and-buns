@@ -40,9 +40,10 @@ const ctx = canvas.getContext('2d');
 
 // --- Preload intro images ---
 const imgs = {};
-['chef','dog','dognodog','hotdog','chefarm'].forEach(name => {
+['chef','dog','dognodog','hotdog','chefarm','gamedog'].forEach(name => {
   const img = new Image();
-  img.src = name + '.png';
+  // gamedog uses the dognodog.png file
+  img.src = (name === 'gamedog' ? 'dognodog' : name) + '.png';
   imgs[name] = img;
 });
 
@@ -299,23 +300,63 @@ function updateGameDogs() {
   }
 }
 
+// Pre-process gamedog image to remove white background
+let gameDogCanvas = null;
+function getGameDogCanvas() {
+  if (gameDogCanvas) return gameDogCanvas;
+  const img = imgs.gamedog;
+  if (!img || !img.complete || img.naturalWidth === 0) return null;
+  const oc = document.createElement('canvas');
+  oc.width = img.naturalWidth;
+  oc.height = img.naturalHeight;
+  const oc_ctx = oc.getContext('2d');
+  oc_ctx.drawImage(img, 0, 0);
+  const imageData = oc_ctx.getImageData(0, 0, oc.width, oc.height);
+  const data = imageData.data;
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i], g = data[i+1], b = data[i+2];
+    // Remove near-white pixels
+    if (r > 220 && g > 220 && b > 220) {
+      data[i+3] = 0; // fully transparent
+    } else if (r > 180 && g > 180 && b > 180) {
+      // Semi-transparent edge pixels for smooth edges
+      const brightness = (r + g + b) / 3;
+      data[i+3] = Math.floor((255 - brightness) * 2.2);
+    }
+  }
+  oc_ctx.putImageData(imageData, 0, 0);
+  gameDogCanvas = oc;
+  return oc;
+}
+
 function drawGameDogs() {
   for (const d of gameDogs) {
     ctx.save();
     ctx.translate(d.x, d.y);
-    // Gentle bob scale pulse
     const pulse = 1 + Math.sin(d.phase * 2) * 0.04;
     ctx.scale(pulse, pulse);
-    ctx.font = '36px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('🐕', 0, 0);
-    // Glow ring to make it stand out
+
+    const dogImg = getGameDogCanvas();
+    if (dogImg) {
+      // Draw at a good gameplay size — small enough to be a bonus target
+      // but large enough to be clearly visible
+      const w = 70, h = 52;
+      ctx.drawImage(dogImg, -w / 2, -h / 2, w, h);
+    } else {
+      // Fallback emoji while image processes
+      ctx.font = '36px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🐕', 0, 0);
+    }
+
+    // Gold glow ring to signal it's a bonus target
     ctx.beginPath();
-    ctx.arc(0, 0, 24, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(255,215,0,${0.3 + Math.sin(d.phase * 2) * 0.2})`;
-    ctx.lineWidth = 2;
+    ctx.arc(0, 0, 38, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(255,215,0,${0.35 + Math.sin(d.phase * 2) * 0.2})`;
+    ctx.lineWidth = 2.5;
     ctx.stroke();
+
     ctx.restore();
   }
 }
@@ -591,7 +632,7 @@ function landFrank(bun) {
   addParticles(bun.x,bun.y,'#FFD700',10); shakeAmount=bun.condiment?6:3;
   addFloatingText(bun.x,bun.y-20,'+'+pts+(bun.condiment?' '+bun.condiment.label:''),bun.condiment?bun.condiment.color:'#FFD700',bun.condiment?21:20);
   boxFranks++;
-  if (boxFranks>=8) {
+  if (boxFranks>=6) {
     boxFranks=0; boxesCompleted++;
     const bonus=boxesCompleted*100; score+=bonus; boxFlash=60; sndBox(); shakeAmount=8;
     addFloatingText(W/2,H/2-40,'BOXED! +'+bonus,'#FF6600',32);
@@ -747,11 +788,11 @@ function drawHUD() {
   ctx.textAlign='right'; for (let i=0; i<lives; i++) drawFrank(W-20-i*38,28,0.7,0.7);
   const bbX=12,bbY=56,bbW=W-24,bbH=16;
   ctx.fillStyle='rgba(0,0,0,0.4)'; rrect(bbX,bbY,bbW,bbH,4); ctx.fill();
-  const fw=(boxFranks/8)*bbW;
+  const fw=(boxFranks/6)*bbW;
   const bgrad=ctx.createLinearGradient(bbX,0,bbX+bbW,0); bgrad.addColorStop(0,'#FF6600'); bgrad.addColorStop(1,'#FFaa00');
   ctx.fillStyle=bgrad; rrect(bbX,bbY,Math.max(fw,0),bbH,4); ctx.fill();
   ctx.fillStyle='#fff'; ctx.font='bold 10px Arial'; ctx.textAlign='center';
-  ctx.fillText('🌭 '+boxFranks+'/8  |  Boxes: '+boxesCompleted,W/2,bbY+12);
+  ctx.fillText('🌭 '+boxFranks+'/6  |  Boxes: '+boxesCompleted,W/2,bbY+12);
   if (boxFlash>0) { ctx.fillStyle=`rgba(255,102,0,${boxFlash/60*0.15})`; ctx.fillRect(0,0,W,H); }
   if (streakTimer>0&&streakText) {
     ctx.save(); ctx.globalAlpha=Math.min(streakTimer/20,1);
