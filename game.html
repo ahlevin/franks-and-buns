@@ -96,6 +96,10 @@ const BUN_W = 60, BUN_H = 26;
 let forks = [];
 let nextForkDist = 300; // distance until next fork spawns
 
+// --- Gameplay dogs ---
+let gameDogs = [];
+let nextDogDist = 9999; // unlocks after box 3
+
 function spawnFork() {
   // Fork comes from bottom (chef reaches up) or top (reaches down)
   const fromBottom = Math.random() > 0.35; // mostly from bottom
@@ -300,8 +304,79 @@ function drawForks() {
 }
 
 // ============================================================
-// BUNS & CONDIMENTS
+// GAMEPLAY DOGS
 // ============================================================
+function sndDogReward() {
+  playTone(523, 0.08, 'sine', 0.13);
+  setTimeout(() => playTone(659, 0.08, 'sine', 0.13), 90);
+  setTimeout(() => playTone(784, 0.08, 'sine', 0.13), 180);
+  setTimeout(() => playTone(1047, 0.18, 'sine', 0.15), 270);
+}
+
+function spawnGameDog() {
+  const y = H * 0.25 + Math.random() * H * 0.45;
+  gameDogs.push({
+    x: W + 60,
+    y: y,
+    phase: Math.random() * Math.PI * 2,
+    scored: false,
+  });
+}
+
+function updateGameDogs() {
+  // Unlock after box 3
+  if (boxesCompleted < 3) { nextDogDist = 9999; return; }
+
+  nextDogDist -= scrollSpeed;
+  if (nextDogDist <= 0) {
+    spawnGameDog();
+    nextDogDist = 350 + Math.random() * 300;
+  }
+
+  for (let i = gameDogs.length - 1; i >= 0; i--) {
+    const d = gameDogs[i];
+    d.x -= scrollSpeed;
+    d.phase += 0.05;
+    d.y += Math.sin(d.phase) * 0.8; // gentle float up/down
+
+    // Check if frank passes through dog
+    if (!d.scored && frank.alive) {
+      const dx = Math.abs(frank.x - d.x);
+      const dy = Math.abs(frank.y - d.y);
+      if (dx < 28 && dy < 28) {
+        d.scored = true;
+        score += 1000;
+        sndDogReward();
+        addParticles(d.x, d.y, '#FFD700', 20);
+        addFloatingText(d.x, d.y - 30, '+1000 🐕', '#FFD700', 26);
+        shakeAmount = 4;
+      }
+    }
+
+    if (d.x < -80) gameDogs.splice(i, 1);
+  }
+}
+
+function drawGameDogs() {
+  for (const d of gameDogs) {
+    ctx.save();
+    ctx.translate(d.x, d.y);
+    // Gentle bob scale pulse
+    const pulse = 1 + Math.sin(d.phase * 2) * 0.04;
+    ctx.scale(pulse, pulse);
+    ctx.font = '36px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🐕', 0, 0);
+    // Glow ring to make it stand out
+    ctx.beginPath();
+    ctx.arc(0, 0, 24, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(255,215,0,${0.3 + Math.sin(d.phase * 2) * 0.2})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+  }
+}
 const bunTypes = [
   { name: 'counter',  yRange: [0.55, 0.75], label: null,         multiplier: 1,   color: '#c8914a' },
   { name: 'shelf',    yRange: [0.3,  0.55], label: 'SHELF',      multiplier: 1,   color: '#b8833e' },
@@ -363,12 +438,12 @@ function spawnBun() {
 
 function resetGame() {
   frank = { x:70, y:H*0.4, vy:0, squash:1, stretch:1, alive:true };
-  buns=[]; splats=[]; particles=[]; floatingTexts=[]; forks=[];
+  buns=[]; splats=[]; particles=[]; floatingTexts=[]; forks=[]; gameDogs=[];
   score=0; lives=3; streak=0; bestStreak=0;
   franksLanded=0; boxFranks=0; boxesCompleted=0; boxFlash=0;
   scrollSpeed=2.2; scrollX=0; nextBunDist=0;
   shakeAmount=0; streakText=''; streakTimer=0; gameOverDelay=0;
-  nextForkDist = 320;
+  nextForkDist = 320; nextDogDist = 9999;
   state = STATE.PLAYING;
 }
 
@@ -539,6 +614,7 @@ function update() {
   }
 
   updateForks();
+  updateGameDogs();
 
   shakeAmount *= 0.85; if (shakeAmount < 0.5) shakeAmount = 0;
   if (streakTimer > 0) streakTimer--;
@@ -576,6 +652,11 @@ function landFrank(bun) {
     const bonus=boxesCompleted*100; score+=bonus; boxFlash=60; sndBox(); shakeAmount=8;
     addFloatingText(W/2,H/2-40,'BOXED! +'+bonus,'#FF6600',32);
     scrollSpeed=Math.min(2.2+boxesCompleted*0.3,5.5);
+    // Unlock gameplay dogs after box 3
+    if (boxesCompleted === 3) {
+      nextDogDist = 200 + Math.random() * 200;
+      addFloatingText(W/2, H/2-60, '🐕 DOGS UNLEASHED!', '#FFD700', 24);
+    }
   }
   frank.vy=FLAP_POWER*0.7; frank.squash=0.7; frank.stretch=1.4;
 }
@@ -929,7 +1010,8 @@ function draw() {
   drawKitchenBG();
   drawSplats();
   for (const b of buns) drawBun(b);
-  drawForks(); // drawn behind frank
+  drawForks();
+  drawGameDogs();
   if (state===STATE.PLAYING&&frank.alive) {
     drawFrank(frank.x,frank.y,frank.squash,frank.stretch);
     if (Math.abs(frank.vy)>3) { ctx.globalAlpha=0.25; drawFrank(frank.x,frank.y-frank.vy*1.5,frank.squash*0.9,frank.stretch*0.9); ctx.globalAlpha=1; }
