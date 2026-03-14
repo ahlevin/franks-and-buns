@@ -67,8 +67,12 @@ function sndStart()     { playTone(660, 0.08, 'sine', 0.10); setTimeout(() => pl
 function sndFork()      { playTone(900, 0.04, 'sine', 0.08); setTimeout(() => playTone(1100, 0.06, 'sine', 0.07), 40); } // clink sound
 
 // --- State ---
-const STATE = { MENU: 0, PLAYING: 1, GAMEOVER: 2 };
+const STATE = { MENU: 0, INTRO: 3, PLAYING: 1, GAMEOVER: 2 };
 let state = STATE.MENU;
+
+// --- Intro cutscene ---
+let intro = { frame:0, dogX:0, dogY:0, chefX:0, frankX:0, frankY:0, frankVY:-8, dogFall:0, frankFlying:false };
+const INTRO_DURATION = 155;
 let score = 0;
 let bestScore = parseInt(localStorage.getItem('fb_best') || '0');
 let lives = 3, streak = 0, bestStreak = 0;
@@ -367,10 +371,26 @@ function resetGame() {
   state = STATE.PLAYING;
 }
 
+function startIntro() {
+  intro = {
+    frame: 0,
+    dogX: -80,         // dog starts off LEFT side
+    dogY: H * 0.5,
+    chefX: -240,       // chef starts further left, behind dog
+    frankX: -44,
+    frankY: H * 0.5,
+    frankVY: -8,
+    dogFall: 0,
+    frankFlying: false,
+  };
+  state = STATE.INTRO;
+}
+
 // --- Input ---
 function onTap() {
   ensureAudio();
-  if (state === STATE.MENU)     { sndStart(); resetGame(); return; }
+  if (state === STATE.MENU)     { sndStart(); startIntro(); return; }
+  if (state === STATE.INTRO)    { resetGame(); return; } // tap to skip intro
   if (state === STATE.GAMEOVER) { if (gameOverDelay > 40) resetGame(); return; }
   tapping = true;
   if (frank.alive) { frank.vy = FLAP_POWER; frank.squash = 1.3; frank.stretch = 0.7; sndFlap(); }
@@ -407,8 +427,63 @@ function addSplat(x, y) {
 }
 
 // --- Update ---
+function updateIntro() {
+  const f = intro;
+  f.frame++;
+
+  // Phase 1 (0-65): dog and chef run in from the LEFT, moving right
+  if (f.frame <= 65) {
+    const t = f.frame / 65;
+    f.dogX  = -80  + t * (W * 0.62);
+    f.chefX = -240 + t * (W * 0.62);
+    f.dogY  = H * 0.5;
+    f.frankX = f.dogX + 38;
+    f.frankY = f.dogY - 12;
+  }
+
+  // Phase 2 (65-92): chef jabs fork forward, dog stumbles
+  if (f.frame > 65 && f.frame <= 92) {
+    f.chefX += 2.8;                     // chef lunges forward (rightward)
+    f.frankX = f.dogX + 38;
+    f.frankY = f.dogY - 12;
+    if (f.frame === 78) { sndFork(); shakeAmount = 6; }
+  }
+
+  // Phase 3 (92-135): dog falls down, frank launches up and LEFT toward player start
+  if (f.frame > 92 && f.frame <= 135) {
+    f.dogFall = (f.frame - 92) / 43;
+    f.dogY = H * 0.5 + f.dogFall * H * 0.32;
+    if (f.frame === 93) {
+      f.frankFlying = true;
+      f.frankVY = -12;
+      sndFlap();
+    }
+    if (f.frankFlying) {
+      f.frankVY += 0.30;
+      f.frankY += f.frankVY;
+      f.frankX += 3.5;                  // flies RIGHT out of dog's mouth
+    }
+  }
+
+  // Phase 4 (135-155): frank arcs down continuing right
+  if (f.frame > 135 && f.frame <= INTRO_DURATION) {
+    f.frankVY += 0.38;
+    f.frankY += f.frankVY;
+    f.frankX += 2.0;
+  }
+
+  // Done — start game with frank at its current position
+  if (f.frame >= INTRO_DURATION) {
+    resetGame();
+    frank.x = Math.min(Math.max(f.frankX, 60), 160);
+    frank.y = Math.min(Math.max(f.frankY, H*0.2), H*0.7);
+    frank.vy = -2;
+  }
+}
+
 function update() {
   frameCount++;
+  if (state === STATE.INTRO) { updateIntro(); return; }
   if (state !== STATE.PLAYING) { if (state === STATE.GAMEOVER) gameOverDelay++; return; }
 
   frank.vy += GRAVITY; frank.y += frank.vy;
@@ -674,6 +749,139 @@ function rrect(x,y,w,h,r) {
 }
 if (!ctx.roundRect) CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r){rrect(x,y,w,h,r);return this;};
 
+function drawIntroChef(x, y, jabbing) {
+  ctx.save();
+  ctx.translate(x, y);
+
+  const bob = Math.sin(intro.frame * 0.28) * 3;
+
+  // Chef emoji — big
+  ctx.font = '72px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('👨‍🍳', 0, bob);
+
+  // Fork held out in front (right side of chef)
+  ctx.save();
+  ctx.translate(44, bob - 8);
+  const forkAngle = jabbing ? 0.15 : 0.45 + Math.sin(intro.frame * 0.18) * 0.08;
+  ctx.rotate(forkAngle);
+
+  // Handle
+  const hg = ctx.createLinearGradient(-3,0,3,0);
+  hg.addColorStop(0,'#999'); hg.addColorStop(0.5,'#eee'); hg.addColorStop(1,'#888');
+  ctx.fillStyle = hg;
+  ctx.beginPath(); ctx.roundRect(-3, 0, 6, 28, 2); ctx.fill();
+  ctx.strokeStyle='#777'; ctx.lineWidth=0.7; ctx.stroke();
+
+  // Neck
+  ctx.beginPath(); ctx.roundRect(-2.5, 27, 5, 10, 1);
+  ctx.fillStyle='#ddd'; ctx.fill();
+
+  // 4 tines
+  ctx.strokeStyle='#ddd'; ctx.lineWidth=2; ctx.lineCap='round';
+  [-5,-1.8,1.8,5].forEach(tx => {
+    ctx.beginPath(); ctx.moveTo(tx, 36); ctx.lineTo(tx, 52); ctx.stroke();
+    ctx.beginPath(); ctx.arc(tx, 52, 1.5, 0, Math.PI*2);
+    ctx.fillStyle='#eee'; ctx.fill();
+  });
+  // Tine base bar
+  ctx.beginPath(); ctx.moveTo(-6,37); ctx.lineTo(6,37);
+  ctx.strokeStyle='#ccc'; ctx.lineWidth=2; ctx.stroke();
+
+  // Shine
+  ctx.beginPath(); ctx.moveTo(-1,1); ctx.lineTo(-1,34);
+  ctx.strokeStyle='rgba(255,255,255,0.35)'; ctx.lineWidth=1.2; ctx.stroke();
+
+  ctx.restore();
+  ctx.restore();
+}
+
+function drawIntroDog(x, y, falling) {
+  ctx.save();
+  ctx.translate(x, y);
+
+  // Tumble when hit
+  if (falling > 0) ctx.rotate(falling * Math.PI * 0.65);
+
+  // Bob up/down while running
+  const bob = falling > 0 ? 0 : Math.sin(intro.frame * 0.35) * 4;
+
+  // Flip horizontally so dog faces RIGHT
+  ctx.scale(-1, 1);
+
+  // Dog emoji — large
+  ctx.font = '72px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🐕', 0, bob);
+
+  // Flip back to place 🌭 on nose (nose is now on the right after flip)
+  ctx.scale(-1, 1);
+  if (falling < 0.2) {
+    ctx.save();
+    ctx.translate(30, bob - 30);
+    ctx.rotate(-0.25 + Math.sin(intro.frame * 0.1) * 0.07);
+    ctx.font = '30px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🌭', 0, 0);
+    ctx.restore();
+  }
+
+  ctx.restore();
+}
+
+function drawIntro() {
+  // Draw kitchen BG
+  drawKitchenBG();
+
+  // Dark overlay with title
+  ctx.fillStyle = 'rgba(20,10,2,0.45)';
+  ctx.fillRect(0, 0, W, H);
+
+  const f = intro;
+  const jabbing = f.frame > 65 && f.frame < 100;
+
+  // Draw chef
+  drawIntroChef(f.chefX, f.dogY, jabbing);
+
+  // Draw dog (only while still on screen)
+  if (f.dogFall < 1.1) {
+    drawIntroDog(f.dogX, f.dogY + f.dogFall * H * 0.28, f.dogFall);
+  }
+
+  // Draw flying frank (after dog drops it) — use emoji for consistency
+  if (f.frankFlying || f.frame > 92) {
+    ctx.save();
+    ctx.translate(f.frankX, f.frankY);
+    // Spin as it flies
+    ctx.rotate((f.frame - 92) * 0.08);
+    ctx.font = '34px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🌭', 0, 0);
+    // Motion trail
+    if (Math.abs(f.frankVY) > 3) {
+      ctx.globalAlpha = 0.2;
+      ctx.font = '28px Arial';
+      ctx.fillText('🌭', 0, f.frankVY * 1.2);
+    }
+    ctx.restore();
+  }
+
+  // "TAP TO SKIP" hint
+  if (f.frame > 20) {
+    ctx.save();
+    ctx.globalAlpha = 0.5 + Math.sin(f.frame * 0.1) * 0.3;
+    ctx.fillStyle = '#fff';
+    ctx.font = '13px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('TAP TO SKIP', W/2, H - 20);
+    ctx.restore();
+  }
+}
+
 function draw() {
   ctx.clearRect(0,0,W,H);
   ctx.save();
@@ -690,6 +898,7 @@ function draw() {
   if (state===STATE.PLAYING) drawHUD();
   ctx.restore();
   if (state===STATE.MENU) drawMenu();
+  if (state===STATE.INTRO) drawIntro();
   if (state===STATE.GAMEOVER) drawGameOver();
 }
 
