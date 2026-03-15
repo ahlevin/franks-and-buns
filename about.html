@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="google-adsense-account" content="ca-pub-4015428134622878">
+  <meta name="description" content="About Franks & Buns — the free hot dog arcade game. Learn about the game, its characters, and how it was made.">
+  <title>About — Franks &amp; Buns</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="favicon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Boogaloo&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-5PVW85JQP6"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-5PVW85JQP6');
+  </script>
+  <style>
+    :root{--bg:#1a0e05;--bg2:#2a1a0a;--orange:#FF6600;--gold:#FFD700;--cream:#fff8ee;--muted:#a08060;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:var(--bg);color:var(--cream);font-family:'Nunito',sans-serif;line-height:1.7;}
+    nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 5vw;height:60px;background:rgba(26,14,5,0.92);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,102,0,0.18);}
+    .nav-logo{font-family:'Boogaloo',cursive;font-size:1.5rem;color:var(--gold);text-decoration:none;}
+    .nav-logo span{color:var(--orange);}
+    nav ul{list-style:none;display:flex;gap:2rem;}
+    nav ul a{color:var(--cream);text-decoration:none;font-weight:600;font-size:0.9rem;letter-spacing:0.05em;text-transform:uppercase;opacity:0.8;transition:opacity 0.2s,color 0.2s;}
+    nav ul a:hover{opacity:1;color:var(--gold);}
+    .container{max-width:760px;margin:0 auto;padding:100px 5vw 80px;}
+    h1{font-family:'Boogaloo',cursive;font-size:2.8rem;color:var(--gold);margin-bottom:0.5rem;}
+    h2{font-family:'Boogaloo',cursive;font-size:1.6rem;color:var(--orange);margin:2.5rem 0 0.75rem;}
+    p{color:#c8a880;margin-bottom:1.2rem;font-size:1rem;}
+    .divider{width:60px;height:3px;background:linear-gradient(90deg,var(--orange),var(--gold));border-radius:2px;margin:0 0 2.5rem;}
+    .character-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;margin:1.5rem 0;}
+    .character-card{background:var(--bg2);border:1px solid rgba(255,102,0,0.15);border-radius:16px;padding:1.5rem;text-align:center;}
+    .character-icon{font-size:3rem;margin-bottom:0.8rem;}
+    .character-card h3{font-family:'Boogaloo',cursive;color:var(--orange);font-size:1.2rem;margin-bottom:0.5rem;}
+    .character-card p{color:var(--muted);font-size:0.9rem;margin:0;}
+    .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin:1.5rem 0;}
+    .stat{background:var(--bg2);border:1px solid rgba(255,215,0,0.12);border-radius:12px;padding:1.2rem;text-align:center;}
+    .stat-num{font-family:'Boogaloo',cursive;font-size:2rem;color:var(--gold);}
+    .stat-label{font-size:0.8rem;color:var(--muted);margin-top:0.2rem;}
+    .btn-play{display:inline-block;background:var(--orange);color:#fff;font-family:'Boogaloo',cursive;font-size:1.4rem;padding:0.6em 2em;border-radius:50px;text-decoration:none;margin-top:1rem;}
+    footer{background:#110a02;border-top:1px solid rgba(255,255,255,0.06);text-align:center;padding:2rem 5vw;color:var(--muted);font-size:0.85rem;}
+    footer a{color:var(--orange);text-decoration:none;}
+    .footer-links{margin-bottom:0.75rem;display:flex;justify-content:center;gap:2rem;flex-wrap:wrap;}
+    @media(max-width:600px){nav ul{display:none;}}
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="/">Franks <span>&</span> Buns</a>
+  <ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="blog.html">Blog</a></li>
+    <li><a href="game.html">Play Now</a></li>
+    <li><a href="privacy.html">Privacy</a></li>
+    <li><a href="terms.html">Terms</a></li>
+  </ul>
+</nav>
+
+<div class="container">
+  <h1>About Franks &amp; Buns 🌭</h1>
+  <div class="divider"></div>
+
+  <p>Franks &amp; Buns is a free browser-based arcade game inspired by the classic one-tap mechanics of Flappy Bird — but with hot dogs. The premise is simple: a rogue frank has escaped the kitchen, and it's your job to guide it into buns while dodging the chef's fork and racking up the highest score possible.</p>
+
+  <p>The game is completely free to play, works on any device with a web browser, and requires no download or account. Just tap, fly, and land your frank.</p>
+
+  <h2>The Story</h2>
+  <p>It all starts with a hungry dog. In the opening cutscene, a dog makes off with a hot dog, tongue out and tail wagging. The chef gives chase — fork raised, white jacket flapping — but the dog trips and the frank goes flying. That airborne hot dog? That's you.</p>
+
+  <p>From there you navigate a scrolling kitchen, landing in buns perched on counters, shelves, ovens, and fridges. Collect condiment bonuses for score multipliers, fill boxes of six franks for big point bursts, and watch out for the chef's arm that shoots up from below with a fork ready to end your run.</p>
+
+  <h2>Meet the Characters</h2>
+  <div class="character-grid">
+    <div class="character-card">
+      <div class="character-icon">🌭</div>
+      <h3>The Frank</h3>
+      <p>That's you. A plucky little sausage with grill marks and a smile, just trying to find a good bun.</p>
+    </div>
+    <div class="character-card">
+      <div class="character-icon">👨‍🍳</div>
+      <h3>The Chef</h3>
+      <p>He wants his hot dog back. His fork appears without warning — dodge it or lose a life.</p>
+    </div>
+    <div class="character-card">
+      <div class="character-icon">🐕</div>
+      <h3>The Dog</h3>
+      <p>The chaos agent. After box 3 the dog appears as a bonus target worth a massive 1000 points.</p>
+    </div>
+  </div>
+
+  <h2>Scoring &amp; Multipliers</h2>
+  <p>Every frank you land in a bun scores 100 base points. But the real fun is in the multipliers. Condiment buns — marked with squeeze bottles of mustard, ketchup, relish, cheese, or jalapeño — multiply your score by 2x, 3x, 5x, or even 10x. Land 3 in a row for a streak bonus, 5 in a row for Franks on Fire, and 10 in a row for the legendary Wiener Wizard mode at 3x multiplier.</p>
+
+  <p>Every 6 franks fills a box. Complete a box for a big point bonus and a speed increase. The further you get, the faster and more chaotic the kitchen becomes.</p>
+
+  <h2>Game Stats</h2>
+  <div class="stat-grid">
+    <div class="stat"><div class="stat-num">6</div><div class="stat-label">Franks per box</div></div>
+    <div class="stat"><div class="stat-num">3</div><div class="stat-label">Lives to start</div></div>
+    <div class="stat"><div class="stat-num">10x</div><div class="stat-label">Max condiment multiplier</div></div>
+    <div class="stat"><div class="stat-num">1000</div><div class="stat-label">Dog bonus points</div></div>
+  </div>
+
+  <h2>How to Play</h2>
+  <p>Tap, click, or press Space to boost your frank upward. Release to let gravity bring it down. Time your drops to land perfectly in the open bun slots as they scroll past. The kitchen moves from left to right — buns appear at different heights, so you'll need to navigate up and down to reach them all.</p>
+
+  <p>Miss a bun, hit the floor, or collide with the chef's fork and you lose a life. Three lives and it's game over. Your best score is saved locally in your browser so you can always chase your personal best.</p>
+
+  <h2>Play Free</h2>
+  <p>Franks &amp; Buns is completely free to play. No downloads, no accounts, no paywalls. The game is supported by Google AdSense advertising which allows us to keep it free for everyone.</p>
+
+  <a class="btn-play" href="game.html">▶ Play Now</a>
+</div>
+
+<footer>
+  <div class="footer-links">
+    <a href="/">Home</a>
+    <a href="about.html">About</a>
+    <a href="blog.html">Blog</a>
+    <a href="game.html">Play the Game</a>
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="terms.html">Terms of Service</a>
+    <a href="mailto:askfranksandbuns@gmail.com">Contact</a>
+  </div>
+  <p>&copy; 2026 Franks &amp; Buns. All rights reserved.</p>
+</footer>
+
+</body>
+</html>
