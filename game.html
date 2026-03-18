@@ -1033,7 +1033,17 @@ function draw() {
   drawMuteBtn(); // always visible, outside shake transform
 }
 
-function loop() { update(); draw(); requestAnimationFrame(loop); }
+function loop() { update(); draw();
+
+  // Show header/footer only on menu and game over screens
+  const gh = document.getElementById('game-header');
+  const gf = document.getElementById('game-footer');
+  if (gh && gf) {
+    const showUI = (state === STATE.MENU || state === STATE.GAMEOVER);
+    gh.style.visibility = showUI ? 'visible' : 'hidden';
+    gf.style.visibility = showUI ? 'visible' : 'hidden';
+  }
+  requestAnimationFrame(loop); }
 loop();
 </script>
 </body>
