@@ -15,8 +15,60 @@
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
-  canvas { display: block; margin: 0 auto; background: #2d1b0e; }
+  canvas { display: block; margin: 0 auto; background: #2d1b0e; flex-shrink: 0; }
+
+  #game-header {
+    width: 100%; max-width: 420px;
+    background: #110800;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  #game-header .gh-title {
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    font-weight: bold;
+    color: #FFD700;
+    text-decoration: none;
+  }
+  #game-header .gh-tagline {
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    font-style: italic;
+    color: #FF6600;
+    flex: 1;
+    text-align: center;
+  }
+  #game-header .gh-links {
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    color: #a08060;
+  }
+  #game-header .gh-links a {
+    color: #FF6600;
+    text-decoration: none;
+    margin-left: 10px;
+  }
+  #game-footer {
+    width: 100%; max-width: 420px;
+    background: #110800;
+    padding: 6px 12px;
+    flex-shrink: 0;
+  }
+  #game-footer p {
+    font-family: Arial, sans-serif;
+    font-size: 10px;
+    color: #a08060;
+    text-align: center;
+    line-height: 1.5;
+  }
+  #game-footer a { color: #FF6600; text-decoration: none; }
 </style>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-5PVW85JQP6"></script>
@@ -28,7 +80,19 @@
   </script>
 </head>
 <body>
+<div id="game-header">
+  <a class="gh-title" href="/">🌭 Franks &amp; Buns</a>
+  <span class="gh-tagline">Don't get forked!</span>
+  <span class="gh-links">
+    <a href="/">Home</a>
+    <a href="about.html">About</a>
+  </span>
+</div>
 <canvas id="game"></canvas>
+<div id="game-footer">
+  <p>Tap to launch your frank into buns &bull; Dodge the chef's fork &bull; Beat your best score<br>
+  Free arcade game &bull; <a href="/">franksandbuns.com</a> &bull; <a href="about.html">How to play</a> &bull; <a href="privacy.html">Privacy</a></p>
+</div>
 <script>
 // ============================================================
 // FRANKS & BUNS — © 2026 franksandbuns.com
