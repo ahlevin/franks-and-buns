@@ -1,786 +1,222 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="description" content="Franks & Buns — a fast, free arcade game where you guide a flying hot dog into buns. Tap to boost, release to drop. Land franks, earn combos, pack boxes. How many can you land?">
-<meta name="keywords" content="franks and buns, hot dog game, arcade game, mobile game, flappy bird style, free browser game, casual game">
-<title>Franks & Buns — Free Hot Dog Arcade Game</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body {
-    width: 100%; height: 100%;
-    overflow: hidden;
-    background: #1a1a2e;
-    touch-action: none;
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    user-select: none;
-  }
-  canvas {
-    display: block;
-    margin: 0 auto;
-    background: #2d1b0e;
-  }
-  /* Crawler-visible content block — zero visual footprint in-game */
-  #game-info {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0,0,0,0);
-    white-space: nowrap;
-    border: 0;
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="google-adsense-account" content="ca-pub-4015428134622878">
+  <meta name="description" content="Franks & Buns — the free browser arcade game where you guide a hot dog into buns, dodge chef forks, and rack up combos. Play free, no download needed.">
+  <title>Franks &amp; Buns — The Hot Dog Arcade Game</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="favicon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Boogaloo&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#1a0e05; --bg2:#2a1a0a; --orange:#FF6600; --gold:#FFD700;
+      --cream:#fff8ee; --muted:#a08060;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{background:var(--bg);color:var(--cream);font-family:'Nunito',sans-serif;overflow-x:hidden;}
+
+    nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 5vw;height:60px;background:rgba(26,14,5,0.92);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,102,0,0.18);}
+    .nav-logo{font-family:'Boogaloo',cursive;font-size:1.5rem;color:var(--gold);text-decoration:none;letter-spacing:0.03em;}
+    .nav-logo span{color:var(--orange);}
+    nav ul{list-style:none;display:flex;gap:2rem;}
+    nav ul a{color:var(--cream);text-decoration:none;font-weight:600;font-size:0.9rem;letter-spacing:0.05em;text-transform:uppercase;opacity:0.8;transition:opacity 0.2s,color 0.2s;}
+    nav ul a:hover{opacity:1;color:var(--gold);}
+
+    .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 5vw 60px;position:relative;overflow:hidden;}
+    .hero::before{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 34px,rgba(255,255,255,0.025) 34px,rgba(255,255,255,0.025) 35px),repeating-linear-gradient(90deg,transparent,transparent 34px,rgba(255,255,255,0.025) 34px,rgba(255,255,255,0.025) 35px);animation:tilescroll 18s linear infinite;pointer-events:none;}
+    @keyframes tilescroll{from{background-position:0 0;}to{background-position:35px 35px;}}
+    .hero::after{content:'';position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(255,102,0,0.12) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-55%);pointer-events:none;}
+
+    .hero-emoji{font-size:clamp(4rem,12vw,7rem);line-height:1;margin-bottom:1rem;animation:float 3s ease-in-out infinite;position:relative;z-index:1;}
+    @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-14px);}}
+
+    .hero h1{font-family:'Boogaloo',cursive;font-size:clamp(3rem,10vw,6rem);line-height:1;color:var(--gold);text-shadow:0 4px 30px rgba(255,102,0,0.4);position:relative;z-index:1;animation:fadein 0.8s ease both;}
+    .hero h1 span{color:var(--orange);}
+    .hero-tagline{font-size:clamp(1rem,3vw,1.35rem);color:var(--muted);margin:1.2rem 0 2.5rem;max-width:520px;line-height:1.6;position:relative;z-index:1;animation:fadein 0.8s 0.2s ease both;}
+    @keyframes fadein{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+
+    .btn-play{display:inline-block;background:var(--orange);color:#fff;font-family:'Boogaloo',cursive;font-size:1.6rem;letter-spacing:0.06em;padding:0.75em 2.5em;border-radius:50px;text-decoration:none;box-shadow:0 6px 30px rgba(255,102,0,0.45);transition:transform 0.15s,box-shadow 0.15s,background 0.15s;position:relative;z-index:1;animation:fadein 0.8s 0.4s ease both;}
+    .btn-play:hover{transform:translateY(-3px) scale(1.04);box-shadow:0 10px 40px rgba(255,102,0,0.6);background:#ff7722;}
+    .btn-play:active{transform:scale(0.97);}
+    .hero-sub{margin-top:1.2rem;font-size:0.85rem;color:var(--muted);position:relative;z-index:1;animation:fadein 0.8s 0.6s ease both;}
+
+    .section{padding:80px 5vw;max-width:900px;margin:0 auto;}
+    .section-title{font-family:'Boogaloo',cursive;font-size:clamp(1.8rem,5vw,2.8rem);color:var(--gold);text-align:center;margin-bottom:1.5rem;}
+    .section-title span{color:var(--orange);}
+    .divider{width:60px;height:3px;background:linear-gradient(90deg,var(--orange),var(--gold));border-radius:2px;margin:0 auto 3rem;}
+
+    .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2rem;}
+    .step{background:var(--bg2);border:1px solid rgba(255,102,0,0.15);border-radius:16px;padding:2rem 1.5rem;text-align:center;transition:transform 0.2s,border-color 0.2s;}
+    .step:hover{transform:translateY(-4px);border-color:rgba(255,102,0,0.4);}
+    .step-icon{font-size:2.8rem;margin-bottom:0.8rem;}
+    .step h3{font-family:'Boogaloo',cursive;font-size:1.3rem;color:var(--orange);margin-bottom:0.5rem;}
+    .step p{color:var(--muted);font-size:0.95rem;line-height:1.6;}
+
+    .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;}
+    .feature{background:linear-gradient(135deg,var(--bg2),rgba(255,102,0,0.06));border:1px solid rgba(255,215,0,0.12);border-radius:12px;padding:1.5rem;display:flex;align-items:flex-start;gap:1rem;}
+    .feature-icon{font-size:1.8rem;flex-shrink:0;}
+    .feature h4{font-weight:700;color:var(--gold);margin-bottom:0.3rem;font-size:0.95rem;}
+    .feature p{color:var(--muted);font-size:0.85rem;line-height:1.5;}
+
+    .cta-band{background:linear-gradient(135deg,rgba(255,102,0,0.15),rgba(255,215,0,0.08));border-top:1px solid rgba(255,102,0,0.2);border-bottom:1px solid rgba(255,102,0,0.2);text-align:center;padding:60px 5vw;}
+    .cta-band h2{font-family:'Boogaloo',cursive;font-size:clamp(2rem,6vw,3.5rem);color:var(--gold);margin-bottom:1rem;}
+    .cta-band p{color:var(--muted);margin-bottom:2rem;font-size:1.05rem;}
+
+    footer{background:#110a02;border-top:1px solid rgba(255,255,255,0.06);text-align:center;padding:2rem 5vw;color:var(--muted);font-size:0.85rem;}
+    footer a{color:var(--orange);text-decoration:none;}
+    footer a:hover{text-decoration:underline;}
+    .footer-links{margin-bottom:0.75rem;display:flex;justify-content:center;gap:2rem;flex-wrap:wrap;}
+
+    @media(max-width:600px){nav ul{display:none;}.steps{grid-template-columns:1fr;}}
+
+    .responsible-band{background:rgba(255,152,0,0.07);border-top:1px solid rgba(255,102,0,0.15);border-bottom:1px solid rgba(255,102,0,0.15);padding:28px 5vw;text-align:center;}
+    .responsible-band p{color:#c8a060;font-size:0.9rem;max-width:560px;margin:0 auto;line-height:1.6;}
+    .responsible-band strong{color:var(--gold);}
+
+    .hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px;background:none;border:none;}
+    .hamburger span{display:block;width:24px;height:2px;background:var(--cream);border-radius:2px;transition:all 0.3s;}
+    .mobile-menu{display:none;position:fixed;top:60px;left:0;right:0;background:rgba(26,14,5,0.98);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,102,0,0.2);z-index:99;padding:1rem 5vw 1.5rem;}
+    .mobile-menu a{display:block;color:var(--cream);text-decoration:none;font-weight:600;font-size:1rem;letter-spacing:0.05em;text-transform:uppercase;padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.06);}
+    .mobile-menu a:last-child{border-bottom:none;}
+    .mobile-menu a:hover{color:var(--gold);}
+    .mobile-menu.open{display:block;}
+    @media(max-width:700px){nav ul{display:none;}.hamburger{display:flex;}}
+  </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-5PVW85JQP6"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-5PVW85JQP6');
+  </script>
 </head>
 <body>
-<canvas id="game"></canvas>
 
-<!-- Content block for search crawlers. Visually hidden, zero impact on gameplay. -->
-<div id="game-info" aria-hidden="true">
-  <h1>Franks &amp; Buns — Free Hot Dog Arcade Game</h1>
-  <p>
-    Franks &amp; Buns is a free, mobile-friendly arcade game inspired by Flappy Bird.
-    Guide your flying hot dog (the frank) through a scrolling kitchen and land it
-    perfectly into buns at different heights — on the counter, inside ovens, on
-    cabinet shelves, and even in a dog's mouth!
-  </p>
-  <h2>How to Play</h2>
-  <p>
-    Tap or click to boost your frank upward. Release to let gravity pull it down.
-    Time your drops to land inside the buns as they scroll past.
-    Miss a bun and you lose one of your three lives. Land franks back-to-back
-    to build a streak and multiply your score.
-  </p>
-  <h2>Game Features</h2>
+<nav>
+  <a class="nav-logo" href="/">Franks <span>&</span> Buns</a>
   <ul>
-    <li>One-tap controls — easy to learn, hard to master</li>
-    <li>Condiment buns (mustard, ketchup, relish, cheese, jalapeño) for bonus points</li>
-    <li>Box system — land 8 franks to complete a box and earn a big bonus</li>
-    <li>Streak multipliers — ON A ROLL, FRANKS ON FIRE, WIENER WIZARD</li>
-    <li>Increasing speed and difficulty as you pack more boxes</li>
-    <li>Local high score saved in your browser</li>
-    <li>Works on iPhone, Android, and desktop browsers — no download required</li>
+    <li><a href="#how-to-play">How to Play</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="about.html">About</a></li>
+  <a href="game.html">Play Now</a></li>
+    <li><a href="privacy.html">Privacy</a></li>
+    <li><a href="terms.html">Terms</a></li>
   </ul>
-  <h2>Scoring</h2>
-  <p>
-    Each frank landed in a regular bun earns 100 points. Condiment buns multiply
-    your score — mustard is 2x, ketchup 3x, relish and cheese 5x, and the rare
-    jalapeño bun is worth 10x. Complete a box of 8 franks for a box bonus equal
-    to the box number times 100. Chain together consecutive landings to activate
-    streak multipliers of up to 3x.
-  </p>
+  <button class="hamburger" id="hamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="/">Home</a>
+  <a href="about.html">About</a>
+  <a href="game.html">Play Now</a>
+  <a href="privacy.html">Privacy</a>
+  <a href="terms.html">Terms</a>
 </div>
 
+<section class="hero">
+  <div class="hero-emoji">🌭</div>
+  <h1>Franks <span>&</span> Buns</h1>
+  <p class="hero-tagline">The world's most important hot dog arcade game. Tap to launch your frank, dodge the chef's fork, and land perfectly in the bun.</p>
+  <a class="btn-play" href="game.html">&#9654; PLAY FREE</a>
+  <p class="hero-sub">No download &nbsp;·&nbsp; No login &nbsp;·&nbsp; Works on any device</p>
+</section>
+
+<section class="section" id="how-to-play">
+  <h2 class="section-title">How to <span>Play</span></h2>
+  <div class="divider"></div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-icon">👆</div>
+      <h3>Tap to Boost</h3>
+      <p>Tap or click to launch your frank upward. Release to let gravity do its thing.</p>
+    </div>
+    <div class="step">
+      <div class="step-icon">🥖</div>
+      <h3>Land in the Bun</h3>
+      <p>Time your drop perfectly to land in the scrolling hot dog rolls. Different locations score different points.</p>
+    </div>
+    <div class="step">
+      <div class="step-icon">🍴</div>
+      <h3>Dodge the Fork</h3>
+      <p>The chef's fork rises between buns without warning. Hit it and lose a life. You only get three.</p>
+    </div>
+    <div class="step">
+      <div class="step-icon">🏆</div>
+      <h3>Beat Your Best</h3>
+      <p>Chain landings for streak multipliers, grab condiment bonuses, and fill boxes for big point bursts.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="features">
+  <h2 class="section-title">What's <span>Inside</span></h2>
+  <div class="divider"></div>
+  <div class="features-grid">
+    <div class="feature">
+      <div class="feature-icon">🟡</div>
+      <div><h4>Condiment Bonuses</h4><p>Mustard, ketchup, relish, cheese, jalapeño — each squeeze bottle multiplies your score.</p></div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">📦</div>
+      <div><h4>Box System</h4><p>Land 8 franks to complete a box, earn a big bonus, and watch the kitchen speed up.</p></div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🔥</div>
+      <div><h4>Streak Multipliers</h4><p>Hit 3, 5, or 10 in a row to unlock On A Roll, Franks On Fire, and Wiener Wizard modes.</p></div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🐕</div>
+      <div><h4>Dog Bun Event</h4><p>A dog trots through with a bun in its mouth. Land in it for a massive bonus score.</p></div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🍴</div>
+      <div><h4>Chef's Fork</h4><p>The chef's arm rises between buns without warning. Dodge the tines or lose a life.</p></div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">📱</div>
+      <div><h4>Play Anywhere</h4><p>Mobile-first design. Tap on phone, click on desktop. No app install required.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="cta-band">
+  <h2>Ready to get saucy? 🌭</h2>
+  <p>Free to play. Instant start. See how many boxes you can pack.</p>
+  <a class="btn-play" href="game.html">&#9654; PLAY NOW</a>
+</div>
+
+<div class="responsible-band">
+  <p>🌭 <strong>For entertainment purposes only.</strong> Franks &amp; Buns is a free arcade game provided for fun. Play at your own risk and in moderation — take regular breaks and stop if you experience any discomfort. Suitable for ages 13+. See our <a href="terms.html" style="color:#FF6600;">Terms of Service</a> for full details.</p>
+</div>
+
+<footer>
+  <div class="footer-links">
+    <a href="game.html">Play the Game</a>
+    <a href="about.html">About</a>
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="terms.html">Terms of Service</a>
+    <a href="mailto:askfranksandbuns@gmail.com">Contact</a>
+  </div>
+  <p style="margin-bottom:0.6rem;font-size:0.82rem;color:#cc8840;">🌭 <strong>Play Responsibly</strong> — Franks &amp; Buns is designed to be fun and engaging. Please play in moderation and take regular breaks.</p>
+  <p style="margin-bottom:0.6rem;font-size:0.78rem;">This site is intended for users aged 13 and over. Not directed at children under 13.</p>
+  <p>&copy; 2026 Franks &amp; Buns. All rights reserved.</p>
+  <p style="margin-top:0.4rem;font-size:0.78rem;">This site uses cookies and Google AdSense to display ads. See our <a href="privacy.html">Privacy Policy</a> and <a href="terms.html">Terms of Service</a> for details.</p>
+</footer>
+
 <script>
-// ============================================================
-// FRANKS AND BUNS - The Flappy Bird of Hot Dogs
-// ============================================================
-
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
-
-// --- Responsive sizing ---
-function resize() {
-  const dpr = window.devicePixelRatio || 1;
-  const maxW = 420, maxH = 740;
-  let w = Math.min(window.innerWidth, maxW);
-  let h = Math.min(window.innerHeight, maxH);
-  canvas.style.width = w + 'px';
-  canvas.style.height = h + 'px';
-  canvas.width = w * dpr;
-  canvas.height = h * dpr;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  return { w, h };
-}
-let { w: W, h: H } = resize();
-window.addEventListener('resize', () => { ({ w: W, h: H } = resize()); });
-
-// --- Audio Context (Web Audio API for sounds) ---
-let audioCtx = null;
-function ensureAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-}
-function playTone(freq, dur, type = 'square', vol = 0.12) {
-  if (!audioCtx) return;
-  const o = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
-  o.type = type;
-  o.frequency.value = freq;
-  g.gain.setValueAtTime(vol, audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
-  o.connect(g); g.connect(audioCtx.destination);
-  o.start(); o.stop(audioCtx.currentTime + dur);
-}
-function sndFlap() { playTone(440, 0.06, 'sine', 0.10); }
-function sndLand() { playTone(880, 0.08, 'sine', 0.15); playTone(1320, 0.12, 'sine', 0.10); }
-function sndSplat() { playTone(120, 0.25, 'sawtooth', 0.12); }
-function sndBox() { playTone(660, 0.07, 'square', 0.12); setTimeout(() => playTone(990, 0.1, 'square', 0.14), 80); setTimeout(() => playTone(1320, 0.15, 'sine', 0.12), 160); }
-function sndCondiment() { playTone(1200, 0.06, 'sine', 0.13); setTimeout(() => playTone(1600, 0.1, 'sine', 0.11), 70); }
-function sndStreak() { playTone(700, 0.04, 'sine', 0.08); }
-function sndGameOver() { playTone(300, 0.15, 'sawtooth', 0.1); setTimeout(() => playTone(200, 0.2, 'sawtooth', 0.1), 150); setTimeout(() => playTone(120, 0.4, 'sawtooth', 0.08), 350); }
-
-// --- Game State ---
-const STATE = { MENU: 0, PLAYING: 1, GAMEOVER: 2 };
-let state = STATE.MENU;
-let score = 0;
-let bestScore = parseInt(localStorage.getItem('fb_best') || '0');
-let lives = 3;
-let streak = 0;
-let bestStreak = 0;
-let franksLanded = 0;
-let boxFranks = 0;
-let boxesCompleted = 0;
-let boxFlash = 0;
-let scrollSpeed = 2.2;
-let scrollX = 0;
-let tapping = false;
-let frameCount = 0;
-let shakeAmount = 0;
-let streakText = '';
-let streakTimer = 0;
-let splats = [];
-let particles = [];
-let floatingTexts = [];
-let gameOverDelay = 0;
-
-// --- Frank (player) ---
-let frank = { x: 70, y: 0, vy: 0, squash: 1, stretch: 1, alive: true, landed: false };
-const FRANK_W = 38, FRANK_H = 14;
-const GRAVITY = 0.38;
-const FLAP_POWER = -5.5;
-
-// --- Buns ---
-let buns = [];
-let nextBunDist = 0;
-const BUN_W = 52, BUN_H = 22;
-const bunTypes = [
-  { name: 'counter', yRange: [0.55, 0.75], label: null, multiplier: 1, color: '#d4a45a' },
-  { name: 'shelf', yRange: [0.3, 0.55], label: 'SHELF', multiplier: 1, color: '#c49550' },
-  { name: 'cabinet', yRange: [0.2, 0.45], label: 'CABINET', multiplier: 1, color: '#b08040' },
-  { name: 'oven', yRange: [0.5, 0.7], label: 'OVEN', multiplier: 1.5, color: '#d4a45a' },
-  { name: 'fridge', yRange: [0.12, 0.25], label: 'FRIDGE TOP', multiplier: 2, color: '#ccc' },
-  { name: 'dog', yRange: [0.65, 0.75], label: '🐕', multiplier: 2, color: '#d4a45a', moving: true },
-];
-const condiments = [
-  { name: 'mustard', emoji: '🟡', color: '#FFD700', multiplier: 2 },
-  { name: 'ketchup', emoji: '🔴', color: '#FF3333', multiplier: 3 },
-  { name: 'relish', emoji: '🟢', color: '#33CC33', multiplier: 5 },
-  { name: 'cheese', emoji: '🧀', color: '#FFaa00', multiplier: 5 },
-  { name: 'jalapeno', emoji: '🌶️', color: '#FF4500', multiplier: 10 },
-];
-
-function spawnBun() {
-  const difficulty = Math.min(boxesCompleted, 10);
-  const availTypes = bunTypes.slice(0, Math.min(2 + Math.floor(difficulty / 2), bunTypes.length));
-  const type = availTypes[Math.floor(Math.random() * availTypes.length)];
-  const yMin = type.yRange[0] * H;
-  const yMax = type.yRange[1] * H;
-  const y = yMin + Math.random() * (yMax - yMin);
-  let condiment = null;
-  const condChance = 0.18 + difficulty * 0.02;
-  if (Math.random() < condChance) {
-    const availCond = condiments.slice(0, Math.min(2 + Math.floor(difficulty / 2), condiments.length));
-    condiment = availCond[Math.floor(Math.random() * availCond.length)];
-  }
-  const bobPhase = Math.random() * Math.PI * 2;
-  buns.push({
-    x: W + 60,
-    y: y,
-    type: type,
-    condiment: condiment,
-    scored: false,
-    missed: false,
-    bobPhase: bobPhase,
-    moveY: type.moving ? y : null,
-    moveDir: 1,
-  });
-}
-
-function resetGame() {
-  frank = { x: 70, y: H * 0.4, vy: 0, squash: 1, stretch: 1, alive: true, landed: false };
-  buns = [];
-  splats = [];
-  particles = [];
-  floatingTexts = [];
-  score = 0;
-  lives = 3;
-  streak = 0;
-  bestStreak = 0;
-  franksLanded = 0;
-  boxFranks = 0;
-  boxesCompleted = 0;
-  boxFlash = 0;
-  scrollSpeed = 2.2;
-  scrollX = 0;
-  nextBunDist = 0;
-  shakeAmount = 0;
-  streakText = '';
-  streakTimer = 0;
-  gameOverDelay = 0;
-  state = STATE.PLAYING;
-}
-
-// --- Input ---
-function onTap() {
-  ensureAudio();
-  if (state === STATE.MENU) { resetGame(); return; }
-  if (state === STATE.GAMEOVER) {
-    if (gameOverDelay > 40) { resetGame(); }
-    return;
-  }
-  tapping = true;
-  if (frank.alive) {
-    frank.vy = FLAP_POWER;
-    frank.squash = 1.3;
-    frank.stretch = 0.7;
-    sndFlap();
-  }
-}
-function onRelease() { tapping = false; }
-
-canvas.addEventListener('touchstart', (e) => { e.preventDefault(); onTap(); });
-canvas.addEventListener('touchend', (e) => { e.preventDefault(); onRelease(); });
-canvas.addEventListener('mousedown', onTap);
-canvas.addEventListener('mouseup', onRelease);
-document.addEventListener('keydown', (e) => { if (e.code === 'Space') { e.preventDefault(); onTap(); }});
-document.addEventListener('keyup', (e) => { if (e.code === 'Space') onRelease(); });
-
-// --- Particles ---
-function addParticles(x, y, color, count = 8) {
-  for (let i = 0; i < count; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const speed = 1.5 + Math.random() * 3;
-    particles.push({
-      x, y,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - 2,
-      life: 30 + Math.random() * 20,
-      maxLife: 50,
-      color: color,
-      size: 2 + Math.random() * 4,
-    });
-  }
-}
-
-function addFloatingText(x, y, text, color = '#fff', size = 20) {
-  floatingTexts.push({ x, y, text, color, size, life: 60, vy: -1.5 });
-}
-
-function addSplat(x, y) {
-  splats.push({ x, y, life: 120, maxLife: 120, size: 30 + Math.random() * 30 });
-}
-
-// --- Update ---
-function update() {
-  frameCount++;
-  if (state !== STATE.PLAYING) {
-    if (state === STATE.GAMEOVER) gameOverDelay++;
-    return;
-  }
-
-  // Frank physics
-  frank.vy += GRAVITY;
-  frank.y += frank.vy;
-  frank.squash += (1 - frank.squash) * 0.15;
-  frank.stretch += (1 - frank.stretch) * 0.15;
-
-  // Clamp frank to screen
-  if (frank.y < 10) { frank.y = 10; frank.vy = 0.5; }
-  if (frank.y > H - 30) {
-    frank.y = H - 30;
-    frank.vy = 0;
-    loseLife();
-  }
-
-  // Scroll
-  scrollX += scrollSpeed;
-  nextBunDist -= scrollSpeed;
-  if (nextBunDist <= 0) {
-    spawnBun();
-    const gap = 160 + Math.random() * 100 - Math.min(boxesCompleted * 5, 40);
-    nextBunDist = Math.max(gap, 100);
-  }
-
-  // Update buns
-  for (let i = buns.length - 1; i >= 0; i--) {
-    const b = buns[i];
-    b.x -= scrollSpeed;
-    b.bobPhase += 0.04;
-
-    if (b.type.moving && b.moveY !== null) {
-      b.y += b.moveDir * 0.5;
-      if (b.y > b.moveY + 20 || b.y < b.moveY - 20) b.moveDir *= -1;
-    }
-
-    if (!b.scored && !b.missed && frank.alive) {
-      const fx = frank.x, fy = frank.y;
-      const bx = b.x, by = b.y + Math.sin(b.bobPhase) * 3;
-      if (fx > bx - BUN_W / 2 - 5 && fx < bx + BUN_W / 2 + 5 &&
-          fy > by - 10 && fy < by + BUN_H + 5 &&
-          frank.vy > 0) {
-        b.scored = true;
-        landFrank(b);
-      }
-    }
-
-    if (!b.scored && !b.missed && b.x < frank.x - BUN_W) {
-      b.missed = true;
-      loseLife();
-    }
-
-    if (b.x < -100) buns.splice(i, 1);
-  }
-
-  shakeAmount *= 0.85;
-  if (shakeAmount < 0.5) shakeAmount = 0;
-
-  if (streakTimer > 0) streakTimer--;
-  if (boxFlash > 0) boxFlash--;
-
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const p = particles[i];
-    p.x += p.vx;
-    p.y += p.vy;
-    p.vy += 0.1;
-    p.life--;
-    if (p.life <= 0) particles.splice(i, 1);
-  }
-
-  for (let i = floatingTexts.length - 1; i >= 0; i--) {
-    const ft = floatingTexts[i];
-    ft.y += ft.vy;
-    ft.life--;
-    if (ft.life <= 0) floatingTexts.splice(i, 1);
-  }
-
-  for (let i = splats.length - 1; i >= 0; i--) {
-    splats[i].life--;
-    if (splats[i].life <= 0) splats.splice(i, 1);
-  }
-}
-
-function landFrank(bun) {
-  let pts = 100;
-  let mult = bun.type.multiplier || 1;
-  if (bun.condiment) {
-    mult *= bun.condiment.multiplier;
-    sndCondiment();
-    addParticles(bun.x, bun.y, bun.condiment.color, 15);
-  }
-
-  streak++;
-  franksLanded++;
-  if (streak > bestStreak) bestStreak = streak;
-
-  let streakMult = 1;
-  if (streak >= 10) { streakMult = 3; streakText = 'WIENER WIZARD!'; streakTimer = 90; sndStreak(); }
-  else if (streak >= 5) { streakMult = 2; streakText = 'FRANKS ON FIRE!'; streakTimer = 60; sndStreak(); }
-  else if (streak >= 3) { streakMult = 1.5; streakText = 'ON A ROLL!'; streakTimer = 45; sndStreak(); }
-
-  pts = Math.floor(pts * mult * streakMult);
-  score += pts;
-
-  sndLand();
-  addParticles(bun.x, bun.y, '#FFD700', 10);
-  shakeAmount = bun.condiment ? 6 : 3;
-
-  let ptText = '+' + pts;
-  if (bun.condiment) ptText += ' ' + bun.condiment.emoji;
-  addFloatingText(bun.x, bun.y - 20, ptText, bun.condiment ? bun.condiment.color : '#FFD700', bun.condiment ? 26 : 20);
-
-  boxFranks++;
-  if (boxFranks >= 8) {
-    boxFranks = 0;
-    boxesCompleted++;
-    const boxBonus = boxesCompleted * 100;
-    score += boxBonus;
-    boxFlash = 60;
-    sndBox();
-    shakeAmount = 8;
-    addFloatingText(W / 2, H / 2 - 40, 'BOXED! +' + boxBonus, '#FF6600', 32);
-    scrollSpeed = Math.min(2.2 + boxesCompleted * 0.3, 5.5);
-  }
-
-  frank.vy = FLAP_POWER * 0.7;
-  frank.squash = 0.7;
-  frank.stretch = 1.4;
-}
-
-function loseLife() {
-  lives--;
-  streak = 0;
-  sndSplat();
-  addSplat(frank.x, frank.y);
-  addParticles(frank.x, frank.y, '#FF3333', 12);
-  shakeAmount = 5;
-
-  if (lives <= 0) {
-    state = STATE.GAMEOVER;
-    frank.alive = false;
-    sndGameOver();
-    if (score > bestScore) {
-      bestScore = score;
-      localStorage.setItem('fb_best', bestScore.toString());
-    }
-  } else {
-    frank.y = H * 0.35;
-    frank.vy = 0;
-  }
-}
-
-// --- Draw ---
-function drawFrank(x, y, sq, st) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.scale(sq, st);
-  ctx.fillStyle = '#cc5533';
-  ctx.beginPath();
-  ctx.ellipse(0, 0, FRANK_W / 2, FRANK_H / 2, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = 'rgba(255,200,150,0.35)';
-  ctx.beginPath();
-  ctx.ellipse(-2, -3, FRANK_W / 2 - 6, FRANK_H / 2 - 4, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(80,20,0,0.3)';
-  ctx.lineWidth = 1.5;
-  for (let lx = -10; lx <= 10; lx += 7) {
-    ctx.beginPath();
-    ctx.moveTo(lx, -FRANK_H / 2 + 2);
-    ctx.lineTo(lx, FRANK_H / 2 - 2);
-    ctx.stroke();
-  }
-  ctx.restore();
-}
-
-function drawBun(b) {
-  const bobY = Math.sin(b.bobPhase) * 3;
-  const x = b.x, y = b.y + bobY;
-
-  ctx.save();
-  ctx.translate(x, y);
-
-  if (b.type.label && b.type.label !== '🐕') {
-    ctx.fillStyle = 'rgba(0,0,0,0.25)';
-    ctx.font = 'bold 9px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(b.type.label, 0, -BUN_H + 2);
-  }
-  if (b.type.label === '🐕') {
-    ctx.font = '22px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('🐕', -30, BUN_H / 2 + 6);
-  }
-
-  ctx.fillStyle = b.type.color;
-  ctx.beginPath();
-  ctx.ellipse(0, BUN_H / 2, BUN_W / 2, BUN_H / 2.5, 0, 0, Math.PI);
-  ctx.fill();
-  ctx.fillStyle = '#e8c06a';
-  ctx.beginPath();
-  ctx.ellipse(0, BUN_H / 2, BUN_W / 2 - 2, BUN_H / 2.5 - 2, 0, 0.1, Math.PI - 0.1);
-  ctx.fill();
-
-  ctx.fillStyle = b.type.color;
-  ctx.beginPath();
-  ctx.ellipse(0, -BUN_H / 2, BUN_W / 2, BUN_H / 2, 0, Math.PI, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#f5e6c8';
-  ctx.beginPath(); ctx.ellipse(-8, -BUN_H / 2 - 4, 2, 1.2, -0.3, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(5, -BUN_H / 2 - 5, 2, 1.2, 0.2, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(-1, -BUN_H / 2 - 6, 2, 1.2, 0.1, 0, Math.PI * 2); ctx.fill();
-
-  if (b.condiment) {
-    ctx.font = '16px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(b.condiment.emoji, 0, -BUN_H - 4);
-    ctx.shadowColor = b.condiment.color;
-    ctx.shadowBlur = 10 + Math.sin(frameCount * 0.1) * 5;
-    ctx.beginPath();
-    ctx.arc(0, -BUN_H / 2, BUN_W / 2 + 3, Math.PI, Math.PI * 2);
-    ctx.strokeStyle = b.condiment.color + '44';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-  }
-
-  if (b.scored) {
-    ctx.fillStyle = '#cc5533';
-    ctx.beginPath();
-    ctx.ellipse(0, 2, FRANK_W / 2 - 2, FRANK_H / 2 - 1, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  ctx.restore();
-}
-
-function drawKitchenBG() {
-  ctx.fillStyle = '#4a3728';
-  ctx.fillRect(0, H - 40, W, 40);
-  ctx.strokeStyle = '#3d2e20';
-  ctx.lineWidth = 1;
-  for (let tx = -scrollX % 40; tx < W; tx += 40) {
-    ctx.beginPath(); ctx.moveTo(tx, H - 40); ctx.lineTo(tx, H); ctx.stroke();
-  }
-  const gradient = ctx.createLinearGradient(0, 0, 0, H - 40);
-  gradient.addColorStop(0, '#5c4033');
-  gradient.addColorStop(1, '#3e2a1c');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, W, H - 40);
-  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
-  const tileSize = 35;
-  for (let ty = 0; ty < H - 40; ty += tileSize) {
-    for (let tx = -scrollX % tileSize; tx < W; tx += tileSize) {
-      ctx.strokeRect(tx, ty, tileSize, tileSize);
-    }
-  }
-  ctx.fillStyle = '#8B7355';
-  ctx.fillRect(0, H * 0.78, W, 8);
-  ctx.fillStyle = '#6B5340';
-  ctx.fillRect(0, H * 0.78 + 8, W, H * 0.22 - 48);
-}
-
-function drawHUD() {
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 18px Arial';
-  ctx.textAlign = 'left';
-  ctx.fillText('Score: ' + score, 12, 28);
-
-  ctx.font = '12px Arial';
-  ctx.fillStyle = '#aaa';
-  ctx.fillText('Best: ' + bestScore, 12, 44);
-
-  ctx.textAlign = 'right';
-  for (let i = 0; i < lives; i++) {
-    drawFrank(W - 20 - i * 28, 28, 0.7, 0.7);
-  }
-
-  const boxBarX = 12, boxBarY = 56, boxBarW = W - 24, boxBarH = 16;
-  ctx.fillStyle = 'rgba(0,0,0,0.4)';
-  ctx.roundRect(boxBarX, boxBarY, boxBarW, boxBarH, 4);
-  ctx.fill();
-
-  const fillW = (boxFranks / 8) * boxBarW;
-  const boxGrad = ctx.createLinearGradient(boxBarX, 0, boxBarX + boxBarW, 0);
-  boxGrad.addColorStop(0, '#FF6600');
-  boxGrad.addColorStop(1, '#FFaa00');
-  ctx.fillStyle = boxGrad;
-  ctx.roundRect(boxBarX, boxBarY, Math.max(fillW, 0), boxBarH, 4);
-  ctx.fill();
-
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 10px Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText('🌭 ' + boxFranks + '/8  |  Boxes: ' + boxesCompleted, W / 2, boxBarY + 12);
-
-  if (boxFlash > 0) {
-    ctx.fillStyle = `rgba(255,102,0,${boxFlash / 60 * 0.15})`;
-    ctx.fillRect(0, 0, W, H);
-  }
-
-  if (streakTimer > 0 && streakText) {
-    ctx.save();
-    ctx.globalAlpha = Math.min(streakTimer / 20, 1);
-    ctx.fillStyle = streak >= 10 ? '#FF00FF' : streak >= 5 ? '#FF4400' : '#FFD700';
-    ctx.font = `bold ${streak >= 10 ? 28 : streak >= 5 ? 24 : 20}px Arial`;
-    ctx.textAlign = 'center';
-    ctx.fillText(streakText, W / 2, H / 2 - 60);
-    if (streak >= 5) {
-      ctx.font = 'bold 16px Arial';
-      ctx.fillText(streak >= 10 ? '3x MULTIPLIER' : '2x MULTIPLIER', W / 2, H / 2 - 38);
-    }
-    ctx.restore();
-  }
-}
-
-function drawSplats() {
-  for (const s of splats) {
-    const alpha = s.life / s.maxLife * 0.6;
-    ctx.fillStyle = `rgba(200,30,30,${alpha})`;
-    ctx.beginPath();
-    ctx.ellipse(s.x, s.y, s.size, s.size * 0.6, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = `rgba(180,20,20,${alpha * 0.7})`;
-    ctx.beginPath();
-    ctx.ellipse(s.x + 8, s.y + s.size * 0.3 + (s.maxLife - s.life) * 0.3, 4, 8, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(s.x - 12, s.y + s.size * 0.2 + (s.maxLife - s.life) * 0.2, 3, 6, 0.3, 0, Math.PI * 2);
-    ctx.fill();
-  }
-}
-
-function drawParticles() {
-  for (const p of particles) {
-    const alpha = p.life / p.maxLife;
-    ctx.fillStyle = p.color;
-    ctx.globalAlpha = alpha;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-}
-
-function drawFloatingTexts() {
-  for (const ft of floatingTexts) {
-    ctx.save();
-    ctx.globalAlpha = Math.min(ft.life / 20, 1);
-    ctx.fillStyle = ft.color;
-    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
-    ctx.lineWidth = 3;
-    ctx.font = `bold ${ft.size}px Arial`;
-    ctx.textAlign = 'center';
-    ctx.strokeText(ft.text, ft.x, ft.y);
-    ctx.fillText(ft.text, ft.x, ft.y);
-    ctx.restore();
-  }
-}
-
-function drawMenu() {
-  ctx.fillStyle = 'rgba(30,15,5,0.85)';
-  ctx.fillRect(0, 0, W, H);
-
-  ctx.fillStyle = '#FFD700';
-  ctx.font = 'bold 38px Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText('FRANKS', W / 2, H * 0.25);
-  ctx.fillText('& BUNS', W / 2, H * 0.25 + 42);
-
-  ctx.font = '60px Arial';
-  ctx.fillText('🌭', W / 2, H * 0.48);
-
-  ctx.fillStyle = '#ddd';
-  ctx.font = '16px Arial';
-  ctx.fillText('TAP to boost your frank up', W / 2, H * 0.58);
-  ctx.fillText('RELEASE to let it drop', W / 2, H * 0.58 + 24);
-  ctx.fillText('Land in buns to score!', W / 2, H * 0.58 + 48);
-
-  ctx.fillStyle = '#FF6600';
-  ctx.font = 'bold 22px Arial';
-  const pulse = 0.8 + Math.sin(frameCount * 0.06) * 0.2;
-  ctx.globalAlpha = pulse;
-  ctx.fillText('TAP TO START', W / 2, H * 0.80);
-  ctx.globalAlpha = 1;
-
-  if (bestScore > 0) {
-    ctx.fillStyle = '#aaa';
-    ctx.font = '14px Arial';
-    ctx.fillText('Best: ' + bestScore, W / 2, H * 0.88);
-  }
-}
-
-function drawGameOver() {
-  ctx.fillStyle = 'rgba(30,15,5,0.82)';
-  ctx.fillRect(0, 0, W, H);
-
-  ctx.fillStyle = '#FF4444';
-  ctx.font = 'bold 36px Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText('GAME OVER', W / 2, H * 0.22);
-
-  ctx.fillStyle = '#FFD700';
-  ctx.font = 'bold 28px Arial';
-  ctx.fillText(score.toLocaleString(), W / 2, H * 0.34);
-  ctx.fillStyle = '#aaa';
-  ctx.font = '14px Arial';
-  ctx.fillText('SCORE', W / 2, H * 0.34 + 20);
-
-  if (score >= bestScore && score > 0) {
-    ctx.fillStyle = '#FF6600';
-    ctx.font = 'bold 16px Arial';
-    ctx.fillText('★ NEW BEST! ★', W / 2, H * 0.34 + 42);
-  }
-
-  const statsY = H * 0.50;
-  ctx.fillStyle = '#ddd';
-  ctx.font = '15px Arial';
-  ctx.fillText('Franks Landed: ' + franksLanded, W / 2, statsY);
-  ctx.fillText('Boxes Packed: ' + boxesCompleted, W / 2, statsY + 24);
-  ctx.fillText('Best Streak: ' + bestStreak, W / 2, statsY + 48);
-  ctx.fillText('Best: ' + bestScore.toLocaleString(), W / 2, statsY + 72);
-
-  if (gameOverDelay > 40) {
-    ctx.fillStyle = '#FF6600';
-    ctx.font = 'bold 20px Arial';
-    const pulse = 0.8 + Math.sin(frameCount * 0.06) * 0.2;
-    ctx.globalAlpha = pulse;
-    ctx.fillText('TAP TO RETRY', W / 2, H * 0.82);
-    ctx.globalAlpha = 1;
-  }
-
-  const quips = [
-    '"You\'re on a roll!"', '"No bun intended."',
-    '"That was a frank failure."', '"Ketchup to the competition!"',
-    '"Mustard up more courage!"', '"Relish the attempt!"'
-  ];
-  ctx.fillStyle = '#888';
-  ctx.font = 'italic 13px Arial';
-  ctx.fillText(quips[Math.floor(score / 7) % quips.length], W / 2, H * 0.92);
-}
-
-// --- Main Loop ---
-function draw() {
-  ctx.clearRect(0, 0, W, H);
-
-  ctx.save();
-  if (shakeAmount > 0) {
-    ctx.translate(
-      (Math.random() - 0.5) * shakeAmount,
-      (Math.random() - 0.5) * shakeAmount
-    );
-  }
-
-  drawKitchenBG();
-  drawSplats();
-
-  for (const b of buns) {
-    drawBun(b);
-  }
-
-  if (state === STATE.PLAYING && frank.alive) {
-    drawFrank(frank.x, frank.y, frank.squash, frank.stretch);
-    if (Math.abs(frank.vy) > 3) {
-      ctx.globalAlpha = 0.25;
-      drawFrank(frank.x, frank.y - frank.vy * 1.5, frank.squash * 0.9, frank.stretch * 0.9);
-      ctx.globalAlpha = 1;
-    }
-  }
-
-  drawParticles();
-  drawFloatingTexts();
-
-  if (state === STATE.PLAYING) drawHUD();
-
-  ctx.restore();
-
-  if (state === STATE.MENU) drawMenu();
-  if (state === STATE.GAMEOVER) drawGameOver();
-}
-
-// roundRect polyfill
-if (!ctx.roundRect) {
-  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
-    if (w < 2 * r) r = w / 2;
-    if (h < 2 * r) r = h / 2;
-    this.beginPath();
-    this.moveTo(x + r, y);
-    this.arcTo(x + w, y, x + w, y + h, r);
-    this.arcTo(x + w, y + h, x, y + h, r);
-    this.arcTo(x, y + h, x, y, r);
-    this.arcTo(x, y, x + w, y, r);
-    this.closePath();
-    return this;
-  };
-}
-
-function loop() {
-  update();
-  draw();
-  requestAnimationFrame(loop);
-}
-loop();
+const hb = document.getElementById('hamburger');
+const mm = document.getElementById('mobileMenu');
+hb.addEventListener('click', () => mm.classList.toggle('open'));
+document.addEventListener('click', e => { if (!hb.contains(e.target) && !mm.contains(e.target)) mm.classList.remove('open'); });
 </script>
 </body>
 </html>
