@@ -88,6 +88,13 @@
   </span>
 </div>
 <canvas id="game"></canvas>
+<div style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;" aria-hidden="true">
+<h1>Franks and Buns - Free Hot Dog Arcade Game</h1>
+<p>Franks and Buns is a free browser-based arcade game. Tap to launch your hot dog upward and land it in buns as they scroll past. Dodge the chef fork obstacle, collect condiment bonuses for score multipliers, and beat your high score.</p>
+<p>Features include mustard, ketchup, relish, cheese and jalapeno condiment bonuses worth 2x to 10x points, a streak multiplier system, box completion bonuses, and bonus dogs worth 1000 points. The game gets faster and more challenging as you progress.</p>
+<p>Play free with no download required at franksandbuns.com. Works on iPhone, Android, and desktop browsers.</p>
+<p>Learn more on our <a href="/">home page</a> or read the <a href="about.html">about page</a> for tips and character descriptions.</p>
+</div>
 <div id="game-footer">
   <p>Tap to launch your frank into buns &bull; Dodge the chef's fork &bull; Beat your best score<br>
   Free arcade game &bull; <a href="/">franksandbuns.com</a> &bull; <a href="about.html">How to play</a> &bull; <a href="privacy.html">Privacy</a></p>
@@ -152,8 +159,10 @@ function sndStart()     { playTone(660, 0.08, 'sine', 0.10); setTimeout(() => pl
 function sndFork()      { playTone(900, 0.04, 'sine', 0.08); setTimeout(() => playTone(1100, 0.06, 'sine', 0.07), 40); } // clink sound
 
 // --- State ---
-const STATE = { MENU: 0, INTRO: 3, PLAYING: 1, GAMEOVER: 2 };
+const STATE = { MENU: 0, INTRO: 3, PLAYING: 1, GAMEOVER: 2, BONUS: 4 };
 let state = STATE.MENU;
+let bonusTimer = 0, bonusDogs = [], nextBonusDogDist = 0, bonusScore = 0;
+const BONUS_DURATION = 300;
 
 // --- Intro cutscene ---
 let intro = { frame:0, dogX:0, dogY:0, chefX:0, frankX:0, frankY:0, frankVY:-8, dogFall:0, frankFlying:false };
@@ -490,6 +499,7 @@ function resetGame() {
   scrollSpeed=2.2; scrollX=0; nextBunDist=0;
   shakeAmount=0; streakText=''; streakTimer=0; gameOverDelay=0;
   nextForkDist = 320; nextDogDist = 9999;
+  bonusTimer=0; bonusDogs=[]; bonusScore=0;
   state = STATE.PLAYING;
 }
 
@@ -513,7 +523,8 @@ function startIntro() {
 function onTap() {
   ensureAudio();
   if (state === STATE.MENU)     { sndStart(); startIntro(); return; }
-  if (state === STATE.INTRO)    { resetGame(); return; } // tap to skip intro
+  if (state === STATE.INTRO)    { resetGame(); return; }
+  if (state === STATE.BONUS) { if (frank.alive) { frank.vy=FLAP_POWER; frank.squash=1.3; frank.stretch=0.7; sndFlap(); } return; } // tap to skip intro
   if (state === STATE.GAMEOVER) { if (gameOverDelay > 40) resetGame(); return; }
   tapping = true;
   if (frank.alive) { frank.vy = FLAP_POWER; frank.squash = 1.3; frank.stretch = 0.7; sndFlap(); }
@@ -626,9 +637,105 @@ function updateIntro() {
   }
 }
 
+
+function sndBonusStart() {
+  playTone(523,0.08,'sine',0.14); setTimeout(()=>playTone(659,0.08,'sine',0.14),100);
+  setTimeout(()=>playTone(784,0.08,'sine',0.14),200); setTimeout(()=>playTone(1047,0.25,'sine',0.18),300);
+}
+function sndBonusEnd() {
+  playTone(1047,0.08,'sine',0.14); setTimeout(()=>playTone(784,0.08,'sine',0.14),100);
+  setTimeout(()=>playTone(659,0.08,'sine',0.14),200); setTimeout(()=>playTone(523,0.25,'sine',0.18),300);
+}
+function startBonusRound() {
+  state = STATE.BONUS;
+  bonusTimer = BONUS_DURATION;
+  bonusDogs = []; nextBonusDogDist = 0; bonusScore = 0;
+  buns = []; forks = [];
+  sndBonusStart(); shakeAmount = 8;
+}
+function endBonusRound() {
+  state = STATE.PLAYING;
+  if (lives < 3) { lives++; addFloatingText(W/2, H/2+20, '+1 LIFE!', '#FF4444', 28); }
+  addFloatingText(W/2, H/2-20, 'BONUS: +'+bonusScore, '#FFD700', 28);
+  sndBonusEnd(); shakeAmount=6; nextBunDist=120;
+}
+function updateBonusRound() {
+  bonusTimer--;
+  if (bonusTimer <= 0) { endBonusRound(); return; }
+  frank.vy += GRAVITY; frank.y += frank.vy;
+  frank.squash += (1-frank.squash)*0.15;
+  frank.stretch += (1-frank.stretch)*0.15;
+  if (frank.y < 10) { frank.y=10; frank.vy=0.5; }
+  if (frank.y > H-30) { frank.y=H-30; frank.vy=0; }
+  nextBonusDogDist -= scrollSpeed;
+  if (nextBonusDogDist <= 0) {
+    bonusDogs.push({ x:W+60, y:H*0.15+Math.random()*H*0.65,
+      speed:scrollSpeed*1.2+Math.random()*1.5, scored:false, phase:Math.random()*Math.PI*2 });
+    nextBonusDogDist = 55 + Math.random()*45;
+  }
+  for (let i=bonusDogs.length-1; i>=0; i--) {
+    const d=bonusDogs[i];
+    d.x -= d.speed; d.phase += 0.06; d.y += Math.sin(d.phase)*0.8;
+    if (!d.scored && frank.alive && Math.abs(frank.x-d.x)<30 && Math.abs(frank.y-d.y)<30) {
+      d.scored=true; bonusScore+=500; score+=500; sndDogReward();
+      addParticles(d.x,d.y,'#FFD700',14);
+      addFloatingText(d.x,d.y-28,'+500','#FFD700',22);
+      shakeAmount=3;
+    }
+    if (d.x < -80) bonusDogs.splice(i,1);
+  }
+  for (let i=particles.length-1;i>=0;i--) {
+    const p=particles[i]; p.x+=p.vx; p.y+=p.vy; p.vy+=0.1; p.life--;
+    if (p.life<=0) particles.splice(i,1);
+  }
+  for (let i=floatingTexts.length-1;i>=0;i--) {
+    const ft=floatingTexts[i]; ft.y+=ft.vy; ft.life--;
+    if (ft.life<=0) floatingTexts.splice(i,1);
+  }
+  shakeAmount*=0.85; if(shakeAmount<0.5) shakeAmount=0;
+}
+function drawBonusRound() {
+  drawKitchenBG();
+  ctx.fillStyle='rgba(255,200,0,0.07)';
+  ctx.fillRect(0,0,W,H);
+  for (const d of bonusDogs) {
+    ctx.save();
+    ctx.translate(d.x, d.y);
+    ctx.scale(1+Math.sin(d.phase*2)*0.05, 1+Math.sin(d.phase*2)*0.05);
+    const dogImg = getGameDogCanvas();
+    if (dogImg) { ctx.drawImage(dogImg,-35,-26,70,52); }
+    else { ctx.font='36px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('🐕',0,0); }
+    ctx.beginPath(); ctx.arc(0,0,36,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(255,215,0,${0.4+Math.sin(d.phase*2)*0.2})`;
+    ctx.lineWidth=2.5; ctx.stroke();
+    ctx.restore();
+  }
+  if (frank.alive) {
+    drawFrank(frank.x,frank.y,frank.squash,frank.stretch);
+    if (Math.abs(frank.vy)>3) {
+      ctx.globalAlpha=0.25;
+      drawFrank(frank.x,frank.y-frank.vy*1.5,frank.squash*0.9,frank.stretch*0.9);
+      ctx.globalAlpha=1;
+    }
+  }
+  drawParticles(); drawFloatingTexts();
+  ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(0,0,W,50);
+  ctx.fillStyle='#FFD700'; ctx.font='bold 22px Arial'; ctx.textAlign='center';
+  ctx.fillText('🐕 DOG PARADE BONUS! 🐕', W/2, 22);
+  const pct = bonusTimer/BONUS_DURATION;
+  ctx.fillStyle='rgba(0,0,0,0.4)'; ctx.fillRect(12,32,W-24,10);
+  const bg=ctx.createLinearGradient(12,0,W-12,0);
+  bg.addColorStop(0,'#FFD700'); bg.addColorStop(1,'#FF6600');
+  ctx.fillStyle=bg; ctx.fillRect(12,32,(W-24)*pct,10);
+  ctx.fillStyle='#FF6600'; ctx.font='bold 13px Arial'; ctx.textAlign='right';
+  ctx.fillText('Bonus: +'+bonusScore, W-12, 22);
+  drawMuteBtn();
+}
+
 function update() {
   frameCount++;
   if (state === STATE.INTRO) { updateIntro(); return; }
+  if (state === STATE.BONUS) { updateBonusRound(); return; }
   if (state !== STATE.PLAYING) { if (state === STATE.GAMEOVER) gameOverDelay++; return; }
 
   frank.vy += GRAVITY; frank.y += frank.vy;
@@ -700,6 +807,7 @@ function landFrank(bun) {
     const bonus=boxesCompleted*100; score+=bonus; boxFlash=60; sndBox(); shakeAmount=8;
     addFloatingText(W/2,H/2-40,'BOXED! +'+bonus,'#FF6600',32);
     scrollSpeed=Math.min(2.2+boxesCompleted*0.3,5.5);
+    if (boxesCompleted > 0 && boxesCompleted % 4 === 0) { startBonusRound(); }
     // Unlock gameplay dogs after box 3
     if (boxesCompleted === 3) {
       nextDogDist = 200 + Math.random() * 200;
@@ -1029,20 +1137,21 @@ function draw() {
   if (state===STATE.MENU) drawMenu();
   if (state===STATE.INTRO) drawIntro();
   if (state===STATE.GAMEOVER) drawGameOver();
+  if (state===STATE.BONUS) drawBonusRound();
   drawMuteBtn(); // always visible, outside shake transform
 }
 
-function loop() { update(); draw();
-
-  // Show header/footer only on menu and game over screens
+function loop() {
+  update(); draw();
   const gh = document.getElementById('game-header');
   const gf = document.getElementById('game-footer');
   if (gh && gf) {
-    const showUI = (state === STATE.MENU || state === STATE.GAMEOVER);
+    const showUI = (state === STATE.MENU || state === STATE.GAMEOVER || state === STATE.BONUS);
     gh.style.visibility = showUI ? 'visible' : 'hidden';
     gf.style.visibility = showUI ? 'visible' : 'hidden';
   }
-  requestAnimationFrame(loop); }
+  requestAnimationFrame(loop);
+}
 loop();
 </script>
 </body>
