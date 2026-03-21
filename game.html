@@ -213,6 +213,7 @@ let lives = 3, streak = 0, bestStreak = 0;
 let franksLanded = 0, boxFranks = 0, boxesCompleted = 0, boxFlash = 0;
 let scrollSpeed = 2.2, scrollX = 0;
 let tapping = false, frameCount = 0, shakeAmount = 0;
+let gracePeriod = 0;
 let muted = false; // default unmuted
 let streakText = '', streakTimer = 0;
 let splats = [], particles = [], floatingTexts = [], gameOverDelay = 0;
@@ -489,8 +490,10 @@ const condiments = [
 ];
 
 function shiftColor(hex, amt) {
-  const c = hex.replace('#', '');
+  let c = hex.replace('#', '');
+  if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2]; // expand #ddd to #dddddd
   let r = parseInt(c.substring(0,2),16), g = parseInt(c.substring(2,4),16), b = parseInt(c.substring(4,6),16);
+  if (isNaN(r)||isNaN(g)||isNaN(b)) return hex; // safety fallback
   return '#' + [Math.min(255,Math.max(0,r+amt)), Math.min(255,Math.max(0,g+amt)), Math.min(255,Math.max(0,b+amt))].map(v=>v.toString(16).padStart(2,'0')).join('');
 }
 
@@ -537,7 +540,7 @@ function resetGame() {
   score=0; lives=3; streak=0; bestStreak=0;
   franksLanded=0; boxFranks=0; boxesCompleted=0; boxFlash=0;
   scrollSpeed=2.2; scrollX=0; nextBunDist=0;
-  shakeAmount=0; streakText=''; streakTimer=0; gameOverDelay=0;
+  shakeAmount=0; streakText=''; streakTimer=0; gameOverDelay=0; gracePeriod=0;
   nextForkDist = 320; nextDogDist = 9999;
   bonusTimer=0; bonusDogs=[]; bonusScore=0;
   state = STATE.PLAYING;
@@ -802,8 +805,10 @@ function update() {
       const by = b.y + Math.sin(b.bobPhase)*3;
       if (frank.x>b.x-BUN_W/2-5 && frank.x<b.x+BUN_W/2+5 && frank.y>by-10 && frank.y<by+BUN_H+5 && frank.vy>0) {
         b.scored = true; landFrank(b);
+        if (state === STATE.BONUS) break; // landFrank may have cleared buns via startBonusRound
       }
     }
+    if (i >= buns.length) break; // safety check if buns was cleared mid-loop
     if (!b.scored && !b.missed && b.x < frank.x-BUN_W) { b.missed=true; loseLife(); }
     if (b.x < -100) buns.splice(i, 1);
   }
@@ -813,6 +818,7 @@ function update() {
 
   shakeAmount *= 0.85; if (shakeAmount < 0.5) shakeAmount = 0;
   if (streakTimer > 0) streakTimer--;
+  if (gracePeriod > 0) gracePeriod--;
   if (boxFlash > 0) boxFlash--;
 
   for (let i=particles.length-1; i>=0; i--) {
@@ -858,7 +864,8 @@ function landFrank(bun) {
 }
 
 function loseLife() {
-  lives--; streak=0; sndSplat();
+  if (gracePeriod > 0) return;
+  lives--; streak=0; gracePeriod=180; sndSplat();
   addSplat(frank.x, frank.y);
   addParticles(frank.x, frank.y, '#CC1111', 18);
   shakeAmount=8;
@@ -900,6 +907,12 @@ function drawFrank(x, y, sq, st) {
   ctx.beginPath(); ctx.arc(-1,-1,1.6,0,Math.PI*2); ctx.fillStyle='#1a0800'; ctx.fill();
   ctx.beginPath(); ctx.arc(-1.6,-1.6,0.65,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.75)'; ctx.fill();
   ctx.beginPath(); ctx.arc(-3.5,1.2,3,0.25,Math.PI-0.25); ctx.strokeStyle='#1a0800'; ctx.lineWidth=1.3; ctx.stroke();
+  if (gracePeriod > 0) {
+    const gAlpha = (Math.sin(frameCount * 0.25) * 0.5 + 0.5) * (gracePeriod / 180) * 0.7;
+    ctx.beginPath(); ctx.ellipse(0,0,FRANK_W/2+6,FRANK_H/2+6,0,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(100,200,255,${gAlpha})`;
+    ctx.lineWidth=3; ctx.stroke();
+  }
   ctx.restore();
 }
 

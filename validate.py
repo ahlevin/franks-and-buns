@@ -140,6 +140,28 @@ if g:
         if feature not in g: errors.append(f"game.html missing: {label}")
     print("  ✅ Game features present")
 
+    # 13. Check for unsafe mid-loop array mutations
+    # Functions called inside loops should not clear the array being iterated
+    print("\n[ game.html — mid-loop safety ]")
+    loop_patterns = [
+        ('buns loop', 'for (let i=buns.length', 'buns = []', 'landFrank'),
+        ('forks loop', 'for (let i=forks.length', 'forks = []', 'loseLife'),
+        ('gameDogs loop', 'for (let i=gameDogs.length', 'gameDogs = []', None),
+        ('bonusDogs loop', 'for (let i=bonusDogs.length', 'bonusDogs = []', None),
+    ]
+    for name, loop_start, clear_op, called_fn in loop_patterns:
+        if loop_start in g and clear_op in g:
+            # Check if there is a safety break after the function call
+            if called_fn and called_fn in g:
+                if 'if (state === STATE.BONUS) break' not in g and 'if (i >= buns.length) break' not in g:
+                    warnings.append(f"game.html {name} calls {called_fn} which may clear the array mid-loop — add safety break")
+                else:
+                    print(f"  ✅ {name} has safety break after {called_fn}")
+            else:
+                print(f"  ✅ {name} looks safe")
+        else:
+            print(f"  ✅ {name} — no unsafe pattern detected")
+
 # ── CONTENT PAGES ──────────────────────────────────────────
 for fname in ['index.html','about.html','privacy.html','terms.html']:
     print(f"\n[ {fname} ]")
