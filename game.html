@@ -150,6 +150,10 @@ const imgs = {};
   // gamedog uses the dognodog.png file
   img.src = (name === 'gamedog' ? 'dognodog' : name) + '.png';
   imgs[name] = img;
+  // Pre-process dog image as soon as it loads so first appearance doesn't freeze
+  if (name === 'gamedog') {
+    img.onload = () => { getGameDogCanvas(); };
+  }
 });
 
 function resize() {
@@ -182,6 +186,7 @@ function playTone(freq, dur, type = 'square', vol = 0.12) {
   g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
   o.connect(g); g.connect(audioCtx.destination);
   o.start(); o.stop(audioCtx.currentTime + dur);
+  o.onended = () => { o.disconnect(); g.disconnect(); };
 }
 function sndFlap()      { playTone(440, 0.06, 'sine', 0.10); }
 function sndLand()      { playTone(880, 0.08, 'sine', 0.15); playTone(1320, 0.12, 'sine', 0.10); }

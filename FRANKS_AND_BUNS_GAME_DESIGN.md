@@ -1,7 +1,7 @@
 # Franks and Buns — Game Design Document
 
-## The Flappy Bird Principle
-Flappy Bird worked because of ONE thing: **tap timing**. One input. Infinite skill ceiling. Instant death. Instant restart. "Just one more try."
+## The One-Tap Principle
+Franks & Buns works because of ONE thing: **tap timing**. One input. Infinite skill ceiling. Instant death. Instant restart. "Just one more try."
 
 Franks and Buns uses the same principle: **tap to pump the frank upward, stop tapping to let it drop into a bun.**
 
@@ -13,7 +13,7 @@ Franks and Buns uses the same principle: **tap to pump the frank upward, stop ta
 You're looking at a side-scrolling kitchen. A hot dog (the frank) is on the left side of the screen, floating in mid-air. The kitchen scrolls right-to-left, and **buns appear at different heights** — tucked in cabinets, sitting in open ovens, balanced on shelves, even in a dog's mouth.
 
 ### The One Input
-**TAP** = the frank bounces upward (like Flappy Bird's flap)
+**TAP** = the frank bounces upward (the frank bounces upward)
 **STOP TAPPING** = the frank drops with gravity
 
 ### The Goal
@@ -59,7 +59,7 @@ Miss → SPLAT! 🟥 ketchup everywhere
 ## WHY THIS IS ADDICTIVE (The Psychology)
 
 ### 1. Tap Rhythm Creates Flow State
-Just like Flappy Bird, you develop a TAP RHYTHM. Your brain locks into "tap-tap-tap... release... DROP!" It becomes muscle memory. When you're in the zone, it feels effortless. When you mess up, you KNOW it was your fault. That's what makes you hit restart.
+You develop a TAP RHYTHM. Your brain locks into "tap-tap-tap... release... DROP!" It becomes muscle memory. When you're in the zone, it feels effortless. When you mess up, you KNOW it was your fault. That's what makes you hit restart.
 
 ### 2. The Drop Is the Dopamine Hit
 The frank doesn't just land in the bun — it **nestles in with a satisfying SNAP sound**, the bun closes slightly around it, and a little steam puff appears. That micro-reward is what keeps people playing. Every successful drop feels *chef's kiss*.
@@ -68,7 +68,7 @@ The frank doesn't just land in the bun — it **nestles in with a satisfying SNA
 When you BARELY miss a bun, the frank clips the edge and tumbles off with a sad trombone. Ketchup splatters across the screen. You can SEE how close you were. "ONE MORE TRY."
 
 ### 4. The Kitchen Scrolls — You Can't Stop
-Like Flappy Bird's pipes, the kitchen keeps scrolling. Buns keep coming. You can't pause to think. It's react or die.
+The kitchen keeps scrolling. Buns keep coming. You can't pause to think. It's react or die.
 
 ---
 
@@ -199,7 +199,7 @@ BOXED! → 🎁 +800pts → Box #8 complete!
 ```
 
 ### Key Addiction Element: INSTANT RESTART
-Just like Flappy Bird — one tap and you're back in. No menus. No loading. No friction. Die → see score → tap → playing again in under 1 second.
+One tap and you're back in. No menus. No loading. No friction. Die → see score → tap → playing again in under 1 second.
 
 ---
 
@@ -248,7 +248,7 @@ Just like Flappy Bird — one tap and you're back in. No menus. No loading. No f
 
 ## SUMMARY: Why This Works
 
-1. **One mechanic** — tap to rise, release to drop (Flappy Bird simplicity)
+1. **One mechanic** — tap to rise, release to drop (one-tap simplicity)
 2. **Instant feedback** — every action has a sound and visual response
 3. **Always almost winning** — boxes keep you "one more" away from a milestone
 4. **Escalating chaos** — the kitchen gets crazier the longer you survive
