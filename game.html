@@ -1155,6 +1155,7 @@ function drawMuteBtn() {
 
 function draw() {
   ctx.clearRect(0,0,W,H);
+  if (state===STATE.BONUS) { drawBonusRound(); drawMuteBtn(); return; }
   ctx.save();
   if (shakeAmount>0) ctx.translate((Math.random()-0.5)*shakeAmount,(Math.random()-0.5)*shakeAmount);
   drawKitchenBG();
@@ -1172,7 +1173,6 @@ function draw() {
   if (state===STATE.MENU) drawMenu();
   if (state===STATE.INTRO) drawIntro();
   if (state===STATE.GAMEOVER) drawGameOver();
-  if (state===STATE.BONUS) drawBonusRound();
   drawMuteBtn(); // always visible, outside shake transform
 }
 
