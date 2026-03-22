@@ -121,7 +121,7 @@ if g:
     else: print("  ✅ No old drawn fork code")
 
     # 12. Core game functions present
-    for fn in ['function update()','function draw()','function loop()','drawFrank','drawBun','loseLife','landFrank']:
+    for fn in ['function update()','function draw()','function loop','drawFrank','drawBun','loseLife','landFrank']:
         if fn not in g: errors.append(f"game.html missing {fn}")
     print("  ✅ Core game functions present")
 
