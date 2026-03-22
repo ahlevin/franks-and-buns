@@ -213,7 +213,6 @@ let lives = 3, streak = 0, bestStreak = 0;
 let franksLanded = 0, boxFranks = 0, boxesCompleted = 0, boxFlash = 0;
 let scrollSpeed = 2.2, scrollX = 0;
 let tapping = false, frameCount = 0, shakeAmount = 0;
-let lastFrameTime = 0, slowFrameCount = 0, showLowPowerWarning = false;
 let gracePeriod = 0;
 let muted = false; // default unmuted
 let streakText = '', streakTimer = 0;
@@ -1055,11 +1054,7 @@ function drawGameOver() {
   ctx.fillStyle='#FF4444'; ctx.font='bold 36px Arial'; ctx.textAlign='center'; ctx.fillText('GAME OVER',W/2,H*0.22);
   ctx.fillStyle='#FFD700'; ctx.font='bold 28px Arial'; ctx.fillText(score.toLocaleString(),W/2,H*0.34);
   ctx.fillStyle='#aaa'; ctx.font='14px Arial'; ctx.fillText('SCORE',W/2,H*0.34+20);
-  if (score>=bestScore&&score>0) {
-    ctx.fillStyle='#FF6600'; ctx.font='bold 16px Arial';
-    const bestMsg = showLowPowerWarning ? '★ NEW BEST! ★  (LP)' : '★ NEW BEST! ★';
-    ctx.fillText(bestMsg,W/2,H*0.34+42);
-  }
+  if (score>=bestScore&&score>0) { ctx.fillStyle='#FF6600'; ctx.font='bold 16px Arial'; ctx.fillText('★ NEW BEST! ★',W/2,H*0.34+42); }
   const sy=H*0.50; ctx.fillStyle='#ddd'; ctx.font='15px Arial';
   ctx.fillText('Franks Landed: '+franksLanded,W/2,sy); ctx.fillText('Boxes Packed: '+boxesCompleted,W/2,sy+24);
   ctx.fillText('Best Streak: '+bestStreak,W/2,sy+48); ctx.fillText('Best: '+bestScore.toLocaleString(),W/2,sy+72);
@@ -1192,16 +1187,6 @@ function draw() {
   }
   drawParticles(); drawFloatingTexts();
   if (state===STATE.PLAYING) drawHUD();
-  if (showLowPowerWarning && state===STATE.PLAYING) {
-    ctx.save();
-    ctx.fillStyle='rgba(0,0,0,0.6)';
-    ctx.fillRect(W/2-130, H/2-22, 260, 40);
-    ctx.fillStyle='#FFD700';
-    ctx.font='bold 13px Arial';
-    ctx.textAlign='center';
-    ctx.fillText('⚡ Disable Low Power Mode for best play', W/2, H/2+2);
-    ctx.restore();
-  }
   ctx.restore();
   if (state===STATE.MENU) drawMenu();
   if (state===STATE.INTRO) drawIntro();
@@ -1209,16 +1194,7 @@ function draw() {
   drawMuteBtn(); // always visible, outside shake transform
 }
 
-function loop(timestamp) {
-  // Low power mode detection — if frames consistently take >40ms (below 25fps), warn user
-  if (lastFrameTime > 0) {
-    const elapsed = timestamp - lastFrameTime;
-    if (elapsed > 40) slowFrameCount++;
-    else if (slowFrameCount > 0) slowFrameCount = Math.max(0, slowFrameCount - 1);
-    if (slowFrameCount > 30) showLowPowerWarning = true;
-    else if (slowFrameCount < 5) showLowPowerWarning = false;
-  }
-  lastFrameTime = timestamp;
+function loop() {
   update(); draw();
   const gh = document.getElementById('game-header');
   const gf = document.getElementById('game-footer');
