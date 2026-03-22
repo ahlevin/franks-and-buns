@@ -785,7 +785,7 @@ function update() {
   frank.squash += (1-frank.squash)*0.15;
   frank.stretch += (1-frank.stretch)*0.15;
   if (frank.y < 10) { frank.y=10; frank.vy=0.5; }
-  if (frank.y > H-30) { frank.y=H-30; frank.vy=0; loseLife(); }
+  if (frank.y > H-30) { frank.y=H-30; frank.vy=0; loseLifeNoGrace(); }
 
   scrollX += scrollSpeed;
   nextBunDist -= scrollSpeed;
@@ -863,6 +863,12 @@ function landFrank(bun) {
   frank.vy=FLAP_POWER*0.7; frank.squash=0.7; frank.stretch=1.4;
 }
 
+function loseLifeNoGrace() {
+  const saved = gracePeriod;
+  gracePeriod = 0;
+  loseLife();
+  gracePeriod = saved;
+}
 function loseLife() {
   if (gracePeriod > 0) return;
   lives--; streak=0; gracePeriod=180; sndSplat();
