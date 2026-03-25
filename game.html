@@ -1352,6 +1352,14 @@ function drawGameOver() {
   drawLeaderboard(H * 0.65);
   const quips=['"You\'re on a roll!"','"No bun intended."','"That was a frank failure."','"Ketchup to the competition!"','"Mustard up more courage!"','"Relish the attempt!"'];
   ctx.fillStyle='#888'; ctx.font='italic 13px Arial'; ctx.fillText(quips[Math.floor(score/7)%quips.length],W/2,H*0.92);
+  // Addiction warning
+  ctx.fillStyle='rgba(0,0,0,0.5)';
+  ctx.fillRect(8, H*0.94, W-16, 28);
+  ctx.fillStyle='#FFD700';
+  ctx.font='bold 10px Arial';
+  ctx.textAlign='center';
+  ctx.fillText('⚠️ Warning: This game can be addictive and harmful if not played in moderation.', W/2, H*0.94+12);
+  ctx.fillText('Please take regular breaks.', W/2, H*0.94+22);
 }
 
 function rrect(x,y,w,h,r) {
