@@ -123,9 +123,6 @@
   </span>
 </div>
 <canvas id="game"></canvas>
-<input id="nicknameField" type="text" maxlength="20"
-  style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;top:0;left:0;"
-  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
 <div style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;" aria-hidden="true">
 <h1>Franks and Buns - Free Hot Dog Arcade Game</h1>
 <p>Franks and Buns is a free browser-based arcade game. Tap to launch your hot dog upward and land it in buns as they scroll past. Dodge the chef fork obstacle, collect condiment bonuses for score multipliers, and beat your high score.</p>
@@ -233,37 +230,6 @@ function drawLeaderboard(startY) {
   ctx.textAlign = 'center';
 }
 
-function focusNicknameField() {
-  const field = document.getElementById('nicknameField');
-  if (field) {
-    field.value = nicknameValue;
-    field.style.pointerEvents = 'auto';
-    field.focus();
-    field.oninput = () => {
-      nicknameValue = field.value.substring(0, 20);
-    };
-    field.onkeydown = (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        if (nicknameValue.trim().length > 0) {
-          showNicknameInput = false;
-          field.style.pointerEvents = 'none';
-          field.blur();
-          submitScore(nicknameValue.trim());
-        }
-      }
-    };
-  }
-}
-
-function blurNicknameField() {
-  const field = document.getElementById('nicknameField');
-  if (field) {
-    field.style.pointerEvents = 'none';
-    field.blur();
-  }
-}
-
 function drawNicknameInput() {
   // Dark overlay
   ctx.fillStyle = 'rgba(0,0,0,0.75)';
@@ -280,7 +246,7 @@ function drawNicknameInput() {
   ctx.fillStyle = '#FFD700';
   ctx.font = 'bold 18px Arial';
   ctx.textAlign = 'center';
-  ctx.fillText('YOU MADE THE TOP 5!', W/2, H/2 - 48);
+  ctx.fillText('YOU MADE THE TOP 10!', W/2, H/2 - 48);
 
   ctx.fillStyle = '#ddd';
   ctx.font = '14px Arial';
@@ -752,10 +718,8 @@ function onTap() {
   ensureAudio();
   // Handle nickname submit button tap
   if (showNicknameInput) {
-    focusNicknameField();
     if (nicknameValue.trim().length > 0) {
       showNicknameInput = false;
-      blurNicknameField();
       submitScore(nicknameValue.trim());
     }
     return;
@@ -1094,7 +1058,7 @@ function loseLife() {
     state=STATE.GAMEOVER; frank.alive=false; sndGameOver();
     if (score>bestScore) { bestScore=score; localStorage.setItem('fb_best',bestScore.toString()); }
     fetchLeaderboard().then(() => {
-      if (isTopFive() && score > 0) { showNicknameInput = true; }
+      if (isTopFive() && score > 0) showNicknameInput = true;
     });
   } else { frank.y=H*0.35; frank.vy=0; }
 }
