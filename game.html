@@ -752,6 +752,7 @@ function onTap() {
   ensureAudio();
   // Handle nickname submit button tap
   if (showNicknameInput) {
+    focusNicknameField();
     if (nicknameValue.trim().length > 0) {
       showNicknameInput = false;
       blurNicknameField();
@@ -1093,7 +1094,7 @@ function loseLife() {
     state=STATE.GAMEOVER; frank.alive=false; sndGameOver();
     if (score>bestScore) { bestScore=score; localStorage.setItem('fb_best',bestScore.toString()); }
     fetchLeaderboard().then(() => {
-      if (isTopFive() && score > 0) { showNicknameInput = true; setTimeout(focusNicknameField, 100); }
+      if (isTopFive() && score > 0) { showNicknameInput = true; }
     });
   } else { frank.y=H*0.35; frank.vy=0; }
 }
