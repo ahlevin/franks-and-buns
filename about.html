@@ -6,7 +6,7 @@
   <meta name="google-adsense-account" content="ca-pub-4015428134622878">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4015428134622878" crossorigin="anonymous"></script>
   <meta name="description" content="Learn about Franks & Buns, the free hot dog arcade game. Meet the characters, discover scoring tips, streak multipliers, condiment bonuses, and how to beat your best score.">
-  <title>About Franks &amp; Buns — Free Browser Arcade Game | How to Play &amp; Scoring</title>
+  <title>About Franks &amp; Buns Free Browser Arcade Game | How to Play &amp; Scoring</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
@@ -14,7 +14,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Boogaloo&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-5PVW85JQP6"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -39,6 +38,7 @@
     .divider{width:60px;height:3px;background:linear-gradient(90deg,var(--orange),var(--gold));border-radius:2px;margin:0 0 2.5rem;}
     .character-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;margin:1.5rem 0;}
     .character-card{background:var(--bg2);border:1px solid rgba(255,102,0,0.15);border-radius:16px;padding:1.5rem;text-align:center;}
+    .character-card img{width:100px;height:100px;object-fit:contain;margin-bottom:0.8rem;}
     .character-icon{font-size:3rem;margin-bottom:0.8rem;}
     .character-card h3{font-family:'Boogaloo',cursive;color:var(--orange);font-size:1.2rem;margin-bottom:0.5rem;}
     .character-card p{color:var(--muted);font-size:0.9rem;margin:0;}
@@ -46,12 +46,18 @@
     .stat{background:var(--bg2);border:1px solid rgba(255,215,0,0.12);border-radius:12px;padding:1.2rem;text-align:center;}
     .stat-num{font-family:'Boogaloo',cursive;font-size:2rem;color:var(--gold);}
     .stat-label{font-size:0.8rem;color:var(--muted);margin-top:0.2rem;}
+    .condiment-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:1rem;margin:1.5rem 0;}
+    .condiment{background:var(--bg2);border:1px solid rgba(255,215,0,0.12);border-radius:12px;padding:1rem;text-align:center;}
+    .condiment svg{margin-bottom:0.4rem;}
+    .condiment h4{color:var(--gold);font-size:0.9rem;margin-bottom:0.2rem;}
+    .condiment p{color:var(--muted);font-size:0.8rem;margin:0;}
+    .bonus-band{background:linear-gradient(135deg,rgba(255,102,0,0.12),rgba(255,215,0,0.06));border:1px solid rgba(255,102,0,0.2);border-radius:16px;padding:1.5rem;margin:1.5rem 0;}
+    .bonus-band h3{font-family:'Boogaloo',cursive;color:var(--orange);font-size:1.3rem;margin-bottom:0.5rem;}
+    .bonus-band p{color:#c8a880;margin:0;font-size:0.95rem;}
     .btn-play{display:inline-block;background:var(--orange);color:#fff;font-family:'Boogaloo',cursive;font-size:1.4rem;padding:0.6em 2em;border-radius:50px;text-decoration:none;margin-top:1rem;}
     footer{background:#110a02;border-top:1px solid rgba(255,255,255,0.06);text-align:center;padding:2rem 5vw;color:var(--muted);font-size:0.85rem;}
     footer a{color:var(--orange);text-decoration:none;}
     .footer-links{margin-bottom:0.75rem;display:flex;justify-content:center;gap:2rem;flex-wrap:wrap;}
-    
-
     .hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px;background:none;border:none;}
     .hamburger span{display:block;width:24px;height:2px;background:var(--cream);border-radius:2px;transition:all 0.3s;}
     .mobile-menu{display:none;position:fixed;top:60px;left:0;right:0;background:rgba(26,14,5,0.98);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,102,0,0.2);z-index:99;padding:1rem 5vw 1.5rem;}
@@ -63,12 +69,12 @@
   </style>
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Franks &amp; Buns">
-  <meta property="og:title" content="About Franks &amp; Buns — Free Hot Dog Arcade Game">
+  <meta property="og:title" content="About Franks &amp; Buns Free Hot Dog Arcade Game">
   <meta property="og:description" content="Meet the frank, the chef, and the dog. Learn how scoring, streak multipliers, and condiment bonuses work in this free browser arcade game.">
   <meta property="og:url" content="https://franksandbuns.com/about.html">
   <meta property="og:image" content="https://franksandbuns.com/favicon-180.png">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="About Franks &amp; Buns — Free Hot Dog Arcade Game">
+  <meta name="twitter:title" content="About Franks &amp; Buns Free Hot Dog Arcade Game">
   <meta name="twitter:description" content="Meet the frank, the chef, and the dog. Learn how scoring, streak multipliers, and condiment bonuses work in this free browser arcade game.">
   <meta name="twitter:image" content="https://franksandbuns.com/favicon-180.png">
   <link rel="canonical" href="https://franksandbuns.com/about.html">
@@ -77,44 +83,15 @@
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    {
-      "@type": "Question",
-      "name": "How do you play Franks & Buns?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Tap or click to boost your hot dog upward. Release to let it drop into the buns as they scroll past. Land in buns to score points, dodge the chef fork obstacle, and collect condiment bonuses for score multipliers."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Is Franks & Buns free to play?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Yes, Franks & Buns is completely free to play in your browser. No download, no signup, no payment required."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "How do you get a high score in Franks & Buns?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Chase condiment buns for 2x to 10x multipliers, build streaks of 3, 5, or 10 in a row for bonus multipliers, and complete boxes of 6 franks for big point bonuses. The jalapeno bun is worth 10x points and is the rarest condiment bonus."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "What is the dog parade bonus round?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "After completing 4 boxes, a 5-second dog parade bonus round triggers where dogs stream across the screen worth 500 points each. After the bonus round ends you receive an extra life."
-      }
-    }
+    {"@type":"Question","name":"How do you play Franks & Buns?","acceptedAnswer":{"@type":"Answer","text":"Tap or click to boost your hot dog upward. Release to let it drop into the buns as they scroll past. Land in buns to score points, dodge the chef fork obstacle, and collect condiment bonuses for score multipliers."}},
+    {"@type":"Question","name":"Is Franks & Buns free to play?","acceptedAnswer":{"@type":"Answer","text":"Yes, Franks & Buns is completely free to play in your browser. No download, no signup, no payment required."}},
+    {"@type":"Question","name":"How do you get a high score in Franks & Buns?","acceptedAnswer":{"@type":"Answer","text":"Chase condiment buns for 2x to 10x multipliers, build streaks of 3, 5, or 10 in a row for bonus multipliers, and complete boxes of 6 franks for big point bonuses. The jalapeno bun is worth 10x points and is the rarest condiment bonus."}},
+    {"@type":"Question","name":"What is the dog parade bonus round?","acceptedAnswer":{"@type":"Answer","text":"After completing 4 boxes, a 5-second dog parade bonus round triggers where dogs stream across the screen worth 500 points each. After the bonus round ends you receive an extra life."}}
   ]
 }
 </script>
 </head>
 <body>
-
 <nav>
   <a class="nav-logo" href="/">Franks <span>&</span> Buns</a>
   <ul>
@@ -139,62 +116,76 @@
 <div class="container">
 <div style="border-top:1px solid rgba(255,215,0,0.3);padding-top:10px;margin:12px 0 16px;">
   <p style="font-size:11px;color:#a08060;text-align:center;margin:0;line-height:1.6;">
-    <span style="color:#FFD700;font-weight:bold;">⚠ Warning</span> — This game may be difficult to stop playing for some users. Extended play may interfere with sleep, work, school or other activities. Take regular breaks and stop playing if you believe the game is affecting your health, responsibilities or relationships.
+    <span style="color:#FFD700;font-weight:bold;">&#9888; Warning</span> This game may be difficult to stop playing for some users. Extended play may interfere with sleep, work, school or other activities. Take regular breaks and stop playing if you believe the game is affecting your health, responsibilities or relationships.
   </p>
 </div>
+
   <h1>About Franks &amp; Buns 🌭</h1>
   <div class="divider"></div>
 
-  <p>Franks &amp; Buns is a one-tap arcade game where timing and precision are everything. The story goes like this: a sneaky dog stole a hot dog and made a run for it. When the chef gives chase and runs into the pup, the wiener goes flying. That airborne hot dog is you. Guide it into buns, dodge the chef&apos;s fork, and rack up the highest score possible.</p>
-
-  <p>The game is completely free to play, works on any device with a web browser, and requires no download or account. Just tap, fly, and land your frank.</p>
-
-  <h2>The Story</h2>
-  <p>It all starts with a hungry dog. In the opening cutscene, a dog makes off with a hot dog, tongue out and tail wagging. The chef gives chase, fork raised and white jacket flapping, but the dog trips and the frank goes flying. That airborne hot dog? That's you.</p>
-
-  <p>From there you navigate a scrolling kitchen, landing in buns perched on counters, shelves, ovens, and fridges. Collect condiment bonuses for score multipliers, fill boxes of six franks for big point bursts, and watch out for the chef's arm that shoots up from below with a fork ready to end your run.</p>
+  <p>Franks &amp; Buns is a one-tap arcade game where timing and precision are everything. A sneaky dog stole a hot dog and made a run for it. When the chef gives chase and runs into the pup, the wiener goes flying. That airborne hot dog is you. Guide it into buns, dodge the chef's fork, and rack up the highest score possible.</p>
 
   <h2>Meet the Characters</h2>
   <div class="character-grid">
     <div class="character-card">
       <div class="character-icon">🌭</div>
       <h3>The Frank</h3>
-      <p>That's you. A plucky little sausage with grill marks and a smile, just trying to find a good bun.</p>
+      <p>That's you. A plucky little sausage with grill marks, just trying to find a good bun.</p>
     </div>
     <div class="character-card">
-      <div class="character-icon">👨‍🍳</div>
+      <img src="chef.png" alt="The Chef chasing his stolen hot dog with a fork">
       <h3>The Chef</h3>
-      <p>He wants his hot dog back. His fork appears without warning. Dodge it or lose a life.</p>
+      <p>He wants his hot dog back. His fork shoots up without warning. Dodge it or lose a life.</p>
     </div>
     <div class="character-card">
-      <div class="character-icon">🐕</div>
+      <img src="dognodog.png" alt="The Dog who started it all">
       <h3>The Dog</h3>
-      <p>The chaos agent. After box 3 the dog appears as a bonus target worth a massive 1000 points.</p>
+      <p>The chaos agent who started it all. After box 3 the dog appears in gameplay worth 1,000 points.</p>
     </div>
   </div>
 
-  <h2>Scoring &amp; Multipliers</h2>
-  <p>Every frank you land in a bun scores 100 base points. But the real fun is in the multipliers. Condiment buns marked with squeeze bottles of mustard, ketchup, relish, cheese, or jalapeño multiply your score by 2x, 3x, 5x, or even 10x. Land 3 in a row for a streak bonus, 5 in a row for Franks on Fire, and 10 in a row for the legendary Wiener Wizard mode at 3x multiplier.</p>
+  <h2>How to Play</h2>
+  <p>Tap, click, or press Space to boost your frank upward. Release to let gravity bring it down. Time your drops to land in the open bun slots as they scroll past from right to left. Buns appear at different heights on counters, shelves, ovens, and fridges. Miss a bun, hit the floor, or collide with the chef's fork and you lose a life. Three lives and it's game over.</p>
 
-  <p>Every 6 franks fills a box. Complete a box for a big point bonus and a speed increase. The further you get, the faster and more chaotic the kitchen becomes.</p>
+  <h2>Scoring &amp; Multipliers</h2>
+  <p>Every frank you land scores 100 base points. The real fun is in the multipliers. Condiment buns marked with squeeze bottles multiply your score and landing in a grilled bun after box 6 earns a flat 1,000 point bonus.</p>
+
+  <div class="condiment-grid">
+    <div class="condiment"><svg width="48" height="72" viewBox="0 0 48 72" xmlns="http://www.w3.org/2000/svg"><rect x="18" y="2" width="12" height="8" rx="3" fill="#cc9900"/><rect x="21" y="0" width="6" height="4" rx="1" fill="#cc9900"/><path d="M10 18 Q8 22 8 32 L8 58 Q8 64 14 64 L34 64 Q40 64 40 58 L40 32 Q40 22 38 18 L32 10 L16 10 Z" fill="#FFD700"/><path d="M16 10 L32 10 L38 18 L10 18 Z" fill="#FFD700" opacity="0.85"/><ellipse cx="17" cy="35" rx="3" ry="10" fill="rgba(255,255,255,0.25)"/><rect x="12" y="30" width="24" height="20" rx="3" fill="rgba(180,120,0,0.4)"/></svg><h4>Mustard</h4><p>2x multiplier</p></div>
+    <div class="condiment"><svg width="48" height="72" viewBox="0 0 48 72" xmlns="http://www.w3.org/2000/svg"><rect x="18" y="2" width="12" height="8" rx="3" fill="#aa0000"/><rect x="21" y="0" width="6" height="4" rx="1" fill="#aa0000"/><path d="M10 18 Q8 22 8 32 L8 58 Q8 64 14 64 L34 64 Q40 64 40 58 L40 32 Q40 22 38 18 L32 10 L16 10 Z" fill="#EE2222"/><path d="M16 10 L32 10 L38 18 L10 18 Z" fill="#EE2222" opacity="0.85"/><ellipse cx="17" cy="35" rx="3" ry="10" fill="rgba(255,255,255,0.25)"/><rect x="12" y="30" width="24" height="20" rx="3" fill="rgba(150,0,0,0.4)"/></svg><h4>Ketchup</h4><p>3x multiplier</p></div>
+    <div class="condiment"><svg width="48" height="72" viewBox="0 0 48 72" xmlns="http://www.w3.org/2000/svg"><rect x="18" y="2" width="12" height="8" rx="3" fill="#116622"/><rect x="21" y="0" width="6" height="4" rx="1" fill="#116622"/><path d="M10 18 Q8 22 8 32 L8 58 Q8 64 14 64 L34 64 Q40 64 40 58 L40 32 Q40 22 38 18 L32 10 L16 10 Z" fill="#22AA33"/><path d="M16 10 L32 10 L38 18 L10 18 Z" fill="#22AA33" opacity="0.85"/><ellipse cx="17" cy="35" rx="3" ry="10" fill="rgba(255,255,255,0.25)"/><rect x="12" y="30" width="24" height="20" rx="3" fill="rgba(0,100,20,0.4)"/></svg><h4>Relish</h4><p>5x multiplier</p></div>
+    <div class="condiment"><svg width="48" height="72" viewBox="0 0 48 72" xmlns="http://www.w3.org/2000/svg"><rect x="18" y="2" width="12" height="8" rx="3" fill="#cc7700"/><rect x="21" y="0" width="6" height="4" rx="1" fill="#cc7700"/><path d="M10 18 Q8 22 8 32 L8 58 Q8 64 14 64 L34 64 Q40 64 40 58 L40 32 Q40 22 38 18 L32 10 L16 10 Z" fill="#FFaa00"/><path d="M16 10 L32 10 L38 18 L10 18 Z" fill="#FFaa00" opacity="0.85"/><ellipse cx="17" cy="35" rx="3" ry="10" fill="rgba(255,255,255,0.25)"/><rect x="12" y="30" width="24" height="20" rx="3" fill="rgba(160,80,0,0.4)"/></svg><h4>Cheese</h4><p>5x multiplier</p></div>
+    <div class="condiment"><svg width="48" height="72" viewBox="0 0 48 72" xmlns="http://www.w3.org/2000/svg"><rect x="18" y="2" width="12" height="8" rx="3" fill="#cc2200"/><rect x="21" y="0" width="6" height="4" rx="1" fill="#cc2200"/><path d="M10 18 Q8 22 8 32 L8 58 Q8 64 14 64 L34 64 Q40 64 40 58 L40 32 Q40 22 38 18 L32 10 L16 10 Z" fill="#FF4500"/><path d="M16 10 L32 10 L38 18 L10 18 Z" fill="#FF4500" opacity="0.85"/><ellipse cx="17" cy="35" rx="3" ry="10" fill="rgba(255,255,255,0.25)"/><rect x="12" y="30" width="24" height="20" rx="3" fill="rgba(150,20,0,0.4)"/></svg><h4>Jalape&ntilde;o</h4><p>10x multiplier</p></div>
+    <div class="condiment"><svg width="48" height="72" viewBox="0 0 48 72" xmlns="http://www.w3.org/2000/svg"><text x="24" y="56" font-size="44" text-anchor="middle">🔥</text></svg><h4>Grilled Bun</h4><p>+1,000 pts</p></div>
+  </div>
+
+  <p>Build streaks for additional multipliers land 3 in a row for On A Roll (1.5x), 5 in a row for Franks On Fire (2x), and 10 in a row for the legendary Wiener Wizard mode (3x). Miss once and your streak resets.</p>
+
+  <h2>The Box System</h2>
+  <p>Every 6 franks you land fills a box. Complete a box for a point bonus and a speed increase. The further you get, the faster and more chaotic the kitchen becomes. Grilled buns start appearing after box 6 land in one for a massive 1,000 point bonus and the satisfying "LET THEM COOK!" callout.</p>
+
+  <h2>Bonus Rounds</h2>
+  <div class="bonus-band">
+    <h3><img src="dognodog.png" alt="Dog Parade" style="width:40px;height:40px;object-fit:contain;vertical-align:middle;margin-right:8px;">Dog Parade Bonus Round</h3>
+    <p>Complete 4 boxes and the kitchen goes wild. Dogs stream across the screen for 5 seconds tap to land your frank on each one for 500 points each. After the parade ends you earn an extra life. The bonus round repeats every 4 boxes.</p>
+  </div>
+
+  <h2>The Wienerboard</h2>
+  <p>Think you've got what it takes? The Wienerboard tracks the top 5 scores of all time. Beat a top 5 score and you'll be prompted to enter your nickname. Can you claim the #1 spot?</p>
 
   <h2>Game Stats</h2>
   <div class="stat-grid">
     <div class="stat"><div class="stat-num">6</div><div class="stat-label">Franks per box</div></div>
     <div class="stat"><div class="stat-num">3</div><div class="stat-label">Lives to start</div></div>
     <div class="stat"><div class="stat-num">10x</div><div class="stat-label">Max condiment multiplier</div></div>
-    <div class="stat"><div class="stat-num">1000</div><div class="stat-label">Dog bonus points</div></div>
+    <div class="stat"><div class="stat-num">1,000</div><div class="stat-label">Dog bonus points</div></div>
+    <div class="stat"><div class="stat-num">500</div><div class="stat-label">Parade dog points</div></div>
+    <div class="stat"><div class="stat-num">Top 5</div><div class="stat-label">Wienerboard slots</div></div>
   </div>
 
-  <h2>How to Play</h2>
-  <p>Tap, click, or press Space to boost your frank upward. Release to let gravity bring it down. Time your drops to land perfectly in the open bun slots as they scroll past. The kitchen moves from left to right. Buns appear at different heights, so you'll need to navigate up and down to reach them all.</p>
-
-  <p>Miss a bun, hit the floor, or collide with the chef's fork and you lose a life. Three lives and it's game over. Your best score is saved locally in your browser so you can always chase your personal best.</p>
-
   <h2>Play Free</h2>
-  <p>Franks &amp; Buns is completely free to play. No downloads, no accounts, no paywalls. The game is supported by Google AdSense advertising which allows us to keep it free for everyone.</p>
-
-  <a class="btn-play" href="game.html">▶ Play Now</a>
+  <p>Franks &amp; Buns is completely free to play. No downloads, no accounts, no paywalls. Just tap, fly, and land your frank.</p>
+  <a class="btn-play" href="game.html">&#9654; Play Now</a>
 </div>
 
 <footer>
