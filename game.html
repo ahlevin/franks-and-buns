@@ -354,8 +354,7 @@ window.addEventListener('resize', () => { ({ w: W, h: H } = resize()); });
 let audioCtx = null;
 function ensureAudio() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  // Do not resume audio while activity is paused (page hidden or blurred)
-  if (audioCtx.state === 'suspended' && !activityPaused) audioCtx.resume();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
 }
 function playTone(freq, dur, type = 'square', vol = 0.12) {
   if (!audioCtx || muted) return;
@@ -398,48 +397,6 @@ let muted = false; // default unmuted
 let streakText = '', streakTimer = 0;
 let splats = [], particles = [], floatingTexts = [], gameOverDelay = 0;
 
-// Fixed-step timing & headless hooks (first hunk)
-const STEP_SECONDS = 1 / 60;           // simulation step size (seconds)
-const MAX_FRAME_DELTA = 0.25;          // clamp large frame gaps (seconds)
-let accumulator = 0;                   // seconds waiting to be stepped
-let lastFrameTime = 0;                 // for rAF-based delta calculation
-let activityPaused = false;            // visibility/blur pause flag
-let lastPointerId = null;              // dedupe pointer events
-let lastImpulseMs = 0;                // dedupe impulses across pointer/keyboard
-const IMPULSE_DEDUPE_MS = 40;         // ms window to ignore duplicate impulses
-
-// Small seeded PRNG used by harness; normal play seeds from time for variability
-function createRng(seed = (Date.now() >>> 0) || 1) {
-  let s = seed >>> 0;
-  return function() {
-    s = (1664525 * s + 1013904223) >>> 0;
-    return s / 4294967296;
-  };
-}
-let gameplayRandom = createRng();
-function setGameplaySeed(seed) { gameplayRandom = createRng((seed >>> 0) || 1); }
-function gameRandom() { return gameplayRandom(); }
-function randomRange(min, max) { return min + gameRandom() * (max - min); }
-
-// Expose tiny headless seam for the self-test harness.
-// `advanceSimulation(deltaSeconds)` will step the game by clamped `deltaSeconds`.
-function advanceSimulation(deltaSeconds) {
-  if (activityPaused) return;
-  const d = Math.min(deltaSeconds, MAX_FRAME_DELTA);
-  accumulator += d;
-  while (accumulator >= STEP_SECONDS) {
-    update(); // reuse existing update() as the per-step simulation
-    accumulator -= STEP_SECONDS;
-  }
-}
-
-// Minimal runtime export for node harness or tests
-const __FB_RUNTIME = {
-  STEP_SECONDS, MAX_FRAME_DELTA, advanceSimulation, setGameplaySeed, gameRandom
-};
-try { globalThis.__FBGame = __FB_RUNTIME; } catch (e) {}
-if (typeof module !== 'undefined' && module.exports) module.exports = __FB_RUNTIME;
-
 let frank = { x: 70, y: 0, vy: 0, squash: 1, stretch: 1, alive: true };
 const FRANK_W = 40, FRANK_H = 14;
 const GRAVITY = 0.38, FLAP_POWER = -5.5;
@@ -459,10 +416,10 @@ let nextDogDist = 9999; // unlocks after box 3
 
 function spawnFork() {
   // Fork comes from bottom (chef reaches up) or top (reaches down)
-  const fromBottom = gameRandom() > 0.35; // mostly from bottom
+  const fromBottom = Math.random() > 0.35; // mostly from bottom
   const targetY = fromBottom
-    ? H * 0.45 + gameRandom() * H * 0.25   // reaches up into play area
-    : H * 0.15 + gameRandom() * H * 0.2;  // reaches down from top
+    ? H * 0.45 + Math.random() * H * 0.25   // reaches up into play area
+    : H * 0.15 + Math.random() * H * 0.2;  // reaches down from top
 
   forks.push({
     x: W + 50,
@@ -470,7 +427,7 @@ function spawnFork() {
     targetY: targetY,
     fromBottom: fromBottom,
     state: 'entering',   // entering → holding → leaving
-    holdTimer: 55 + Math.floor(gameRandom() * 40),
+    holdTimer: 55 + Math.floor(Math.random() * 40),
     phase: 0,            // for wobble
     warned: false,
   });
@@ -482,7 +439,7 @@ function updateForks() {
   if (nextForkDist <= 0) {
     spawnFork();
     const minGap = Math.max(280 - boxesCompleted * 15, 130);
-    nextForkDist = minGap + gameRandom() * 200;
+    nextForkDist = minGap + Math.random() * 200;
   }
 
   for (let i = forks.length - 1; i >= 0; i--) {
@@ -592,11 +549,11 @@ function sndDogReward() {
 }
 
 function spawnGameDog() {
-  const y = H * 0.25 + gameRandom() * H * 0.45;
+  const y = H * 0.25 + Math.random() * H * 0.45;
   gameDogs.push({
     x: W + 60,
     y: y,
-    phase: gameRandom() * Math.PI * 2,
+    phase: Math.random() * Math.PI * 2,
     scored: false,
   });
 }
@@ -608,7 +565,7 @@ function updateGameDogs() {
   nextDogDist -= scrollSpeed;
   if (nextDogDist <= 0) {
     spawnGameDog();
-    nextDogDist = 350 + gameRandom() * 300;
+    nextDogDist = 350 + Math.random() * 300;
   }
 
   for (let i = gameDogs.length - 1; i >= 0; i--) {
@@ -741,23 +698,23 @@ function drawSqueezeBottle(cx, cy, cond, sc) {
 function spawnBun() {
   const diff = Math.min(boxesCompleted, 10);
   const avail = bunTypes.slice(0, Math.min(2 + Math.floor(diff/2), bunTypes.length));
-  const type = avail[Math.floor(gameRandom() * avail.length)];
-  const y = type.yRange[0]*H + gameRandom()*(type.yRange[1]-type.yRange[0])*H;
+  const type = avail[Math.floor(Math.random() * avail.length)];
+  const y = type.yRange[0]*H + Math.random()*(type.yRange[1]-type.yRange[0])*H;
   let condiment = null;
-  if (gameRandom() < 0.18 + diff*0.02) {
+  if (Math.random() < 0.18 + diff*0.02) {
     const ac = condiments.slice(0, Math.min(2+Math.floor(diff/2), condiments.length));
-    condiment = ac[Math.floor(gameRandom() * ac.length)];
+    condiment = ac[Math.floor(Math.random() * ac.length)];
   }
   // Grilled buns unlock after box 6 — 25% chance
   let grillTimer = 0;
-  let spawnGrilled = boxesCompleted >= 6 && gameRandom() < 0.25;
+  let spawnGrilled = boxesCompleted >= 6 && Math.random() < 0.25;
   if (spawnGrilled) {
-    grillTimer = 60 + Math.floor(gameRandom() * 20); // brief fire effect, then grilled
+    grillTimer = 60 + Math.floor(Math.random() * 20); // brief fire effect, then grilled
   }
   buns.push({
     x: W+60, y, type, condiment,
     scored: false, missed: false,
-    bobPhase: gameRandom()*Math.PI*2,
+    bobPhase: Math.random()*Math.PI*2,
     moveY: type.moving ? y : null, moveDir: 1,
     grillTimer: grillTimer, grilled: spawnGrilled,
   });
@@ -826,41 +783,21 @@ function isMuteTap(clientX, clientY) {
          cy > btnY - 10 && cy < btnY + MUTE_BTN.size + 10;
 }
 
-// Unified pointer handling (covers mouse + touch + pen)
-canvas.addEventListener('pointerdown', e => {
+canvas.addEventListener('touchstart', e => {
   e.preventDefault();
-  // ignore duplicate pointer events from the same pointerId
-  if (lastPointerId === e.pointerId) return;
-  lastPointerId = e.pointerId;
-  if (isMuteTap(e.clientX, e.clientY)) { muted = !muted; return; }
-  const now = Date.now();
-  if (now - lastImpulseMs < IMPULSE_DEDUPE_MS) return;
-  lastImpulseMs = now;
+  const t = e.touches[0];
+  if (isMuteTap(t.clientX, t.clientY)) { muted = !muted; return; }
   onTap();
 });
-canvas.addEventListener('pointerup', e => {
-  if (e.pointerId === lastPointerId) lastPointerId = null;
-  onRelease();
+canvas.addEventListener('touchend',   e => { e.preventDefault(); onRelease(); });
+canvas.addEventListener('mousedown', e => {
+  if (isMuteTap(e.clientX, e.clientY)) { muted = !muted; return; }
+  onTap();
 });
-canvas.addEventListener('pointercancel', e => {
-  if (e.pointerId === lastPointerId) lastPointerId = null;
-  onRelease();
-});
-
-// Keyboard: keep Space support but ignore auto-repeat to avoid repeated impulses
+canvas.addEventListener('mouseup', onRelease);
 document.addEventListener('keydown', e => {
-  if (e.code === 'Space') {
-    if (showNicknameInput) { e.preventDefault(); nicknameValue += ' '; return; }
-    if (!e.repeat && !showNicknameInput) {
-      e.preventDefault();
-      const now = Date.now();
-      if (now - lastImpulseMs >= IMPULSE_DEDUPE_MS) {
-        lastImpulseMs = now;
-        onTap();
-      }
-    }
-    return;
-  }
+  if (e.code === 'Space' && !showNicknameInput) { e.preventDefault(); onTap(); }
+  if (e.code === 'Space' && showNicknameInput) { e.preventDefault(); nicknameValue += ' '; }
   if (showNicknameInput) {
     if (e.key === 'Enter') {
       if (nicknameValue.trim().length > 0) {
@@ -874,35 +811,13 @@ document.addEventListener('keydown', e => {
     }
   }
 });
-document.addEventListener('keyup', e => { if (e.code === 'Space') onRelease(); });
-
-// Pause/resume activity on visibilitychange and window blur/focus.
-function pauseActivity() {
-  if (activityPaused) return;
-  activityPaused = true;
-  // suspend audio while inactive
-  try { if (audioCtx && audioCtx.state === 'running') audioCtx.suspend(); } catch (e) {}
-}
-function resumeActivity() {
-  if (!activityPaused) return;
-  activityPaused = false;
-  // reset frame timer so we don't apply background time when resuming
-  lastFrameTime = 0;
-  // resume audio if available and not muted
-  try { if (audioCtx && audioCtx.state === 'suspended' && !muted) audioCtx.resume(); } catch (e) {}
-}
-
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) pauseActivity(); else resumeActivity();
-});
-window.addEventListener('blur', () => { pauseActivity(); });
-window.addEventListener('focus', () => { resumeActivity(); });
+document.addEventListener('keyup',   e => { if (e.code === 'Space') onRelease(); });
 
 // --- Particles / Splats / Floats ---
 function addParticles(x, y, color, count=8) {
   for (let i=0; i<count; i++) {
-    const a=gameRandom()*Math.PI*2, sp=1.5+gameRandom()*3;
-    particles.push({ x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-2, life:30+gameRandom()*20, maxLife:50, color, size:2+gameRandom()*4 });
+    const a=Math.random()*Math.PI*2, sp=1.5+Math.random()*3;
+    particles.push({ x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-2, life:30+Math.random()*20, maxLife:50, color, size:2+Math.random()*4 });
   }
 }
 function addFloatingText(x, y, text, color='#fff', size=20) {
@@ -910,13 +825,13 @@ function addFloatingText(x, y, text, color='#fff', size=20) {
 }
 function addSplat(x, y) {
   const blobs = [];
-  for (let i=0; i<6+Math.floor(gameRandom()*5); i++) {
-    const a=gameRandom()*Math.PI*2, d=i===0?0:10+gameRandom()*30;
-    blobs.push({ x:x+Math.cos(a)*d, y:y+Math.sin(a)*d, rx:12+gameRandom()*24, ry:7+gameRandom()*14, rot:gameRandom()*Math.PI });
+  for (let i=0; i<6+Math.floor(Math.random()*5); i++) {
+    const a=Math.random()*Math.PI*2, d=i===0?0:10+Math.random()*30;
+    blobs.push({ x:x+Math.cos(a)*d, y:y+Math.sin(a)*d, rx:12+Math.random()*24, ry:7+Math.random()*14, rot:Math.random()*Math.PI });
   }
   const drips = [];
-  for (let i=0; i<4+Math.floor(gameRandom()*4); i++) {
-    drips.push({ x:x+(gameRandom()-0.5)*55, y:y+gameRandom()*8, len:25+gameRandom()*70, w:3+gameRandom()*5, speed:0.5+gameRandom()*0.9, progress:0 });
+  for (let i=0; i<4+Math.floor(Math.random()*4); i++) {
+    drips.push({ x:x+(Math.random()-0.5)*55, y:y+Math.random()*8, len:25+Math.random()*70, w:3+Math.random()*5, speed:0.5+Math.random()*0.9, progress:0 });
   }
   splats.push({ x, y, blobs, drips, life:200, maxLife:200 });
 }
@@ -1009,9 +924,9 @@ function updateBonusRound() {
   if (frank.y > H-30) { frank.y=H-30; frank.vy=0; }
   nextBonusDogDist -= scrollSpeed;
   if (nextBonusDogDist <= 0) {
-    bonusDogs.push({ x:W+60, y:H*0.15+gameRandom()*H*0.65,
-      speed:scrollSpeed*1.2+gameRandom()*1.5, scored:false, phase:gameRandom()*Math.PI*2 });
-    nextBonusDogDist = 55 + gameRandom()*45;
+    bonusDogs.push({ x:W+60, y:H*0.15+Math.random()*H*0.65,
+      speed:scrollSpeed*1.2+Math.random()*1.5, scored:false, phase:Math.random()*Math.PI*2 });
+    nextBonusDogDist = 55 + Math.random()*45;
   }
   for (let i=bonusDogs.length-1; i>=0; i--) {
     const d=bonusDogs[i];
@@ -1088,7 +1003,7 @@ function update() {
   nextBunDist -= scrollSpeed;
   if (nextBunDist <= 0) {
     spawnBun();
-    nextBunDist = Math.max(160+gameRandom()*100-Math.min(boxesCompleted*5,40), 100);
+    nextBunDist = Math.max(160+Math.random()*100-Math.min(boxesCompleted*5,40), 100);
   }
 
   for (let i=buns.length-1; i>=0; i--) {
@@ -1158,7 +1073,7 @@ function landFrank(bun) {
     if (boxesCompleted > 0 && boxesCompleted % 4 === 0) { startBonusRound(); }
     // Unlock gameplay dogs after box 3
     if (boxesCompleted === 3) {
-      nextDogDist = 200 + gameRandom() * 200;
+      nextDogDist = 200 + Math.random() * 200;
       addFloatingText(W/2, H/2-60, 'DOGS UNLEASHED!', '#FFD700', 24);
     }
   }
@@ -1559,7 +1474,7 @@ function draw() {
   ctx.clearRect(0,0,W,H);
   if (state===STATE.BONUS) { drawBonusRound(); drawMuteBtn(); return; }
   ctx.save();
-  if (shakeAmount>0) ctx.translate((gameRandom()-0.5)*shakeAmount,(gameRandom()-0.5)*shakeAmount);
+  if (shakeAmount>0) ctx.translate((Math.random()-0.5)*shakeAmount,(Math.random()-0.5)*shakeAmount);
   drawKitchenBG();
   drawSplats();
   for (const b of buns) drawBun(b);
@@ -1578,14 +1493,8 @@ function draw() {
   drawMuteBtn(); // always visible, outside shake transform
 }
 
-function loop(ts) {
-  const now = (typeof ts === 'number') ? ts : (window.performance ? performance.now() : Date.now());
-  if (!lastFrameTime) lastFrameTime = now;
-  const deltaMs = now - lastFrameTime;
-  lastFrameTime = now;
-  // advance simulation in fixed steps (advanceSimulation clamps large deltas)
-  advanceSimulation(deltaMs / 1000);
-  draw();
+function loop() {
+  update(); draw();
   const gh = document.getElementById('game-header');
   const gf = document.getElementById('game-footer');
   if (gh && gf) {
