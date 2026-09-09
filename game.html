@@ -1493,7 +1493,7 @@ function draw() {
   drawMuteBtn(); // always visible, outside shake transform
 }
 
-function loopBody() {
+function loop() {
   update(); draw();
   const gh = document.getElementById('game-header');
   const gf = document.getElementById('game-footer');
@@ -1502,18 +1502,7 @@ function loopBody() {
     gh.style.visibility = showUI ? 'visible' : 'hidden';
     gf.style.visibility = showUI ? 'visible' : 'hidden';
   }
-}
-
-// 60fps cap: ProMotion/120Hz displays run this game's per-frame physics at
-// double speed. Gate loopBody() to ~60/sec regardless of display refresh.
-let _lastLoop = 0;
-const _FRAME_MS = 1000 / 60;
-function loop(ts) {
   requestAnimationFrame(loop);
-  if (ts === undefined) ts = performance.now();
-  if (ts - _lastLoop < _FRAME_MS - 0.5) return;
-  _lastLoop = ts;
-  loopBody();
 }
 loop();
 </script>
