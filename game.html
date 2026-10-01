@@ -1352,14 +1352,30 @@ function drawGameOver() {
   drawLeaderboard(H * 0.65);
   const quips=['"You\'re on a roll!"','"No bun intended."','"That was a frank failure."','"Ketchup to the competition!"','"Mustard up more courage!"','"Relish the attempt!"'];
   ctx.fillStyle='#888'; ctx.font='italic 13px Arial'; ctx.fillText(quips[Math.floor(score/7)%quips.length],W/2,H*0.92);
-  // Addiction warning
-  ctx.fillStyle='rgba(0,0,0,0.5)';
-  ctx.fillRect(8, H*0.94, W-16, 28);
-  ctx.fillStyle='#FFD700';
+  // Addiction warning: word-wrapped to the canvas width, box sized to the text,
+  // anchored to the bottom so it stays centered and on-screen on any phone.
+  const warnMsg='⚠️ Warning: This game may be difficult to stop playing for some users. Take regular breaks and stop if it affects your health or responsibilities.';
   ctx.font='bold 10px Arial';
   ctx.textAlign='center';
-  ctx.fillText('⚠️ Warning: This game may be difficult to stop playing for some users.', W/2, H*0.94+10);
-  ctx.fillText('Take regular breaks and stop if it affects your health or responsibilities.', W/2, H*0.94+22);
+  const warnMaxW=W-32, warnLines=[];
+  let warnLine='';
+  for (const word of warnMsg.split(' ')) {
+    const test=warnLine ? warnLine+' '+word : word;
+    if (ctx.measureText(test).width>warnMaxW && warnLine) { warnLines.push(warnLine); warnLine=word; }
+    else warnLine=test;
+  }
+  if (warnLine) warnLines.push(warnLine);
+  const warnLH=12, warnPad=4;
+  const warnBoxH=warnLines.length*warnLH+warnPad*2;
+  const warnBoxY=H-warnBoxH-6;
+  ctx.fillStyle='rgba(0,0,0,0.5)';
+  ctx.fillRect(8, warnBoxY, W-16, warnBoxH);
+  ctx.fillStyle='#FFD700';
+  // Center each line by measuring it: iOS WebKit misplaces textAlign='center'
+  // on canvas text that contains an emoji (the line started mid-screen).
+  ctx.textAlign='left';
+  warnLines.forEach((ln,i)=>ctx.fillText(ln, (W-ctx.measureText(ln).width)/2, warnBoxY+warnPad+9+i*warnLH));
+  ctx.textAlign='center';
 }
 
 function rrect(x,y,w,h,r) {
