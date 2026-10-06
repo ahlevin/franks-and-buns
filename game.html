@@ -149,6 +149,7 @@ const SUPABASE_KEY = 'sb_publishable_cCLBjrWtMM-QSvvd0FsA_A_vRVwJSJy';
 
 let leaderboard = [];
 let leaderboardLoaded = false;
+let leaderboardOffline = false; // true when the Wienerboard couldn't be reached (no internet)
 let showNicknameInput = false;
 let nicknameValue = '';
 let scoreSubmitted = false;
@@ -156,21 +157,64 @@ let playerRank = -1;
 
 async function fetchLeaderboard() {
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/scores?select=nickname,score,franks_landed,boxes_completed,best_streak&order=score.desc&limit=5`, {
+    // Give up after 5 seconds so a weak connection doesn't leave the board on "Loading..."
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 5000);
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/scores?select=nickname,score,franks_landed,boxes_completed,best_streak&order=score.desc&limit=20`, {
+      signal: ctrl.signal,
       headers: {
         'apikey': SUPABASE_KEY,
         'Authorization': `Bearer ${SUPABASE_KEY}`
       }
     });
-    leaderboard = await res.json();
+    clearTimeout(timer);
+    if (!res.ok) throw new Error('leaderboard ' + res.status);
+    const rows = await res.json();
+    leaderboardOffline = false;
+    leaderboard = Array.isArray(rows) ? rows.filter(r => !isHiddenName(r.nickname)).slice(0, 5) : [];
     leaderboardLoaded = true;
   } catch(e) {
-    leaderboardLoaded = true; // fail silently
+    leaderboardLoaded = true; // no connection: show the offline message, never the nickname prompt
+    leaderboardOffline = true;
     leaderboard = [];
   }
 }
 
+// --- Nickname filter (App Store guideline 1.2: filter objectionable content) ---
+// SUBSTR terms are blocked anywhere in the name; WORDS only as whole words, so
+// names like "Cassidy", "Classic" or "Scunthorpe"-style words aren't caught.
+// Common disguises are undone first: leetspeak (0->o, $->s, @->a...) and
+// separators ("f.u.c.k"). Repeated letters are also squeezed ("fuuuck").
+let nicknameError = '';
+const NICK_SUBSTR = ['fuck','fuk','shit','cunt','bitch','nigger','nigga','faggot','whore','slut','retard',
+  'nazi','hitler','porn','penis','vagina','dildo','jizz','blowjob','rapist','molest','pedophil','kike',
+  'twat','wank','bollock','motherf','asshole','asshat','asswipe','dumbass','jackass','dickhead','kkk','tranny','cumshot','titties','boob'];
+const NICK_WORDS = ['ass','asses','fag','fags','cock','cocks','dick','dicks','cum','rape','raped','tit','tits',
+  'sex','sexy','anal','spic','coon','hoe','hoes','homo','chink','gook','wetback','jap','nig','pedo','milf'];
+function nicknameIsClean(name) {
+  const leet = {'0':'o','1':'i','!':'i','3':'e','4':'a','@':'a','5':'s','$':'s','7':'t','8':'b','+':'t'};
+  const lower = String(name).toLowerCase().replace(/[01!34@57$8+]/g, c => leet[c]);
+  const letters = lower.replace(/[^a-z]/g, '');
+  const squeezed = letters.replace(/(.)\1+/g, '$1');
+  const words = lower.split(/[^a-z]+/).filter(Boolean);
+  for (const w of NICK_SUBSTR) {
+    if (letters.includes(w)) return false;
+    if (!/(.)\1/.test(w) && squeezed.includes(w)) return false; // squeeze only terms without double letters
+  }
+  for (const w of words) if (NICK_WORDS.includes(w) || NICK_WORDS.includes(w.replace(/(.)\1+/g, '$1'))) return false;
+  if (NICK_WORDS.includes(letters)) return false; // e.g. "a.s.s"
+  return true;
+}
+
 async function submitScore(nickname) {
+  if (!nicknameIsClean(nickname)) {
+    // Blocked: reopen the entry box with a message instead of posting.
+    nicknameError = 'Please pick a different nickname';
+    nicknameValue = '';
+    showNicknameInput = true;
+    return;
+  }
+  nicknameError = '';
   try {
     await fetch(`${SUPABASE_URL}/rest/v1/scores`, {
       method: 'POST',
@@ -195,12 +239,89 @@ async function submitScore(nickname) {
   }
 }
 
+// --- Wienerboard report / hide (App Store guideline 1.2) ---
+// Tap a name on the game-over Wienerboard to report it (opens an email to us)
+// or hide that player on this device. Hidden names are kept in localStorage.
+const REPORT_EMAIL = 'askfranksandbuns@gmail.com';
+let lbRowRects = [];      // tappable leaderboard rows, rebuilt each draw
+let lbMenu = null;        // { entry } while the report/hide menu is open
+let lbMenuRects = {};     // menu button hit areas, rebuilt each draw
+let lbToast = '', lbToastUntil = 0;
+function hiddenNames() {
+  try { return JSON.parse(localStorage.getItem('fb_hidden_names') || '[]'); } catch (e) { return []; }
+}
+function isHiddenName(n) { return hiddenNames().includes(String(n).toLowerCase()); }
+function hideName(n) {
+  try {
+    const list = hiddenNames(), k = String(n).toLowerCase();
+    if (!list.includes(k)) { list.push(k); localStorage.setItem('fb_hidden_names', JSON.stringify(list)); }
+  } catch (e) {}
+}
+function canvasPoint(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  return { x: (clientX - rect.left) * (W / rect.width), y: (clientY - rect.top) * (H / rect.height) };
+}
+function inRect(p, r) { return !!r && p.x >= r.x0 && p.x <= r.x1 && p.y >= r.y0 && p.y <= r.y1; }
+// True when the tap was used by the Wienerboard, so it doesn't also restart the game.
+function handleBoardTap(clientX, clientY) {
+  if (state !== STATE.GAMEOVER || showNicknameInput) return false;
+  const p = canvasPoint(clientX, clientY);
+  if (lbMenu) {
+    const e = lbMenu.entry;
+    if (inRect(p, lbMenuRects.report)) {
+      const body = 'Nickname: ' + e.nickname + '\nScore: ' + e.score + '\n\nWhat is wrong with this nickname?\n';
+      lbToast = 'Thanks. Reports go to ' + REPORT_EMAIL; lbToastUntil = Date.now() + 4000;
+      lbMenu = null;
+      try { window.location.href = 'mailto:' + REPORT_EMAIL + '?subject=' + encodeURIComponent('Report a Wienerboard nickname') + '&body=' + encodeURIComponent(body); } catch (err) {}
+    } else if (inRect(p, lbMenuRects.hide)) {
+      hideName(e.nickname);
+      leaderboard = leaderboard.filter(r => !isHiddenName(r.nickname));
+      lbToast = 'Hidden on this device'; lbToastUntil = Date.now() + 2500;
+      lbMenu = null;
+      fetchLeaderboard(); // refill the top 5 from beyond the hidden name
+    } else {
+      lbMenu = null; // Cancel, or a tap outside the menu
+    }
+    gameOverDelay = Math.min(gameOverDelay, 30); // brief pause so the next tap doesn't restart by accident
+    return true;
+  }
+  for (const r of lbRowRects) {
+    if (inRect(p, r)) { lbMenu = { entry: r.entry }; return true; }
+  }
+  return false;
+}
+function drawBoardMenu() {
+  if (lbToast && Date.now() < lbToastUntil) {
+    ctx.fillStyle = '#FFD700'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center';
+    ctx.fillText(lbToast, W / 2, H * 0.65 - 22);
+  }
+  lbMenuRects = {};
+  if (!lbMenu) return;
+  const e = lbMenu.entry, bw = 240, bx = W / 2 - bw / 2, by = H * 0.5 - 90;
+  ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#2a1a0a'; ctx.strokeStyle = '#FF6600'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.roundRect(bx, by, bw, 180, 12); ctx.fill(); ctx.stroke();
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#FFD700'; ctx.font = 'bold 16px Arial'; ctx.fillText(String(e.nickname).slice(0, 20), W / 2, by + 30);
+  ctx.fillStyle = '#aaa'; ctx.font = '12px Arial'; ctx.fillText(Number(e.score).toLocaleString() + ' points', W / 2, by + 48);
+  const btn = (key, label, y, fill) => {
+    ctx.fillStyle = fill; ctx.beginPath(); ctx.roundRect(bx + 20, y, bw - 40, 32, 6); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Arial'; ctx.fillText(label, W / 2, y + 21);
+    lbMenuRects[key] = { x0: bx + 20, x1: bx + bw - 20, y0: y, y1: y + 32 };
+  };
+  btn('report', 'Report this name', by + 62, '#CC3300');
+  btn('hide', 'Hide this player', by + 100, '#555555');
+  ctx.fillStyle = '#ddd'; ctx.font = '13px Arial'; ctx.fillText('Cancel', W / 2, by + 160);
+}
+
 function isTopFive() {
+  if (leaderboardOffline) return false; // can't rank against a board we couldn't load
   if (leaderboard.length < 5) return true;
   return score > leaderboard[leaderboard.length - 1].score;
 }
 
 function drawLeaderboard(startY) {
+  lbRowRects = [];
   const x = W / 2;
   ctx.fillStyle = '#FFD700';
   ctx.font = 'bold 16px Arial';
@@ -214,6 +335,14 @@ function drawLeaderboard(startY) {
     return;
   }
 
+  if (leaderboardOffline) {
+    ctx.fillStyle = '#aaa';
+    ctx.font = '13px Arial';
+    ctx.fillText('Wienerboard needs internet', x, startY + 24);
+    ctx.fillText('Your best score is saved on this device', x, startY + 42);
+    return;
+  }
+
   if (leaderboard.length === 0) {
     ctx.fillStyle = '#aaa';
     ctx.font = '13px Arial';
@@ -223,7 +352,8 @@ function drawLeaderboard(startY) {
 
   ctx.font = '12px Arial';
   leaderboard.forEach((entry, i) => {
-    const y = startY + 22 + i * 18;
+    const y = startY + 22 + i * 16;
+    lbRowRects.push({ entry, x0: x - 95, x1: x + 95, y0: y - 13, y1: y + 3 });
     const isPlayer = scoreSubmitted && entry.nickname === nicknameValue && entry.score === score;
     ctx.fillStyle = isPlayer ? '#FF6600' : (i === 0 ? '#FFD700' : '#ddd');
     const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
@@ -233,6 +363,8 @@ function drawLeaderboard(startY) {
     ctx.fillText(entry.score.toLocaleString(), x + 80, y);
   });
   ctx.textAlign = 'center';
+  ctx.fillStyle = '#999'; ctx.font = '10px Arial';
+  ctx.fillText('Tap a name to report or hide it', x, startY + 22 + leaderboard.length * 16 + 2);
 }
 
 function focusNicknameField() {
@@ -243,6 +375,7 @@ function focusNicknameField() {
     field.focus();
     field.oninput = () => {
       nicknameValue = field.value.substring(0, 20);
+      nicknameError = '';
     };
     field.onkeydown = (e) => {
       if (e.key === 'Enter') {
@@ -284,9 +417,9 @@ function drawNicknameInput() {
   ctx.textAlign = 'center';
   ctx.fillText('YOU MADE THE TOP 5!', W/2, H/2 - 48);
 
-  ctx.fillStyle = '#ddd';
+  ctx.fillStyle = nicknameError ? '#FF6666' : '#ddd';
   ctx.font = '14px Arial';
-  ctx.fillText('Enter your nickname:', W/2, H/2 - 20);
+  ctx.fillText(nicknameError || 'Enter a nickname — keep it friendly', W/2, H/2 - 20);
 
   // Input box
   ctx.fillStyle = '#1a0a00';
@@ -729,7 +862,7 @@ function resetGame() {
   shakeAmount=0; streakText=''; streakTimer=0; gameOverDelay=0; gracePeriod=0;
   nextForkDist = 320; nextDogDist = 9999;
   bonusTimer=0; bonusDogs=[]; bonusScore=0;
-  showNicknameInput=false; scoreSubmitted=false; nicknameValue=''; playerRank=-1;
+  showNicknameInput=false; scoreSubmitted=false; nicknameValue=''; nicknameError=''; lbMenu=null; playerRank=-1;
   state = STATE.PLAYING;
 }
 
@@ -787,11 +920,13 @@ canvas.addEventListener('touchstart', e => {
   e.preventDefault();
   const t = e.touches[0];
   if (isMuteTap(t.clientX, t.clientY)) { muted = !muted; return; }
+  if (handleBoardTap(t.clientX, t.clientY)) return;
   onTap();
 });
 canvas.addEventListener('touchend',   e => { e.preventDefault(); onRelease(); });
 canvas.addEventListener('mousedown', e => {
   if (isMuteTap(e.clientX, e.clientY)) { muted = !muted; return; }
+  if (handleBoardTap(e.clientX, e.clientY)) return;
   onTap();
 });
 canvas.addEventListener('mouseup', onRelease);
@@ -1376,6 +1511,7 @@ function drawGameOver() {
   ctx.textAlign='left';
   warnLines.forEach((ln,i)=>ctx.fillText(ln, (W-ctx.measureText(ln).width)/2, warnBoxY+warnPad+9+i*warnLH));
   ctx.textAlign='center';
+  drawBoardMenu(); // Wienerboard report/hide menu and confirmation, drawn on top
 }
 
 function rrect(x,y,w,h,r) {
