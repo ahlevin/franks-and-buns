@@ -181,7 +181,7 @@ for fname in ['index.html','about.html','privacy.html','terms.html']:
     if 'about.html' not in c: errors.append(f"{fname} missing About link")
     if 'game.html' not in c: errors.append(f"{fname} missing game link")
     if 'footer' not in c: errors.append(f"{fname} missing footer")
-    if 'askfranksandbuns@gmail.com' not in c: errors.append(f"{fname} missing contact email")
+    if 'admin@slaelabs.com' not in c: errors.append(f"{fname} missing contact email")
     if 'blog.html' in c: errors.append(f"{fname} has blog.html link — remove it")
     if 'Flappy Bird' in c or 'flappy bird' in c: errors.append(f"{fname} has Flappy Bird reference")
     else: print("  ✅ Nav, footer, links clean, no Flappy Bird")
