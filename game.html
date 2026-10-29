@@ -207,6 +207,8 @@ const ctx = canvas.getContext('2d');
 
 // --- Kitchen art: back wall, counter strip, start screen (?bg=a | b | off) ---
 const ART_SET = (new URLSearchParams(location.search).get('bg') || 'a').toLowerCase();
+// The older images already have see-through backgrounds; 'screen' washes them out on the light kitchen walls
+const OLD_ART_BLEND = (ART_SET === 'a' || ART_SET === 'b') ? 'source-over' : 'screen';
 const bgArt = {};
 if (ART_SET === 'a' || ART_SET === 'b') {
   ['wall','counter','start'].forEach(k => { const im = new Image(); im.src = 'bg-' + k + '-' + ART_SET + '.jpg'; bgArt[k] = im; });
@@ -430,7 +432,7 @@ function drawForks() {
       const w = 100, h = 240;
       const drawX = -w / 2;
       const drawY = -h * 0.42; // positions tines above centre, sleeve below
-      ctx.globalCompositeOperation = 'screen';
+      ctx.globalCompositeOperation = OLD_ART_BLEND;
       ctx.drawImage(armImg, drawX, drawY, w, h);
       ctx.globalCompositeOperation = 'source-over';
     } else {
@@ -1310,7 +1312,7 @@ function drawIntroChef(x, y, jabbing) {
   ctx.save();
   ctx.translate(x, y + bob);
   ctx.rotate(lean);
-  ctx.globalCompositeOperation = 'screen'; // knocks out black background
+  ctx.globalCompositeOperation = OLD_ART_BLEND; // knocks out black background
   ctx.drawImage(imgs.chef, -size * 0.45, -size * 0.85, size, size);
   ctx.globalCompositeOperation = 'source-over';
   ctx.restore();
@@ -1325,7 +1327,7 @@ function drawIntroDog(x, y, falling) {
   ctx.save();
   ctx.translate(x, y + bob);
   if (falling > 0) ctx.rotate(falling * Math.PI * 0.65);
-  ctx.globalCompositeOperation = 'screen';
+  ctx.globalCompositeOperation = OLD_ART_BLEND;
   // dog.png faces right already; center horizontally on snout side
   ctx.drawImage(img, -size * 0.55, -size * 0.6, size, size);
   ctx.globalCompositeOperation = 'source-over';
@@ -1358,13 +1360,13 @@ function drawIntro() {
       ctx.save();
       ctx.translate(f.frankX, f.frankY);
       ctx.rotate((f.frame - 92) * 0.07); // spin as it flies
-      ctx.globalCompositeOperation = 'screen';
+      ctx.globalCompositeOperation = OLD_ART_BLEND;
       ctx.drawImage(imgs.hotdog, -hsize/2, -hsize/2, hsize, hsize);
       ctx.globalCompositeOperation = 'source-over';
       // Motion trail
       if (Math.abs(f.frankVY) > 3) {
         ctx.globalAlpha = 0.18;
-        ctx.globalCompositeOperation = 'screen';
+        ctx.globalCompositeOperation = OLD_ART_BLEND;
         ctx.drawImage(imgs.hotdog, -hsize/2, -hsize/2 + f.frankVY * 1.2, hsize * 0.85, hsize * 0.85);
         ctx.globalCompositeOperation = 'source-over';
         ctx.globalAlpha = 1;
