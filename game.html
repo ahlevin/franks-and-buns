@@ -313,6 +313,7 @@ function frankGrowY() { return spriteReady('frank') ? (FRANK_ART_H - FRANK_H) / 
 const GRAVITY = 0.38, FLAP_POWER = -5.5;
 
 let buns = [], nextBunDist = 0;
+const FORK_BUN_CLEAR = 80;   // minimum height gap between a bun and fork tines beside it
 const BUN_W = 60, BUN_H = 26;
 
 // ============================================================
@@ -328,9 +329,20 @@ let nextDogDist = 9999; // unlocks after box 3
 function spawnFork() {
   // Fork comes from bottom (chef reaches up) or top (reaches down)
   const fromBottom = Math.random() > 0.35; // mostly from bottom
-  const targetY = fromBottom
+  const pickY = () => fromBottom
     ? H * 0.45 + Math.random() * H * 0.25   // reaches up into play area
     : H * 0.15 + Math.random() * H * 0.2;  // reaches down from top
+  // Fair play: forks and buns scroll together, so keep the tines away from the height of any bun close beside the fork
+  const tineAt = ty => fromBottom ? ty - 56 : ty + 56;
+  const clashes = ty => buns.some(b => {
+    const dx = Math.abs(b.x - (W + 50));
+    if (dx < 130 && Math.abs(tineAt(ty) - b.y) < FORK_BUN_CLEAR) return true;                 // tines at the bun's height
+    if (dx < 100 && (fromBottom ? b.y > tineAt(ty) : b.y < tineAt(ty))) return true;           // the arm would pass through the bun
+    return false;
+  });
+  let targetY = pickY();
+  for (let k = 0; k < 12 && clashes(targetY); k++) targetY = pickY();
+  if (clashes(targetY)) return;   // no fair spot for this fork; skip it
 
   forks.push({
     x: W + 50,
@@ -341,6 +353,8 @@ function spawnFork() {
     holdTimer: 55 + Math.floor(Math.random() * 40),
     phase: 0,            // for wobble
     warned: false,
+    // finish entering by 60% of the way across, so the tines never sweep through the player at high speed
+    enterSpeed: Math.abs((fromBottom ? H + 120 : -120) - targetY) / Math.max(((W + 50) - W * 0.6) / scrollSpeed, 1),
   });
 }
 
@@ -359,7 +373,7 @@ function updateForks() {
     f.phase += 0.06;
 
     if (f.state === 'entering') {
-      const speed = 4.5 + boxesCompleted * 0.2;
+      const speed = Math.max(4.5 + boxesCompleted * 0.2, f.enterSpeed || 0);
       if (f.fromBottom) {
         f.y -= speed;
         if (f.y <= f.targetY) { f.y = f.targetY; f.state = 'holding'; sndFork(); }
@@ -614,7 +628,37 @@ function spawnBun() {
   const diff = Math.min(boxesCompleted, 10);
   const avail = bunTypes.slice(0, Math.min(2 + Math.floor(diff/2), bunTypes.length));
   const type = avail[Math.floor(Math.random() * avail.length)];
-  const y = type.yRange[0]*H + Math.random()*(type.yRange[1]-type.yRange[0])*H;
+  let y = type.yRange[0]*H + Math.random()*(type.yRange[1]-type.yRange[0])*H;
+  // Fair play: keep each bun within reach of the previous one in the time between them.
+  // Steady tapping climbs about 5px a frame; after landing, the bounce rises before the hot dog can fall.
+  const prev = buns.length ? buns[buns.length-1] : null;
+  if (prev) {
+    const n = Math.max((W + 60 - prev.x) / scrollSpeed, 1);                        // frames between the two landings
+    const up = 3.2 * n;                                                             // brisk human tapping, with margin
+    const down = Math.max(0, 0.8 * (GRAVITY / 2 * n * n + FLAP_POWER * 0.7 * n));   // fall after the landing bounce, with margin
+    const lo = Math.max(prev.y - up, H * 0.12), hi = Math.min(prev.y + down, H * 0.75);
+    y = lo <= hi ? Math.min(Math.max(y, lo), hi) : prev.y;
+  }
+  // Fair play: a fork between the previous bun and this one must not wall off the climb or drop between them
+  if (prev) {
+    for (const f of forks) {
+      if (f.x <= prev.x || f.x >= W + 60) continue;
+      const tine = f.fromBottom ? f.targetY - 56 : f.targetY + 56;
+      const lowY = Math.min(prev.y, y) - FORK_BUN_CLEAR, highY = Math.max(prev.y, y) + FORK_BUN_CLEAR;
+      if (tine < lowY || tine > highY) continue;                         // tines are clear of the path
+      const after = ((W + 60) - f.x - 75) / scrollSpeed;                 // frames left once the fork has passed
+      if (after >= Math.abs(y - prev.y) / 3.2 + 8) continue;             // enough time to make the move after it
+      y = prev.y > tine ? Math.max(y, tine + FORK_BUN_CLEAR) : Math.min(y, tine - FORK_BUN_CLEAR);  // stay on the player's side
+    }
+  }
+  // Fair play: don't put a bun at the height of fork tines parked right beside it
+  for (const f of forks) {
+    if (Math.abs(f.x - (W + 60)) >= 130) continue;
+    const tine = f.fromBottom ? f.targetY - 56 : f.targetY + 56;
+    if (Math.abs(tine - y) < FORK_BUN_CLEAR) y = (y < tine ? tine - FORK_BUN_CLEAR : tine + FORK_BUN_CLEAR);
+    if (Math.abs(f.x - (W + 60)) < 100) y = f.fromBottom ? Math.min(y, tine - FORK_BUN_CLEAR) : Math.max(y, tine + FORK_BUN_CLEAR);  // never inside the arm
+  }
+  y = Math.min(Math.max(y, H * 0.12), H * 0.75);
   let condiment = null;
   if (Math.random() < 0.18 + diff*0.02) {
     const ac = condiments.slice(0, Math.min(2+Math.floor(diff/2), condiments.length));
@@ -895,7 +939,7 @@ function update() {
   nextBunDist -= scrollSpeed;
   if (nextBunDist <= 0) {
     spawnBun();
-    nextBunDist = Math.max(160+Math.random()*100-Math.min(boxesCompleted*5,40), 100);
+    nextBunDist = Math.max(160+Math.random()*100-Math.min(boxesCompleted*5,40), 100, scrollSpeed*30);   // at least half a second between buns
   }
 
   for (let i=buns.length-1; i>=0; i--) {
