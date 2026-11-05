@@ -224,14 +224,19 @@ function gcAchieve(key) {
   gc.unlockAchievement({ achievementId: GC_ACH[key] }).catch(() => { gcSent.delete(key); });
 }
 function gcShowBoard() {
-  const gc = gcPlugin(); if (!gc || !gcSignedIn) return;
-  gc.showLeaderboard({ leaderboardId: GC_BOARD }).catch(() => {});
+  const gc = gcPlugin(); if (!gc) return;
+  if (gcSignedIn) { gc.showLeaderboard({ leaderboardId: GC_BOARD }).catch(() => {}); return; }
+  // Not signed in: only now, because the player tapped the button, show Apple's Game Center sign-in
+  gc.signIn({ present: true }).then(r => {
+    gcSignedIn = !!(r && r.signedIn);
+    if (gcSignedIn) { gcSubmitScore(score); gc.showLeaderboard({ leaderboardId: GC_BOARD }).catch(() => {}); }
+  }).catch(() => {});
 }
 setTimeout(gcSignIn, 1500);
-// Game-over "Game Center" button (app only, once signed in)
+// Game-over "Game Center" button (app only; signs in only when tapped)
 const GC_BTN = { w: 170, h: 32 };
 function gcBtnRect() { return { x: W / 2 - GC_BTN.w / 2, y: H * 0.115 - GC_BTN.h / 2, w: GC_BTN.w, h: GC_BTN.h }; }
-function gcBtnVisible() { return state === STATE.GAMEOVER && gcSignedIn && !!gcPlugin(); }
+function gcBtnVisible() { return state === STATE.GAMEOVER && !!gcPlugin(); }
 function drawGcButton() {
   if (!gcBtnVisible()) return;
   const r = gcBtnRect();
