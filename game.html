@@ -21,6 +21,8 @@
     align-items: center;
   }
   canvas { display: block; margin: 0 auto; background: #2d1b0e; flex-shrink: 0; }
+  /* app on iPad / iPhone Duo: kitchen wall beside the game instead of black bars */
+  body.fb-wide { background: linear-gradient(rgba(17,8,0,0.55), rgba(17,8,0,0.55)), url('bg-wall-a.jpg') center top / auto 100% repeat-x, #110800; }
 
   #game-header {
     width: 100%; max-width: 420px;
@@ -210,9 +212,14 @@ function gcPlugin() {
   if (!C || !C.isNativePlatform || !C.isNativePlatform()) return null;
   return (C.Plugins && C.Plugins.GameCenter) || (C.registerPlugin ? C.registerPlugin('GameCenter') : null);
 }
+const GC_OPTIN = 'fb_gc_optin';   // set once the player has tapped the Game Center button
+let gcNoteUntil = 0;
+function gcOptedIn() { try { return localStorage.getItem(GC_OPTIN) === '1'; } catch (e) { return false; } }
+function gcSetOptIn(on) { try { on ? localStorage.setItem(GC_OPTIN, '1') : localStorage.removeItem(GC_OPTIN); } catch (e) {} }
 function gcSignIn() {
-  const gc = gcPlugin(); if (!gc) return;
-  gc.signIn().then(r => { gcSignedIn = !!(r && r.signedIn); }).catch(() => {});
+  // Quiet sign-in at launch ONLY for players who already chose Game Center before
+  const gc = gcPlugin(); if (!gc || !gcOptedIn()) return;
+  gc.signIn().then(r => { gcSignedIn = !!(r && r.signedIn); if (!gcSignedIn) gcSetOptIn(false); }).catch(() => {});
 }
 function gcSubmitScore(value) {
   const gc = gcPlugin(); if (!gc || !gcSignedIn || !(value > 0)) return;
@@ -229,8 +236,10 @@ function gcShowBoard() {
   // Not signed in: only now, because the player tapped the button, show Apple's Game Center sign-in
   gc.signIn({ present: true }).then(r => {
     gcSignedIn = !!(r && r.signedIn);
+    gcSetOptIn(gcSignedIn);
     if (gcSignedIn) { gcSubmitScore(score); gc.showLeaderboard({ leaderboardId: GC_BOARD }).catch(() => {}); }
-  }).catch(() => {});
+    else gcNoteUntil = performance.now() + 5000;
+  }).catch(() => { gcNoteUntil = performance.now() + 5000; });
 }
 setTimeout(gcSignIn, 1500);
 // Game-over "Game Center" button (app only; signs in only when tapped)
@@ -245,6 +254,10 @@ function drawGcButton() {
   ctx.beginPath(); ctx.roundRect(r.x, r.y, r.w, r.h, 16); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#FFD700'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText('🏆 Game Center', W / 2, r.y + r.h / 2 + 1);
+  if (performance.now() < gcNoteUntil) {
+    ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 12px Arial';
+    ctx.fillText('Sign in to Game Center in the Settings app', W / 2, r.y + r.h + 14);
+  }
   ctx.restore();
 }
 function isGcTap(clientX, clientY) {
@@ -296,11 +309,21 @@ function resize() {
   const maxW = 420, maxH = 740;
   let w = Math.min(window.innerWidth, maxW);
   let h = Math.min(window.innerHeight, maxH);
-  canvas.style.width = w + 'px';
-  canvas.style.height = h + 'px';
-  canvas.width = w * dpr;
-  canvas.height = h * dpr;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // App on a big screen (iPad, iPhone Duo open): keep the same 420x740 game, drawn larger to fill the height
+  const C = window.Capacitor, inApp = !!(C && C.isNativePlatform && C.isNativePlatform());
+  let scale = 1;
+  if (inApp) {
+    const chrome = ['game-header', 'game-footer'].reduce((t, id) => { const el = document.getElementById(id); return t + (el ? el.offsetHeight : 0); }, 0);
+    const availH = window.innerHeight - chrome, availW = window.innerWidth;
+    if (availW >= 600 && availH >= 600) { w = maxW; h = maxH; scale = Math.min(availH / maxH, availW / maxW); }
+    document.body.classList.toggle('fb-wide', scale > 1 && availW > w * scale + 8);   // iPad / open Duo only; phones keep the plain dark edge
+    ['game-header', 'game-footer'].forEach(id => { const el = document.getElementById(id); if (el) el.style.maxWidth = Math.round(w * scale) + 'px'; });
+  }
+  canvas.style.width = (w * scale) + 'px';
+  canvas.style.height = (h * scale) + 'px';
+  canvas.width = Math.round(w * scale * dpr);
+  canvas.height = Math.round(h * scale * dpr);
+  ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
   return { w, h };
 }
 let { w: W, h: H } = resize();
