@@ -169,6 +169,7 @@ function recordRun() {
   bestRuns = bestRuns.slice(0, 5);
   lastRunIndex = bestRuns.indexOf(run);
   try { localStorage.setItem(RUNS_KEY, JSON.stringify(bestRuns)); } catch (e) {}
+  gcSubmitScore(score);
 }
 
 function drawLeaderboard(startY) {
@@ -197,6 +198,57 @@ function drawLeaderboard(startY) {
   ctx.textAlign = 'center';
 }
 loadRuns();
+// ============================================================
+// GAME CENTER (iPhone app only; does nothing on the website)
+// ============================================================
+const GC_BOARD = 'franksandbuns.highscore';
+const GC_ACH = { firstbox: 'franksandbuns.firstbox', wienerwizard: 'franksandbuns.wienerwizard', dogparade: 'franksandbuns.dogparade' };
+let gcSignedIn = false;
+const gcSent = new Set();
+function gcPlugin() {
+  const C = window.Capacitor;
+  if (!C || !C.isNativePlatform || !C.isNativePlatform()) return null;
+  return (C.Plugins && C.Plugins.GameCenter) || (C.registerPlugin ? C.registerPlugin('GameCenter') : null);
+}
+function gcSignIn() {
+  const gc = gcPlugin(); if (!gc) return;
+  gc.signIn().then(r => { gcSignedIn = !!(r && r.signedIn); }).catch(() => {});
+}
+function gcSubmitScore(value) {
+  const gc = gcPlugin(); if (!gc || !gcSignedIn || !(value > 0)) return;
+  gc.submitScore({ leaderboardId: GC_BOARD, score: Math.floor(value) }).catch(() => {});
+}
+function gcAchieve(key) {
+  const gc = gcPlugin(); if (!gc || !gcSignedIn || gcSent.has(key)) return;
+  gcSent.add(key);
+  gc.unlockAchievement({ achievementId: GC_ACH[key] }).catch(() => { gcSent.delete(key); });
+}
+function gcShowBoard() {
+  const gc = gcPlugin(); if (!gc || !gcSignedIn) return;
+  gc.showLeaderboard({ leaderboardId: GC_BOARD }).catch(() => {});
+}
+setTimeout(gcSignIn, 1500);
+// Game-over "Game Center" button (app only, once signed in)
+const GC_BTN = { w: 170, h: 32 };
+function gcBtnRect() { return { x: W / 2 - GC_BTN.w / 2, y: H * 0.115 - GC_BTN.h / 2, w: GC_BTN.w, h: GC_BTN.h }; }
+function gcBtnVisible() { return state === STATE.GAMEOVER && gcSignedIn && !!gcPlugin(); }
+function drawGcButton() {
+  if (!gcBtnVisible()) return;
+  const r = gcBtnRect();
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.roundRect(r.x, r.y, r.w, r.h, 16); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#FFD700'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('🏆 Game Center', W / 2, r.y + r.h / 2 + 1);
+  ctx.restore();
+}
+function isGcTap(clientX, clientY) {
+  if (!gcBtnVisible()) return false;
+  const rect = canvas.getBoundingClientRect();
+  const cx = (clientX - rect.left) * (W / rect.width), cy = (clientY - rect.top) * (H / rect.height);
+  const r = gcBtnRect();
+  return cx > r.x - 6 && cx < r.x + r.w + 6 && cy > r.y - 6 && cy < r.y + r.h + 6;
+}
 // ============================================================
 // FRANKS & BUNS — © 2026 franksandbuns.com
 // All rights reserved. Unauthorized reproduction or distribution
@@ -736,11 +788,13 @@ canvas.addEventListener('touchstart', e => {
   e.preventDefault();
   const t = e.touches[0];
   if (isMuteTap(t.clientX, t.clientY)) { muted = !muted; return; }
+  if (isGcTap(t.clientX, t.clientY)) { gcShowBoard(); return; }
   onTap();
 });
 canvas.addEventListener('touchend',   e => { e.preventDefault(); onRelease(); });
 canvas.addEventListener('mousedown', e => {
   if (isMuteTap(e.clientX, e.clientY)) { muted = !muted; return; }
+  if (isGcTap(e.clientX, e.clientY)) { gcShowBoard(); return; }
   onTap();
 });
 canvas.addEventListener('mouseup', onRelease);
@@ -838,6 +892,7 @@ function sndBonusEnd() {
   setTimeout(()=>playTone(659,0.08,'sine',0.14),200); setTimeout(()=>playTone(523,0.25,'sine',0.18),300);
 }
 function startBonusRound() {
+  gcAchieve('dogparade');
   state = STATE.BONUS;
   bonusTimer = BONUS_DURATION;
   bonusDogs = []; nextBonusDogDist = 0; bonusScore = 0;
@@ -994,7 +1049,7 @@ function landFrank(bun) {
   if (bun.condiment) { mult *= bun.condiment.multiplier; sndCondiment(); addParticles(bun.x,bun.y,bun.condiment.color,15); }
   streak++; franksLanded++; if (streak>bestStreak) bestStreak=streak;
   let sm=1;
-  if      (streak>=10){sm=3;streakText='WIENER WIZARD!';streakTimer=90;sndStreak();}
+  if      (streak>=10){sm=3;streakText='WIENER WIZARD!';streakTimer=90;sndStreak();gcAchieve('wienerwizard');}
   else if (streak>=5) {sm=2;streakText='FRANKS ON FIRE!';streakTimer=60;sndStreak();}
   else if (streak>=3) {sm=1.5;streakText='ON A ROLL!';streakTimer=45;sndStreak();}
   const pts=Math.floor(100*mult*sm); score+=pts; sndLand();
@@ -1002,7 +1057,7 @@ function landFrank(bun) {
   addFloatingText(bun.x,bun.y-20,'+'+pts+(bun.condiment?' '+bun.condiment.label:''),bun.condiment?bun.condiment.color:'#FFD700',bun.condiment?21:20);
   boxFranks++;
   if (boxFranks>=6) {
-    boxFranks=0; boxesCompleted++;
+    boxFranks=0; boxesCompleted++; gcAchieve('firstbox');
     const bonus=boxesCompleted*100; score+=bonus; boxFlash=60; sndBox(); shakeAmount=8;
     addFloatingText(W/2,H/2-40,'BOXED! +'+bonus,'#FF6600',32);
     scrollSpeed=Math.min(2.2+boxesCompleted*0.3,5.5);
@@ -1313,6 +1368,7 @@ function drawGameOver() {
   ctx.fillText('Best Streak: '+bestStreak,W/2,sy+48); ctx.fillText('Best: '+bestScore.toLocaleString(),W/2,sy+72);
   if (gameOverDelay>40) { ctx.fillStyle='#FF6600'; ctx.font='bold 20px Arial'; ctx.globalAlpha=0.8+Math.sin(frameCount*0.06)*0.2; ctx.fillText('TAP TO RETRY',W/2,H*0.82); ctx.globalAlpha=1; }
   drawLeaderboard(H * 0.65);
+  drawGcButton();
   const quips=['"You\'re on a roll!"','"No bun intended."','"That was a frank failure."','"Ketchup to the competition!"','"Mustard up more courage!"','"Relish the attempt!"'];
   ctx.fillStyle='#888'; ctx.font='italic 13px Arial'; ctx.fillText(quips[Math.floor(score/7)%quips.length],W/2,H*0.92);
   // Addiction warning: word-wrapped to the canvas width, box sized to the text,
