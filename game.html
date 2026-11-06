@@ -210,6 +210,7 @@ const gcSent = new Set();
 function gcPlugin() {
   const C = window.Capacitor;
   if (!C || !C.isNativePlatform || !C.isNativePlatform()) return null;
+  if (C.getPlatform && C.getPlatform() !== 'ios') return null;   // Game Center is iPhone/iPad only (no button on Android)
   return (C.Plugins && C.Plugins.GameCenter) || (C.registerPlugin ? C.registerPlugin('GameCenter') : null);
 }
 const GC_OPTIN = 'fb_gc_optin';   // set once the player has tapped the Game Center button
