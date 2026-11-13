@@ -82,9 +82,15 @@
     .btn-appstore:hover{transform:translateY(-2px);}
     .btn-appstore .as-small{font-size:0.72rem;letter-spacing:0.02em;}
     .btn-appstore .as-big{font-size:1.45rem;font-weight:600;letter-spacing:-0.01em;}
+    .app-store{display:flex;align-items:center;gap:1.2rem;}
+    .btn-gplay{display:inline-flex;flex-direction:column;align-items:flex-start;background:#000;color:#fff;border:1px solid #a6a6a6;border-radius:12px;padding:8px 20px 9px;text-decoration:none;line-height:1.1;font-family:Roboto,Arial,sans-serif;transition:transform 0.15s;}
+    .btn-gplay:hover{transform:translateY(-2px);}
+    .btn-gplay .as-small{font-size:0.72rem;letter-spacing:0.04em;text-transform:uppercase;}
+    .btn-gplay .as-big{font-size:1.45rem;font-weight:500;letter-spacing:-0.01em;}
     .app-qr{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:0.78rem;color:var(--muted);}
     .app-qr img{background:#fff;border-radius:10px;padding:4px;width:124px;height:124px;}
-    @media(max-width:600px){.app-qr img{width:112px;height:112px;}}
+    .btn-appstore .as-big,.btn-gplay .as-big{white-space:nowrap;}
+    @media(max-width:600px){.app-qr img{width:112px;height:112px;}.app-store{gap:0.9rem;}.btn-gplay{padding:8px 16px 9px;}.btn-gplay .as-big{font-size:1.3rem;}}
     .responsible-band{background:rgba(255,152,0,0.07);border-top:1px solid rgba(255,102,0,0.15);border-bottom:1px solid rgba(255,102,0,0.15);padding:28px 5vw;text-align:center;}
     .responsible-band p{color:#c8a060;font-size:0.9rem;max-width:560px;margin:0 auto;line-height:1.6;}
     .responsible-band strong{color:var(--gold);}
@@ -140,7 +146,7 @@
   "description": "A free browser arcade game with one-tap controls. Tap to launch your hot dog into buns, dodge the chef fork obstacle, collect condiment bonuses for score multipliers, and beat your high score.",
   "genre": ["Arcade", "Casual"],
   "gamePlatform": ["Web Browser", "Mobile Browser", "Desktop Browser", "iOS"],
-  "sameAs": ["https://apps.apple.com/app/franks-buns/id6761290671"],
+  "sameAs": ["https://apps.apple.com/app/franks-buns/id6761290671", "https://play.google.com/store/apps/details?id=com.franksandbuns.game"],
   "operatingSystem": "Any",
   "applicationCategory": "Game",
   "offers": {
@@ -188,8 +194,14 @@
   <a class="btn-play" href="game.html">&#9654; PLAY FREE</a>
   <p class="hero-sub">No download &nbsp;·&nbsp; No login &nbsp;·&nbsp; Works on any device</p>
   <div class="app-get">
-    <a class="btn-appstore" href="https://apps.apple.com/app/franks-buns/id6761290671" target="_blank" rel="noopener" aria-label="Download Franks and Buns on the App Store"><span class="as-small">Download on the</span><span class="as-big">App Store</span></a>
-    <div class="app-qr"><img src="qr-appstore.png" alt="QR code that opens Franks and Buns in the App Store"><span>Scan with your iPhone camera</span></div>
+    <div class="app-store">
+      <a class="btn-appstore" href="https://apps.apple.com/app/franks-buns/id6761290671" target="_blank" rel="noopener" aria-label="Download Franks and Buns on the App Store"><span class="as-small">Download on the</span><span class="as-big">App Store</span></a>
+      <div class="app-qr"><img src="qr-appstore.png" alt="QR code that opens Franks and Buns in the App Store"><span>Scan with your iPhone camera</span></div>
+    </div>
+    <div class="app-store">
+      <a class="btn-gplay" href="https://play.google.com/store/apps/details?id=com.franksandbuns.game" target="_blank" rel="noopener" aria-label="Get Franks and Buns on Google Play"><span class="as-small">Get it on</span><span class="as-big">Google Play</span></a>
+      <div class="app-qr"><img src="qr-googleplay.png" alt="QR code that opens Franks and Buns on Google Play"><span>Scan with your Android camera</span></div>
+    </div>
   </div>
 <div style="border-top:1px solid rgba(255,215,0,0.3);padding-top:10px;margin:12px auto 0;max-width:600px;">
   <p style="font-size:11px;color:#a08060;text-align:center;margin:0;line-height:1.6;">
@@ -311,6 +323,7 @@
   <div class="footer-links">
     <a href="game.html">Play the Game</a>
     <a href="https://apps.apple.com/app/franks-buns/id6761290671" target="_blank" rel="noopener">iPhone &amp; iPad App</a>
+    <a href="https://play.google.com/store/apps/details?id=com.franksandbuns.game" target="_blank" rel="noopener">Android App</a>
     <a href="about.html">About</a>
     <a href="privacy.html">Privacy Policy</a>
     <a href="terms.html">Terms of Service</a>
