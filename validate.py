@@ -17,6 +17,17 @@ print("=" * 55)
 
 # ── GAME.HTML ──────────────────────────────────────────────
 print("\n[ game.html — structure ]")
+
+# Analytics must load only through the consent code (consent.js, inlined in each page)
+_CONSENT = open('consent.js').read() if __import__('os').path.exists('consent.js') else None
+def consent_ok(name, text):
+    if _CONSENT is None: return f"{name}: consent.js missing"
+    if "gtag('config', 'G-5PVW85JQP6')" in text or 'googletagmanager.com/gtag/js?id=G-5PVW85JQP6"' in text:
+        return f"{name} loads Google Analytics before consent"
+    if '<script>\n' + _CONSENT + '</script>' not in text:
+        return f"{name} consent block is missing or out of date (run python3 tools/inline_consent.py)"
+    if 'fbPrivacyChoices()' not in text: return f"{name} missing Privacy choices link"
+    return None
 g = check('game.html')
 if g:
     lines = g.split('\n')
@@ -25,8 +36,9 @@ if g:
         if tag not in g: errors.append(f"game.html missing {tag}")
     if 'google-adsense-account' in g: errors.append("game.html has AdSense meta tag — REMOVE IT")
     else: print("  ✅ No AdSense tag")
-    if 'G-5PVW85JQP6' not in g: errors.append("game.html missing Google Analytics")
-    else: print("  ✅ Google Analytics present")
+    _e = consent_ok('game.html', g)
+    if _e: errors.append(_e)
+    else: print("  ✅ Google Analytics behind consent")
     for tag in ['og:title','twitter:card','canonical','meta name="description"']:
         if tag not in g: errors.append(f"game.html missing {tag}")
     else: print("  ✅ SEO tags present")
@@ -171,8 +183,9 @@ for fname in ['index.html','about.html','privacy.html','terms.html']:
         if tag not in c: errors.append(f"{fname} missing {tag}")
     if 'google-adsense-account' not in c: errors.append(f"{fname} missing AdSense meta tag")
     else: print("  ✅ AdSense tag present")
-    if 'G-5PVW85JQP6' not in c: errors.append(f"{fname} missing Google Analytics")
-    else: print("  ✅ Google Analytics present")
+    _e = consent_ok(fname, c)
+    if _e: errors.append(_e)
+    else: print("  ✅ Google Analytics behind consent")
     for tag in ['og:title','twitter:card','canonical','meta name="description"']:
         if tag not in c: errors.append(f"{fname} missing {tag}")
     else: print("  ✅ SEO tags present")

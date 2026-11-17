@@ -52,14 +52,135 @@
     .mobile-menu.open{display:block;}
     @media(max-width:700px){nav ul{display:none;}.hamburger{display:flex;}}
   </style>
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-5PVW85JQP6"></script>
-  <script>
+  <!-- Google Analytics loads only after the visitor allows it (consent.js) -->
+  <!-- FB-CONSENT START (generated from consent.js by tools/inline_consent.py; edit consent.js, not this) -->
+<script>
+/* Franks & Buns: analytics consent.
+ * Google Analytics is NOT loaded until the player taps "Allow".
+ * The choice is saved on this device (fb_consent = granted | denied) and can be
+ * changed at any time with fbPrivacyChoices() (the "Privacy choices" links).
+ * Used by the website and, bundled as a local file, by the iPhone and Android apps. */
+(function () {
+  'use strict';
+  var GA_ID = 'G-5PVW85JQP6';
+  var KEY = 'fb_consent';
+  var CID_KEY = 'fb_ga_cid';
+  var loaded = false;
+
+  function store(k, v) {
+    try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {}
+  }
+  function read(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+
+  function appPlatform() {
+    var C = window.Capacitor;
+    try {
+      if (C && C.isNativePlatform && C.isNativePlatform()) return (C.getPlatform && C.getPlatform()) || 'app';
+    } catch (e) {}
+    return null;
+  }
+
+  function loadAnalytics() {
+    if (loaded) return;
+    loaded = true;
     window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-5PVW85JQP6');
-  </script>
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    window.gtag('consent', 'default', {
+      analytics_storage: 'granted', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied'
+    });
+    window.gtag('js', new Date());
+    var cfg = {};
+    var platform = appPlatform();
+    if (platform) {
+      // In the apps the page is served from inside the app, where cookies are not kept.
+      // Keep a random ID on the device instead and label visits as app visits.
+      var cid = read(CID_KEY);
+      if (!cid) { cid = Math.floor(Math.random() * 2147483647) + '.' + Math.floor(Date.now() / 1000); store(CID_KEY, cid); }
+      cfg.client_storage = 'none';
+      cfg.client_id = cid;
+      cfg.page_location = 'https://franksandbuns.com/app-' + platform + '/';
+      cfg.page_title = 'Franks and Buns app (' + platform + ')';
+    }
+    window.gtag('config', GA_ID, cfg);
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+    document.head.appendChild(s);
+  }
+
+  function clearAnalyticsCookies() {
+    var host = location.hostname, parts = host.split('.');
+    var domains = ['', host, '.' + host];
+    if (parts.length > 2) domains.push('.' + parts.slice(-2).join('.'));
+    document.cookie.split(';').forEach(function (c) {
+      var name = c.split('=')[0].trim();
+      if (name === '_ga' || name.indexOf('_ga_') === 0 || name === '_gid') {
+        domains.forEach(function (d) {
+          document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/' + (d ? '; domain=' + d : '');
+        });
+      }
+    });
+  }
+
+  function decide(granted) {
+    store(KEY, granted ? 'granted' : 'denied');
+    hideBanner();
+    if (granted) {
+      loadAnalytics();
+    } else {
+      if (loaded && window.gtag) window.gtag('consent', 'update', { analytics_storage: 'denied' });
+      window['ga-disable-' + GA_ID] = true;
+      store(CID_KEY, null);
+      clearAnalyticsCookies();
+    }
+  }
+
+  var banner = null;
+  function hideBanner() { if (banner && banner.parentNode) banner.parentNode.removeChild(banner); banner = null; }
+
+  function showBanner() {
+    if (banner) return;
+    var policy = appPlatform() ? 'https://franksandbuns.com/privacy.html' : 'privacy.html';
+    banner = document.createElement('div');
+    banner.id = 'fb-consent';
+    banner.setAttribute('role', 'dialog');
+    banner.setAttribute('aria-label', 'Analytics choice');
+    banner.innerHTML =
+      '<p>Can we count plays with Google Analytics to help improve the game? It stays off unless you allow it. ' +
+      '<a href="' + policy + '" target="_blank" rel="noopener">Privacy Policy</a></p>' +
+      '<div class="fbc-btns"><button type="button" class="fbc-no">No thanks</button>' +
+      '<button type="button" class="fbc-yes">Allow</button></div>';
+    var css = document.createElement('style');
+    css.textContent =
+      '#fb-consent{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom));' +
+      'width:min(560px,calc(100% - 24px));box-sizing:border-box;z-index:2147483000;background:#1d0f02;color:#f3e3c3;' +
+      'border:1px solid #ff6600;border-radius:14px;padding:12px 14px;font:14px/1.4 -apple-system,Segoe UI,Roboto,Arial,sans-serif;' +
+      'box-shadow:0 6px 24px rgba(0,0,0,.5)}' +
+      '#fb-consent p{margin:0 0 10px}#fb-consent a{color:#ffb347}' +
+      '#fb-consent .fbc-btns{display:flex;gap:10px;justify-content:flex-end}' +
+      '#fb-consent button{font:600 14px/1 inherit;font-family:inherit;border-radius:999px;padding:10px 18px;cursor:pointer;border:1px solid #ff6600}' +
+      '#fb-consent .fbc-no{background:transparent;color:#f3e3c3}#fb-consent .fbc-yes{background:#ff6600;color:#fff}';
+    banner.appendChild(css);
+    ['touchstart', 'touchend', 'mousedown', 'pointerdown'].forEach(function (t) {
+      banner.addEventListener(t, function (e) { e.stopPropagation(); }, { passive: true });
+    });
+    banner.querySelector('.fbc-yes').addEventListener('click', function () { decide(true); });
+    banner.querySelector('.fbc-no').addEventListener('click', function () { decide(false); });
+    (document.body || document.documentElement).appendChild(banner);
+  }
+
+  // "Privacy choices" link: show the choice again (to allow or withdraw).
+  window.fbPrivacyChoices = function () { hideBanner(); showBanner(); return false; };
+
+  var choice = read(KEY);
+  if (choice === 'granted') loadAnalytics();
+  else if (choice !== 'denied') {
+    if (document.body) showBanner();
+    else document.addEventListener('DOMContentLoaded', showBanner);
+  }
+})();
+</script>
+<!-- FB-CONSENT END -->
   <meta name="description" content="Privacy policy for Franks & Buns. Learn how we handle data, cookies, and advertising on our free browser arcade game.">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Franks &amp; Buns">
@@ -103,50 +224,50 @@
   </p>
 </div>
   <h1>Privacy Policy</h1>
-  <p class="updated">Last updated: November 5, 2026</p>
-  <p>This Privacy Policy explains what information Franks &amp; Buns collects, how it is used and shared, and the choices you have. It covers the website at <strong>franksandbuns.com</strong> (the "Site") and the Franks &amp; Buns app for iPhone (the "App"). Franks &amp; Buns is operated by <strong>SLAE Labs LLC</strong>, a California limited liability company ("we", "us", or "our").</p>
+  <p class="updated">Last updated: November 17, 2026</p>
+  <p>This Privacy Policy explains what information Franks &amp; Buns collects, how it is used and shared, and the choices you have. It covers the website at <strong>franksandbuns.com</strong> (the "Site") and the Franks &amp; Buns apps for iPhone, iPad and Android (together, the "App"). Franks &amp; Buns is operated by <strong>SLAE Labs LLC</strong>, a California limited liability company ("we", "us", or "our").</p>
   <h2>1. Information We Collect</h2>
   <p>You don't need an account to play, and the game never asks for your name, email address, or phone number. We collect:</p>
   <ul>
-    <li><strong>Usage data</strong> — pages and screens viewed, time spent, game events, device and browser type, and approximate location (city or region, derived from your IP address), collected by Google Analytics on the Site and in the App. Google Analytics assigns your browser or device a random identifier; it does not identify you by name.</li>
-    <li><strong>Your scores</strong> — your best score and your Wienerboard (your top 5 runs, with each run's score, statistics, and date) are saved only on your own device, in browser or app local storage. They are never sent to us.</li>
+    <li><strong>Usage data</strong> — pages and screens viewed, time spent, game events, device and browser type, and approximate location (city or region, derived from your IP address), collected by Google Analytics on the Site and in the App <strong>only if you allow it</strong>. The Site and the App ask first, and Analytics stays off unless you tap "Allow". Google Analytics assigns your browser or device a random identifier; it does not identify you by name. (App versions released before November 17, 2026 turned Analytics on without asking; update the App to get the choice.)</li>
+    <li><strong>Your scores</strong> — your best score and your Wienerboard (your top 5 runs, with each run's score, statistics, and date) are saved only on your own device, in browser or app local storage. They are never sent to us. Like other app data, they may be included in your device's own backups (for example iCloud or Google backup), depending on your device settings.</li>
     <li><strong>Advertising data (Site only)</strong> — on the Site, Google AdSense may use cookies and your IP address to show ads. The App does not currently show ads; if we add advertising to the App, we will update this policy before it starts.</li>
   </ul>
   <h2>2. How We Use Information</h2>
   <ul>
     <li>To run the game</li>
-    <li>To understand how the game is played and improve it (Google Analytics)</li>
+    <li>To understand how the game is played and improve it (Google Analytics, only if you allow it)</li>
     <li>To show ads on the Site (Google AdSense)</li>
   </ul>
   <p>We do not sell your information, and the App does not track you across other companies' apps or websites.</p>
   <h2>3. The Wienerboard</h2>
   <p>The Wienerboard shows your own top 5 runs. It is stored only on the device you play on; nothing you type is shared with other players. Each device and browser keeps its own Wienerboard. Clearing your browser's site data or deleting the App erases it.</p>
-  <p><strong>Game Center (App only, optional):</strong> if you choose to use Apple Game Center by tapping the App's Game Center button, the App sends your final score and any achievements you unlock to Game Center, where they appear on Apple's global Franks and Buns High Scores leaderboard under your Game Center nickname. Apple runs Game Center under its own privacy policy; we do not receive your Apple ID, name, or contact details. You can sign out of Game Center or change who sees your activity in your iPhone or iPad Settings.</p>
+  <p><strong>Game Center (iPhone and iPad App only, optional):</strong> if you choose to use Apple Game Center by tapping the App's Game Center button, the App sends your final score and any achievements you unlock to Game Center, where they appear on Apple's global Franks and Buns High Scores leaderboard under your Game Center nickname. Apple runs Game Center under its own privacy policy; we do not receive your Apple ID, name, or contact details. You can sign out of Game Center or change who sees your activity in your iPhone or iPad Settings.</p>
   <h2>4. Service Providers</h2>
   <p>We share information only with the providers that run parts of the game, and only for the purposes above. We choose providers that protect data to the same or a higher standard than this policy, and each processes it under its own privacy terms:</p>
   <ul>
-    <li><strong>Google Analytics</strong> (Google LLC) — usage measurement on the Site and in the App. <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Privacy Policy</a></li>
+    <li><strong>Google Analytics</strong> (Google LLC) — usage measurement on the Site and in the App, only if you allow it. <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Privacy Policy</a></li>
     <li><strong>Google AdSense</strong> (Google LLC) — advertising on the Site only. See <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener">how Google uses data when you use our partners' sites or apps</a>.</li>
-    <li><strong>Apple Game Center</strong> (Apple Inc.) — optional scores, leaderboard and achievements in the App. <a href="https://www.apple.com/legal/privacy/" target="_blank" rel="noopener">Apple Privacy Policy</a></li>
+    <li><strong>Apple Game Center</strong> (Apple Inc.) — optional scores, leaderboard and achievements in the iPhone and iPad App. <a href="https://www.apple.com/legal/privacy/" target="_blank" rel="noopener">Apple Privacy Policy</a></li>
   </ul>
   <h2>5. Cookies and Local Storage</h2>
   <ul>
-    <li><strong>Analytics cookies</strong> — Google Analytics, on the Site and in the App.</li>
+    <li><strong>Analytics cookies</strong> — Google Analytics, on the Site, only after you allow it. In the App, a random analytics identifier is kept in app storage instead of a cookie, also only after you allow it.</li>
     <li><strong>Advertising cookies</strong> — Google AdSense, on the Site only.</li>
-    <li><strong>Local storage</strong> — your best score and Wienerboard, kept on your device.</li>
+    <li><strong>Local storage</strong> — your best score, your Wienerboard, and your analytics choice, kept on your device.</li>
   </ul>
   <p>Where required, visitors to the Site from the EEA, UK, and Switzerland are asked for consent before advertising cookies are set. You can clear cookies and local storage in your browser settings, and deleting the App removes the data it stores on your device. You can opt out of personalized ads at <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener">Google Ad Settings</a> or <a href="https://www.aboutads.info" target="_blank" rel="noopener">aboutads.info</a>, and out of Google Analytics on the Site with Google's <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener">opt-out browser add-on</a>.</p>
   <h2>6. How Long We Keep Information</h2>
   <ul>
-    <li><strong>Google Analytics data</strong> — no longer than 14 months, then deleted automatically.</li>
+    <li><strong>Google Analytics data</strong> — data tied to a browser or device identifier is kept for 14 months after that browser or device was last active, then deleted automatically. Aggregated reports that do not identify a browser or device may be kept longer.</li>
     <li><strong>Your best score and Wienerboard</strong> — on your device until you clear it or delete the App. We never receive them.</li>
   </ul>
   <h2>7. Your Choices and Rights</h2>
-  <p>You can erase your scores at any time by clearing the Site's data in your browser or deleting the App, and you can stop analytics and personalized ads using the opt-outs above.</p>
+  <p>You can erase your scores at any time by clearing the Site's data in your browser or deleting the App, and you can stop analytics and personalized ads using the opt-outs above. To change your analytics choice at any time, tap <strong>Privacy choices</strong> at the bottom of any page or in the App; if you withdraw, Analytics stops and its cookies on the Site are removed.</p>
   <p>If you are in the European Economic Area, United Kingdom, or Switzerland, you have the right to access, correct, delete, restrict, or object to the processing of your personal data, to data portability, to withdraw consent at any time, and to complain to your local data protection authority. For advertising data held by Google, please contact Google directly.</p>
   <p><strong>California:</strong> we do not sell personal information. On the Site, Google AdSense may use cookies for personalized advertising, which California law may treat as "sharing"; you can opt out at Google Ad Settings. The Site does not respond to browser "Do Not Track" signals; use the opt-outs above instead.</p>
   <h2>8. Children's Privacy</h2>
-  <p>Franks &amp; Buns is a general-audience game and is not directed at children under 13. The App is rated 4+ on the App Store, which describes its content, not its intended audience. We do not knowingly collect personal information from children under 13. The game never asks for a name, email address, or contact details. If you believe a child under 13 has sent us personal information, contact us at admin@slaelabs.com and we will delete it.</p>
+  <p>Franks &amp; Buns is a general-audience game and is not directed at children under 13. The App is rated 4+ on the App Store and Everyone on Google Play; these ratings describe its content, not its intended audience. We do not knowingly collect personal information from children under 13. The game never asks for a name, email address, or contact details. If you believe a child under 13 has sent us personal information, contact us at admin@slaelabs.com and we will delete it.</p>
   <h2>9. Security</h2>
   <p>Information sent between the game and our service providers is encrypted in transit (HTTPS). Your scores stay on your device and are never sent to us.</p>
   <h2>10. Third-Party Links</h2>
@@ -165,6 +286,7 @@
     <a href="game.html">Play the Game</a>
     <a href="privacy.html">Privacy Policy</a>
     <a href="terms.html">Terms of Service</a>
+    <a href="#" onclick="return fbPrivacyChoices()">Privacy choices</a>
     <a href="mailto:admin@slaelabs.com">Contact</a>
   </div>
   <p>&copy; 2026 SLAE Labs LLC. All rights reserved.</p>

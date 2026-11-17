@@ -49,14 +49,135 @@
     .mobile-menu.open{display:block;}
     @media(max-width:700px){nav ul{display:none;}.hamburger{display:flex;}}
   </style>
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-5PVW85JQP6"></script>
-  <script>
+  <!-- Google Analytics loads only after the visitor allows it (consent.js) -->
+  <!-- FB-CONSENT START (generated from consent.js by tools/inline_consent.py; edit consent.js, not this) -->
+<script>
+/* Franks & Buns: analytics consent.
+ * Google Analytics is NOT loaded until the player taps "Allow".
+ * The choice is saved on this device (fb_consent = granted | denied) and can be
+ * changed at any time with fbPrivacyChoices() (the "Privacy choices" links).
+ * Used by the website and, bundled as a local file, by the iPhone and Android apps. */
+(function () {
+  'use strict';
+  var GA_ID = 'G-5PVW85JQP6';
+  var KEY = 'fb_consent';
+  var CID_KEY = 'fb_ga_cid';
+  var loaded = false;
+
+  function store(k, v) {
+    try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {}
+  }
+  function read(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+
+  function appPlatform() {
+    var C = window.Capacitor;
+    try {
+      if (C && C.isNativePlatform && C.isNativePlatform()) return (C.getPlatform && C.getPlatform()) || 'app';
+    } catch (e) {}
+    return null;
+  }
+
+  function loadAnalytics() {
+    if (loaded) return;
+    loaded = true;
     window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-5PVW85JQP6');
-  </script>
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    window.gtag('consent', 'default', {
+      analytics_storage: 'granted', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied'
+    });
+    window.gtag('js', new Date());
+    var cfg = {};
+    var platform = appPlatform();
+    if (platform) {
+      // In the apps the page is served from inside the app, where cookies are not kept.
+      // Keep a random ID on the device instead and label visits as app visits.
+      var cid = read(CID_KEY);
+      if (!cid) { cid = Math.floor(Math.random() * 2147483647) + '.' + Math.floor(Date.now() / 1000); store(CID_KEY, cid); }
+      cfg.client_storage = 'none';
+      cfg.client_id = cid;
+      cfg.page_location = 'https://franksandbuns.com/app-' + platform + '/';
+      cfg.page_title = 'Franks and Buns app (' + platform + ')';
+    }
+    window.gtag('config', GA_ID, cfg);
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+    document.head.appendChild(s);
+  }
+
+  function clearAnalyticsCookies() {
+    var host = location.hostname, parts = host.split('.');
+    var domains = ['', host, '.' + host];
+    if (parts.length > 2) domains.push('.' + parts.slice(-2).join('.'));
+    document.cookie.split(';').forEach(function (c) {
+      var name = c.split('=')[0].trim();
+      if (name === '_ga' || name.indexOf('_ga_') === 0 || name === '_gid') {
+        domains.forEach(function (d) {
+          document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/' + (d ? '; domain=' + d : '');
+        });
+      }
+    });
+  }
+
+  function decide(granted) {
+    store(KEY, granted ? 'granted' : 'denied');
+    hideBanner();
+    if (granted) {
+      loadAnalytics();
+    } else {
+      if (loaded && window.gtag) window.gtag('consent', 'update', { analytics_storage: 'denied' });
+      window['ga-disable-' + GA_ID] = true;
+      store(CID_KEY, null);
+      clearAnalyticsCookies();
+    }
+  }
+
+  var banner = null;
+  function hideBanner() { if (banner && banner.parentNode) banner.parentNode.removeChild(banner); banner = null; }
+
+  function showBanner() {
+    if (banner) return;
+    var policy = appPlatform() ? 'https://franksandbuns.com/privacy.html' : 'privacy.html';
+    banner = document.createElement('div');
+    banner.id = 'fb-consent';
+    banner.setAttribute('role', 'dialog');
+    banner.setAttribute('aria-label', 'Analytics choice');
+    banner.innerHTML =
+      '<p>Can we count plays with Google Analytics to help improve the game? It stays off unless you allow it. ' +
+      '<a href="' + policy + '" target="_blank" rel="noopener">Privacy Policy</a></p>' +
+      '<div class="fbc-btns"><button type="button" class="fbc-no">No thanks</button>' +
+      '<button type="button" class="fbc-yes">Allow</button></div>';
+    var css = document.createElement('style');
+    css.textContent =
+      '#fb-consent{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom));' +
+      'width:min(560px,calc(100% - 24px));box-sizing:border-box;z-index:2147483000;background:#1d0f02;color:#f3e3c3;' +
+      'border:1px solid #ff6600;border-radius:14px;padding:12px 14px;font:14px/1.4 -apple-system,Segoe UI,Roboto,Arial,sans-serif;' +
+      'box-shadow:0 6px 24px rgba(0,0,0,.5)}' +
+      '#fb-consent p{margin:0 0 10px}#fb-consent a{color:#ffb347}' +
+      '#fb-consent .fbc-btns{display:flex;gap:10px;justify-content:flex-end}' +
+      '#fb-consent button{font:600 14px/1 inherit;font-family:inherit;border-radius:999px;padding:10px 18px;cursor:pointer;border:1px solid #ff6600}' +
+      '#fb-consent .fbc-no{background:transparent;color:#f3e3c3}#fb-consent .fbc-yes{background:#ff6600;color:#fff}';
+    banner.appendChild(css);
+    ['touchstart', 'touchend', 'mousedown', 'pointerdown'].forEach(function (t) {
+      banner.addEventListener(t, function (e) { e.stopPropagation(); }, { passive: true });
+    });
+    banner.querySelector('.fbc-yes').addEventListener('click', function () { decide(true); });
+    banner.querySelector('.fbc-no').addEventListener('click', function () { decide(false); });
+    (document.body || document.documentElement).appendChild(banner);
+  }
+
+  // "Privacy choices" link: show the choice again (to allow or withdraw).
+  window.fbPrivacyChoices = function () { hideBanner(); showBanner(); return false; };
+
+  var choice = read(KEY);
+  if (choice === 'granted') loadAnalytics();
+  else if (choice !== 'denied') {
+    if (document.body) showBanner();
+    else document.addEventListener('DOMContentLoaded', showBanner);
+  }
+})();
+</script>
+<!-- FB-CONSENT END -->
   <meta name="description" content="Terms of service for Franks & Buns. Read our terms before playing this free browser arcade game.">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Franks &amp; Buns">
@@ -100,9 +221,9 @@
   </p>
 </div>
   <h1>Terms of Service</h1>
-  <p class="updated">Last updated: November 5, 2026</p>
+  <p class="updated">Last updated: November 17, 2026</p>
 
-  <p>Welcome to Franks &amp; Buns. By accessing or using the website at <strong>franksandbuns.com</strong> or the Franks &amp; Buns app for iPhone (together, the "Site"), operated by <strong>SLAE Labs LLC</strong>, a California limited liability company ("we", "us", or "our"), you agree to be bound by these Terms of Service ("Terms"). Please read them carefully. If you do not agree, please do not use the Site.</p>
+  <p>Welcome to Franks &amp; Buns. By accessing or using the website at <strong>franksandbuns.com</strong> or the Franks &amp; Buns apps for iPhone, iPad and Android (together, the "Site"; the apps are also called the "App"), operated by <strong>SLAE Labs LLC</strong>, a California limited liability company ("we", "us", or "our"), you agree to be bound by these Terms of Service ("Terms"). Please read them carefully. If you do not agree, please do not use the Site.</p>
 
   <div class="warning-box">
     <h3>🌭 Play Responsibly</h3>
@@ -110,13 +231,13 @@
   </div>
 
   <h2>1. Acceptance of Terms</h2>
-  <p>Franks &amp; Buns is a general-audience game. The App is rated 4+ on the App Store, which describes its content; it does not mean the game is designed for children. If you are under 18 (or the age of majority where you live), you may use the Site and App only with the involvement of a parent or guardian, who agrees to these Terms on your behalf and is responsible for your use, including how long you play. The website shows third-party advertising and is not directed at children under 13.</p>
+  <p>Franks &amp; Buns is a general-audience game. The App is rated 4+ on the App Store and Everyone on Google Play, which describes its content; it does not mean the game is designed for children. If you are under 18 (or the age of majority where you live), you may use the Site and App only with the involvement of a parent or guardian, who agrees to these Terms on your behalf and is responsible for your use, including how long you play. The website shows third-party advertising and is not directed at children under 13.</p>
 
   <h2>2. Entertainment Purposes Only</h2>
   <p>Franks &amp; Buns is provided <strong>for entertainment purposes only</strong>. The game, its scores, rankings, and any in-game rewards have no real-world monetary value and confer no rights, benefits, or entitlements of any kind. Nothing on this Site constitutes professional advice of any kind.</p>
 
   <h2>3. Use of the Site</h2>
-  <p>Franks &amp; Buns is a free arcade game, playable in a web browser and as an iPhone app, provided for personal, non-commercial entertainment. You agree to use the Site only for lawful purposes and in a manner that does not infringe the rights of others.</p>
+  <p>Franks &amp; Buns is a free arcade game, playable in a web browser and as an app for iPhone, iPad and Android, provided for personal, non-commercial entertainment. You agree to use the Site only for lawful purposes and in a manner that does not infringe the rights of others.</p>
   <p>You agree not to:</p>
   <ul>
     <li>Attempt to interfere with or disrupt the Site or its servers</li>
@@ -126,7 +247,7 @@
   </ul>
 
   <h2>4. The Wienerboard</h2>
-  <p>The Wienerboard records your top 5 runs on the device you play on. It is not shared online, and each device and browser keeps its own. Scores can be lost if you clear your browser's site data or delete the App, and we cannot restore them. In the App, if you use Apple Game Center, your final scores and achievements are also posted to Apple's Franks and Buns High Scores leaderboard under your Game Center nickname; Game Center is provided by Apple under Apple's terms.</p>
+  <p>The Wienerboard records your top 5 runs on the device you play on. It is not shared online, and each device and browser keeps its own. Scores can be lost if you clear your browser's site data or delete the App, and we cannot restore them. In the iPhone and iPad App, if you use Apple Game Center, your final scores and achievements are also posted to Apple's Franks and Buns High Scores leaderboard under your Game Center nickname; Game Center is provided by Apple under Apple's terms.</p>
   <h2>5. Play at Your Own Risk</h2>
   <p>You access and play Franks &amp; Buns entirely at your own risk. By using this Site you acknowledge and accept that:</p>
   <ul>
@@ -151,7 +272,7 @@
   <p>All content on this Site, including but not limited to the game code, graphics, character designs, sounds, and text, is the property of SLAE Labs LLC and is protected by applicable copyright and intellectual property laws. You may not reproduce, distribute, or create derivative works without express written permission.</p>
 
   <h2>8. Advertising</h2>
-  <p>The website displays advertisements served by Google AdSense and potentially other advertising partners. The iPhone app does not currently show advertising; we may add it in a future update and will update these Terms when we do. We do not control the content of third-party advertisements. Advertising revenue helps keep the game free to play.</p>
+  <p>The website displays advertisements served by Google AdSense and potentially other advertising partners. The apps do not currently show advertising; we may add it in a future update and will update these Terms when we do. We do not control the content of third-party advertisements. Advertising revenue helps keep the game free to play.</p>
 
   <h2>9. Disclaimers and Limitation of Liability</h2>
   <p>The Site is provided on an "as is" and "as available" basis without warranties of any kind, express or implied. We do not warrant that the Site will be uninterrupted, error-free, or free of viruses or other harmful components.</p>
@@ -165,8 +286,9 @@
   <h2>11. Privacy</h2>
   <p>Your use of the Site is also governed by our <a href="privacy.html">Privacy Policy</a>, which is incorporated into these Terms by reference.</p>
 
-  <h2>12. App Store Terms</h2>
+  <h2>12. App Store and Google Play Terms</h2>
   <p>If you downloaded the app from Apple's App Store, Apple's <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noopener">Licensed Application End User License Agreement</a> also applies. These Terms are between you and SLAE Labs LLC, not Apple. Apple is not responsible for the app or its content and has no obligation to provide support for it.</p>
+  <p>If you downloaded the app from Google Play, the <a href="https://play.google.com/about/play-terms/" target="_blank" rel="noopener">Google Play Terms of Service</a> also apply to your use of Google Play. These Terms are between you and SLAE Labs LLC, not Google.</p>
   <h2>13. Changes to Terms</h2>
   <p>We reserve the right to modify these Terms at any time. Changes will be posted on this page with an updated date. Your continued use of the Site after changes are posted constitutes your acceptance of the revised Terms.</p>
 
@@ -184,6 +306,7 @@
   <a href="about.html">About</a>
     <a href="privacy.html">Privacy Policy</a>
     <a href="terms.html">Terms of Service</a>
+    <a href="#" onclick="return fbPrivacyChoices()">Privacy choices</a>
     <a href="mailto:admin@slaelabs.com">Contact</a>
   </div>
   <p>&copy; 2026 SLAE Labs LLC. All rights reserved.</p>
