@@ -70,6 +70,17 @@
     .cta-band h2{font-family:'Boogaloo',cursive;font-size:clamp(2rem,6vw,3.5rem);color:var(--gold);margin-bottom:1rem;}
     .cta-band p{color:var(--muted);margin-bottom:2rem;font-size:1.05rem;}
 
+    .merch-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-bottom:2rem;}
+    .merch-card{display:block;background:#E8D6B8;border-radius:16px;overflow:hidden;text-decoration:none;border:1px solid rgba(255,215,0,0.15);transition:transform 0.2s,box-shadow 0.2s;}
+    .merch-card:hover{transform:translateY(-4px);box-shadow:0 10px 30px rgba(255,102,0,0.25);}
+    .merch-card img{display:block;width:100%;height:auto;aspect-ratio:4/5;}
+    .merch-card span{display:block;background:var(--bg2);color:var(--cream);font-weight:700;font-size:0.9rem;text-align:center;padding:0.7rem 0.5rem;}
+    .merch-intro{text-align:center;color:var(--muted);margin:-1.5rem auto 2rem;max-width:520px;line-height:1.6;}
+    .merch-cta{text-align:center;}
+    .btn-shop{display:inline-block;background:transparent;color:var(--gold);border:2px solid var(--orange);font-family:'Boogaloo',cursive;font-size:1.4rem;letter-spacing:0.05em;padding:0.55em 2em;border-radius:50px;text-decoration:none;transition:background 0.15s,color 0.15s,transform 0.15s;}
+    .btn-shop:hover{background:var(--orange);color:#fff;transform:translateY(-2px);}
+    @media(max-width:600px){.merch-grid{grid-template-columns:repeat(2,1fr);}.merch-grid .merch-card:nth-child(3){display:none;}}
+
     footer{background:#110a02;border-top:1px solid rgba(255,255,255,0.06);text-align:center;padding:2rem 5vw;color:var(--muted);font-size:0.85rem;}
     footer a{color:var(--orange);text-decoration:none;}
     footer a:hover{text-decoration:underline;}
@@ -293,6 +304,7 @@
     <li><a href="#features">Features</a></li>
     <li><a href="about.html">About</a></li>
     <li><a href="game.html">Play Now</a></li>
+    <li><a href="https://shop.franksandbuns.com">Merch</a></li>
     <li><a href="privacy.html">Privacy</a></li>
     <li><a href="terms.html">Terms</a></li>
   </ul>
@@ -304,6 +316,7 @@
   <a href="/">Home</a>
   <a href="about.html">About</a>
   <a href="game.html">Play Now</a>
+  <a href="https://shop.franksandbuns.com">Merch</a>
   <a href="privacy.html">Privacy</a>
   <a href="terms.html">Terms</a>
 </div>
@@ -430,6 +443,18 @@
   </div>
 </section>
 
+<section class="section" id="merch">
+  <h2 class="section-title">Franks &amp; Buns <span>Merch</span></h2>
+  <div class="divider"></div>
+  <p class="merch-intro">Tees and hoodies from the On a Roll Club and our Saratoga, California originals. Printed to order and shipped to your door.</p>
+  <div class="merch-grid">
+    <a class="merch-card" href="https://shop.franksandbuns.com/products/on-a-roll-club-tee"><img src="merch/on-a-roll-club-tee.webp" alt="On a Roll Club tee, back print" width="480" height="600" loading="lazy"><span>On a Roll Club Tee</span></a>
+    <a class="merch-card" href="https://shop.franksandbuns.com/products/franks-buns-saratoga-tee"><img src="merch/saratoga-tee.webp" alt="Franks &amp; Buns Saratoga tee, back print" width="480" height="600" loading="lazy"><span>Saratoga Tee</span></a>
+    <a class="merch-card" href="https://shop.franksandbuns.com/products/on-a-roll-club-hoodie"><img src="merch/on-a-roll-club-hoodie.webp" alt="On a Roll Club hoodie, back print" width="480" height="600" loading="lazy"><span>On a Roll Club Hoodie</span></a>
+  </div>
+  <div class="merch-cta"><a class="btn-shop" href="https://shop.franksandbuns.com">Shop all merch &rarr;</a></div>
+</section>
+
 <div class="cta-band">
   <h2>Ready to get saucy? 🌭</h2>
   <p>Free to play. Instant start. See how many boxes you can pack.</p>
@@ -445,6 +470,7 @@
     <a href="game.html">Play the Game</a>
     <a href="https://apps.apple.com/app/franks-buns/id6761290671" target="_blank" rel="noopener">iPhone &amp; iPad App</a>
     <a href="https://play.google.com/store/apps/details?id=com.franksandbuns.game" target="_blank" rel="noopener">Android App</a>
+    <a href="https://shop.franksandbuns.com">Merch Shop</a>
     <a href="about.html">About</a>
     <a href="privacy.html">Privacy Policy</a>
     <a href="terms.html">Terms of Service</a>
