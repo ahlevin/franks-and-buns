@@ -410,6 +410,7 @@ const STATE = { MENU: 0, INTRO: 3, PLAYING: 1, GAMEOVER: 2, BONUS: 4 };
 let state = STATE.MENU;
 let bonusTimer = 0, bonusDogs = [], nextBonusDogDist = 0, bonusScore = 0;
 const BONUS_DURATION = 300;
+const MAX_LIVES = 5;   // the Dog Parade can add a life above the starting 3
 
 // --- Intro cutscene ---
 let intro = { frame:0, dogX:0, dogY:0, chefX:0, frankX:0, frankY:0, frankVY:-8, dogFall:0, frankFlying:false };
@@ -971,7 +972,7 @@ function startBonusRound() {
 }
 function endBonusRound() {
   state = STATE.PLAYING;
-  if (lives < 3) { lives++; addFloatingText(W/2, H/2+20, '+1 LIFE!', '#FF4444', 28); }
+  if (lives < MAX_LIVES) { lives++; addFloatingText(W/2, H/2+20, '+1 LIFE!', '#FF4444', 28); }
   addFloatingText(W/2, H/2-20, 'BONUS: +'+bonusScore, '#FFD700', 28);
   sndBonusEnd(); shakeAmount=6; nextBunDist=120;
 }
@@ -1390,7 +1391,7 @@ function drawFloatingTexts() {
 function drawHUD() {
   ctx.fillStyle='#fff'; ctx.font='bold 18px Arial'; ctx.textAlign='left'; ctx.fillText('Score: '+score,12,28);
   ctx.font='12px Arial'; ctx.fillStyle='#aaa'; ctx.fillText('Best: '+bestScore,12,44);
-  ctx.textAlign='right'; for (let i=0; i<lives; i++) drawFrank(W-20-i*38,28,0.7,0.7);
+  ctx.textAlign='right'; const lifeGap = lives>3 ? 30 : 38; for (let i=0; i<lives; i++) drawFrank(W-20-i*lifeGap,28,0.7,0.7);
   const bbX=12,bbY=56,bbW=W-24,bbH=16;
   ctx.fillStyle='rgba(0,0,0,0.4)'; rrect(bbX,bbY,bbW,bbH,4); ctx.fill();
   const fw=(boxFranks/6)*bbW;
