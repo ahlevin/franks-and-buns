@@ -1,0 +1,11 @@
+"Rhinoceros" Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+https://creativecommons.org/licenses/by/4.0/
+
+Original track (ISRC USUAN1500040):
+https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1500040
+
+Gameplay edit: excerpted, converted to mono, and edited into a 30.476-second loop.
+Listening demo: the gameplay edit was mixed with the Franks & Buns sound effects and original cues.
+
+Put the credit, track link and appropriate edit notice in an accessible Credits/About screen in each build that includes the music. The CC BY 4.0 notice applies to the Rhinoceros music, including its gameplay edit and use in the demo. The opening chase music, Dog Parade music and separate game effects are original synthesized cues prepared for Franks & Buns.

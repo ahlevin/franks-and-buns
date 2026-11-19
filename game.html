@@ -257,7 +257,7 @@
 </div>
 <div id="game-footer">
   <p>Tap to launch your frank into buns &bull; Dodge the chef's fork &bull; Beat your best score<br>
-  Free arcade game &bull; <a href="/">franksandbuns.com</a> &bull; <a href="about.html">How to play</a> &bull; <a href="privacy.html">Privacy</a> &bull; <a href="#" onclick="return fbPrivacyChoices()">Privacy choices</a></p>
+  Free arcade game &bull; <a href="/">franksandbuns.com</a> &bull; <a href="about.html">How to play</a> &bull; <a href="privacy.html">Privacy</a> &bull; <a href="#" onclick="return fbPrivacyChoices()">Privacy choices</a> &bull; <a href="#" onclick="return fbShowCredits()">Credits</a></p>
 </div>
 <script>
 
@@ -511,9 +511,12 @@ function playSlide(f0, f1, dur, type, vol, when = 0) {
   o.onended = () => { o.disconnect(); f.disconnect(); g.disconnect(); };
 }
 function sndSquish() { playNoise(0.12, 'lowpass', 1800, 300, 0.10, 2); playSlide(220, 110, 0.10, 'sine', 0.08); }
-function sndWhoosh() { playNoise(0.35, 'bandpass', 400, 2400, 0.05, 1.5); }
+function sndWhoosh() {
+  if (playWavEffect('fork-whoosh', 0)) return;
+  playNoise(0.35, 'bandpass', 400, 2400, 0.05, 1.5); }
 function sndBark()   { playSlide(700, 260, 0.09, 'sawtooth', 0.12); playSlide(760, 280, 0.10, 'sawtooth', 0.11, 0.14); }
 function sndCheer(big) {   // crowd-like roar: two detuned noise bands with a quick swell
+  if (wavBuffers.has('box-complete')) return;   // the WAV set has its own box and Wiener Wizard cues
   playNoise(big ? 0.9 : 0.55, 'bandpass', 900, 1600, big ? 0.07 : 0.05, 0.8);
   playNoise(big ? 0.9 : 0.55, 'bandpass', 2200, 3000, big ? 0.04 : 0.03, 0.8, 0.05);
 }
@@ -548,7 +551,9 @@ function musicHat(t, vol) {
 }
 function musicTick() {
   if (!audioCtx || audioCtx.state !== 'running') return;
+  prepareWavs();
   const mode = musicMode();
+  if (useWavMusic(state === STATE.INTRO ? 'intro' : mode)) { musicNext = 0; return; }
   if (!musicOn || muted || mode === 'off') { musicNext = 0; return; }
   if (!musicGain) {
     musicGain = audioCtx.createGain(); musicGain.gain.value = 0.45;
@@ -573,16 +578,185 @@ function musicTick() {
 }
 function setMusic(on) { musicOn = on; safeSet('fb_music', on ? '1' : '0'); if (!on) musicNext = 0; }
 
-function sndFlap()      { playTone(440, 0.06, 'sine', 0.10); }
-function sndLand()      { playTone(880, 0.08, 'sine', 0.15); playTone(1320, 0.12, 'sine', 0.10); sndSquish(); }
-function sndSplat()     { playTone(120, 0.25, 'sawtooth', 0.12); sndSplatWet(); }
-function sndBox()       { playTone(660, 0.07, 'square', 0.12); setTimeout(() => playTone(990, 0.1, 'square', 0.14), 80); setTimeout(() => playTone(1320, 0.15, 'sine', 0.12), 160); }
-function sndCondiment() { playTone(1200, 0.06, 'sine', 0.13); setTimeout(() => playTone(1600, 0.1, 'sine', 0.11), 70); }
+// ============================================================
+// WAV SOUNDTRACK AND EFFECTS (files in audio/, packaged with the web site and both apps)
+// "Rhinoceros" by Kevin MacLeod (incompetech.com), CC BY 4.0, edited into a gameplay loop;
+// credit is shown in-game (Credits button) and on the About page. Other cues are original.
+// If a WAV fails to load, the matching code-made sound above is used instead.
+// ============================================================
+const WAV_FILES = {
+  'chef-chase-bed': 'audio/intro/chef-chase-bed.wav', 'rhinoceros-gameplay-loop': 'audio/music/rhinoceros-gameplay-loop.wav',
+  'dog-parade-loop': 'audio/music/dog-parade-loop.wav',
+  'chase-tap': 'audio/intro/chase-tap.wav', 'chase-dog-yip': 'audio/intro/chase-dog-yip.wav', 'chase-paw-step': 'audio/intro/chase-paw-step.wav',
+  'chase-chef-step': 'audio/intro/chase-chef-step.wav', 'chase-frank-zip': 'audio/intro/chase-frank-zip.wav', 'chase-tumble': 'audio/intro/chase-tumble.wav',
+  'launch-bwoip-a': 'audio/effects/launch-bwoip-a.wav', 'launch-bwoip-b': 'audio/effects/launch-bwoip-b.wav',
+  'fork-whoosh': 'audio/effects/fork-whoosh.wav', 'fork-tink': 'audio/effects/fork-tink.wav', 'bun-landing': 'audio/effects/bun-landing.wav',
+  'condiment-pop': 'audio/effects/condiment-pop.wav', 'splat': 'audio/effects/splat.wav', 'box-complete': 'audio/effects/box-complete.wav',
+  'dog-pickup': 'audio/effects/dog-pickup.wav', 'chili-rush-start': 'audio/effects/chili-rush-start.wav', 'chili-sizzle': 'audio/effects/chili-sizzle.wav',
+  'wiener-wizard': 'audio/effects/wiener-wizard.wav', 'game-over': 'audio/effects/game-over.wav',
+};
+// gains from effects-map.tsv
+const WAV_LEVELS = {
+  'launch-bwoip-a': .48, 'launch-bwoip-b': .46,
+  'fork-whoosh': .82, 'fork-tink': .85, 'bun-landing': .80,
+  'condiment-pop': .52, 'splat': .77, 'box-complete': .67,
+  'dog-pickup': .68, 'chili-rush-start': .73, 'chili-sizzle': .64,
+  'wiener-wizard': .77, 'game-over': .75,
+};
+const WAV_DUCK = new Set(['fork-whoosh', 'fork-tink', 'bun-landing', 'chili-rush-start', 'box-complete']);   // briefly halve the music under these
+// opening chase cues (audio/intro/chase-timeline.json): simulation frames at 60 Hz
+const CHASE = {"fps":60,"endFrame":155,"bedGain":0.41,"cues":[{"frame":0,"wav":"chase-tap","gain":0.62},{"frame":6,"wav":"chase-dog-yip","gain":0.63},{"frame":10,"wav":"chase-paw-step","gain":0.3},{"frame":18,"wav":"chase-paw-step","gain":0.38},{"frame":22,"wav":"chase-dog-yip","gain":0.43},{"frame":26,"wav":"chase-paw-step","gain":0.44},{"frame":33,"wav":"chase-chef-step","gain":0.37},{"frame":35,"wav":"chase-paw-step","gain":0.47},{"frame":44,"wav":"chase-paw-step","gain":0.5},{"frame":45,"wav":"chase-chef-step","gain":0.48},{"frame":53,"wav":"chase-paw-step","gain":0.54},{"frame":56,"wav":"chase-chef-step","gain":0.54},{"frame":62,"wav":"chase-paw-step","gain":0.54},{"frame":65,"wav":"chase-chef-step","gain":0.58},{"frame":66,"wav":"fork-whoosh","gain":0.82},{"frame":78,"wav":"fork-tink","gain":0.85},{"frame":93,"wav":"chase-frank-zip","gain":0.83},{"frame":121,"wav":"chase-tumble","gain":0.67}]};
+const chaseFrames = new Map();
+for (const cue of CHASE.cues) { if (!chaseFrames.has(cue.frame)) chaseFrames.set(cue.frame, []); chaseFrames.get(cue.frame).push(cue); }
+let wavLoading = null, wavEffectsBus = null, wavFailed = false;
+let wavLoop = null, wavLoopGain = null, wavLoopName = null, wavTarget = -1;
+let wavDuckUntil = 0, wavLaunchCount = 0, wavLastLaunch = -Infinity, wavLastSizzle = -Infinity, wavOriginalMuted = false;
+const wavBuffers = new Map();
+const chaseSounds = new Set();
+
+// Fetch and decode every WAV once, silently, before it is needed (no sound until the player taps)
+function prepareWavs() {
+  if (audioCtx && !wavEffectsBus) { wavEffectsBus = audioCtx.createGain(); wavEffectsBus.connect(audioCtx.destination); }
+  if (wavLoading) return wavLoading;
+  const Offline = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  let decoder = null;
+  if (Offline) { try { decoder = new Offline(1, 1, 32000); } catch (e) {} }
+  const decode = (buf) => new Promise((ok, bad) => {
+    const d = decoder || audioCtx; if (!d) return bad(new Error('no audio'));
+    const r = d.decodeAudioData(buf, ok, bad); if (r && r.then) r.then(ok, bad);
+  });
+  wavLoading = Promise.allSettled(Object.entries(WAV_FILES).map(async ([name, url]) => {
+    const res = await fetch(url); if (!res.ok) throw new Error(url);
+    wavBuffers.set(name, await decode(await res.arrayBuffer()));
+  })).then(results => { wavFailed = results.some(r => r.status === 'rejected'); });
+  return wavLoading;
+}
+
+// Play one WAV cue; returns false when it isn't available, so the caller can use the code-made sound
+function playWavEffect(name, delay = 0, volume = WAV_LEVELS[name], chase = false) {
+  if (!audioCtx || !wavEffectsBus) return false;
+  if (muted) return true;
+  const clip = wavBuffers.get(name);
+  if (!clip) return false;
+  const now = audioCtx.currentTime;
+  if (name.startsWith('launch-')) { if (now - wavLastLaunch < .075) return true; wavLastLaunch = now; }   // one launch per 75 ms
+  if (name === 'chili-sizzle') { if (now - wavLastSizzle < 1) return true; wavLastSizzle = now; }        // about once a second
+  if (WAV_DUCK.has(name)) wavDuckUntil = Math.max(wavDuckUntil, now + delay + .20);
+  const src = audioCtx.createBufferSource(), vol = audioCtx.createGain();
+  src.buffer = clip; vol.gain.value = volume;
+  src.connect(vol); vol.connect(wavEffectsBus);
+  const voice = { src, vol };
+  if (chase) chaseSounds.add(voice);
+  src.onended = () => { chaseSounds.delete(voice); src.disconnect(); vol.disconnect(); };
+  src.start(now + delay);
+  return true;
+}
+function playChaseFrame(frame) {
+  let played = false;
+  for (const cue of chaseFrames.get(frame) || []) played = playWavEffect(cue.wav, 0, cue.gain, true) || played;
+  return played;
+}
+function stopChaseEffects() {   // skip / retry: cut the chase foley quickly
+  if (!chaseSounds.size || !audioCtx) return;
+  const now = audioCtx.currentTime;
+  for (const { src, vol } of chaseSounds) { vol.gain.setTargetAtTime(0, now, .006); try { src.stop(now + .025); } catch (e) {} }
+  chaseSounds.clear();
+}
+function stopWavLoop() {
+  if (!wavLoop) return;
+  const now = audioCtx.currentTime;
+  wavLoopGain.gain.setTargetAtTime(0, now, .028);
+  try { wavLoop.stop(now + .12); } catch (e) {}
+  wavLoop = null; wavLoopName = null; wavTarget = -1;
+}
+function setOldBedMuted(silent) {   // the code-made music stays silent while a WAV bed plays
+  if (!musicGain || silent === wavOriginalMuted) return;
+  musicGain.gain.setTargetAtTime(silent ? 0 : .45, audioCtx.currentTime, .025);
+  wavOriginalMuted = silent;
+}
+// Music for the current moment: chase bed (intro), Rhinoceros (play, louder in Chili Rush), Dog Parade loop
+function useWavMusic(mode) {
+  if (wavEffectsBus) wavEffectsBus.gain.value = muted ? 0 : 1;   // global mute covers effects; music-off does not
+  const name = mode === 'intro' ? 'chef-chase-bed' : mode === 'bonus' ? 'dog-parade-loop' :
+    (mode === 'play' || mode === 'rush') ? 'rhinoceros-gameplay-loop' : null;
+  const clip = wavBuffers.get(name);
+  if (!musicOn || muted || !clip) { stopWavLoop(); setOldBedMuted(false); return false; }
+  setOldBedMuted(true);
+  if (wavLoopName !== name) {
+    stopWavLoop();
+    const src = audioCtx.createBufferSource(), vol = audioCtx.createGain();
+    src.buffer = clip; src.loop = mode !== 'intro'; vol.gain.value = 0;
+    src.connect(vol); vol.connect(audioCtx.destination);
+    src.onended = () => { src.disconnect(); vol.disconnect(); };
+    const offset = mode === 'intro' ? Math.min(intro.frame / CHASE.fps, clip.duration - .001) : 0;   // stay in step if it starts late
+    src.start(0, offset);
+    wavLoop = src; wavLoopGain = vol; wavLoopName = name;
+  }
+  const fullLevel = mode === 'intro' ? CHASE.bedGain : mode === 'bonus' ? .51 : mode === 'rush' ? .48 : .32;
+  const level = fullLevel * (audioCtx.currentTime < wavDuckUntil ? .49 : 1);
+  if (wavTarget !== level) {   // fast dip, gentle recovery
+    wavLoopGain.gain.setTargetAtTime(level, audioCtx.currentTime, level < wavTarget ? .015 : .05);
+    wavTarget = level;
+  }
+  return true;
+}
+prepareWavs();   // start loading right away; nothing plays until the first tap unlocks audio
+
+// --- Music credits (CC BY 4.0 attribution), opened from the Credits button and the page footer ---
+function fbShowCredits() {
+  let box = document.getElementById('fb-credits');
+  if (box) { box.style.display = 'flex'; return false; }
+  box = document.createElement('div');
+  box.id = 'fb-credits'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'Credits');
+  box.innerHTML =
+    '<div class="fbcr-card"><h2>Credits</h2>' +
+    '<p><strong>Music:</strong> &ldquo;Rhinoceros&rdquo; Kevin MacLeod (<a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1500040" target="_blank" rel="noopener">incompetech.com</a>)<br>' +
+    'Licensed under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">Creative Commons: By Attribution 4.0 License</a></p>' +
+    '<p>Original track (ISRC USUAN1500040):<br><a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1500040" target="_blank" rel="noopener">incompetech.com/music/royalty-free/index.html?isrc=USUAN1500040</a></p>' +
+    '<p>Changes: excerpted, converted to mono, and edited into a 30.476-second gameplay loop.</p>' +
+    '<p class="fbcr-small">The opening chase music, Dog Parade music and game sound effects are original cues made for Franks &amp; Buns.</p>' +
+    '<button type="button" class="fbcr-close">Close</button></div>';
+  const css = document.createElement('style');
+  css.textContent =
+    '#fb-credits{position:fixed;inset:0;z-index:2147483001;display:flex;align-items:center;justify-content:center;background:rgba(10,5,0,.82);padding:16px;box-sizing:border-box}' +
+    '#fb-credits .fbcr-card{max-width:420px;width:100%;box-sizing:border-box;background:#2a1a0a;color:#f3e3c3;border:2px solid rgba(255,215,0,.5);border-radius:16px;padding:18px 18px 14px;font:14px/1.45 -apple-system,Segoe UI,Roboto,Arial,sans-serif;text-align:left}' +
+    '#fb-credits h2{margin:0 0 10px;color:#FFD700;font:bold 22px Arial;text-align:center}#fb-credits p{margin:0 0 10px}' +
+    '#fb-credits a{color:#ffb347;word-break:break-word}#fb-credits .fbcr-small{font-size:12px;color:#c8a878}' +
+    '#fb-credits .fbcr-close{display:block;margin:6px auto 0;font:600 15px Arial;border-radius:999px;padding:10px 26px;border:1px solid #ff6600;background:#ff6600;color:#fff;cursor:pointer}';
+  box.appendChild(css);
+  ['touchstart', 'touchend', 'mousedown', 'pointerdown'].forEach(t => box.addEventListener(t, e => e.stopPropagation(), { passive: true }));
+  box.addEventListener('click', e => { if (e.target === box || e.target.classList.contains('fbcr-close')) box.style.display = 'none'; });
+  (document.body || document.documentElement).appendChild(box);
+  return false;
+}
+window.fbShowCredits = fbShowCredits;
+
+function sndFlap()      {
+  if (playWavEffect(wavLaunchCount++ % 2 ? 'launch-bwoip-b' : 'launch-bwoip-a')) return;
+  playTone(440, 0.06, 'sine', 0.10); }
+function sndLand()      {
+  if (playWavEffect('bun-landing', 0)) return;
+  playTone(880, 0.08, 'sine', 0.15); playTone(1320, 0.12, 'sine', 0.10); sndSquish(); }
+function sndSplat()     {
+  if (playWavEffect('splat', 0)) return;
+  playTone(120, 0.25, 'sawtooth', 0.12); sndSplatWet(); }
+function sndBox()       {
+  if (playWavEffect('box-complete', 0.19)) return;
+  playTone(660, 0.07, 'square', 0.12); setTimeout(() => playTone(990, 0.1, 'square', 0.14), 80); setTimeout(() => playTone(1320, 0.15, 'sine', 0.12), 160); }
+function sndCondiment() {
+  if (playWavEffect('condiment-pop', 0.14)) return;
+  playTone(1200, 0.06, 'sine', 0.13); setTimeout(() => playTone(1600, 0.1, 'sine', 0.11), 70); }
 function sndStreak()    { playTone(700, 0.04, 'sine', 0.08); }
-function sndGameOver()  { playTone(300, 0.15, 'sawtooth', 0.1); setTimeout(() => playTone(200, 0.2, 'sawtooth', 0.1), 150); setTimeout(() => playTone(120, 0.4, 'sawtooth', 0.08), 350); }
+function sndGameOver()  {
+  if (playWavEffect('game-over', 0.3)) return;
+  playTone(300, 0.15, 'sawtooth', 0.1); setTimeout(() => playTone(200, 0.2, 'sawtooth', 0.1), 150); setTimeout(() => playTone(120, 0.4, 'sawtooth', 0.08), 350); }
 function sndStart()     { playTone(660, 0.08, 'sine', 0.10); setTimeout(() => playTone(880, 0.12, 'sine', 0.10), 90); }
-function sndChiliCatch() { playTone(330,0.08,'sawtooth',0.10); setTimeout(()=>playTone(494,0.08,'sawtooth',0.10),70); setTimeout(()=>playTone(740,0.10,'sawtooth',0.11),140); setTimeout(()=>playTone(988,0.22,'square',0.10),210); }
-function sndSizzle() {   // short burst of filtered noise, like oil on a grill
+function sndChiliCatch() {
+  if (playWavEffect('chili-rush-start', 0)) return;
+  playTone(330,0.08,'sawtooth',0.10); setTimeout(()=>playTone(494,0.08,'sawtooth',0.10),70); setTimeout(()=>playTone(740,0.10,'sawtooth',0.11),140); setTimeout(()=>playTone(988,0.22,'square',0.10),210); }
+function sndSizzle() {
+  if (playWavEffect('chili-sizzle', 0)) return;
+    // short burst of filtered noise, like oil on a grill
   if (!audioCtx || muted) return;
   const len = Math.floor(audioCtx.sampleRate * 0.35), buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate), d = buf.getChannelData(0);
   for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
@@ -593,7 +767,9 @@ function sndSizzle() {   // short burst of filtered noise, like oil on a grill
 }
 function sndForkSmash() { playTone(180,0.12,'square',0.12); setTimeout(()=>playTone(1400,0.08,'triangle',0.09),40); }
 function sndCoolDown()  { playTone(784,0.08,'sine',0.10); setTimeout(()=>playTone(523,0.10,'sine',0.09),90); setTimeout(()=>playTone(392,0.18,'sine',0.08),180); }
-function sndFork()      { playTone(900, 0.04, 'sine', 0.08); setTimeout(() => playTone(1100, 0.06, 'sine', 0.07), 40); } // clink sound
+function sndFork()      {
+  if (playWavEffect('fork-tink', 0)) return;
+  playTone(900, 0.04, 'sine', 0.08); setTimeout(() => playTone(1100, 0.06, 'sine', 0.07), 40); } // clink sound
 
 // --- State ---
 const STATE = { MENU: 0, INTRO: 3, PLAYING: 1, GAMEOVER: 2, BONUS: 4 };
@@ -795,6 +971,7 @@ function drawForks() {
 // GAMEPLAY DOGS
 // ============================================================
 function sndDogReward() {
+  if (playWavEffect('dog-pickup', 0)) return;
   sndBark();
   playTone(523, 0.08, 'sine', 0.13);
   setTimeout(() => playTone(659, 0.08, 'sine', 0.13), 90);
@@ -1009,6 +1186,7 @@ function spawnBun() {
 }
 
 function resetGame() {
+  stopChaseEffects(); wavDuckUntil = 0;   // skipping the intro cuts the chase foley; gameplay music starts once
   frank = { x:70, y:H*0.4, vy:0, squash:1, stretch:1, alive:true };
   buns=[]; splats=[]; particles=[]; floatingTexts=[]; forks=[]; gameDogs=[];
   score=0; lives=3; streak=0; bestStreak=0;
@@ -1036,12 +1214,14 @@ function startIntro() {
     dogSwapped: false,   // flips to true when chef catches dog
   };
   state = STATE.INTRO;
+  if (!playChaseFrame(0)) sndStart();
 }
 
 // --- Input ---
 function onTap() {
   ensureAudio();
-  if (state === STATE.MENU)     { sndStart(); startIntro(); return; }
+  prepareWavs();
+  if (state === STATE.MENU)     { startIntro(); return; }
   if (state === STATE.INTRO)    { resetGame(); return; }
   if (state === STATE.BONUS) { if (frank.alive) { frank.vy=FLAP_POWER; frank.squash=1.3; frank.stretch=0.7; sndFlap(); } return; } // tap to skip intro
   if (state === STATE.GAMEOVER) { if (gameOverDelay > 40) resetGame(); return; }
@@ -1067,6 +1247,16 @@ function handleScoresTap(clientX, clientY) {
   return false;
 }
 
+const CREDITS_BTN = { w: 86, h: 30 };
+function creditsBtnVisible() { return state === STATE.MENU && !scoresOpen; }   // start screen (game over has its own warning text there)
+function isCreditsTap(clientX, clientY) {
+  if (!creditsBtnVisible()) return false;
+  const rect = canvas.getBoundingClientRect();
+  const cx = (clientX - rect.left) * (W / rect.width), cy = (clientY - rect.top) * (H / rect.height);
+  const btnY = H - 48;
+  return cx > W - 14 - CREDITS_BTN.w - 6 && cx < W - 8 &&
+         cy > btnY - 8 && cy < btnY + MUTE_BTN.size + 8;
+}
 function isMusicTap(clientX, clientY) {
   const rect = canvas.getBoundingClientRect();
   const cx = (clientX - rect.left) * (W / rect.width), cy = (clientY - rect.top) * (H / rect.height);
@@ -1090,6 +1280,7 @@ canvas.addEventListener('touchstart', e => {
   const t = e.touches[0];
   if (isMuteTap(t.clientX, t.clientY)) { muted = !muted; return; }
   if (isMusicTap(t.clientX, t.clientY)) { ensureAudio(); setMusic(!musicOn); return; }
+  if (isCreditsTap(t.clientX, t.clientY)) { fbShowCredits(); return; }
   if (isGcTap(t.clientX, t.clientY)) { gcShowBoard(); return; }
   if (handleScoresTap(t.clientX, t.clientY)) return;
   onTap();
@@ -1098,6 +1289,7 @@ canvas.addEventListener('touchend',   e => { e.preventDefault(); onRelease(); })
 canvas.addEventListener('mousedown', e => {
   if (isMuteTap(e.clientX, e.clientY)) { muted = !muted; return; }
   if (isMusicTap(e.clientX, e.clientY)) { ensureAudio(); setMusic(!musicOn); return; }
+  if (isCreditsTap(e.clientX, e.clientY)) { fbShowCredits(); return; }
   if (isGcTap(e.clientX, e.clientY)) { gcShowBoard(); return; }
   if (handleScoresTap(e.clientX, e.clientY)) return;
   onTap();
@@ -1135,6 +1327,7 @@ function addSplat(x, y) {
 function updateIntro() {
   const f = intro;
   f.frame++;
+  const playedChaseCue = playChaseFrame(f.frame);
 
   // Phase 1 (0-65): dog and chef run in from the LEFT, moving right
   if (f.frame <= 65) {
@@ -1151,7 +1344,7 @@ function updateIntro() {
     f.chefX += 2.8;                     // chef lunges forward (rightward)
     f.frankX = f.dogX + 38;
     f.frankY = f.dogY - 12;
-    if (f.frame === 78) { sndFork(); shakeAmount = 6; }
+    if (f.frame === 78) { if (!playedChaseCue) sndFork(); shakeAmount = 6; }
   }
 
   // Phase 3 (92-135): dog falls down, frank launches up and LEFT toward player start
@@ -1162,7 +1355,7 @@ function updateIntro() {
       f.frankFlying = true;
       f.frankVY = -12;
       f.dogSwapped = true;   // swap dog image instantly
-      sndFlap();
+      if (!playedChaseCue) sndFlap();
     }
     if (f.frankFlying) {
       f.frankVY += 0.30;
@@ -1189,10 +1382,12 @@ function updateIntro() {
 
 
 function sndBonusStart() {
+  if (wavBuffers.has('dog-parade-loop')) return;   // the Dog Parade loop takes over
   playTone(523,0.08,'sine',0.14); setTimeout(()=>playTone(659,0.08,'sine',0.14),100);
   setTimeout(()=>playTone(784,0.08,'sine',0.14),200); setTimeout(()=>playTone(1047,0.25,'sine',0.18),300);
 }
 function sndBonusEnd() {
+  if (wavBuffers.has('dog-parade-loop')) return;
   playTone(1047,0.08,'sine',0.14); setTimeout(()=>playTone(784,0.08,'sine',0.14),100);
   setTimeout(()=>playTone(659,0.08,'sine',0.14),200); setTimeout(()=>playTone(523,0.25,'sine',0.18),300);
 }
@@ -1365,7 +1560,7 @@ function updateChili() {
   chili.y = chili.cy + Math.sin(chili.angle) * chili.r;
   if (frank.alive && Math.abs(frank.x - chili.x) < 30 + frankGrowX() && Math.abs(frank.y - chili.y) < 28 + frankGrowY()) {
     chiliRush = CHILI_RUSH_FRAMES; score += 500;
-    sndChiliCatch(); sndSizzle(); shakeAmount = 8;
+    sndChiliCatch(); if (!playWavEffect('chili-sizzle', .24)) sndSizzle(); shakeAmount = 8;
     addParticles(chili.x, chili.y, '#FF4500', 22); addParticles(chili.x, chili.y, '#FFD700', 12);
     addFloatingText(W / 2, H / 2 - 50, 'CHILI RUSH!', '#FF3300', 34);
     addFloatingText(chili.x, chili.y - 30, '+500', '#FFD700', 22);
@@ -1418,7 +1613,7 @@ function landFrank(bun) {
   if (bun.condiment) { mult *= bun.condiment.multiplier; sndCondiment(); addParticles(bun.x,bun.y,bun.condiment.color,15); }
   streak++; franksLanded++; if (streak>bestStreak) bestStreak=streak;
   let sm=1;
-  if      (streak>=10){sm=3;streakText='WIENER WIZARD!';streakTimer=90;sndStreak();gcAchieve('wienerwizard');}
+  if      (streak>=10){sm=3;streakText='WIENER WIZARD!';streakTimer=90;if (!(streak === 10 && playWavEffect('wiener-wizard', .14))) sndStreak();gcAchieve('wienerwizard');}
   else if (streak>=5) {sm=2;streakText='FRANKS ON FIRE!';streakTimer=60;sndStreak();}
   else if (streak>=3) {sm=1.5;streakText='ON A ROLL!';streakTimer=45;sndStreak();}
   if (streak === 3 || streak === 5 || streak === 10) sndCheer(streak === 10);   // crowd cheer when a streak level is reached
@@ -1913,6 +2108,12 @@ function drawMuteBtn() {
   ctx.globalAlpha = (musicOn && !muted) ? 1 : 0.4;
   ctx.fillText('🎵', mx + size/2, y + size/2);
   if (!musicOn) { ctx.strokeStyle = '#FF4444'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(mx + 8, y + 8); ctx.lineTo(mx + size - 8, y + size - 8); ctx.stroke(); }
+  if (creditsBtnVisible()) {   // music credit (CC BY 4.0) is one tap away
+    const cw = CREDITS_BTN.w, ch = CREDITS_BTN.h, cx = W - 14 - cw, cy = y + (size - ch) / 2;
+    ctx.globalAlpha = 0.85; ctx.fillStyle = 'rgba(0,0,0,0.55)'; rrect(cx, cy, cw, ch, ch / 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,215,0,0.6)'; ctx.lineWidth = 1.5; rrect(cx, cy, cw, ch, ch / 2); ctx.stroke();
+    ctx.globalAlpha = 1; ctx.fillStyle = '#FFD700'; ctx.font = 'bold 13px Arial'; ctx.fillText('ⓘ Credits', cx + cw / 2, cy + ch / 2 + 1);
+  }
   ctx.restore();
 }
 

@@ -1,0 +1,97 @@
+{
+  "fps": 60,
+  "endFrame": 155,
+  "bedGain": 0.41,
+  "cues": [
+    {
+      "frame": 0,
+      "wav": "chase-tap",
+      "gain": 0.62
+    },
+    {
+      "frame": 6,
+      "wav": "chase-dog-yip",
+      "gain": 0.63
+    },
+    {
+      "frame": 10,
+      "wav": "chase-paw-step",
+      "gain": 0.3
+    },
+    {
+      "frame": 18,
+      "wav": "chase-paw-step",
+      "gain": 0.38
+    },
+    {
+      "frame": 22,
+      "wav": "chase-dog-yip",
+      "gain": 0.43
+    },
+    {
+      "frame": 26,
+      "wav": "chase-paw-step",
+      "gain": 0.44
+    },
+    {
+      "frame": 33,
+      "wav": "chase-chef-step",
+      "gain": 0.37
+    },
+    {
+      "frame": 35,
+      "wav": "chase-paw-step",
+      "gain": 0.47
+    },
+    {
+      "frame": 44,
+      "wav": "chase-paw-step",
+      "gain": 0.5
+    },
+    {
+      "frame": 45,
+      "wav": "chase-chef-step",
+      "gain": 0.48
+    },
+    {
+      "frame": 53,
+      "wav": "chase-paw-step",
+      "gain": 0.54
+    },
+    {
+      "frame": 56,
+      "wav": "chase-chef-step",
+      "gain": 0.54
+    },
+    {
+      "frame": 62,
+      "wav": "chase-paw-step",
+      "gain": 0.54
+    },
+    {
+      "frame": 65,
+      "wav": "chase-chef-step",
+      "gain": 0.58
+    },
+    {
+      "frame": 66,
+      "wav": "fork-whoosh",
+      "gain": 0.82
+    },
+    {
+      "frame": 78,
+      "wav": "fork-tink",
+      "gain": 0.85
+    },
+    {
+      "frame": 93,
+      "wav": "chase-frank-zip",
+      "gain": 0.83
+    },
+    {
+      "frame": 121,
+      "wav": "chase-tumble",
+      "gain": 0.67
+    }
+  ]
+}
