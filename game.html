@@ -535,7 +535,7 @@ function musicMode() {
 function musicNoteAt(freq, t, dur, type, vol) {
   const o = audioCtx.createOscillator(), g = audioCtx.createGain();
   o.type = type; o.frequency.value = freq;
-  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.04);
   o.connect(g); g.connect(musicGain); o.start(t); o.stop(t + dur + 0.02);
   o.onended = () => { o.disconnect(); g.disconnect(); };
 }
@@ -550,7 +550,11 @@ function musicTick() {
   if (!audioCtx || audioCtx.state !== 'running') return;
   const mode = musicMode();
   if (!musicOn || muted || mode === 'off') { musicNext = 0; return; }
-  if (!musicGain) { musicGain = audioCtx.createGain(); musicGain.gain.value = 0.55; musicGain.connect(audioCtx.destination); }
+  if (!musicGain) {
+    musicGain = audioCtx.createGain(); musicGain.gain.value = 0.45;
+    const warm = audioCtx.createBiquadFilter(); warm.type = 'lowpass'; warm.frequency.value = 3200; warm.Q.value = 0.5;   // takes the fizz off
+    musicGain.connect(warm); warm.connect(audioCtx.destination);
+  }
   const bpm = mode === 'bonus' ? 152 : mode === 'rush' ? 144 : mode === 'menu' ? 112 : 128;
   const step = 60 / bpm / 4;                                   // sixteenth notes
   if (musicNext < audioCtx.currentTime) musicNext = audioCtx.currentTime + 0.05;
@@ -559,12 +563,11 @@ function musicTick() {
     if (i % 4 === 0) musicNoteAt(NOTE(chord[0] - 12), t, step * 3, 'triangle', 0.09);          // bass on the beat
     if (i % 4 === 2) musicNoteAt(NOTE(chord[0]), t, step * 1.5, 'triangle', 0.05);              // bass bounce
     if (mode !== 'menu') {
-      if (i % 2 === 1) musicHat(t, 0.025);                                                       // off-beat hats
-      if (i % 8 === 4) { const c = chord.map(n => NOTE(n + 12)); c.forEach(f => musicNoteAt(f, t, step * 1.2, 'square', 0.012)); }   // chord stab
+      if (i % 8 === 4) { const c = chord.map(n => NOTE(n + 12)); c.forEach(f => musicNoteAt(f, t, step * 1.2, 'triangle', 0.02)); }   // chord stab
     }
     const m = MUSIC_MELODY[i];
-    if (m) musicNoteAt(NOTE(m + (mode === 'bonus' ? 12 : 0)), t, step * 1.6, 'square', mode === 'menu' ? 0.018 : 0.022);
-    if (mode === 'rush' && i % 2 === 0) musicNoteAt(NOTE(chord[i % 6 < 2 ? 0 : i % 6 < 4 ? 1 : 2] + 24), t, step * 0.8, 'sawtooth', 0.012);   // hot arpeggio
+    if (m) musicNoteAt(NOTE(m + (mode === 'bonus' ? 12 : 0)), t, step * 1.6, 'triangle', mode === 'menu' ? 0.035 : 0.045);
+    if (mode === 'rush' && i % 2 === 0) musicNoteAt(NOTE(chord[i % 6 < 2 ? 0 : i % 6 < 4 ? 1 : 2] + 24), t, step * 0.8, 'triangle', 0.02);   // hot arpeggio
     musicStep++; musicNext += step;
   }
 }
