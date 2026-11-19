@@ -13,18 +13,24 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS players (id TEXT PRIMARY KEY, token_hash TEXT NOT NULL UNIQUE, nickname TEXT NOT NULL,
      best INTEGER NOT NULL DEFAULT 0, best_at INTEGER, last_score_at INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS packs (id TEXT PRIMARY KEY, code TEXT NOT NULL UNIQUE, name TEXT NOT NULL, owner_id TEXT NOT NULL,
-     default_board TEXT NOT NULL DEFAULT 'week', created_at INTEGER NOT NULL)`,
+     default_board TEXT NOT NULL DEFAULT 'week', created_at INTEGER NOT NULL, approval INTEGER NOT NULL DEFAULT 1)`,
   `CREATE TABLE IF NOT EXISTS members (pack_id TEXT NOT NULL, player_id TEXT NOT NULL, joined_at INTEGER NOT NULL,
      PRIMARY KEY (pack_id, player_id))`,
   `CREATE INDEX IF NOT EXISTS members_player ON members (player_id)`,
   `CREATE TABLE IF NOT EXISTS weekly (player_id TEXT NOT NULL, week TEXT NOT NULL, best INTEGER NOT NULL, best_at INTEGER NOT NULL,
      PRIMARY KEY (player_id, week))`,
   `CREATE TABLE IF NOT EXISTS limits (k TEXT PRIMARY KEY, n INTEGER NOT NULL, day TEXT NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS requests (pack_id TEXT NOT NULL, player_id TEXT NOT NULL, requested_at INTEGER NOT NULL,
+     PRIMARY KEY (pack_id, player_id))`,
+  `CREATE INDEX IF NOT EXISTS requests_player ON requests (player_id)`,
 ];
+const MAX_WAITING_PER_PACK = 50, MAX_REQUESTS_PER_PLAYER = 5;
 let schemaReady = false;
 async function ensureSchema(db) {
   if (schemaReady) return;
   await db.batch(SCHEMA.map(s => db.prepare(s)));
+  // Packs made before "approve to join" existed get the column (it already exists everywhere after the first run)
+  try { await db.prepare('ALTER TABLE packs ADD COLUMN approval INTEGER NOT NULL DEFAULT 1').run(); } catch (e) {}
   schemaReady = true;
 }
 
@@ -108,14 +114,21 @@ async function needPlayer(db, request) {
 async function myPacks(db, playerId) {
   const { results } = await db.prepare(
     `SELECT p.id, p.code, p.name, p.default_board, p.owner_id,
-            (SELECT COUNT(*) FROM members m2 WHERE m2.pack_id = p.id) AS members
+            (SELECT COUNT(*) FROM members m2 WHERE m2.pack_id = p.id) AS members,
+            CASE WHEN p.owner_id = m.player_id THEN (SELECT COUNT(*) FROM requests r WHERE r.pack_id = p.id) ELSE 0 END AS waiting
        FROM members m JOIN packs p ON p.id = m.pack_id
       WHERE m.player_id = ? ORDER BY m.joined_at`).bind(playerId).all();
   return results.map(r => ({ id: r.id, code: r.code, name: r.name, defaultBoard: r.default_board,
-    members: r.members, isOwner: r.owner_id === playerId }));
+    members: r.members, isOwner: r.owner_id === playerId, waiting: r.waiting }));
+}
+async function myRequests(db, playerId) {
+  const { results } = await db.prepare(
+    'SELECT p.id, p.name FROM requests r JOIN packs p ON p.id = r.pack_id WHERE r.player_id = ? ORDER BY r.requested_at').bind(playerId).all();
+  return results.map(r => ({ id: r.id, name: r.name }));
 }
 async function meResponse(db, p, extra) {
-  return Object.assign({ player: { id: p.id, nickname: p.nickname, best: p.best }, packs: await myPacks(db, p.id) }, extra || {});
+  return Object.assign({ player: { id: p.id, nickname: p.nickname, best: p.best }, packs: await myPacks(db, p.id),
+    requests: await myRequests(db, p.id) }, extra || {});
 }
 
 // ---------- packs ----------
@@ -135,7 +148,10 @@ async function leavePack(db, pack, playerId) {
   if (pack.owner_id !== playerId) return;
   const next = await db.prepare('SELECT player_id FROM members WHERE pack_id = ? ORDER BY joined_at LIMIT 1').bind(pack.id).first();
   if (next) await db.prepare('UPDATE packs SET owner_id = ? WHERE id = ?').bind(next.player_id, pack.id).run();
-  else await db.prepare('DELETE FROM packs WHERE id = ?').bind(pack.id).run();   // last one out: the Pack is gone
+  else await db.batch([   // last one out: the Pack and its join requests are gone
+    db.prepare('DELETE FROM requests WHERE pack_id = ?').bind(pack.id),
+    db.prepare('DELETE FROM packs WHERE id = ?').bind(pack.id),
+  ]);
 }
 async function board(db, pack, playerId, which, now) {
   const week = weekKey(now);
@@ -149,7 +165,13 @@ async function board(db, pack, playerId, which, now) {
   const { results } = await stmt.all();
   const rows = results.map(r => ({ id: r.id, name: r.nickname, score: r.score, you: r.id === playerId, owner: r.id === pack.owner_id }));
   const out = { pack: { id: pack.id, code: pack.code, name: pack.name, defaultBoard: pack.default_board,
-    isOwner: pack.owner_id === playerId, members: rows.length }, board: which, rows };
+    isOwner: pack.owner_id === playerId, members: rows.length, approval: !!pack.approval }, board: which, rows };
+  if (pack.owner_id === playerId) {
+    const { results: reqs } = await db.prepare(
+      `SELECT pl.id, pl.nickname FROM requests r JOIN players pl ON pl.id = r.player_id
+        WHERE r.pack_id = ? ORDER BY r.requested_at LIMIT ${MAX_WAITING_PER_PACK}`).bind(pack.id).all();
+    out.requests = reqs.map(r => ({ id: r.id, name: r.nickname }));
+  }
   if (which !== 'all') {
     const next = new Date(week + 'T00:00:00Z').getTime() + 7 * 86400000;
     out.resetsAt = next;
@@ -160,6 +182,14 @@ async function board(db, pack, playerId, which, now) {
     if (last && last.best > 0) out.lastWeekTop = { name: last.nickname, score: last.best };
   }
   return out;
+}
+
+async function newPackCode(db) {
+  for (let i = 0; i < 6; i++) {
+    const c = randCode(6);
+    if (!(await db.prepare('SELECT 1 FROM packs WHERE code = ?').bind(c).first())) return c;
+  }
+  fail(503, 'Could not make a Pack code. Please try again.');
 }
 
 // ---------- scores ----------
@@ -216,6 +246,7 @@ async function route(request, env, path) {
     for (const pack of results) await leavePack(db, pack, p.id);
     await db.batch([
       db.prepare('DELETE FROM weekly WHERE player_id = ?').bind(p.id),
+      db.prepare('DELETE FROM requests WHERE player_id = ?').bind(p.id),
       db.prepare('DELETE FROM limits WHERE k = ?').bind('nk:' + p.id),
       db.prepare('DELETE FROM players WHERE id = ?').bind(p.id),
     ]);
@@ -225,17 +256,12 @@ async function route(request, env, path) {
     const p = await needPlayer(db, request);
     const name = cleanName(body.name, 3, 24, 'Pack name');
     const defaultBoard = body.defaultBoard === 'all' ? 'all' : 'week';
+    const approval = body.approval === false ? 0 : 1;
     if ((await packCount(db, p.id)) >= MAX_PACKS_PER_PLAYER) fail(409, `You can be in up to ${MAX_PACKS_PER_PLAYER} Packs. Leave one to make a new one.`);
     if (!(await underLimit(db, 'nk:' + p.id, NEW_PACKS_PER_PLAYER_PER_DAY))) fail(429, 'That is a lot of new Packs for one day. Try again tomorrow.');
-    const id = randCode(12);
-    let code = '';
-    for (let i = 0; i < 6 && !code; i++) {
-      const c = randCode(6);
-      if (!(await db.prepare('SELECT 1 FROM packs WHERE code = ?').bind(c).first())) code = c;
-    }
-    if (!code) fail(503, 'Could not make a Pack code. Please try again.');
+    const id = randCode(12), code = await newPackCode(db);
     await db.batch([
-      db.prepare('INSERT INTO packs (id, code, name, owner_id, default_board, created_at) VALUES (?, ?, ?, ?, ?, ?)').bind(id, code, name, p.id, defaultBoard, now),
+      db.prepare('INSERT INTO packs (id, code, name, owner_id, default_board, created_at, approval) VALUES (?, ?, ?, ?, ?, ?, ?)').bind(id, code, name, p.id, defaultBoard, now, approval),
       db.prepare('INSERT INTO members (pack_id, player_id, joined_at) VALUES (?, ?, ?)').bind(id, p.id, now),
     ]);
     const pack = await db.prepare('SELECT * FROM packs WHERE id = ?').bind(id).first();
@@ -252,11 +278,28 @@ async function route(request, env, path) {
       if ((await packCount(db, p.id)) >= MAX_PACKS_PER_PLAYER) fail(409, `You can be in up to ${MAX_PACKS_PER_PLAYER} Packs. Leave one to join this one.`);
       const n = await db.prepare('SELECT COUNT(*) AS n FROM members WHERE pack_id = ?').bind(pack.id).first();
       if (n && n.n >= MAX_MEMBERS) fail(409, `That Pack is full (${MAX_MEMBERS} players).`);
+      if (pack.approval) {   // the leader lets each new player in
+        const asked = await db.prepare('SELECT 1 FROM requests WHERE pack_id = ? AND player_id = ?').bind(pack.id, p.id).first();
+        if (!asked) {
+          const mine = await db.prepare('SELECT COUNT(*) AS n FROM requests WHERE player_id = ?').bind(p.id).first();
+          if (mine && mine.n >= MAX_REQUESTS_PER_PLAYER) fail(409, `You're already waiting on ${MAX_REQUESTS_PER_PLAYER} Packs. Cancel one to ask to join another.`);
+          const waiting = await db.prepare('SELECT COUNT(*) AS n FROM requests WHERE pack_id = ?').bind(pack.id).first();
+          if (waiting && waiting.n >= MAX_WAITING_PER_PACK) fail(409, 'That Pack has too many players waiting. Try again later.');
+          await db.prepare('INSERT INTO requests (pack_id, player_id, requested_at) VALUES (?, ?, ?)').bind(pack.id, p.id, now).run();
+        }
+        return meResponse(db, p, { pending: { id: pack.id, name: pack.name } });
+      }
       await db.prepare('INSERT OR IGNORE INTO members (pack_id, player_id, joined_at) VALUES (?, ?, ?)').bind(pack.id, p.id, now).run();
     }
     return board(db, pack, p.id, pack.default_board, now);
   }
-  let m = path.match(/^packs\/([A-Z0-9]{12})(?:\/(leave|remove|settings))?$/);
+  let m = path.match(/^packs\/([A-Z0-9]{12})\/cancel$/);
+  if (m && method === 'POST') {   // take back your own request to join
+    const p = await needPlayer(db, request);
+    await db.prepare('DELETE FROM requests WHERE pack_id = ? AND player_id = ?').bind(m[1], p.id).run();
+    return meResponse(db, p);
+  }
+  m = path.match(/^packs\/([A-Z0-9]{12})(?:\/(leave|remove|settings|approve|decline|newcode))?$/);
   if (m) {
     const p = await needPlayer(db, request);
     const pack = await packForMember(db, m[1], p.id);
@@ -266,17 +309,36 @@ async function route(request, env, path) {
       return board(db, pack, p.id, which, now);
     }
     if (method === 'POST' && action === 'leave') { await leavePack(db, pack, p.id); return meResponse(db, p); }
-    if (method === 'POST' && (action === 'remove' || action === 'settings')) {
+    if (method === 'POST' && action) {
       if (pack.owner_id !== p.id) fail(403, 'Only the Pack leader can do that.');
+      const who = String(body.playerId || '');
       if (action === 'remove') {
-        const who = String(body.playerId || '');
         if (who === p.id) fail(400, 'Use Leave Pack to leave your own Pack.');
         await db.prepare('DELETE FROM members WHERE pack_id = ? AND player_id = ?').bind(pack.id, who).run();
+      } else if (action === 'approve') {
+        const asked = await db.prepare('SELECT 1 FROM requests WHERE pack_id = ? AND player_id = ?').bind(pack.id, who).first();
+        if (!asked) fail(404, 'That request is gone. The player may have cancelled it.');
+        const n = await db.prepare('SELECT COUNT(*) AS n FROM members WHERE pack_id = ?').bind(pack.id).first();
+        if (n && n.n >= MAX_MEMBERS) fail(409, `Your Pack is full (${MAX_MEMBERS} players).`);
+        if ((await packCount(db, who)) >= MAX_PACKS_PER_PLAYER) {
+          await db.prepare('DELETE FROM requests WHERE pack_id = ? AND player_id = ?').bind(pack.id, who).run();
+          fail(409, `That player is already in ${MAX_PACKS_PER_PLAYER} Packs, so they can't join. Their request was removed.`);
+        }
+        await db.batch([
+          db.prepare('INSERT OR IGNORE INTO members (pack_id, player_id, joined_at) VALUES (?, ?, ?)').bind(pack.id, who, now),
+          db.prepare('DELETE FROM requests WHERE pack_id = ? AND player_id = ?').bind(pack.id, who),
+        ]);
+      } else if (action === 'decline') {
+        await db.prepare('DELETE FROM requests WHERE pack_id = ? AND player_id = ?').bind(pack.id, who).run();
+      } else if (action === 'newcode') {   // the old code stops working right away
+        pack.code = await newPackCode(db);
+        await db.prepare('UPDATE packs SET code = ? WHERE id = ?').bind(pack.code, pack.id).run();
       } else {
-        const defaultBoard = body.defaultBoard === 'all' ? 'all' : 'week';
+        const defaultBoard = body.defaultBoard === 'all' ? 'all' : body.defaultBoard === 'week' ? 'week' : pack.default_board;
+        const approval = body.approval === undefined ? pack.approval : (body.approval ? 1 : 0);
         const name = body.name === undefined ? pack.name : cleanName(body.name, 3, 24, 'Pack name');
-        await db.prepare('UPDATE packs SET default_board = ?, name = ? WHERE id = ?').bind(defaultBoard, name, pack.id).run();
-        pack.default_board = defaultBoard; pack.name = name;
+        await db.prepare('UPDATE packs SET default_board = ?, name = ?, approval = ? WHERE id = ?').bind(defaultBoard, name, approval, pack.id).run();
+        pack.default_board = defaultBoard; pack.name = name; pack.approval = approval;
       }
       return board(db, pack, p.id, body.board === 'all' ? 'all' : 'week', now);
     }
@@ -295,7 +357,18 @@ async function route(request, env, path) {
                   ON CONFLICT (player_id, week) DO UPDATE SET best = MAX(best, excluded.best),
                   best_at = CASE WHEN excluded.best > best THEN excluded.best_at ELSE best_at END`).bind(p.id, week, run.score, now),
     ]);
-    return { ok: true };
+    // Where this leaves you in each of your Packs this week (shown on the Game Over screen)
+    const me = await db.prepare('SELECT best FROM weekly WHERE player_id = ? AND week = ?').bind(p.id, week).first();
+    const weekBest = me ? me.best : run.score;
+    const { results } = await db.prepare(
+      `SELECT p.id, p.name,
+              (SELECT COUNT(*) FROM members m2 WHERE m2.pack_id = p.id) AS players,
+              (SELECT COUNT(*) FROM members m3 JOIN weekly w ON w.player_id = m3.player_id AND w.week = ?
+                 WHERE m3.pack_id = p.id AND w.best > ?) AS ahead
+         FROM members m JOIN packs p ON p.id = m.pack_id WHERE m.player_id = ? ORDER BY m.joined_at`)
+      .bind(week, weekBest, p.id).all();
+    return { ok: true, score: run.score, weekBest, newWeekBest: run.score >= weekBest,
+      packs: results.map(r => ({ id: r.id, name: r.name, rank: r.ahead + 1, players: r.players })) };
   }
   fail(404, 'Not found.');
 }
