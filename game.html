@@ -336,7 +336,7 @@ if (ART_SET === 'a' || ART_SET === 'b') {
 }
 const sp = {};
 if (ART_SET === 'a' || ART_SET === 'b') {
-  ['frank','bun','grilled','bun-frank','grilled-frank','dog-a','dog-b','mustard','ketchup','relish','cheese','jalapeno']
+  ['frank','bun','grilled','bun-frank','grilled-frank','dog-a','dog-b','mustard','ketchup','relish','cheese','jalapeno','chili-a','chili-b']
     .forEach(k => { const im = new Image(); im.src = 'sp-' + k + '.png'; sp[k] = im; });
 }
 function spriteReady(k) { const im = sp[k]; return !!(im && im.complete && im.naturalWidth > 0); }
@@ -403,6 +403,18 @@ function sndCondiment() { playTone(1200, 0.06, 'sine', 0.13); setTimeout(() => p
 function sndStreak()    { playTone(700, 0.04, 'sine', 0.08); }
 function sndGameOver()  { playTone(300, 0.15, 'sawtooth', 0.1); setTimeout(() => playTone(200, 0.2, 'sawtooth', 0.1), 150); setTimeout(() => playTone(120, 0.4, 'sawtooth', 0.08), 350); }
 function sndStart()     { playTone(660, 0.08, 'sine', 0.10); setTimeout(() => playTone(880, 0.12, 'sine', 0.10), 90); }
+function sndChiliCatch() { playTone(330,0.08,'sawtooth',0.10); setTimeout(()=>playTone(494,0.08,'sawtooth',0.10),70); setTimeout(()=>playTone(740,0.10,'sawtooth',0.11),140); setTimeout(()=>playTone(988,0.22,'square',0.10),210); }
+function sndSizzle() {   // short burst of filtered noise, like oil on a grill
+  if (!audioCtx || muted) return;
+  const len = Math.floor(audioCtx.sampleRate * 0.35), buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+  const src = audioCtx.createBufferSource(), f = audioCtx.createBiquadFilter(), g = audioCtx.createGain();
+  src.buffer = buf; f.type = 'highpass'; f.frequency.value = 2500; g.gain.value = 0.06;
+  src.connect(f); f.connect(g); g.connect(audioCtx.destination); src.start();
+  src.onended = () => { src.disconnect(); f.disconnect(); g.disconnect(); };
+}
+function sndForkSmash() { playTone(180,0.12,'square',0.12); setTimeout(()=>playTone(1400,0.08,'triangle',0.09),40); }
+function sndCoolDown()  { playTone(784,0.08,'sine',0.10); setTimeout(()=>playTone(523,0.10,'sine',0.09),90); setTimeout(()=>playTone(392,0.18,'sine',0.08),180); }
 function sndFork()      { playTone(900, 0.04, 'sine', 0.08); setTimeout(() => playTone(1100, 0.06, 'sine', 0.07), 40); } // clink sound
 
 // --- State ---
@@ -450,6 +462,11 @@ let nextForkDist = 300; // distance until next fork spawns
 
 // --- Gameplay dogs ---
 let gameDogs = [];
+// --- Chili Rush: a chili dog floats in a circle; catch it and the frank is red-hot for 6 seconds ---
+// double points on every landing, and forks are smashed instead of costing a life
+const CHILI_RUSH_FRAMES = 360;        // 6 s at 60 updates a second
+let chili = null, chiliRush = 0, chiliCooldown = 0;
+function nextChiliWait() { return 1800 + Math.floor(Math.random() * 900); }   // 30 to 45 s
 let nextDogDist = 9999; // unlocks after box 3
 
 function spawnFork() {
@@ -526,7 +543,13 @@ function updateForks() {
       const dx = Math.abs(frank.x - tineX);
       const dy = Math.abs(frank.y - tineY);
       if (dx < 18 + frankGrowX() && dy < 26 + frankGrowY()) {
-        loseLife();
+        if (chiliRush > 0) {   // red-hot frank blasts through the fork
+          score += 250; sndForkSmash(); shakeAmount = 7;
+          addParticles(tineX, tineY, '#C0C0C0', 14); addParticles(tineX, tineY, '#FF6600', 10);
+          addFloatingText(Math.min(Math.max(tineX, 130), W - 130), tineY - 30, 'FORK SMASHED! +250', '#FF6600', 22);
+        } else {
+          loseLife();
+        }
         forks.splice(i, 1);
         continue;
       }
@@ -813,6 +836,7 @@ function resetGame() {
   scrollSpeed=2.2; scrollX=0; nextBunDist=0;
   shakeAmount=0; streakText=''; streakTimer=0; gameOverDelay=0; gracePeriod=0;
   nextForkDist = 320; nextDogDist = 9999;
+  chili = null; chiliRush = 0; chiliCooldown = nextChiliWait();
   bonusTimer=0; bonusDogs=[]; bonusScore=0;
   lastRunIndex=-1;
   state = STATE.PLAYING;
@@ -967,6 +991,7 @@ function startBonusRound() {
   state = STATE.BONUS;
   bonusTimer = BONUS_DURATION;
   bonusDogs = []; nextBonusDogDist = 0; bonusScore = 0;
+  chili = null;
   buns = []; forks = [];
   sndBonusStart(); shakeAmount = 8;
 }
@@ -1090,6 +1115,7 @@ function update() {
 
   updateForks();
   updateGameDogs();
+  updateChili();
 
   shakeAmount *= 0.85; if (shakeAmount < 0.5) shakeAmount = 0;
   if (streakTimer > 0) streakTimer--;
@@ -1111,6 +1137,68 @@ function update() {
   }
 }
 
+function updateChili() {
+  if (chiliRush > 0) {
+    chiliRush--;
+    if (frank.alive && frameCount % 3 === 0) particles.push({ x: frank.x - 30, y: frank.y + (Math.random() - 0.5) * 10, vx: -1.5 - Math.random(), vy: -0.6 - Math.random() * 0.8, life: 24, maxLife: 24, color: Math.random() < 0.5 ? '#FF4500' : '#FFAA00', size: 4 + Math.random() * 3 });
+    if (chiliRush % 45 === 0 && chiliRush > 0) sndSizzle();
+    if (chiliRush === 0) { sndCoolDown(); addParticles(frank.x, frank.y, '#BBBBBB', 16); addFloatingText(Math.max(frank.x + 40, 90), frank.y - 30, 'COOLED DOWN', '#DDDDDD', 20); }
+  }
+  if (!chili) {
+    if (boxesCompleted < 1 || chiliRush > 0) return;   // first one appears after the first box
+    if (--chiliCooldown > 0) return;
+    chili = { cx: W + 70, cy: H * 0.25 + Math.random() * H * 0.35, angle: Math.random() * Math.PI * 2, r: 38, frame: 0 };
+    return;
+  }
+  chili.cx -= scrollSpeed * 0.9; chili.angle += 0.055; chili.frame++;
+  chili.x = chili.cx + Math.cos(chili.angle) * chili.r;
+  chili.y = chili.cy + Math.sin(chili.angle) * chili.r;
+  if (frank.alive && Math.abs(frank.x - chili.x) < 30 + frankGrowX() && Math.abs(frank.y - chili.y) < 28 + frankGrowY()) {
+    chiliRush = CHILI_RUSH_FRAMES; score += 500;
+    sndChiliCatch(); sndSizzle(); shakeAmount = 8;
+    addParticles(chili.x, chili.y, '#FF4500', 22); addParticles(chili.x, chili.y, '#FFD700', 12);
+    addFloatingText(W / 2, H / 2 - 50, 'CHILI RUSH!', '#FF3300', 34);
+    addFloatingText(chili.x, chili.y - 30, '+500', '#FFD700', 22);
+    chili = null; chiliCooldown = nextChiliWait();
+    return;
+  }
+  if (chili.cx < -90) { chili = null; chiliCooldown = nextChiliWait(); }
+}
+function drawChili() {
+  if (!chili || chili.x === undefined) return;
+  ctx.save(); ctx.translate(chili.x, chili.y);
+  const bob = Math.sin(chili.frame * 0.1) * 0.05; ctx.scale(1 + bob, 1 - bob);
+  ctx.beginPath(); ctx.arc(0, 0, 40, 0, Math.PI * 2);
+  ctx.strokeStyle = `rgba(255,60,0,${0.45 + Math.sin(chili.frame * 0.15) * 0.25})`; ctx.lineWidth = 3; ctx.stroke();
+  const key = (Math.floor(chili.frame / 15) % 2) ? 'chili-b' : 'chili-a';
+  if (spriteReady(key)) {
+    ctx.drawImage(sp[key], -40, -30, 80, 60);
+  } else {
+    // drawn chili dog until the final art is added: hot dog in a bun, heaped with chili and cheese
+    if (spriteReady('bun-frank')) ctx.drawImage(sp['bun-frank'], -40, -12, 80, 34);
+    else { ctx.fillStyle = '#E0A050'; rrect(-34, -4, 68, 18, 9); ctx.fill(); ctx.fillStyle = '#C0392B'; rrect(-30, -10, 60, 12, 6); ctx.fill(); }
+    ctx.fillStyle = '#8B2A10';
+    for (let i = -3; i <= 3; i++) { ctx.beginPath(); ctx.arc(i * 8, -12 + Math.sin(i * 1.7) * 2, 7, 0, Math.PI * 2); ctx.fill(); }
+    ctx.fillStyle = '#FFB300';
+    for (let i = -2; i <= 2; i++) { ctx.fillRect(i * 9 - 3, -19 + (i % 2) * 2, 7, 3); }
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 2;
+    for (let i = -1; i <= 1; i++) { const sx = i * 12, off = (chili.frame * 0.6 + i * 9) % 14; ctx.beginPath(); ctx.moveTo(sx, -22 - off); ctx.quadraticCurveTo(sx + 5, -28 - off, sx, -34 - off); ctx.stroke(); }
+  }
+  ctx.restore();
+}
+function drawChiliRushOverlay() {
+  if (chiliRush <= 0) return;
+  const ending = chiliRush < 90, a = (ending && Math.floor(chiliRush / 8) % 2) ? 0.05 : 0.16 + Math.sin(frameCount * 0.2) * 0.04;
+  const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.75);
+  g.addColorStop(0, 'rgba(255,60,0,0)'); g.addColorStop(1, `rgba(255,60,0,${a})`);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  const bx = 12, by = 76, bw = W - 24, bh = 8;
+  ctx.fillStyle = 'rgba(0,0,0,0.4)'; rrect(bx, by, bw, bh, 4); ctx.fill();
+  ctx.fillStyle = '#FF3300'; rrect(bx, by, Math.max(bw * chiliRush / CHILI_RUSH_FRAMES, 0), bh, 4); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 10px Arial'; ctx.textAlign = 'center';
+  ctx.fillText('🌶 CHILI RUSH x2', W / 2, by + 20);
+}
+
 function landFrank(bun) {
   let mult = bun.type.multiplier||1;
   if (bun.grilled) {
@@ -1123,9 +1211,10 @@ function landFrank(bun) {
   if      (streak>=10){sm=3;streakText='WIENER WIZARD!';streakTimer=90;sndStreak();}
   else if (streak>=5) {sm=2;streakText='FRANKS ON FIRE!';streakTimer=60;sndStreak();}
   else if (streak>=3) {sm=1.5;streakText='ON A ROLL!';streakTimer=45;sndStreak();}
-  const pts=Math.floor(100*mult*sm); score+=pts; sndLand();
+  const rushMult = chiliRush > 0 ? 2 : 1;
+  const pts=Math.floor(100*mult*sm*rushMult); score+=pts; sndLand();
   addParticles(bun.x,bun.y,'#FFD700',10); shakeAmount=bun.condiment?6:3;
-  addFloatingText(bun.x,bun.y-20,'+'+pts+(bun.condiment?' '+bun.condiment.label:''),bun.condiment?bun.condiment.color:'#FFD700',bun.condiment?21:20);
+  addFloatingText(bun.x,bun.y-20,'+'+pts+(bun.condiment?' '+bun.condiment.label:'')+(rushMult>1?' x2':''),bun.condiment?bun.condiment.color:'#FFD700',bun.condiment?21:20);
   boxFranks++;
   if (boxFranks>=6) {
     boxFranks=0; boxesCompleted++;
@@ -1585,11 +1674,14 @@ function draw() {
   for (const b of buns) drawBun(b);
   drawForks();
   drawGameDogs();
+  drawChili();
   if (state===STATE.PLAYING&&frank.alive) {
+    if (chiliRush > 0) { ctx.save(); ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 16 + Math.sin(frameCount * 0.3) * 6; drawFrank(frank.x,frank.y,frank.squash,frank.stretch); ctx.restore(); }
     drawFrank(frank.x,frank.y,frank.squash,frank.stretch);
     if (Math.abs(frank.vy)>3) { ctx.globalAlpha=0.25; drawFrank(frank.x,frank.y-frank.vy*1.5,frank.squash*0.9,frank.stretch*0.9); ctx.globalAlpha=1; }
   }
   drawParticles(); drawFloatingTexts();
+  if (state===STATE.PLAYING) drawChiliRushOverlay();
   if (state===STATE.PLAYING) drawHUD();
   ctx.restore();
   if (state===STATE.MENU) drawMenu();
