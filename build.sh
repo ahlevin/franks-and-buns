@@ -7,8 +7,8 @@ set -euo pipefail
 rm -rf dist
 mkdir -p dist
 
-# Site pages, images, scripts and config files at the top level
-cp *.html *.png *.jpg *.ico *.js ads.txt robots.txt sitemap.xml _headers dist/
+# Site pages, images and config files at the top level (same list as the old dashboard command)
+cp *.html *.png *.jpg *.ico ads.txt robots.txt sitemap.xml _headers dist/
 
 # Game sound files (WAV effects, intro, music) and their attribution
 if [ -d audio ]; then
