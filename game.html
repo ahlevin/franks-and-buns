@@ -870,6 +870,22 @@ function onTap() {
 }
 function onRelease() { tapping = false; }
 const MUTE_BTN = { x: 20, y: 0, size: 36 }; // y set dynamically in draw
+// --- My Scores: start-screen button that opens your best score and Wienerboard ---
+let scoresOpen = false;
+const SCORES_BTN = { w: 200, h: 40 };
+function scoresBtnRect() { return { x: W / 2 - SCORES_BTN.w / 2, y: H * 0.865 - SCORES_BTN.h / 2, w: SCORES_BTN.w, h: SCORES_BTN.h }; }
+function toCanvasXY(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  return { x: (clientX - rect.left) * (W / rect.width), y: (clientY - rect.top) * (H / rect.height) };
+}
+// returns true when the tap was used by the My Scores button or panel
+function handleScoresTap(clientX, clientY) {
+  if (state !== STATE.MENU) { scoresOpen = false; return false; }
+  if (scoresOpen) { scoresOpen = false; return true; }   // any tap closes the panel
+  const p = toCanvasXY(clientX, clientY), r = scoresBtnRect();
+  if (p.x >= r.x - 6 && p.x <= r.x + r.w + 6 && p.y >= r.y - 6 && p.y <= r.y + r.h + 6) { ensureAudio(); loadRuns(); lastRunIndex = -1; scoresOpen = true; sndStreak(); return true; }
+  return false;
+}
 
 function isMuteTap(clientX, clientY) {
   const rect = canvas.getBoundingClientRect();
@@ -886,16 +902,18 @@ canvas.addEventListener('touchstart', e => {
   e.preventDefault();
   const t = e.touches[0];
   if (isMuteTap(t.clientX, t.clientY)) { muted = !muted; return; }
+  if (handleScoresTap(t.clientX, t.clientY)) return;
   onTap();
 });
 canvas.addEventListener('touchend',   e => { e.preventDefault(); onRelease(); });
 canvas.addEventListener('mousedown', e => {
   if (isMuteTap(e.clientX, e.clientY)) { muted = !muted; return; }
+  if (handleScoresTap(e.clientX, e.clientY)) return;
   onTap();
 });
 canvas.addEventListener('mouseup', onRelease);
 document.addEventListener('keydown', e => {
-  if (e.code === 'Space') { e.preventDefault(); onTap(); }
+  if (e.code === 'Space') { e.preventDefault(); if (scoresOpen) { scoresOpen = false; return; } onTap(); }
 });
 document.addEventListener('keyup',   e => { if (e.code === 'Space') onRelease(); });
 
@@ -1514,7 +1532,26 @@ function drawMenu() {
   ctx.fillText('Land in buns to score!',W/2,H*0.58+48);
   ctx.fillStyle='#FF6600'; ctx.font='bold 22px Arial';
   ctx.globalAlpha=0.8+Math.sin(frameCount*0.06)*0.2; ctx.fillText('TAP TO START',W/2,H*0.80); ctx.globalAlpha=1;
-  if (bestScore>0) { ctx.fillStyle='#aaa'; ctx.font='14px Arial'; ctx.fillText('Best: '+bestScore,W/2,H*0.88); }
+  const r = scoresBtnRect();
+  ctx.fillStyle = 'rgba(0,0,0,0.45)'; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.fill();
+  ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.stroke();
+  ctx.fillStyle = '#FFD700'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
+  ctx.fillText('🏆 MY SCORES', W / 2, r.y + r.h / 2 + (bestScore > 0 ? -1 : 6));
+  if (bestScore > 0) { ctx.fillStyle = '#ddd'; ctx.font = '11px Arial'; ctx.fillText('Best: ' + bestScore.toLocaleString(), W / 2, r.y + r.h / 2 + 13); }
+  if (scoresOpen) drawScoresPanel();
+}
+function drawScoresPanel() {
+  ctx.fillStyle = 'rgba(10,5,0,0.9)'; ctx.fillRect(0, 0, W, H);
+  const pw = Math.min(W - 32, 340), ph = 300, px = W / 2 - pw / 2, py = H * 0.5 - ph / 2;
+  ctx.fillStyle = '#2a1a0a'; rrect(px, py, pw, ph, 16); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,215,0,0.5)'; ctx.lineWidth = 2; rrect(px, py, pw, ph, 16); ctx.stroke();
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#FFD700'; ctx.font = 'bold 26px Arial'; ctx.fillText('MY SCORES', W / 2, py + 40);
+  ctx.fillStyle = '#aaa'; ctx.font = '13px Arial'; ctx.fillText('PERSONAL BEST', W / 2, py + 72);
+  ctx.fillStyle = '#FF6600'; ctx.font = 'bold 34px Arial'; ctx.fillText(bestScore.toLocaleString(), W / 2, py + 108);
+  drawLeaderboard(py + 150);
+  ctx.fillStyle = '#aaa'; ctx.font = '12px Arial'; ctx.textAlign = 'center';
+  ctx.fillText('Saved on this device · Tap anywhere to close', W / 2, py + ph - 16);
 }
 
 function drawGameOver() {
