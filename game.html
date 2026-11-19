@@ -791,6 +791,8 @@ function packsBox() {
     '#fb-packs td.x{width:30px}#fb-packs td.x button{width:28px;height:28px;padding:0;margin:0;border-radius:50%;font-size:13px;background:#7a1f00;border-color:#b33}' +
     '#fb-packs .fbp-foot{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 10px;margin-top:10px;color:#c8a878;font-size:13px;text-align:center}' +
     '#fb-packs .fbp-small{font-size:12px;color:#c8a878;text-align:center;margin:6px 0 0}' +
+    '#fb-packs .fbp-note{background:rgba(255,102,0,.14);border:1px solid rgba(255,102,0,.5);border-radius:12px;padding:10px 12px;margin:10px 0 0;font-size:13px;text-align:center}#fb-packs .fbp-note .fbp-link{display:block;margin:4px auto 0}' +
+    '#fb-packs .fbp-help p{margin:0 0 10px;font-size:14px}#fb-packs .fbp-help b{color:#FFD700}' +
     '#fb-packs .fbp-badge{background:#ff6600;color:#fff;border-radius:999px;padding:1px 7px;font-size:11px}' +
     '#fb-packs .fbp-req{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid rgba(255,215,0,.12)}#fb-packs .fbp-req span{flex:1;word-break:break-word}' +
     '#fb-packs .fbp-req button{width:auto;margin:0;padding:6px 12px;font-size:13px}';
@@ -852,8 +854,9 @@ function packsRender() {
     h += '<button type="button" class="fbp-ghost" data-a="go-join"' + (full ? ' disabled' : '') + '>Join a Pack</button>';
     if (full) h += '<p class="fbp-small">You\'re in 5 Packs, the most allowed. Leave one to make or join another.</p>';
     h += packsMsgHtml();
-    if (packsToken() && packsMe) h += '<div class="fbp-foot"><span>Playing as <b>' + packsEsc(packsMe.player.nickname) + '</b></span><button type="button" class="fbp-link" data-a="go-name">Change name</button><button type="button" class="fbp-link" data-a="go-code">Recovery code</button></div>';
-    else if (!packsToken()) h += '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="go-restore">Already in Packs on another device?</button></div>';
+    if (packsToken() && packsMe && !safeGet('fb_pack_code_seen')) h += '<div class="fbp-note">📌 <b>Save your recovery code.</b> You\'ll need it to get your Packs back on a new phone or after reinstalling. <button type="button" class="fbp-link" data-a="go-code">Show my code</button></div>';
+    if (packsToken() && packsMe) h += '<div class="fbp-foot"><span>Playing as <b>' + packsEsc(packsMe.player.nickname) + '</b></span><button type="button" class="fbp-link" data-a="go-name">Change name</button><button type="button" class="fbp-link" data-a="go-code">Recovery code</button><button type="button" class="fbp-link" data-a="go-help">How Packs work</button></div>';
+    else if (!packsToken()) h += '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="go-help">How Packs work</button><button type="button" class="fbp-link" data-a="go-restore">Already in Packs on another device?</button></div>';
     h += '<button type="button" class="fbp-ghost" data-a="close">Close</button>';
   } else if (packsView === 'results' && packsResult && packsResult.packs) {
     const r = packsResult;
@@ -887,10 +890,21 @@ function packsRender() {
     h += '<h2>CHANGE NAME</h2><form><label for="fbp-nick2">Your name on Wienerboards</label><input id="fbp-nick2" type="text" maxlength="16" value="' + packsEsc(packsMe ? packsMe.player.nickname : '') + '">' +
       '<button type="submit" data-a="rename"' + busy + '>Save</button></form>' + packsMsgHtml() + '<button type="button" class="fbp-ghost" data-a="home">Back</button>';
   } else if (packsView === 'code') {
+    safeSet('fb_pack_code_seen', '1');
     h += '<h2>RECOVERY CODE</h2><p class="fbp-sub">This code is your Packs sign-in. Write it down or take a screenshot. It\'s the only way to get your name and Packs back on a new phone or browser. Don\'t share it.</p>' +
       '<div class="fbp-code">' + packsEsc(packsToken()) + '</div><button type="button" data-a="copy-code">Copy code</button>' + packsMsgHtml() +
       '<button type="button" class="fbp-ghost" data-a="home">Back</button>' +
       '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="delete-me">' + (packsConfirm === 'delete' ? 'Tap again to delete your name, scores and Pack memberships for good' : 'Delete my Packs profile') + '</button></div>';
+  } else if (packsView === 'help') {
+    h += '<h2>HOW PACKS WORK</h2><div class="fbp-help">' +
+      '<p>A Pack is a private Wienerboard for you and your friends. Make one, invite people, and find out who\'s top dog.</p>' +
+      '<p><b>Invite friends:</b> on your Pack, tap Invite friends to text a link, or share the 6-character Pack code. Friends enter it under Join a Pack.</p>' +
+      '<p><b>Who gets in:</b> if your Pack is set to <i>Players I let in</i>, new players wait until you tap Let in. In Pack settings you can switch to <i>Anyone with the code</i>, remove players, or get a new code so old invites stop working.</p>' +
+      '<p><b>Scores:</b> every game you play counts in all your Packs. This Week starts fresh every week; All-Time keeps everyone\'s best. After each game, the Game Over screen shows where you rank.</p>' +
+      '<p><b>Your recovery code:</b> your Packs are saved online, but each place you play (this app, a browser, another phone) needs its own sign-in. Enter your recovery code there under <i>Already in Packs on another device?</i>. You\'ll also need it after reinstalling the app or getting a new phone. Keep it private.</p>' +
+      '<p><b>Limits:</b> up to 5 Packs per player and 50 players per Pack.</p>' +
+      '<p>To leave a Pack, open it and tap Leave Pack. To delete your Packs profile, go to Recovery code.</p></div>' +
+      '<button type="button" class="fbp-ghost" data-a="home">Back</button>';
   } else if (packsView === 'restore') {
     h += '<h2>RESTORE PACKS</h2><form><p class="fbp-sub">Enter the recovery code from My Packs on your other device.</p><label for="fbp-rc">Recovery code</label><input id="fbp-rc" type="text" maxlength="24" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX">' +
       '<button type="submit" data-a="restore"' + busy + '>Restore</button></form>' + packsMsgHtml() + '<button type="button" class="fbp-ghost" data-a="home">Back</button>';
@@ -972,7 +986,7 @@ function packsClick(e) {
     if (!(keep['fbp-pname'] || '').trim()) throw { message: 'Give your Pack a name.' };
     await packsEnsurePlayer(keep['fbp-nick']);
     packsCur = await packsCall('POST', 'packs', { name: keep['fbp-pname'], defaultBoard: packsBoard, approval: packsApproval });
-    packsView = 'pack'; packsMsg = '✓ Pack made! Tap Invite friends to share the code.'; packsRefreshMe();
+    packsView = 'pack'; packsMsg = '✓ Pack made! Tap Invite friends to share the code.' + (safeGet('fb_pack_code_seen') ? '' : ' Then save your recovery code from My Packs.'); packsRefreshMe();
   });
   if (a === 'join') packsDo(async keep => {
     if (!(keep['fbp-code'] || '').trim()) throw { message: 'Enter the 6-character Pack code.' };
