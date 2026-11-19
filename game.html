@@ -293,6 +293,7 @@ function recordRun() {
   lastRunIndex = bestRuns.indexOf(run);
   try { localStorage.setItem(RUNS_KEY, JSON.stringify(bestRuns)); } catch (e) {}
   gcSubmitScore(score);
+  packsSubmit({ score: score, frames: runFrames, franks: franksLanded, boxes: boxesCompleted });
 }
 
 function drawLeaderboard(startY) {
@@ -731,6 +732,280 @@ function fbShowCredits() {
 }
 window.fbShowCredits = fbShowCredits;
 
+// --- Packs: private Wienerboards for groups of friends (My Packs, Create a Pack, Join a Pack) ---
+// Screens are HTML (like Credits) so typing works with the phone keyboard. Data lives at /api (functions/api).
+const PACKS_API = (location.protocol === 'capacitor:' || location.protocol === 'file:' ||
+  (location.hostname === 'localhost' && !location.port)) ? 'https://franksandbuns.com/api/' : '/api/';
+const PACKS_SHARE_URL = 'https://franksandbuns.com/game.html?pack=';
+let packsMe = null, packsView = 'home', packsCur = null, packsBoard = 'week', packsBusy = false, packsMsg = '', packsConfirm = '', packsEdit = false, packsPrefill = '';
+function packsToken() { return safeGet('fb_pack_token') || ''; }
+function packsEsc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+async function packsCall(method, path, body) {
+  const headers = { 'Content-Type': 'application/json' }, tok = packsToken();
+  if (tok) headers.Authorization = 'Bearer ' + tok;
+  let r;
+  try { r = await fetch(PACKS_API + path, { method, headers, body: body ? JSON.stringify(body) : undefined }); }
+  catch (e) { throw { offline: true, message: 'Packs need an internet connection. Check your connection and try again.' }; }
+  let j = null; try { j = await r.json(); } catch (e) {}
+  if (!r.ok) throw { status: r.status, message: (j && j.error) || 'Something went wrong. Please try again.' };
+  return j;
+}
+function packsKeepMe(j) {
+  if (j && j.token) safeSet('fb_pack_token', j.token);
+  if (j && j.player) packsMe = { player: j.player, packs: j.packs || [] };
+}
+function packsIsOpen() { const b = document.getElementById('fb-packs'); return !!(b && b.style.display !== 'none'); }
+function packsClose() { const b = document.getElementById('fb-packs'); if (b) b.style.display = 'none'; }
+function packsBox() {
+  let box = document.getElementById('fb-packs');
+  if (box) return box;
+  box = document.createElement('div');
+  box.id = 'fb-packs'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'My Packs');
+  const css = document.createElement('style');
+  css.textContent =
+    '#fb-packs{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(10,5,0,.86);padding:12px;box-sizing:border-box}' +
+    '#fb-packs .fbp-card{max-width:400px;width:100%;max-height:100%;overflow-y:auto;box-sizing:border-box;background:#2a1a0a;color:#f3e3c3;border:2px solid rgba(255,215,0,.5);border-radius:16px;padding:16px 16px 14px;font:14px/1.4 -apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-overflow-scrolling:touch}' +
+    '#fb-packs h2{margin:0 0 4px;color:#FFD700;font:bold 22px Arial;text-align:center;word-break:break-word}#fb-packs p{margin:0 0 10px}' +
+    '#fb-packs .fbp-sub{text-align:center;color:#c8a878;font-size:13px;margin-bottom:12px}' +
+    '#fb-packs button{font:600 15px Arial;border-radius:999px;padding:11px 16px;border:1px solid #ff6600;background:#ff6600;color:#fff;cursor:pointer;width:100%;margin:6px 0 0}' +
+    '#fb-packs button.fbp-ghost{background:transparent;color:#ffb347;border-color:rgba(255,179,71,.5)}' +
+    '#fb-packs button.fbp-link{background:none;border:none;color:#ffb347;padding:6px;width:auto;margin:0;font-weight:400;font-size:13px;text-decoration:underline}' +
+    '#fb-packs button:disabled{opacity:.5;cursor:default}' +
+    '#fb-packs .fbp-row{display:flex;align-items:center;justify-content:space-between;gap:8px;background:rgba(0,0,0,.25);border:1px solid rgba(255,215,0,.25);border-radius:12px;padding:10px 12px;margin:6px 0 0;color:#f3e3c3;text-align:left;font:15px Arial;width:100%}' +
+    '#fb-packs .fbp-row small{color:#c8a878;font-size:12px;white-space:nowrap}' +
+    '#fb-packs label{display:block;margin:10px 0 4px;color:#FFD700;font:bold 13px Arial}' +
+    '#fb-packs input[type=text]{width:100%;box-sizing:border-box;font:16px Arial;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,215,0,.4);background:#1a0f05;color:#fff}' +
+    '#fb-packs .fbp-choice{display:flex;gap:8px}#fb-packs .fbp-choice button{margin:0}' +
+    '#fb-packs .fbp-tabs{display:flex;gap:6px;margin:10px 0 4px}#fb-packs .fbp-tabs button{margin:0;padding:8px 10px}' +
+    '#fb-packs .fbp-msg{color:#ff8a65;text-align:center;margin:8px 0 0;font-size:13px}' +
+    '#fb-packs .fbp-ok{color:#9be29b}' +
+    '#fb-packs .fbp-code{font:bold 26px monospace;letter-spacing:3px;color:#fff;text-align:center;margin:4px 0 2px;word-break:break-all}' +
+    '#fb-packs .fbp-top{text-align:center;color:#ffb347;font:italic 15px Arial;margin:10px 0 2px}' +
+    '#fb-packs .fbp-wb{text-align:center;color:#FFD700;font:bold 18px Arial;letter-spacing:1px;margin:0 0 4px}' +
+    '#fb-packs table{width:100%;border-collapse:collapse;font:15px Arial}#fb-packs td{padding:7px 4px;border-bottom:1px solid rgba(255,215,0,.12)}' +
+    '#fb-packs td.r{width:34px;text-align:center}#fb-packs td.s{text-align:right;color:#FFD700;font-weight:bold;white-space:nowrap}' +
+    '#fb-packs tr.you td{background:rgba(255,102,0,.18)}#fb-packs td.n{word-break:break-word}' +
+    '#fb-packs td.x{width:30px}#fb-packs td.x button{width:28px;height:28px;padding:0;margin:0;border-radius:50%;font-size:13px;background:#7a1f00;border-color:#b33}' +
+    '#fb-packs .fbp-foot{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 10px;margin-top:10px;color:#c8a878;font-size:13px;text-align:center}' +
+    '#fb-packs .fbp-small{font-size:12px;color:#c8a878;text-align:center;margin:6px 0 0}';
+  box.appendChild(css);
+  const card = document.createElement('div'); card.className = 'fbp-card'; box.appendChild(card);
+  ['touchstart', 'touchend', 'mousedown', 'pointerdown', 'keydown'].forEach(t => box.addEventListener(t, e => e.stopPropagation(), { passive: true }));
+  box.addEventListener('click', packsClick);
+  box.addEventListener('submit', e => { e.preventDefault(); const b = e.target.querySelector('button[type=submit]'); if (b) b.click(); });
+  (document.body || document.documentElement).appendChild(box);
+  return box;
+}
+function packsOpen(view, prefill) {
+  packsBox().style.display = 'flex';
+  packsMsg = ''; packsConfirm = ''; packsEdit = false;
+  if (typeof prefill === 'string' && prefill) packsPrefill = prefill;
+  packsGo(typeof view === 'string' ? view : (packsPrefill ? 'join' : 'home'));
+  if (packsToken()) packsRefreshMe();
+  packsFlush();
+  return false;
+}
+window.fbShowPacks = packsOpen;
+async function packsRefreshMe() {
+  try { packsKeepMe(await packsCall('GET', 'me')); if (packsView === 'home') packsRender(); }
+  catch (e) {
+    if (e.status === 401) { packsMe = null; packsMsg = e.message; }
+    else if (!packsMe) packsMsg = e.message;
+    if (packsView === 'home') packsRender();
+  }
+}
+function packsGo(view) { packsView = view; packsRender(); }
+function packsNameField() {
+  return packsToken() ? '' : '<label for="fbp-nick">Your name on Wienerboards</label><input id="fbp-nick" type="text" maxlength="16" autocomplete="nickname" placeholder="2 to 16 characters">';
+}
+function packsMsgHtml() { return packsMsg ? '<p class="fbp-msg' + (packsMsg.charAt(0) === '✓' ? ' fbp-ok' : '') + '">' + packsEsc(packsMsg) + '</p>' : ''; }
+function packsRender() {
+  const card = packsBox().querySelector('.fbp-card');
+  const busy = packsBusy ? ' disabled' : '';
+  let h = '';
+  if (packsView === 'home') {
+    h += '<h2>MY PACKS</h2>';
+    const list = packsMe ? packsMe.packs : [];
+    if (!packsToken()) {
+      h += '<p class="fbp-sub">Packs are private Wienerboards for you and your friends. Make a Pack, share its code, and find out who\'s top dog.</p>';
+    } else if (!packsMe) {
+      h += '<p class="fbp-sub">Loading your Packs…</p>';
+    } else if (!list.length) {
+      h += '<p class="fbp-sub">You\'re not in a Pack yet. Make one or join a friend\'s.</p>';
+    } else {
+      h += '<p class="fbp-sub">Tap a Pack to see its Wienerboard.</p>';
+      list.forEach(p => { h += '<button type="button" class="fbp-row" data-a="pack" data-id="' + p.id + '"><span>' + packsEsc(p.name) + '</span><small>' + p.members + (p.members === 1 ? ' player' : ' players') + ' ›</small></button>'; });
+    }
+    const full = packsMe && list.length >= 5;
+    h += '<button type="button" data-a="go-create"' + (full ? ' disabled' : '') + '>Create a Pack</button>';
+    h += '<button type="button" class="fbp-ghost" data-a="go-join"' + (full ? ' disabled' : '') + '>Join a Pack</button>';
+    if (full) h += '<p class="fbp-small">You\'re in 5 Packs, the most allowed. Leave one to make or join another.</p>';
+    h += packsMsgHtml();
+    if (packsToken() && packsMe) h += '<div class="fbp-foot"><span>Playing as <b>' + packsEsc(packsMe.player.nickname) + '</b></span><button type="button" class="fbp-link" data-a="go-name">Change name</button><button type="button" class="fbp-link" data-a="go-code">Recovery code</button></div>';
+    else if (!packsToken()) h += '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="go-restore">Already in Packs on another device?</button></div>';
+    h += '<button type="button" class="fbp-ghost" data-a="close">Close</button>';
+  } else if (packsView === 'create') {
+    h += '<h2>CREATE A PACK</h2><form>' + packsNameField() +
+      '<label for="fbp-pname">Pack name</label><input id="fbp-pname" type="text" maxlength="24" placeholder="e.g. Levin Family">' +
+      '<label>Wienerboard opens to</label><div class="fbp-choice"><button type="button" data-a="pick" data-v="week" class="' + (packsBoard === 'week' ? '' : 'fbp-ghost') + '">This Week</button><button type="button" data-a="pick" data-v="all" class="' + (packsBoard === 'all' ? '' : 'fbp-ghost') + '">All-Time</button></div>' +
+      '<p class="fbp-small">Everyone can switch between both. This picks which one shows first.</p>' +
+      '<button type="submit" data-a="create"' + busy + '>Create Pack</button></form>' + packsMsgHtml() +
+      '<button type="button" class="fbp-ghost" data-a="home">Back</button>';
+  } else if (packsView === 'join') {
+    h += '<h2>JOIN A PACK</h2><form>' + packsNameField() +
+      '<label for="fbp-code">Pack code</label><input id="fbp-code" type="text" maxlength="12" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="6 letters and numbers" value="' + packsEsc(packsPrefill) + '">' +
+      '<button type="submit" data-a="join"' + busy + '>Join Pack</button></form>' + packsMsgHtml() +
+      '<button type="button" class="fbp-ghost" data-a="home">Back</button>';
+  } else if (packsView === 'name') {
+    h += '<h2>CHANGE NAME</h2><form><label for="fbp-nick2">Your name on Wienerboards</label><input id="fbp-nick2" type="text" maxlength="16" value="' + packsEsc(packsMe ? packsMe.player.nickname : '') + '">' +
+      '<button type="submit" data-a="rename"' + busy + '>Save</button></form>' + packsMsgHtml() + '<button type="button" class="fbp-ghost" data-a="home">Back</button>';
+  } else if (packsView === 'code') {
+    h += '<h2>RECOVERY CODE</h2><p class="fbp-sub">This code is your Packs sign-in. Write it down or take a screenshot. It\'s the only way to get your name and Packs back on a new phone or browser. Don\'t share it.</p>' +
+      '<div class="fbp-code">' + packsEsc(packsToken()) + '</div><button type="button" data-a="copy-code">Copy code</button>' + packsMsgHtml() +
+      '<button type="button" class="fbp-ghost" data-a="home">Back</button>' +
+      '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="delete-me">' + (packsConfirm === 'delete' ? 'Tap again to delete your name, scores and Pack memberships for good' : 'Delete my Packs profile') + '</button></div>';
+  } else if (packsView === 'restore') {
+    h += '<h2>RESTORE PACKS</h2><form><p class="fbp-sub">Enter the recovery code from My Packs on your other device.</p><label for="fbp-rc">Recovery code</label><input id="fbp-rc" type="text" maxlength="24" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX">' +
+      '<button type="submit" data-a="restore"' + busy + '>Restore</button></form>' + packsMsgHtml() + '<button type="button" class="fbp-ghost" data-a="home">Back</button>';
+  } else if (packsView === 'pack' && packsCur) {
+    const c = packsCur, p = c.pack;
+    h += '<h2>' + packsEsc(p.name) + '</h2><p class="fbp-sub">Pack code <b style="color:#fff;letter-spacing:1px">' + packsEsc(p.code) + '</b> · ' + p.members + (p.members === 1 ? ' player' : ' players') + '</p>' +
+      '<button type="button" data-a="share">Invite friends</button>' +
+      '<div class="fbp-tabs"><button type="button" data-a="tab" data-v="week" class="' + (c.board === 'week' ? '' : 'fbp-ghost') + '">This Week</button><button type="button" data-a="tab" data-v="all" class="' + (c.board === 'all' ? '' : 'fbp-ghost') + '">All-Time</button></div>' +
+      '<p class="fbp-top">Who\'s top dog?</p><p class="fbp-wb">🌭 WIENERBOARD</p><table>';
+    const medals = ['🥇', '🥈', '🥉'];
+    c.rows.forEach((r, i) => {
+      const rank = r.score > 0 ? (medals[i] || (i + 1)) : '·';
+      h += '<tr' + (r.you ? ' class="you"' : '') + '><td class="r">' + rank + '</td><td class="n">' + packsEsc(r.name) + (r.you ? ' <small style="color:#ffb347">(you)</small>' : '') + (r.owner ? ' <small title="Pack leader">👑</small>' : '') + '</td><td class="s">' + (r.score > 0 ? r.score.toLocaleString() : '—') + '</td>' +
+        (packsEdit ? (r.you ? '<td class="x"></td>' : '<td class="x"><button type="button" data-a="remove" data-id="' + r.id + '" aria-label="Remove ' + packsEsc(r.name) + '">' + (packsConfirm === 'rm' + r.id ? '?' : '✕') + '</button></td>') : '') + '</tr>';
+    });
+    h += '</table>';
+    if (c.board === 'week') {
+      if (c.resetsAt) h += '<p class="fbp-small">New week starts ' + new Date(c.resetsAt).toLocaleString([], { weekday: 'long', hour: 'numeric', minute: '2-digit' }) + '</p>';
+      if (c.lastWeekTop) h += '<p class="fbp-small">Last week\'s top dog: <b>' + packsEsc(c.lastWeekTop.name) + '</b> (' + c.lastWeekTop.score.toLocaleString() + ')</p>';
+    }
+    h += '<p class="fbp-small">Every game you play counts in all your Packs.</p>' + packsMsgHtml();
+    if (p.isOwner) {
+      if (packsEdit) {
+        h += '<label>Wienerboard opens to</label><div class="fbp-choice"><button type="button" data-a="setdef" data-v="week" class="' + (p.defaultBoard === 'week' ? '' : 'fbp-ghost') + '">This Week</button><button type="button" data-a="setdef" data-v="all" class="' + (p.defaultBoard === 'all' ? '' : 'fbp-ghost') + '">All-Time</button></div>' +
+          '<p class="fbp-small">To remove a player, tap ✕ next to their name, then tap ? to confirm.</p><button type="button" class="fbp-ghost" data-a="edit">Done</button>';
+      } else h += '<button type="button" class="fbp-ghost" data-a="edit">Pack settings</button>';
+    }
+    h += '<button type="button" class="fbp-ghost" data-a="leave">' + (packsConfirm === 'leave' ? 'Tap again to leave this Pack' : 'Leave Pack') + '</button>' +
+      '<button type="button" class="fbp-ghost" data-a="home">My Packs</button>';
+  }
+  card.innerHTML = h;
+}
+function packsVal(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+function packsKeepInputs() { const keep = {}; document.querySelectorAll('#fb-packs input[type=text]').forEach(i => { keep[i.id] = i.value; }); return keep; }
+function packsPutInputs(keep) { Object.keys(keep).forEach(id => { const el = document.getElementById(id); if (el) el.value = keep[id]; }); }
+async function packsEnsurePlayer(nick) {
+  if (packsToken()) return;
+  packsKeepMe(await packsCall('POST', 'player', { nickname: nick }));
+}
+async function packsDo(fn) {
+  if (packsBusy) return;
+  const keep = packsKeepInputs();
+  packsBusy = true; packsMsg = '';
+  packsRender(); packsPutInputs(keep);
+  try { await fn(keep); }
+  catch (e) { packsMsg = (e && e.message) || 'Something went wrong.'; }
+  packsBusy = false; packsRender();
+  if (packsMsg && packsMsg.charAt(0) !== '✓') packsPutInputs(keep);
+}
+async function packsShowPack(id, board) {
+  packsCur = await packsCall('GET', 'packs/' + id + (board ? '?board=' + board : ''));
+  if (!board && packsCur.board !== packsCur.pack.defaultBoard) packsCur = await packsCall('GET', 'packs/' + id + '?board=' + packsCur.pack.defaultBoard);
+  packsView = 'pack';
+}
+function packsCopy(text) {
+  try { if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text).then(() => true, () => packsCopyOld(text)); } catch (e) {}
+  return Promise.resolve(packsCopyOld(text));
+}
+function packsCopyOld(text) {
+  try { const t = document.createElement('textarea'); t.value = text; t.setAttribute('readonly', ''); t.style.position = 'fixed'; t.style.opacity = '0'; document.body.appendChild(t); t.select(); const ok = document.execCommand('copy'); t.remove(); return ok; } catch (e) { return false; }
+}
+function packsClick(e) {
+  const box = document.getElementById('fb-packs');
+  if (e.target === box) { packsClose(); return; }
+  const b = e.target.closest('button[data-a]'); if (!b || b.disabled) return;
+  const a = b.getAttribute('data-a'), id = b.getAttribute('data-id'), v = b.getAttribute('data-v');
+  if (a !== 'leave' && a !== 'remove' && a !== 'delete-me') packsConfirm = '';
+  if (a === 'close') { packsClose(); return; }
+  if (a === 'home') { packsMsg = ''; packsEdit = false; packsGo('home'); if (packsToken()) packsRefreshMe(); return; }
+  if (a.indexOf('go-') === 0) { packsMsg = ''; packsGo(a.slice(3)); return; }
+  if (a === 'pick') { const keep = packsKeepInputs(); packsBoard = v; packsRender(); packsPutInputs(keep); return; }
+  if (a === 'create') packsDo(async keep => {
+    if (!(keep['fbp-pname'] || '').trim()) throw { message: 'Give your Pack a name.' };
+    await packsEnsurePlayer(keep['fbp-nick']);
+    packsCur = await packsCall('POST', 'packs', { name: keep['fbp-pname'], defaultBoard: packsBoard });
+    packsView = 'pack'; packsMsg = '✓ Pack made! Tap Invite friends to share the code.'; packsRefreshMe();
+  });
+  if (a === 'join') packsDo(async keep => {
+    if (!(keep['fbp-code'] || '').trim()) throw { message: 'Enter the 6-character Pack code.' };
+    await packsEnsurePlayer(keep['fbp-nick']);
+    packsCur = await packsCall('POST', 'packs/join', { code: keep['fbp-code'] });
+    packsPrefill = ''; packsView = 'pack'; packsMsg = '✓ You\'re in!'; packsRefreshMe();
+  });
+  if (a === 'rename') packsDo(async keep => { packsKeepMe(await packsCall('POST', 'me/name', { nickname: keep['fbp-nick2'] })); packsView = 'home'; packsMsg = '✓ Name saved.'; });
+  if (a === 'restore') packsDo(async keep => {
+    const j = await packsCall('POST', 'recover', { code: keep['fbp-rc'] });
+    packsKeepMe(j); packsView = 'home'; packsMsg = '✓ Welcome back, ' + j.player.nickname + '!';
+  });
+  if (a === 'copy-code') { packsCopy(packsToken()).then(ok => { packsMsg = ok ? '✓ Copied.' : 'Copy didn\'t work here. Write the code down instead.'; packsRender(); }); return; }
+  if (a === 'pack') packsDo(async () => { packsEdit = false; await packsShowPack(id); });
+  if (a === 'tab') packsDo(async () => { await packsShowPack(packsCur.pack.id, v); });
+  if (a === 'edit') { packsEdit = !packsEdit; packsMsg = ''; packsRender(); return; }
+  if (a === 'setdef') packsDo(async () => { packsCur = await packsCall('POST', 'packs/' + packsCur.pack.id + '/settings', { defaultBoard: v, board: packsCur.board }); packsMsg = '✓ Saved.'; });
+  if (a === 'remove') {
+    if (packsConfirm !== 'rm' + id) { packsConfirm = 'rm' + id; packsRender(); return; }
+    packsConfirm = '';
+    packsDo(async () => { packsCur = await packsCall('POST', 'packs/' + packsCur.pack.id + '/remove', { playerId: id, board: packsCur.board }); packsMsg = '✓ Removed.'; });
+  }
+  if (a === 'leave') {
+    if (packsConfirm !== 'leave') { packsConfirm = 'leave'; packsRender(); return; }
+    packsConfirm = '';
+    packsDo(async () => { packsKeepMe(await packsCall('POST', 'packs/' + packsCur.pack.id + '/leave')); packsCur = null; packsView = 'home'; packsMsg = '✓ You left the Pack.'; });
+  }
+  if (a === 'delete-me') {
+    if (packsConfirm !== 'delete') { packsConfirm = 'delete'; packsRender(); return; }
+    packsConfirm = '';
+    packsDo(async () => {
+      await packsCall('POST', 'me/delete');
+      safeSet('fb_pack_token', ''); safeSet('fb_pack_pending', ''); packsMe = null; packsCur = null;
+      packsView = 'home'; packsMsg = '✓ Your Packs profile was deleted.';
+    });
+  }
+  if (a === 'share') {
+    const p = packsCur.pack, text = 'Join my Franks & Buns Pack "' + p.name + '"! Code: ' + p.code, url = PACKS_SHARE_URL + p.code;
+    if (navigator.share) { navigator.share({ title: 'Franks & Buns Pack', text: text, url: url }).catch(() => {}); return; }
+    packsCopy(text + ' ' + url).then(ok => { packsMsg = ok ? '✓ Invite copied. Paste it in a message to your friends.' : 'Share this code with your friends: ' + p.code; packsRender(); });
+  }
+}
+// Scores: each finished game is sent once you're in Packs. If you're offline, the best unsent game waits and goes next time.
+function packsSubmit(run) {
+  if (!packsToken() || !(run.score > 0)) return;
+  let pend = null; try { pend = JSON.parse(safeGet('fb_pack_pending') || 'null'); } catch (e) {}
+  if (!pend || run.score > pend.score) safeSet('fb_pack_pending', JSON.stringify(run));
+  packsFlush();
+}
+let packsFlushing = false;
+async function packsFlush() {
+  if (packsFlushing || !packsToken()) return;
+  let pend = null; try { pend = JSON.parse(safeGet('fb_pack_pending') || 'null'); } catch (e) {}
+  if (!pend) return;
+  packsFlushing = true;
+  try { await packsCall('POST', 'score', pend); safeSet('fb_pack_pending', ''); }
+  catch (e) { if (e.status && e.status !== 429 && e.status < 500) safeSet('fb_pack_pending', ''); }   // keep it only if it may work later
+  packsFlushing = false;
+}
+(function packsStartup() {
+  let code = '';
+  try { code = (new URLSearchParams(location.search).get('pack') || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 6).toUpperCase(); } catch (e) {}
+  if (code) { packsPrefill = code; window.addEventListener('load', () => packsOpen('join')); }
+  if (packsToken()) setTimeout(packsFlush, 3000);
+})();
+
 function sndFlap()      {
   if (playWavEffect(wavLaunchCount++ % 2 ? 'launch-bwoip-b' : 'launch-bwoip-a')) return;
   playTone(440, 0.06, 'sine', 0.10); }
@@ -791,6 +1066,7 @@ let lives = 3, streak = 0, bestStreak = 0;
 let franksLanded = 0, boxFranks = 0, boxesCompleted = 0, boxFlash = 0;
 let scrollSpeed = 2.2, scrollX = 0;
 let tapping = false, frameCount = 0, shakeAmount = 0;
+let runFrames = 0;   // game steps in this run (60 a second), sent with Pack scores
 let gracePeriod = 0;
 let muted = false; // default unmuted
 let streakText = '', streakTimer = 0;
@@ -1189,7 +1465,7 @@ function resetGame() {
   stopChaseEffects(); wavDuckUntil = 0;   // skipping the intro cuts the chase foley; gameplay music starts once
   frank = { x:70, y:H*0.4, vy:0, squash:1, stretch:1, alive:true };
   buns=[]; splats=[]; particles=[]; floatingTexts=[]; forks=[]; gameDogs=[];
-  score=0; lives=3; streak=0; bestStreak=0;
+  score=0; runFrames=0; lives=3; streak=0; bestStreak=0;
   franksLanded=0; boxFranks=0; boxesCompleted=0; boxFlash=0;
   scrollSpeed=2.2; scrollX=0; nextBunDist=0;
   shakeAmount=0; streakText=''; streakTimer=0; gameOverDelay=0; gracePeriod=0;
@@ -1232,8 +1508,10 @@ function onRelease() { tapping = false; }
 const MUTE_BTN = { x: 20, y: 0, size: 36 }; // y set dynamically in draw
 // --- My Scores: start-screen button that opens your best score and Wienerboard ---
 let scoresOpen = false;
-const SCORES_BTN = { w: 200, h: 40 };
-function scoresBtnRect() { return { x: W / 2 - SCORES_BTN.w / 2, y: H * 0.865 - SCORES_BTN.h / 2, w: SCORES_BTN.w, h: SCORES_BTN.h }; }
+const SCORES_BTN = { w: 156, h: 40 };   // MY SCORES and MY PACKS sit side by side
+function sideBtnW() { return Math.min(SCORES_BTN.w, (W - 30) / 2); }
+function scoresBtnRect() { const w = sideBtnW(); return { x: W / 2 - w - 5, y: H * 0.865 - SCORES_BTN.h / 2, w: w, h: SCORES_BTN.h }; }
+function packsBtnRect() { const w = sideBtnW(); return { x: W / 2 + 5, y: H * 0.865 - SCORES_BTN.h / 2, w: w, h: SCORES_BTN.h }; }
 function toCanvasXY(clientX, clientY) {
   const rect = canvas.getBoundingClientRect();
   return { x: (clientX - rect.left) * (W / rect.width), y: (clientY - rect.top) * (H / rect.height) };
@@ -1243,7 +1521,9 @@ function handleScoresTap(clientX, clientY) {
   if (state !== STATE.MENU) { scoresOpen = false; return false; }
   if (scoresOpen) { scoresOpen = false; return true; }   // any tap closes the panel
   const p = toCanvasXY(clientX, clientY), r = scoresBtnRect();
-  if (p.x >= r.x - 6 && p.x <= r.x + r.w + 6 && p.y >= r.y - 6 && p.y <= r.y + r.h + 6) { ensureAudio(); loadRuns(); lastRunIndex = -1; scoresOpen = true; sndStreak(); return true; }
+  if (p.x >= r.x - 6 && p.x <= r.x + r.w + 4 && p.y >= r.y - 6 && p.y <= r.y + r.h + 6) { ensureAudio(); loadRuns(); lastRunIndex = -1; scoresOpen = true; sndStreak(); return true; }
+  const k = packsBtnRect();
+  if (p.x >= k.x - 4 && p.x <= k.x + k.w + 6 && p.y >= k.y - 6 && p.y <= k.y + k.h + 6) { ensureAudio(); sndStreak(); packsOpen(); return true; }
   return false;
 }
 
@@ -1296,7 +1576,7 @@ canvas.addEventListener('mousedown', e => {
 });
 canvas.addEventListener('mouseup', onRelease);
 document.addEventListener('keydown', e => {
-  if (e.code === 'Space') { e.preventDefault(); if (scoresOpen) { scoresOpen = false; return; } onTap(); }
+  if (e.code === 'Space') { if (packsIsOpen()) return; e.preventDefault(); if (scoresOpen) { scoresOpen = false; return; } onTap(); }
 });
 document.addEventListener('keyup',   e => { if (e.code === 'Space') onRelease(); });
 
@@ -1481,6 +1761,7 @@ function drawBonusRound() {
 
 function update() {
   frameCount++;
+  if (state === STATE.PLAYING || state === STATE.BONUS) runFrames++;
   if (state === STATE.INTRO) { updateIntro(); return; }
   if (state === STATE.BONUS) { updateBonusRound(); return; }
   if (state !== STATE.PLAYING) { if (state === STATE.GAMEOVER) gameOverDelay++; return; }
@@ -1933,9 +2214,14 @@ function drawMenu() {
   const r = scoresBtnRect();
   ctx.fillStyle = 'rgba(0,0,0,0.45)'; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.fill();
   ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.stroke();
-  ctx.fillStyle = '#FFD700'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
-  ctx.fillText('🏆 MY SCORES', W / 2, r.y + r.h / 2 + (bestScore > 0 ? -1 : 6));
-  if (bestScore > 0) { ctx.fillStyle = '#ddd'; ctx.font = '11px Arial'; ctx.fillText('Best: ' + bestScore.toLocaleString(), W / 2, r.y + r.h / 2 + 13); }
+  ctx.fillStyle = '#FFD700'; ctx.font = 'bold ' + (r.w < 150 ? 13 : 15) + 'px Arial'; ctx.textAlign = 'center';
+  ctx.fillText('🏆 MY SCORES', r.x + r.w / 2, r.y + r.h / 2 + (bestScore > 0 ? -1 : 6));
+  if (bestScore > 0) { ctx.fillStyle = '#ddd'; ctx.font = '11px Arial'; ctx.fillText('Best: ' + bestScore.toLocaleString(), r.x + r.w / 2, r.y + r.h / 2 + 13); }
+  const k = packsBtnRect();
+  ctx.fillStyle = 'rgba(0,0,0,0.45)'; rrect(k.x, k.y, k.w, k.h, k.h / 2); ctx.fill();
+  ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2; rrect(k.x, k.y, k.w, k.h, k.h / 2); ctx.stroke();
+  ctx.fillStyle = '#FFD700'; ctx.font = 'bold ' + (k.w < 150 ? 13 : 15) + 'px Arial';
+  ctx.fillText('🌭 MY PACKS', k.x + k.w / 2, k.y + k.h / 2 + 6);
   if (scoresOpen) drawScoresPanel();
 }
 function scoresPanelRect() { const pw = Math.min(W - 32, 340), ph = gcPlugin() ? 350 : 300; return { x: W / 2 - pw / 2, y: H * 0.5 - ph / 2, w: pw, h: ph }; }
