@@ -481,9 +481,98 @@ function playTone(freq, dur, type = 'square', vol = 0.12) {
   o.start(); o.stop(audioCtx.currentTime + dur);
   o.onended = () => { o.disconnect(); g.disconnect(); };
 }
+// --- Noise-based effects: squish, whoosh, splat, bark, cheer ---
+let _noiseBuf = null;
+function noiseBuffer() {
+  if (_noiseBuf || !audioCtx) return _noiseBuf;
+  const len = audioCtx.sampleRate, b = audioCtx.createBuffer(1, len, audioCtx.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  return (_noiseBuf = b);
+}
+// a short burst of filtered noise whose filter sweeps from f0 to f1
+function playNoise(dur, ftype, f0, f1, vol, q = 1, when = 0, dest = null) {
+  if (!audioCtx || muted) return;
+  const t = audioCtx.currentTime + when, src = audioCtx.createBufferSource(), f = audioCtx.createBiquadFilter(), g = audioCtx.createGain();
+  src.buffer = noiseBuffer(); f.type = ftype; f.Q.value = q;
+  f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(Math.max(f1, 20), t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + Math.min(0.02, dur / 4)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(f); f.connect(g); g.connect(dest || audioCtx.destination);
+  src.start(t, Math.random() * 0.5); src.stop(t + dur + 0.02);
+  src.onended = () => { src.disconnect(); f.disconnect(); g.disconnect(); };
+}
+// a tone whose pitch slides from f0 to f1 (used for barks and boings)
+function playSlide(f0, f1, dur, type, vol, when = 0) {
+  if (!audioCtx || muted) return;
+  const t = audioCtx.currentTime + when, o = audioCtx.createOscillator(), g = audioCtx.createGain(), f = audioCtx.createBiquadFilter();
+  o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  f.type = 'bandpass'; f.frequency.value = 1100; f.Q.value = 1.2;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(f); f.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + dur + 0.02);
+  o.onended = () => { o.disconnect(); f.disconnect(); g.disconnect(); };
+}
+function sndSquish() { playNoise(0.12, 'lowpass', 1800, 300, 0.10, 2); playSlide(220, 110, 0.10, 'sine', 0.08); }
+function sndWhoosh() { playNoise(0.35, 'bandpass', 400, 2400, 0.05, 1.5); }
+function sndBark()   { playSlide(700, 260, 0.09, 'sawtooth', 0.12); playSlide(760, 280, 0.10, 'sawtooth', 0.11, 0.14); }
+function sndCheer(big) {   // crowd-like roar: two detuned noise bands with a quick swell
+  playNoise(big ? 0.9 : 0.55, 'bandpass', 900, 1600, big ? 0.07 : 0.05, 0.8);
+  playNoise(big ? 0.9 : 0.55, 'bandpass', 2200, 3000, big ? 0.04 : 0.03, 0.8, 0.05);
+}
+function sndSplatWet() { playNoise(0.25, 'lowpass', 900, 120, 0.12, 1); }
+
+// --- Background music: a short, bouncy loop made in code; its own on/off switch, saved on the device ---
+let musicOn = safeGet('fb_music') !== '0';
+let musicGain = null, musicNext = 0, musicStep = 0;
+const NOTE = n => 440 * Math.pow(2, (n - 69) / 12);          // MIDI note to Hz
+const MUSIC_CHORDS = [[48, 52, 55], [45, 48, 52], [41, 45, 48], [43, 47, 50]];   // C  Am  F  G
+const MUSIC_MELODY = [72,0,76,0, 79,0,76,74, 72,0,0,74, 76,0,72,0,  69,0,72,0, 76,0,74,72, 69,0,0,71, 72,0,69,0,
+                      65,0,69,0, 72,0,74,72, 69,0,0,67, 65,0,69,0,  67,0,71,0, 74,0,76,74, 71,0,72,0, 74,0,0,0];
+function musicMode() {
+  if (state === STATE.BONUS) return 'bonus';
+  if (state === STATE.PLAYING) return chiliRush > 0 ? 'rush' : 'play';
+  if (state === STATE.MENU || state === STATE.INTRO) return 'menu';
+  return 'off';   // game over: the game-over sound plays alone
+}
+function musicNoteAt(freq, t, dur, type, vol) {
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(musicGain); o.start(t); o.stop(t + dur + 0.02);
+  o.onended = () => { o.disconnect(); g.disconnect(); };
+}
+function musicHat(t, vol) {
+  const src = audioCtx.createBufferSource(), f = audioCtx.createBiquadFilter(), g = audioCtx.createGain();
+  src.buffer = noiseBuffer(); f.type = 'highpass'; f.frequency.value = 7000;
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+  src.connect(f); f.connect(g); g.connect(musicGain); src.start(t, Math.random() * 0.5); src.stop(t + 0.06);
+  src.onended = () => { src.disconnect(); f.disconnect(); g.disconnect(); };
+}
+function musicTick() {
+  if (!audioCtx || audioCtx.state !== 'running') return;
+  const mode = musicMode();
+  if (!musicOn || muted || mode === 'off') { musicNext = 0; return; }
+  if (!musicGain) { musicGain = audioCtx.createGain(); musicGain.gain.value = 0.55; musicGain.connect(audioCtx.destination); }
+  const bpm = mode === 'bonus' ? 152 : mode === 'rush' ? 144 : mode === 'menu' ? 112 : 128;
+  const step = 60 / bpm / 4;                                   // sixteenth notes
+  if (musicNext < audioCtx.currentTime) musicNext = audioCtx.currentTime + 0.05;
+  while (musicNext < audioCtx.currentTime + 0.25) {
+    const i = musicStep % 64, chord = MUSIC_CHORDS[Math.floor(i / 16)], t = musicNext;
+    if (i % 4 === 0) musicNoteAt(NOTE(chord[0] - 12), t, step * 3, 'triangle', 0.09);          // bass on the beat
+    if (i % 4 === 2) musicNoteAt(NOTE(chord[0]), t, step * 1.5, 'triangle', 0.05);              // bass bounce
+    if (mode !== 'menu') {
+      if (i % 2 === 1) musicHat(t, 0.025);                                                       // off-beat hats
+      if (i % 8 === 4) { const c = chord.map(n => NOTE(n + 12)); c.forEach(f => musicNoteAt(f, t, step * 1.2, 'square', 0.012)); }   // chord stab
+    }
+    const m = MUSIC_MELODY[i];
+    if (m) musicNoteAt(NOTE(m + (mode === 'bonus' ? 12 : 0)), t, step * 1.6, 'square', mode === 'menu' ? 0.018 : 0.022);
+    if (mode === 'rush' && i % 2 === 0) musicNoteAt(NOTE(chord[i % 6 < 2 ? 0 : i % 6 < 4 ? 1 : 2] + 24), t, step * 0.8, 'sawtooth', 0.012);   // hot arpeggio
+    musicStep++; musicNext += step;
+  }
+}
+function setMusic(on) { musicOn = on; safeSet('fb_music', on ? '1' : '0'); if (!on) musicNext = 0; }
+
 function sndFlap()      { playTone(440, 0.06, 'sine', 0.10); }
-function sndLand()      { playTone(880, 0.08, 'sine', 0.15); playTone(1320, 0.12, 'sine', 0.10); }
-function sndSplat()     { playTone(120, 0.25, 'sawtooth', 0.12); }
+function sndLand()      { playTone(880, 0.08, 'sine', 0.15); playTone(1320, 0.12, 'sine', 0.10); sndSquish(); }
+function sndSplat()     { playTone(120, 0.25, 'sawtooth', 0.12); sndSplatWet(); }
 function sndBox()       { playTone(660, 0.07, 'square', 0.12); setTimeout(() => playTone(990, 0.1, 'square', 0.14), 80); setTimeout(() => playTone(1320, 0.15, 'sine', 0.12), 160); }
 function sndCondiment() { playTone(1200, 0.06, 'sine', 0.13); setTimeout(() => playTone(1600, 0.1, 'sine', 0.11), 70); }
 function sndStreak()    { playTone(700, 0.04, 'sine', 0.08); }
@@ -556,6 +645,7 @@ function nextChiliWait() { return 1800 + Math.floor(Math.random() * 900); }   //
 let nextDogDist = 9999; // unlocks after box 3
 
 function spawnFork() {
+  sndWhoosh();
   // Fork comes from bottom (chef reaches up) or top (reaches down)
   const fromBottom = Math.random() > 0.35; // mostly from bottom
   const pickY = () => fromBottom
@@ -702,6 +792,7 @@ function drawForks() {
 // GAMEPLAY DOGS
 // ============================================================
 function sndDogReward() {
+  sndBark();
   playTone(523, 0.08, 'sine', 0.13);
   setTimeout(() => playTone(659, 0.08, 'sine', 0.13), 90);
   setTimeout(() => playTone(784, 0.08, 'sine', 0.13), 180);
@@ -973,6 +1064,13 @@ function handleScoresTap(clientX, clientY) {
   return false;
 }
 
+function isMusicTap(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  const cx = (clientX - rect.left) * (W / rect.width), cy = (clientY - rect.top) * (H / rect.height);
+  const btnY = H - 48;
+  return cx > 56 && cx < 56 + MUTE_BTN.size + 10 &&
+         cy > btnY - 10 && cy < btnY + MUTE_BTN.size + 10;
+}
 function isMuteTap(clientX, clientY) {
   const rect = canvas.getBoundingClientRect();
   const scaleX = W / rect.width;
@@ -988,6 +1086,7 @@ canvas.addEventListener('touchstart', e => {
   e.preventDefault();
   const t = e.touches[0];
   if (isMuteTap(t.clientX, t.clientY)) { muted = !muted; return; }
+  if (isMusicTap(t.clientX, t.clientY)) { ensureAudio(); setMusic(!musicOn); return; }
   if (isGcTap(t.clientX, t.clientY)) { gcShowBoard(); return; }
   if (handleScoresTap(t.clientX, t.clientY)) return;
   onTap();
@@ -995,6 +1094,7 @@ canvas.addEventListener('touchstart', e => {
 canvas.addEventListener('touchend',   e => { e.preventDefault(); onRelease(); });
 canvas.addEventListener('mousedown', e => {
   if (isMuteTap(e.clientX, e.clientY)) { muted = !muted; return; }
+  if (isMusicTap(e.clientX, e.clientY)) { ensureAudio(); setMusic(!musicOn); return; }
   if (isGcTap(e.clientX, e.clientY)) { gcShowBoard(); return; }
   if (handleScoresTap(e.clientX, e.clientY)) return;
   onTap();
@@ -1318,6 +1418,7 @@ function landFrank(bun) {
   if      (streak>=10){sm=3;streakText='WIENER WIZARD!';streakTimer=90;sndStreak();gcAchieve('wienerwizard');}
   else if (streak>=5) {sm=2;streakText='FRANKS ON FIRE!';streakTimer=60;sndStreak();}
   else if (streak>=3) {sm=1.5;streakText='ON A ROLL!';streakTimer=45;sndStreak();}
+  if (streak === 3 || streak === 5 || streak === 10) sndCheer(streak === 10);   // crowd cheer when a streak level is reached
   const rushMult = chiliRush > 0 ? 2 : 1;
   const pts=Math.floor(100*mult*sm*rushMult); score+=pts; sndLand();
   addParticles(bun.x,bun.y,'#FFD700',10); shakeAmount=bun.condiment?6:3;
@@ -1325,7 +1426,7 @@ function landFrank(bun) {
   boxFranks++;
   if (boxFranks>=6) {
     boxFranks=0; boxesCompleted++; gcAchieve('firstbox');
-    const bonus=boxesCompleted*100; score+=bonus; boxFlash=60; sndBox(); shakeAmount=8;
+    const bonus=boxesCompleted*100; score+=bonus; boxFlash=60; sndBox(); sndCheer(false); shakeAmount=8;
     addFloatingText(W/2,H/2-40,'BOXED! +'+bonus,'#FF6600',32);
     scrollSpeed=Math.min(2.2+boxesCompleted*0.3,5.5);
     if (boxesCompleted > 0 && boxesCompleted % 4 === 0) { startBonusRound(); }
@@ -1790,6 +1891,15 @@ function drawMuteBtn() {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(muted ? '🔇' : '🔊', x + size/2, y + size/2);
+  // Music on/off, just to the right of the sound button
+  const mx = x + 46;
+  ctx.globalAlpha = 0.72; ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.beginPath(); ctx.arc(mx + size/2, y + size/2, size/2 + 2, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(mx + size/2, y + size/2, size/2 + 2, 0, Math.PI*2); ctx.stroke();
+  ctx.globalAlpha = (musicOn && !muted) ? 1 : 0.4;
+  ctx.fillText('🎵', mx + size/2, y + size/2);
+  if (!musicOn) { ctx.strokeStyle = '#FF4444'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(mx + 8, y + 8); ctx.lineTo(mx + size - 8, y + size - 8); ctx.stroke(); }
   ctx.restore();
 }
 
@@ -1835,6 +1945,7 @@ function loop(ts) {
   while (_acc >= _STEP_MS - 0.5 && steps < 4) { update(); _acc -= _STEP_MS; steps++; }
   if (steps === 4) _acc = 0;
   draw();
+  musicTick();   // schedules music a little ahead, so frame hiccups don't cut it
   const gh = document.getElementById('game-header');
   const gf = document.getElementById('game-footer');
   if (gh && gf) {
