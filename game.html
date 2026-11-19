@@ -21,6 +21,8 @@
     align-items: center;
   }
   canvas { display: block; margin: 0 auto; background: #2d1b0e; flex-shrink: 0; }
+  /* app on iPad / iPhone Duo: kitchen wall beside the game instead of black bars */
+  body.fb-wide { background: linear-gradient(rgba(17,8,0,0.55), rgba(17,8,0,0.55)), url('bg-wall-a.jpg') center top / auto 100% repeat-x, #110800; }
 
   #game-header {
     width: 100%; max-width: 420px;
@@ -290,6 +292,7 @@ function recordRun() {
   bestRuns = bestRuns.slice(0, 5);
   lastRunIndex = bestRuns.indexOf(run);
   try { localStorage.setItem(RUNS_KEY, JSON.stringify(bestRuns)); } catch (e) {}
+  gcSubmitScore(score);
 }
 
 function drawLeaderboard(startY) {
@@ -318,6 +321,79 @@ function drawLeaderboard(startY) {
   ctx.textAlign = 'center';
 }
 loadRuns();
+// ============================================================
+// GAME CENTER (iPhone app only; does nothing on the website)
+// ============================================================
+const GC_BOARD = 'franksandbuns.highscore';
+const GC_ACH = { firstbox: 'franksandbuns.firstbox', wienerwizard: 'franksandbuns.wienerwizard', dogparade: 'franksandbuns.dogparade' };
+let gcSignedIn = false;
+const gcSent = new Set();
+function gcPlugin() {
+  const C = window.Capacitor;
+  if (!C || !C.isNativePlatform || !C.isNativePlatform()) return null;
+  if (C.getPlatform && C.getPlatform() !== 'ios') return null;   // Game Center is iPhone/iPad only (no button on Android)
+  return (C.Plugins && C.Plugins.GameCenter) || (C.registerPlugin ? C.registerPlugin('GameCenter') : null);
+}
+const GC_OPTIN = 'fb_gc_optin';   // set once the player has tapped the Game Center button
+let gcNoteUntil = 0;
+function gcOptedIn() { try { return localStorage.getItem(GC_OPTIN) === '1'; } catch (e) { return false; } }
+function gcSetOptIn(on) { try { on ? localStorage.setItem(GC_OPTIN, '1') : localStorage.removeItem(GC_OPTIN); } catch (e) {} }
+function gcSignIn() {
+  // Quiet sign-in at launch ONLY for players who already chose Game Center before
+  const gc = gcPlugin(); if (!gc || !gcOptedIn()) return;
+  gc.signIn().then(r => { gcSignedIn = !!(r && r.signedIn); if (!gcSignedIn) gcSetOptIn(false); }).catch(() => {});
+}
+function gcSubmitScore(value) {
+  const gc = gcPlugin(); if (!gc || !gcSignedIn || !(value > 0)) return;
+  gc.submitScore({ leaderboardId: GC_BOARD, score: Math.floor(value) }).catch(() => {});
+}
+function gcAchieve(key) {
+  const gc = gcPlugin(); if (!gc || !gcSignedIn || gcSent.has(key)) return;
+  gcSent.add(key);
+  gc.unlockAchievement({ achievementId: GC_ACH[key] }).catch(() => { gcSent.delete(key); });
+}
+function gcShowBoard() {
+  const gc = gcPlugin(); if (!gc) return;
+  if (gcSignedIn) { gc.showLeaderboard({ leaderboardId: GC_BOARD }).catch(() => {}); return; }
+  // Not signed in: only now, because the player tapped the button, show Apple's Game Center sign-in
+  gc.signIn({ present: true }).then(r => {
+    gcSignedIn = !!(r && r.signedIn);
+    gcSetOptIn(gcSignedIn);
+    if (gcSignedIn) { gcSubmitScore(Math.max(score, bestScore)); gc.showLeaderboard({ leaderboardId: GC_BOARD }).catch(() => {}); }
+    else gcNoteUntil = performance.now() + 5000;
+  }).catch(() => { gcNoteUntil = performance.now() + 5000; });
+}
+setTimeout(gcSignIn, 1500);
+// Game-over "Game Center" button (app only; signs in only when tapped)
+const GC_BTN = { w: 230, h: 34 };
+function gcInScores() { return state === STATE.MENU && scoresOpen; }
+function gcBtnRect() {
+  if (gcInScores()) { const pr = scoresPanelRect(); return { x: W / 2 - GC_BTN.w / 2, y: pr.y + pr.h - 76, w: GC_BTN.w, h: GC_BTN.h }; }
+  return { x: W / 2 - GC_BTN.w / 2, y: H * 0.115 - GC_BTN.h / 2, w: GC_BTN.w, h: GC_BTN.h };
+}
+function gcBtnVisible() { return (state === STATE.GAMEOVER || gcInScores()) && !!gcPlugin(); }
+function gcBtnLabel() { return gcSignedIn ? '🏆 Game Center Leaderboard' : '🏆 Connect Game Center'; }
+function drawGcButton() {
+  if (!gcBtnVisible()) return;
+  const r = gcBtnRect();
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.roundRect(r.x, r.y, r.w, r.h, 16); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#FFD700'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(gcBtnLabel(), W / 2, r.y + r.h / 2 + 1);
+  if (performance.now() < gcNoteUntil) {
+    ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 12px Arial';
+    ctx.fillText('Sign in to Game Center in the Settings app', W / 2, r.y + r.h + 14);
+  }
+  ctx.restore();
+}
+function isGcTap(clientX, clientY) {
+  if (!gcBtnVisible()) return false;
+  const rect = canvas.getBoundingClientRect();
+  const cx = (clientX - rect.left) * (W / rect.width), cy = (clientY - rect.top) * (H / rect.height);
+  const r = gcBtnRect();
+  return cx > r.x - 6 && cx < r.x + r.w + 6 && cy > r.y - 6 && cy < r.y + r.h + 6;
+}
 // ============================================================
 // FRANKS & BUNS — © 2026 franksandbuns.com
 // All rights reserved. Unauthorized reproduction or distribution
@@ -360,11 +436,21 @@ function resize() {
   const maxW = 420, maxH = 740;
   let w = Math.min(window.innerWidth, maxW);
   let h = Math.min(window.innerHeight, maxH);
-  canvas.style.width = w + 'px';
-  canvas.style.height = h + 'px';
-  canvas.width = w * dpr;
-  canvas.height = h * dpr;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // App on a big screen (iPad, iPhone Duo open): keep the same 420x740 game, drawn larger to fill the height
+  const C = window.Capacitor, inApp = !!(C && C.isNativePlatform && C.isNativePlatform());
+  let scale = 1;
+  if (inApp) {
+    const chrome = ['game-header', 'game-footer'].reduce((t, id) => { const el = document.getElementById(id); return t + (el ? el.offsetHeight : 0); }, 0);
+    const availH = window.innerHeight - chrome, availW = window.innerWidth;
+    if (availW >= 600 && availH >= 600) { w = maxW; h = maxH; scale = Math.min(availH / maxH, availW / maxW); }
+    document.body.classList.toggle('fb-wide', scale > 1 && availW > w * scale + 8);   // iPad / open Duo only; phones keep the plain dark edge
+    ['game-header', 'game-footer'].forEach(id => { const el = document.getElementById(id); if (el) el.style.maxWidth = Math.round(w * scale) + 'px'; });
+  }
+  canvas.style.width = (w * scale) + 'px';
+  canvas.style.height = (h * scale) + 'px';
+  canvas.width = Math.round(w * scale * dpr);
+  canvas.height = Math.round(h * scale * dpr);
+  ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
   return { w, h };
 }
 let { w: W, h: H } = resize();
@@ -902,12 +988,14 @@ canvas.addEventListener('touchstart', e => {
   e.preventDefault();
   const t = e.touches[0];
   if (isMuteTap(t.clientX, t.clientY)) { muted = !muted; return; }
+  if (isGcTap(t.clientX, t.clientY)) { gcShowBoard(); return; }
   if (handleScoresTap(t.clientX, t.clientY)) return;
   onTap();
 });
 canvas.addEventListener('touchend',   e => { e.preventDefault(); onRelease(); });
 canvas.addEventListener('mousedown', e => {
   if (isMuteTap(e.clientX, e.clientY)) { muted = !muted; return; }
+  if (isGcTap(e.clientX, e.clientY)) { gcShowBoard(); return; }
   if (handleScoresTap(e.clientX, e.clientY)) return;
   onTap();
 });
@@ -1006,6 +1094,7 @@ function sndBonusEnd() {
   setTimeout(()=>playTone(659,0.08,'sine',0.14),200); setTimeout(()=>playTone(523,0.25,'sine',0.18),300);
 }
 function startBonusRound() {
+  gcAchieve('dogparade');
   state = STATE.BONUS;
   bonusTimer = BONUS_DURATION;
   bonusDogs = []; nextBonusDogDist = 0; bonusScore = 0;
@@ -1226,7 +1315,7 @@ function landFrank(bun) {
   if (bun.condiment) { mult *= bun.condiment.multiplier; sndCondiment(); addParticles(bun.x,bun.y,bun.condiment.color,15); }
   streak++; franksLanded++; if (streak>bestStreak) bestStreak=streak;
   let sm=1;
-  if      (streak>=10){sm=3;streakText='WIENER WIZARD!';streakTimer=90;sndStreak();}
+  if      (streak>=10){sm=3;streakText='WIENER WIZARD!';streakTimer=90;sndStreak();gcAchieve('wienerwizard');}
   else if (streak>=5) {sm=2;streakText='FRANKS ON FIRE!';streakTimer=60;sndStreak();}
   else if (streak>=3) {sm=1.5;streakText='ON A ROLL!';streakTimer=45;sndStreak();}
   const rushMult = chiliRush > 0 ? 2 : 1;
@@ -1235,7 +1324,7 @@ function landFrank(bun) {
   addFloatingText(bun.x,bun.y-20,'+'+pts+(bun.condiment?' '+bun.condiment.label:'')+(rushMult>1?' x2':''),bun.condiment?bun.condiment.color:'#FFD700',bun.condiment?21:20);
   boxFranks++;
   if (boxFranks>=6) {
-    boxFranks=0; boxesCompleted++;
+    boxFranks=0; boxesCompleted++; gcAchieve('firstbox');
     const bonus=boxesCompleted*100; score+=bonus; boxFlash=60; sndBox(); shakeAmount=8;
     addFloatingText(W/2,H/2-40,'BOXED! +'+bonus,'#FF6600',32);
     scrollSpeed=Math.min(2.2+boxesCompleted*0.3,5.5);
@@ -1540,9 +1629,10 @@ function drawMenu() {
   if (bestScore > 0) { ctx.fillStyle = '#ddd'; ctx.font = '11px Arial'; ctx.fillText('Best: ' + bestScore.toLocaleString(), W / 2, r.y + r.h / 2 + 13); }
   if (scoresOpen) drawScoresPanel();
 }
+function scoresPanelRect() { const pw = Math.min(W - 32, 340), ph = gcPlugin() ? 350 : 300; return { x: W / 2 - pw / 2, y: H * 0.5 - ph / 2, w: pw, h: ph }; }
 function drawScoresPanel() {
   ctx.fillStyle = 'rgba(10,5,0,0.9)'; ctx.fillRect(0, 0, W, H);
-  const pw = Math.min(W - 32, 340), ph = 300, px = W / 2 - pw / 2, py = H * 0.5 - ph / 2;
+  const pr = scoresPanelRect(), pw = pr.w, ph = pr.h, px = pr.x, py = pr.y;
   ctx.fillStyle = '#2a1a0a'; rrect(px, py, pw, ph, 16); ctx.fill();
   ctx.strokeStyle = 'rgba(255,215,0,0.5)'; ctx.lineWidth = 2; rrect(px, py, pw, ph, 16); ctx.stroke();
   ctx.textAlign = 'center';
@@ -1552,6 +1642,7 @@ function drawScoresPanel() {
   drawLeaderboard(py + 150);
   ctx.fillStyle = '#aaa'; ctx.font = '12px Arial'; ctx.textAlign = 'center';
   ctx.fillText('Saved on this device · Tap anywhere to close', W / 2, py + ph - 16);
+  drawGcButton();   // iPhone app only: opens the Game Center leaderboard, or signs in when tapped
 }
 
 function drawGameOver() {
@@ -1565,6 +1656,7 @@ function drawGameOver() {
   ctx.fillText('Best Streak: '+bestStreak,W/2,sy+48); ctx.fillText('Best: '+bestScore.toLocaleString(),W/2,sy+72);
   if (gameOverDelay>40) { ctx.fillStyle='#FF6600'; ctx.font='bold 20px Arial'; ctx.globalAlpha=0.8+Math.sin(frameCount*0.06)*0.2; ctx.fillText('TAP TO RETRY',W/2,H*0.82); ctx.globalAlpha=1; }
   drawLeaderboard(H * 0.65);
+  drawGcButton();
   const quips=['"You\'re on a roll!"','"No bun intended."','"That was a frank failure."','"Ketchup to the competition!"','"Mustard up more courage!"','"Relish the attempt!"'];
   ctx.fillStyle='#888'; ctx.font='italic 13px Arial'; ctx.fillText(quips[Math.floor(score/7)%quips.length],W/2,H*0.92);
   // Addiction warning: word-wrapped to the canvas width, box sized to the text,
