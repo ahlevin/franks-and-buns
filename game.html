@@ -1168,11 +1168,11 @@ function drawChili() {
   if (!chili || chili.x === undefined) return;
   ctx.save(); ctx.translate(chili.x, chili.y);
   const bob = Math.sin(chili.frame * 0.1) * 0.05; ctx.scale(1 + bob, 1 - bob);
-  ctx.beginPath(); ctx.arc(0, 0, 40, 0, Math.PI * 2);
+  ctx.beginPath(); ctx.arc(0, -2, 46, 0, Math.PI * 2);
   ctx.strokeStyle = `rgba(255,60,0,${0.45 + Math.sin(chili.frame * 0.15) * 0.25})`; ctx.lineWidth = 3; ctx.stroke();
   const key = (Math.floor(chili.frame / 15) % 2) ? 'chili-b' : 'chili-a';
   if (spriteReady(key)) {
-    ctx.drawImage(sp[key], -40, -30, 80, 60);
+    ctx.drawImage(sp[key], -44, -38, 88, 70);   // 320x255 art
   } else {
     // drawn chili dog until the final art is added: hot dog in a bun, heaped with chili and cheese
     if (spriteReady('bun-frank')) ctx.drawImage(sp['bun-frank'], -40, -12, 80, 34);
