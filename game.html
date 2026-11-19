@@ -736,7 +736,8 @@ window.fbShowCredits = fbShowCredits;
 // Screens are HTML (like Credits) so typing works with the phone keyboard. Data lives at /api (functions/api).
 const PACKS_API = (location.protocol === 'capacitor:' || location.protocol === 'file:' ||
   (location.hostname === 'localhost' && !location.port)) ? 'https://franksandbuns.com/api/' : '/api/';
-const PACKS_SHARE_URL = 'https://franksandbuns.com/game.html?pack=';
+// Invites point at the site you're on (so preview invites stay on the preview); the apps invite to franksandbuns.com
+const PACKS_SHARE_URL = (PACKS_API.indexOf('https://') === 0 ? 'https://franksandbuns.com/game.html' : location.origin + location.pathname) + '?pack=';
 let packsResult = null;   // Game Over: null, 'wait', 'off' (couldn't reach Packs) or the server's answer for this game
 let packsApproval = true;   // new Packs: the leader lets each player in, unless they pick "Anyone with the code"
 let packsMe = null, packsView = 'home', packsCur = null, packsBoard = 'week', packsBusy = false, packsMsg = '', packsConfirm = '', packsEdit = false, packsPrefill = '';
