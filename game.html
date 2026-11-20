@@ -1061,7 +1061,7 @@ function packsRender() {
       '<button type="submit" data-a="restore"' + busy + '>Restore</button></form>' + packsMsgHtml() + '<button type="button" class="fbp-ghost" data-a="home">Back</button>';
   } else if (packsView === 'pack' && packsCur) {
     const c = packsCur, p = c.pack;
-    h += '<h2>' + packsEsc(p.name) + '</h2><p class="fbp-sub">Pack code <b style="color:#fff;letter-spacing:1px">' + packsEsc(p.code) + '</b> · ' + p.members + (p.members === 1 ? ' player' : ' players') + '</p>' +
+    h += '<h2>' + packsEsc(p.name) + '</h2><p class="fbp-sub">Pack code <b style="color:#fff;letter-spacing:1px">' + packsEsc(p.code) + '</b> <button type="button" class="fbp-link" data-a="copy-pack" style="padding:2px 4px">Copy code</button> · ' + p.members + (p.members === 1 ? ' player' : ' players') + '</p>' +
       (p.isOwner ? '<p class="fbp-small" style="margin-top:-8px">' + (p.approval ? 'You let in each new player.' : 'Anyone with the code can join.') + '</p>' : '') +
       '<button type="button" data-a="share">Invite friends</button>' +
       '<div class="fbp-tabs"><button type="button" data-a="tab" data-v="week" class="' + (c.board === 'week' ? '' : 'fbp-ghost') + '">This Week</button><button type="button" data-a="tab" data-v="all" class="' + (c.board === 'all' ? '' : 'fbp-ghost') + '">All-Time</button></div>' +
@@ -1201,6 +1201,7 @@ function packsClick(e) {
     packsMsg = '✓ Opening an email to us. If nothing opens, write to admin@slaelabs.com with the Pack code ' + p.code + '.'; packsRender();
     return;
   }
+  if (a === 'copy-pack') { const c = packsCur.pack.code; packsCopy(c).then(ok => { packsMsg = ok ? '✓ Pack code ' + c + ' copied.' : 'Copy didn\'t work here. The code is ' + c + '.'; packsRender(); }); return; }
   if (a === 'share') {
     const p = packsCur.pack, text = 'Join my Franks & Buns Pack "' + p.name + '"! Code: ' + p.code, url = PACKS_SHARE_URL + p.code;
     if (navigator.share) { navigator.share({ title: 'Franks & Buns Pack', text: text, url: url }).catch(() => {}); return; }
