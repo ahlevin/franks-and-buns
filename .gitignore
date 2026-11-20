@@ -1,0 +1,7 @@
+.DS_Store
+# Backup copies made before edits (git history already keeps every version)
+*.pre-*
+# Originals kept in new-art/ (root PNGs would be published by build.sh)
+/chili-dog-a.png
+/chili-dog-b.png
+optin.tgz
