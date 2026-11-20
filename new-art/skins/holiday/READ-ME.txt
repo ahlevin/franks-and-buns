@@ -1,0 +1,17 @@
+FRANKS & BUNS HOLIDAY SKINS
+
+Eight source PNG strips created with the built-in image generator.
+Each strip contains three states, left to right: frank alone, plain bun, grilled bun with steam.
+Trim into individual sprites and check scale/body anchors in the actual game before shipping. These images are not yet integrated. Costume details should not expand collision boxes. No animation pairs are included in this collection.
+
+Suggested picker names:
+christmas-santa.png: Santa Frank
+easter-bunny.png: Easter Buns
+thanksgiving-turkey.png: Gobble Dog
+halloween-vampire.png: Count Frankula
+valentines-cupid.png: Love at First Bite
+st-patricks-lucky.png: Lucky Dog
+july-fourth.png: Yankee Doodle Dog
+new-years-party.png: Midnight Frank
+
+Exact prompts included in prompts.txt. The extra background-cleanup prompt is in cleanup-prompt.txt.

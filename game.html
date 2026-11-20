@@ -429,8 +429,21 @@ const SKINS = [
   { id: 'superhero', name: 'Superhero', need: 10000, frames: 1, fly: [-47.1, -24.5, 85.8, 41.2], bun: [-48.2, -54.3, 92.7, 56.2], grill: [-48.0, -69.9, 92.4, 71.9] },
   { id: 'rocket', name: 'Rocket', need: 20000, frames: 1, fly: [-56.9, -22.7, 96.8, 43.6], bun: [-51.6, -52.4, 99.0, 54.4], grill: [-51.8, -67.4, 99.1, 69.4] },
   { id: 'unicorn', name: 'Unicorn', need: 35000, frames: 1, fly: [-46.0, -33.3, 86.6, 46.9], bun: [-45.2, -54.3, 89.6, 56.3], grill: [-45.6, -66.3, 90.0, 68.2] },
-  { id: 'dragon', name: 'Dragon', need: 50000, frames: 2, fly: [-56.6, -36.9, 108.5, 51.6], bun: [-53.6, -60.3, 109.9, 62.6], grill: [-54.1, -74.8, 111.7, 77.0] }
+  { id: 'dragon', name: 'Dragon', need: 50000, frames: 2, fly: [-56.6, -36.9, 108.5, 51.6], bun: [-53.6, -60.3, 109.9, 62.6], grill: [-54.1, -74.8, 111.7, 77.0] },
+  { id: 'midnight', name: 'Midnight Frank', group: 'holiday', note: 'New Year\'s', frames: 1, fly: [-48.6, -31.7, 91.8, 47.6], bun: [-43.8, -54.7, 89.5, 56.6], grill: [-45.6, -61.2, 92.0, 63.1] },
+  { id: 'cupid', name: 'Love at First Bite', group: 'holiday', note: 'Valentine\'s Day', frames: 1, fly: [-46.7, -27.9, 85.8, 47.1], bun: [-46.1, -54.1, 90.3, 56.1], grill: [-46.8, -66.2, 90.3, 68.1] },
+  { id: 'lucky', name: 'Lucky Dog', group: 'holiday', note: 'St. Patrick\'s Day', frames: 1, fly: [-48.3, -34.3, 93.2, 51.6], bun: [-42.8, -54.5, 85.7, 56.4], grill: [-43.0, -65.5, 86.8, 67.4] },
+  { id: 'easter', name: 'Easter Buns', group: 'holiday', note: 'Easter', frames: 1, fly: [-44.3, -31.1, 83.4, 45.8], bun: [-43.1, -50.4, 84.7, 52.2], grill: [-43.6, -62.1, 85.2, 64.0] },
+  { id: 'yankee', name: 'Yankee Doodle Dog', group: 'holiday', note: 'Fourth of July', frames: 1, fly: [-48.6, -30.8, 87.9, 45.9], bun: [-45.5, -57.2, 94.6, 59.2], grill: [-45.6, -69.0, 94.7, 70.9] },
+  { id: 'frankula', name: 'Count Frankula', group: 'holiday', note: 'Halloween', frames: 1, fly: [-46.1, -20.4, 90.3, 36.7], bun: [-43.0, -43.8, 86.8, 45.7], grill: [-43.0, -60.3, 87.4, 62.2] },
+  { id: 'gobble', name: 'Gobble Dog', group: 'holiday', note: 'Thanksgiving', frames: 1, fly: [-53.3, -30.4, 92.2, 49.4], bun: [-50.3, -55.5, 95.3, 57.5], grill: [-50.5, -66.8, 95.5, 68.7] },
+  { id: 'santa', name: 'Santa Frank', group: 'holiday', note: 'Christmas', frames: 1, fly: [-44.3, -28.9, 84.1, 44.7], bun: [-44.4, -59.9, 98.2, 61.9], grill: [-44.4, -71.1, 98.3, 73.1] }
 ];
+// Skin groups. how: 'earn' = unlocked by best score (need), 'soon' = shown locked (Coming soon),
+// 'hidden' = not shown, 'free' = everyone has them. Skins without a group are 'earn'.
+// The holiday set waits here until buying skins is built.
+const SKIN_GROUPS = { earn: { name: 'Earn them', how: 'earn' }, holiday: { name: 'Holiday', how: 'soon' } };
+function skinHow(s) { return (SKIN_GROUPS[s.group || 'earn'] || SKIN_GROUPS.earn).how; }
 const skinImg = {};   // 'dragon-fly-b' -> Image, loaded when first needed
 function skinPic(id, part) {
   const k = id + '-' + part;
@@ -442,7 +455,13 @@ function skinById(id) { return SKINS.find(s => s.id === id) || SKINS[0]; }
 const SKINS_ALL = new URLSearchParams(location.search).get('skins') === 'all' && location.hostname !== 'franksandbuns.com' &&
   location.protocol !== 'capacitor:' && !(location.hostname === 'localhost' && !location.port);
 function skinBest() { return Math.max(bestScore, (packsMe && packsMe.player && packsMe.player.best) || 0); }
-function skinUnlocked(s, best) { return SKINS_ALL || (best === undefined ? skinBest() : best) >= s.need; }
+function skinUnlocked(s, best) {
+  if (SKINS_ALL) return true;
+  const how = skinHow(s);
+  if (how === 'free') return true;
+  if (how !== 'earn') return false;   // 'soon' and 'hidden' stay locked until they go on sale
+  return (best === undefined ? skinBest() : best) >= s.need;
+}
 function curSkin() { const s = skinById(safeGet('fb_skin') || 'classic'); return skinUnlocked(s) ? s : SKINS[0]; }
 let skinNew = null;   // Game Over: the skin this game unlocked
 function skinPreload(s) { if (s.frames) ['fly', 'bun', 'grill'].forEach(p => { skinPic(s.id, p); if (s.frames > 1) skinPic(s.id, p + '-b'); }); }
@@ -2116,7 +2135,7 @@ function loseLife() {
     state=STATE.GAMEOVER; frank.alive=false; sndGameOver();
     const oldBest = skinBest();
     if (score>bestScore) { bestScore=score; safeSet('fb_best',bestScore.toString()); }
-    skinNew = null; SKINS.forEach(s => { if (!SKINS_ALL && score >= s.need && oldBest < s.need) skinNew = s; });
+    skinNew = null; SKINS.forEach(s => { if (!SKINS_ALL && skinHow(s) === 'earn' && score >= s.need && oldBest < s.need) skinNew = s; });
     if (skinNew) skinPreload(skinNew);
     recordRun();
   } else { frank.y=H*0.35; frank.vy=0; }
@@ -2449,12 +2468,13 @@ function skinsOpen() {
       '#fb-skins .fbs-card{max-width:420px;width:100%;max-height:100%;overflow-y:auto;box-sizing:border-box;background:#2a1a0a;color:#f3e3c3;border:2px solid rgba(255,215,0,.5);border-radius:16px;padding:16px;font:14px/1.4 -apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-overflow-scrolling:touch}' +
       '#fb-skins h2{margin:0 0 4px;color:#FFD700;font:bold 22px Arial;text-align:center}' +
       '#fb-skins .fbs-sub{text-align:center;color:#c8a878;font-size:13px;margin:0 0 12px}' +
+      '#fb-skins .fbs-h{margin:14px 0 6px;color:#FFD700;font:bold 15px Arial;text-align:left}#fb-skins .fbs-h:first-of-type{margin-top:0}' +
       '#fb-skins .fbs-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}' +
       '#fb-skins .fbs-skin{background:rgba(0,0,0,.25);border:2px solid rgba(255,215,0,.25);border-radius:12px;padding:8px 6px;color:#f3e3c3;font:600 14px Arial;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px}' +
       '#fb-skins .fbs-skin img{width:100%;max-width:150px;height:64px;object-fit:contain}' +
       '#fb-skins .fbs-skin small{font:12px Arial;color:#c8a878}' +
       '#fb-skins .fbs-skin.on{border-color:#FFD700;background:rgba(255,215,0,.12)}#fb-skins .fbs-skin.on small{color:#FFD700}' +
-      '#fb-skins .fbs-skin.lock{cursor:default}#fb-skins .fbs-skin.lock img{filter:brightness(0) opacity(.45)}' +
+      '#fb-skins .fbs-skin.lock{cursor:default}#fb-skins .fbs-skin.lock img{filter:brightness(0) opacity(.45)}#fb-skins .fbs-skin.lock.soon img{filter:opacity(.6)}' +
       '#fb-skins .fbs-close{font:600 15px Arial;border-radius:999px;padding:11px 16px;border:1px solid rgba(255,179,71,.5);background:transparent;color:#ffb347;cursor:pointer;width:100%;margin:12px 0 0}';
     document.head.appendChild(css);
     box.addEventListener('click', e => {
@@ -2473,16 +2493,22 @@ function skinsOpen() {
 function skinsRender() {
   const box = document.getElementById('fb-skins'); if (!box) return;
   const cur = curSkin(), best = skinBest();
-  let h = '<div class="fbs-card"><h2>🎭 SKINS</h2><p class="fbs-sub">Dress up your frank. Beat a best score to unlock each costume.' +
-    (best > 0 ? '<br>Your best: ' + best.toLocaleString() : '') + '</p><div class="fbs-grid">';
-  SKINS.forEach(s => {
-    const open = skinUnlocked(s, best), on = s.id === cur.id;
+  let h = '<div class="fbs-card"><h2>🎭 SKINS</h2><p class="fbs-sub">Dress up your frank. Beat a best score to unlock a costume.' +
+    (best > 0 ? '<br>Your best: ' + best.toLocaleString() : '') + '</p>';
+  Object.keys(SKIN_GROUPS).forEach(gid => {
+  const list = SKINS.filter(s => (s.group || 'earn') === gid && (SKINS_ALL || skinHow(s) !== 'hidden'));
+  if (!list.length) return;
+  h += '<h3 class="fbs-h">' + SKIN_GROUPS[gid].name + (skinHow(list[0]) === 'soon' && !SKINS_ALL ? ' · coming soon' : '') + '</h3><div class="fbs-grid">';
+  list.forEach(s => {
+    const open = skinUnlocked(s, best), on = s.id === cur.id, how = skinHow(s);
     const pic = s.frames ? 'skin-' + s.id + '-fly.png' : 'sp-frank.png';
-    h += '<button type="button" class="fbs-skin' + (on ? ' on' : '') + (open ? '' : ' lock') + '" data-skin="' + s.id + '"' +
+    h += '<button type="button" class="fbs-skin' + (on ? ' on' : '') + (open ? '' : ' lock') + (open || how === 'earn' ? '' : ' soon') + '" data-skin="' + s.id + '"' +
       (open ? '' : ' aria-disabled="true"') + '><img src="' + pic + '" alt="">' + s.name +
-      '<small>' + (on ? '✓ Wearing' : open ? 'Tap to wear' : '🔒 Score ' + s.need.toLocaleString()) + '</small></button>';
+      '<small>' + (on ? '✓ Wearing' : open ? 'Tap to wear' : how === 'earn' ? '🔒 Score ' + s.need.toLocaleString() : '🔒 ' + (s.note || 'Coming soon')) + '</small></button>';
   });
-  h += '</div><button type="button" class="fbs-close" data-a="close">Close</button></div>';
+  h += '</div>';
+  });
+  h += '<button type="button" class="fbs-close" data-a="close">Close</button></div>';
   box.innerHTML = h;
 }
 function scoresPanelRect() { const pw = Math.min(W - 32, 340), ph = gcPlugin() ? 350 : 300; return { x: W / 2 - pw / 2, y: H * 0.5 - ph / 2, w: pw, h: ph }; }

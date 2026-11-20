@@ -13,9 +13,18 @@ BUN_W = 79    # bun width in game pixels (the classic bun picture)
 BUN_BOTTOM = 1.25   # bun bottom sits this far below the bun's half height (hh), like sp-bun-frank
 # flying body box in each strip's first picture (x0, x1, y0, y1), measured on a 50px grid
 BODY = {'bunny': (125, 670, 355, 525), 'dragon': (156, 621, 350, 518), 'rocket': (150, 690, 285, 470),
-        'shark': (176, 691, 330, 520), 'superhero': (105, 680, 295, 520), 'unicorn': (76, 666, 360, 545)}
+        'shark': (176, 691, 330, 520), 'superhero': (105, 680, 295, 520), 'unicorn': (76, 666, 360, 545),
+        # holiday set: the sausage between its tied ends (the classic frank has none)
+        'midnight': (102, 654, 304, 520), 'cupid': (80, 680, 285, 550), 'lucky': (104, 656, 310, 538),
+        'easter': (74, 680, 355, 545), 'yankee': (100, 695, 316, 520), 'frankula': (90, 660, 268, 496),
+        'gobble': (126, 684, 290, 540), 'santa': (72, 675, 298, 500)}
+# source strips for each skin (a second file is the B pose of a 2-frame flap)
 FRAMES = {'bunny': ['bunny-a', 'bunny-b'], 'dragon': ['dragon-a', 'dragon-b'], 'rocket': ['rocket'],
-          'shark': ['shark'], 'superhero': ['superhero'], 'unicorn': ['unicorn']}
+          'shark': ['shark'], 'superhero': ['superhero'], 'unicorn': ['unicorn'],
+          'midnight': ['holiday/new-years-party'], 'cupid': ['holiday/valentines-cupid'], 'lucky': ['holiday/st-patricks-lucky'],
+          'easter': ['holiday/easter-bunny'], 'yankee': ['holiday/july-fourth'], 'frankula': ['holiday/halloween-vampire'],
+          'gobble': ['holiday/thanksgiving-turkey'], 'santa': ['holiday/christmas-santa']}
+ONLY = sys.argv[3:]   # optional: just these skins
 
 def runs(alpha):
     col = (alpha > 20).sum(0); out = []; s = None
@@ -35,6 +44,7 @@ def bun_box(rgba, x0, x1):
 
 geo = {}
 for skin, frames in FRAMES.items():
+    if ONLY and skin not in ONLY: continue
     ims = [np.array(Image.open(f'{SRC}/{f}.png').convert('RGBA')) for f in frames]
     rr = [runs(im[..., 3]) for im in ims]
     g = {}
