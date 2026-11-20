@@ -638,10 +638,13 @@ function skinById(id) { return SKINS.find(s => s.id === id) || SKINS[0]; }
 // try every skin on the preview site with ?skins=all (never on franksandbuns.com or in the apps)
 // preview.franks-and-buns.pages.dev is Alan's test site: every costume is unlocked there without the ?skins=all
 // Collections shop. Test mode (pretend purchases, nothing charged): the test site with ?shop=test.
-// Live on franksandbuns.com and in the apps only once SHOP_LIVE is switched on with real purchases.
+// In the iPhone/Android apps the shop is real: Apple / Google Play purchases through RevenueCat (Purchases plugin).
+// On franksandbuns.com the Collections stay "Coming soon" until web checkout exists (SHOP_LIVE).
 const SHOP_LIVE = false;
+function shopPlugin() { const P = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Purchases; return P && P.configure ? P : null; }
+const SHOP_APP = !!shopPlugin() && location.hostname !== 'franksandbuns.com';
 const SHOP_TEST = new URLSearchParams(location.search).get('shop') === 'test' && location.hostname !== 'franksandbuns.com' && location.protocol !== 'capacitor:';
-const SHOP_ON = SHOP_LIVE || SHOP_TEST;
+const SHOP_ON = SHOP_LIVE || SHOP_TEST || SHOP_APP;
 const SKINS_ALL = !SHOP_TEST && (new URLSearchParams(location.search).get('skins') === 'all' || location.hostname === 'preview.franks-and-buns.pages.dev') && location.hostname !== 'franksandbuns.com' &&
   location.protocol !== 'capacitor:' && !(location.hostname === 'localhost' && !location.port);
 function skinUnlocked(s) {
@@ -662,29 +665,76 @@ function shopLaunch() { return shopNow() < SHOP_LAUNCH_END; }
 function shopColSkins(g) { return SKINS.filter(k => k.group === g).map(k => k.id); }
 // product id -> what it is; the same ids get created in App Store Connect and Google Play
 function shopProducts() {
-  const out = {};
+  const out = {}, st = shopStore.products;
+  // in the apps the price comes from the store (the player's own currency); the crossed-out price only in dollars
+  const real = (pid, usd) => SHOP_APP ? (st[pid] ? st[pid].priceString : '') : usd;
+  const usdStore = pid => !SHOP_APP || (st[pid] && st[pid].currencyCode === 'USD');
   SHOP_COLS.forEach(g => {
-    shopColSkins(g).forEach(id => { out['skin_' + id] = { kind: 'skin', name: skinById(id).name, skins: [id], price: '$0.99' }; });
-    out['col_' + g] = { kind: 'col', group: g, name: SKIN_GROUPS[g].name + ' Collection', skins: shopColSkins(g),
-      price: shopLaunch() ? '$2.99' : '$3.99', was: shopLaunch() ? '$3.99' : '' };
+    shopColSkins(g).forEach(id => { out['skin_' + id] = { kind: 'skin', name: skinById(id).name, skins: [id], price: real('skin_' + id, '$0.99') }; });
+    const cid = 'col_' + g;
+    out[cid] = { kind: 'col', group: g, name: SKIN_GROUPS[g].name + ' Collection', skins: shopColSkins(g),
+      price: real(cid, shopLaunch() ? '$2.99' : '$3.99'), was: shopLaunch() && usdStore(cid) ? '$3.99' : '', launch: shopLaunch() };
   });
-  out.col_launch3 = { kind: 'bundle', name: 'All 3 Collections', skins: [].concat.apply([], SHOP_COLS.map(shopColSkins)), price: '$7.99',
+  out.col_launch3 = { kind: 'bundle', name: 'All 3 Collections', skins: [].concat.apply([], SHOP_COLS.map(shopColSkins)), price: real('col_launch3', '$7.99'),
     note: SHOP_COLS.map(g => SKIN_GROUPS[g].name).join(', ') };
   return out;
 }
+// --- the store, in the apps (RevenueCat). Product ids are the same in App Store Connect and Google Play. ---
+const shopStore = { started: null, products: {} };
+function shopStart() {
+  if (!SHOP_APP) return Promise.resolve();
+  if (shopStore.started) return shopStore.started;
+  const P = shopPlugin(), ios = window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'ios';
+  shopStore.started = (async () => {
+    // public SDK keys (made to ship inside apps; not secrets)
+    await P.configure({ apiKey: ios ? 'appl_fbOSmzHIeKwIwyNMMMmlFcRkfFb' : 'goog_pvKGaoJLIDqooemXcHvgYvzEgOO' });
+    const ids = Object.keys(shopProducts());
+    try {
+      const r = await P.getProducts({ productIdentifiers: ids, type: 'NON_SUBSCRIPTION' });
+      (r && r.products || []).forEach(sp => { shopStore.products[sp.identifier] = sp; });
+    } catch (e) {}
+    shopStore.loaded = true;
+    try { const c = await P.getCustomerInfo(); shopFromCustomer(c && c.customerInfo); } catch (e) {}
+    if (skinsIsOpen()) skinsRender();
+  })().catch(e => { shopStore.started = null; throw e; });
+  return shopStore.started;
+}
+// everything this store account has bought -> costumes owned on this device
+function shopFromCustomer(ci) {
+  const bought = (ci && ci.allPurchasedProductIdentifiers) || [], all = shopProducts(), ids = [];
+  bought.forEach(pid => { const p = all[pid]; if (p) p.skins.forEach(id => { if (ids.indexOf(id) < 0) ids.push(id); }); });
+  if (ids.length) shopGive(ids);
+  return ids.length;
+}
+window.addEventListener('load', () => { if (SHOP_APP) setTimeout(() => shopStart().catch(() => {}), 1200); });
 // costumes bought (ids). Test mode keeps pretend purchases on this device only.
 function shopOwned() { try { const a = JSON.parse(safeGet(SHOP_TEST ? 'fb_shop_test' : 'fb_skins_bought') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
 function shopGive(ids) { const have = shopOwned(); ids.forEach(id => { if (have.indexOf(id) < 0) have.push(id); }); safeSet(SHOP_TEST ? 'fb_shop_test' : 'fb_skins_bought', JSON.stringify(have)); }
 function shopOwnedOf(ids) { const have = shopOwned(); return ids.filter(id => have.indexOf(id) >= 0); }
-// buying: the test site pretends; the apps will hand this to Apple / Google Play (through RevenueCat)
+// buying: the test site pretends; the apps go to Apple / Google Play through RevenueCat
 async function shopBuy(pid) {
   const p = shopProducts()[pid]; if (!p) throw new Error('Unknown item');
   if (SHOP_TEST) { await new Promise(r => setTimeout(r, 600)); shopGive(p.skins); return p; }
-  throw new Error('Purchases are coming soon.');
+  if (!SHOP_APP) throw new Error('Purchases are coming soon.');
+  await shopStart();
+  const sp = shopStore.products[pid];
+  if (!sp) throw new Error('This isn’t available right now. Please try again later.');
+  try {
+    const r = await shopPlugin().purchaseStoreProduct({ product: sp });
+    shopFromCustomer(r && r.customerInfo);
+    shopGive(p.skins);
+    return p;
+  } catch (e) {
+    if (e && (e.userCancelled || e.code === '1' || e.code === 1 || /cancel/i.test(e.message || ''))) { const c = new Error(''); c.cancelled = true; throw c; }
+    throw new Error('The purchase didn’t go through. You weren’t charged.');
+  }
 }
 async function shopRestore() {
   if (SHOP_TEST) { await new Promise(r => setTimeout(r, 600)); return shopOwned().length; }
-  throw new Error('Purchases are coming soon.');
+  if (!SHOP_APP) throw new Error('Purchases are coming soon.');
+  await shopStart();
+  const r = await shopPlugin().restorePurchases();
+  return shopFromCustomer(r && r.customerInfo);
 }
 function curSkin() { const s = skinById(safeGet('fb_skin') || 'classic'); return skinUnlocked(s) ? s : SKINS[0]; }
 let skinNew = null;   // Game Over: the skins this game won (array)
@@ -2770,6 +2820,7 @@ function skinsOpen() {
     document.body.appendChild(box);
   }
   box.style.display = 'flex'; skinsTab = null; skinsBuy = null; skinsMsg = ''; skinsRender();
+  if (SHOP_APP) shopStart().catch(() => {});
 }
 let skinsTab = null;   // null: the Collections list; otherwise the SKIN_GROUPS key being shown
 function skinsGroupList(gid) { return SKINS.filter(s => (s.group || 'earn') === gid && (SKINS_ALL || skinHow(s) !== 'hidden')); }
@@ -2779,9 +2830,9 @@ let skinsBuy = null, skinsMsg = '', skinsMsgErr = false, skinsBusy = false;   //
 function skinsDeal(pid) {
   const p = shopProducts()[pid], own = shopOwnedOf(p.skins).length, all = own === p.skins.length;
   return '<button type="button" class="fbs-deal" data-buy="' + pid + '"' + (all ? ' disabled' : '') + '><span class="fbs-price">' +
-    (all ? '<span class="fbs-now">✓ All owned</span>' : (p.was ? '<span class="fbs-was">' + p.was + '</span>' : '') + '<span class="fbs-now">' + p.price + '</span>') + '</span>' +
+    (all ? '<span class="fbs-now">✓ All owned</span>' : (p.was ? '<span class="fbs-was">' + p.was + '</span>' : '') + '<span class="fbs-now">' + (p.price || '…') + '</span>') + '</span>' +
     '<b>' + (p.kind === 'bundle' ? '🛍️ ' : '') + packsEsc(p.name) + '</b><br>' +
-    (p.was && !all ? '<span class="fbs-tag">Launch offer · through Jan 15</span>' : '') +
+    (p.launch && !all ? '<span class="fbs-tag">Launch offer · through Jan 15</span>' : '') +
     '<span class="fbs-inc">' + (p.kind === 'bundle' ? 'These ' + p.skins.length + ' costumes: every costume in ' + packsEsc(p.note) :
       'These ' + p.skins.length + ' costumes: ' + p.skins.map(id => packsEsc(skinById(id).name)).join(', ')) + '</span>' +
     (own && !all ? '<span class="fbs-own">You already own ' + own + ' of these ' + p.skins.length + '</span>' : '') + '</button>';
@@ -2793,7 +2844,7 @@ async function skinsPay() {
     const p = await shopBuy(skinsBuy);
     skinsBuy = null; skinsMsgErr = false; skinsMsg = '🎉 ' + p.name + ' is yours!';
     if (p.skins.length === 1) { safeSet('fb_skin', p.skins[0]); skinPreload(skinById(p.skins[0])); skinsMsg += ' You’re wearing it now.'; }
-  } catch (e) { skinsMsgErr = true; skinsMsg = (e && e.message) || 'That didn’t go through. Nothing was charged.'; }
+  } catch (e) { skinsMsgErr = !(e && e.cancelled); skinsMsg = e && e.cancelled ? '' : (e && e.message) || 'That didn’t go through. Nothing was charged.'; }
   skinsBusy = false; skinsRender();
 }
 async function skinsRestore() {
@@ -2822,14 +2873,14 @@ function skinsRender() {
     h += '<div class="fbs-buy">';
     if (buyP.kind === 'skin') h += '<img src="' + skinsPic(skinById(buyP.skins[0])) + '" alt=""><h3>' + packsEsc(buyP.name) + '</h3><p>One costume, yours to keep.</p>';
     else {
-      h += '<h3>' + packsEsc(buyP.name) + '</h3>' + (buyP.was ? '<span class="fbs-tag">Launch offer · through Jan 15</span>' : '') +
+      h += '<h3>' + packsEsc(buyP.name) + '</h3>' + (buyP.launch ? '<span class="fbs-tag">Launch offer · through Jan 15</span>' : '') +
         '<p>These ' + n + ' costumes' + (buyP.kind === 'bundle' ? ' (' + packsEsc(buyP.note) + ')' : '') + ':</p><ul>' +
         buyP.skins.map(id => '<li' + (own.indexOf(id) >= 0 ? ' class="own"' : '') + '>' + packsEsc(skinById(id).name) + (own.indexOf(id) >= 0 ? ' ✓' : '') + '</li>').join('') + '</ul>';
       if (own.length) h += '<p class="fbs-own">You already own ' + own.length + ' of these ' + n + ' (marked ✓). This adds the other ' + left + '.</p>';
       h += '<p style="font-size:12px;color:#c8a878">Future costumes aren’t included.</p>';
     }
-    h += '<p>' + (buyP.was ? '<span class="fbs-was">' + buyP.was + '</span>' : '') + '<span class="fbs-now">' + buyP.price + '</span></p>' +
-      '<button type="button" class="fbs-go" data-a="pay"' + (skinsBusy ? ' disabled' : '') + '>' + (skinsBusy ? 'One moment…' : 'Buy for ' + buyP.price) + '</button>' + msg + '</div>';
+    h += '<p>' + (buyP.was ? '<span class="fbs-was">' + buyP.was + '</span>' : '') + '<span class="fbs-now">' + (buyP.price || '…') + '</span></p>' +
+      '<button type="button" class="fbs-go" data-a="pay"' + (skinsBusy || !buyP.price ? ' disabled' : '') + '>' + (skinsBusy ? 'One moment…' : buyP.price ? 'Buy for ' + buyP.price : shopStore.loaded ? 'Not available yet' : 'Loading price…') + '</button>' + msg + '</div>';
   } else if (!skinsTab) {
     // Collections: one row per group, newest groups just get added to SKIN_GROUPS
     h += '<p class="fbs-sub">Wearing: <b>' + packsEsc(cur.name) + '</b></p>' + msg;
@@ -2837,7 +2888,7 @@ function skinsRender() {
       const list = skinsGroupList(g), open = list.filter(s => skinUnlocked(s)).length, how = SKINS_ALL ? '' : skinHow(list[0]), soon = how === 'soon';
       const here = list.indexOf(cur) >= 0;
       h += '<button type="button" class="fbs-col' + (here ? ' on' : '') + '" data-tab="' + g + '"><span class="fbs-col-t"><b>' + packsEsc(SKIN_GROUPS[g].name) + '</b>' +
-        '<small>' + (soon ? '🔒 Coming soon · ' + list.length + ' costumes' : how === 'shop' ? (open === list.length ? '✓ All ' + list.length + ' owned' : (open ? open + ' of ' + list.length + ' owned · ' : list.length + ' costumes · ') + 'from $0.99') : open + ' of ' + list.length + ' unlocked') + '</small></span><span class="fbs-col-p">';
+        '<small>' + (soon ? '🔒 Coming soon · ' + list.length + ' costumes' : how === 'shop' ? (open === list.length ? '✓ All ' + list.length + ' owned' : (open ? open + ' of ' + list.length + ' owned · ' : list.length + ' costumes · ') + 'from ' + (shopProducts()['skin_' + list[0].id].price || '…')) : open + ' of ' + list.length + ' unlocked') + '</small></span><span class="fbs-col-p">';
       (here ? [cur].concat(list.filter(s => s !== cur)) : list).slice(0, 3).forEach(s => { h += '<img src="' + skinsPic(s) + '" alt="" loading="lazy">'; });
       h += '</span><span class="fbs-col-a">›</span></button>';
     });
@@ -2847,14 +2898,14 @@ function skinsRender() {
     const list = skinsGroupList(skinsTab), how0 = SKINS_ALL ? '' : skinHow(list[0]), soon = how0 === 'soon';
     h += '<p class="fbs-sub">' + (soon ? 'Coming soon. Check back for these costumes!' :
       skinsTab === 'earn' ? 'Win them in order, one per game: pull off the challenge in a single game.' :
-      how0 === 'shop' ? 'Get one costume for $0.99, or the whole Collection.' : 'Dress up your frank.') + '</p>' + msg;
+      how0 === 'shop' ? 'Get one costume for ' + (shopProducts()['skin_' + list[0].id].price || '$0.99') + ', or the whole Collection.' : 'Dress up your frank.') + '</p>' + msg;
     if (how0 === 'shop') h += skinsDeal('col_' + skinsTab);
     h += '<div class="fbs-grid">';
     list.forEach(s => {
       const open = skinUnlocked(s), on = s.id === cur.id, how = skinHow(s);
       h += '<button type="button" class="fbs-skin' + (on ? ' on' : '') + (open ? '' : ' lock') + (open || how === 'earn' || how === 'shop' ? '' : ' soon') + '" data-skin="' + s.id + '"' +
         (open || how === 'shop' ? '' : ' aria-disabled="true"') + '><img src="' + skinsPic(s) + '" alt="" loading="lazy">' + s.name +
-        '<small>' + (on ? '✓ Wearing' : open ? 'Tap to wear' : how === 'shop' ? '<span class="fbs-p">$0.99</span>' : how === 'earn' ? '🔒 ' + (skinNext() === s || !skinPrev(s) ? '' : 'After ' + skinPrev(s).name + ': ') + s.goal.text : '🔒 ' + (s.note || 'Coming soon')) + '</small></button>';
+        '<small>' + (on ? '✓ Wearing' : open ? 'Tap to wear' : how === 'shop' ? '<span class="fbs-p">' + (shopProducts()['skin_' + s.id].price || '…') + '</span>' : how === 'earn' ? '🔒 ' + (skinNext() === s || !skinPrev(s) ? '' : 'After ' + skinPrev(s).name + ': ') + s.goal.text : '🔒 ' + (s.note || 'Coming soon')) + '</small></button>';
     });
     h += '</div>';
   }
