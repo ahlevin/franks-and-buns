@@ -538,9 +538,10 @@ const SKINS = [
 // Skin groups. how: 'earn' = unlocked by doing its goal in one game, 'soon' = shown locked (Coming soon),
 // 'hidden' = not shown, 'free' = everyone has them. A skin's own how (e.g. free Bunny) beats its group's.
 // The holiday set waits here until buying skins is built.
-const SKIN_GROUPS = { earn: { name: 'Free & Earned', how: 'earn' }, holiday: { name: 'Holiday', how: 'soon' },
-  dogs: { name: 'Dogs', how: 'soon' },
-  cats: { name: 'Cats', how: 'soon' },
+// 'shop' = for sale (each costume or the whole Collection); shows as 'soon' wherever the shop isn't switched on yet.
+const SKIN_GROUPS = { earn: { name: 'Free & Earned', how: 'earn' }, holiday: { name: 'Holiday', how: 'shop' },
+  dogs: { name: 'Dogs', how: 'shop' },
+  cats: { name: 'Cats', how: 'shop' },
   // hidden until Alan says to show them (switch how to 'soon' to show them locked as coming soon)
   spacecases: { name: 'Space Cases', how: 'hidden' },
   tinyterrors: { name: 'Tiny Terrors', how: 'hidden' },
@@ -558,7 +559,7 @@ const SKIN_GROUPS = { earn: { name: 'Free & Earned', how: 'earn' }, holiday: { n
   sidehustles: { name: 'Side Hustles', how: 'hidden' },
   throwbackfranks: { name: 'Throwback Franks', how: 'hidden' },
   wildthings: { name: 'Wild Things', how: 'hidden' } };
-function skinHow(s) { return s.how || (SKIN_GROUPS[s.group || 'earn'] || SKIN_GROUPS.earn).how; }
+function skinHow(s) { const h = s.how || (SKIN_GROUPS[s.group || 'earn'] || SKIN_GROUPS.earn).how; return h === 'shop' && !SHOP_ON ? 'soon' : h; }
 // costumes won so far (ids), kept on this device
 function skinsWon() { try { const a = JSON.parse(safeGet('fb_skins_earned') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
 function skinGoalMet(s, st) { return !!(s.goal && st && (st[s.goal.stat] || 0) >= s.goal.n); }
@@ -636,14 +637,54 @@ function skinPic(id, part) {
 function skinById(id) { return SKINS.find(s => s.id === id) || SKINS[0]; }
 // try every skin on the preview site with ?skins=all (never on franksandbuns.com or in the apps)
 // preview.franks-and-buns.pages.dev is Alan's test site: every costume is unlocked there without the ?skins=all
-const SKINS_ALL = (new URLSearchParams(location.search).get('skins') === 'all' || location.hostname === 'preview.franks-and-buns.pages.dev') && location.hostname !== 'franksandbuns.com' &&
+// Collections shop. Test mode (pretend purchases, nothing charged): the test site with ?shop=test.
+// Live on franksandbuns.com and in the apps only once SHOP_LIVE is switched on with real purchases.
+const SHOP_LIVE = false;
+const SHOP_TEST = new URLSearchParams(location.search).get('shop') === 'test' && location.hostname !== 'franksandbuns.com' && location.protocol !== 'capacitor:';
+const SHOP_ON = SHOP_LIVE || SHOP_TEST;
+const SKINS_ALL = !SHOP_TEST && (new URLSearchParams(location.search).get('skins') === 'all' || location.hostname === 'preview.franks-and-buns.pages.dev') && location.hostname !== 'franksandbuns.com' &&
   location.protocol !== 'capacitor:' && !(location.hostname === 'localhost' && !location.port);
 function skinUnlocked(s) {
   if (SKINS_ALL) return true;
   const how = skinHow(s);
   if (how === 'free') return true;
+  if (how === 'shop') return shopOwned().indexOf(s.id) >= 0;
   if (how !== 'earn') return false;   // 'soon' and 'hidden' stay locked until they go on sale
   return skinsWon().indexOf(s.id) >= 0;   // only games played since skins arrived count
+}
+// --- Collections shop ---
+// Each Collection is sold as exactly the costumes listed here (never "every future Dog costume").
+// Prices: $0.99 per costume; $3.99 per Collection, $2.99 launch offer through Jan 15, 2027 (Pacific); all three $7.99.
+const SHOP_LAUNCH_END = Date.UTC(2027, 0, 16, 8);   // midnight at the end of Jan 15 in California
+const SHOP_COLS = ['holiday', 'dogs', 'cats'];
+function shopNow() { const d = new URLSearchParams(location.search).get('shopdate'); return SHOP_TEST && d === 'after' ? SHOP_LAUNCH_END + 1 : Date.now(); }
+function shopLaunch() { return shopNow() < SHOP_LAUNCH_END; }
+function shopColSkins(g) { return SKINS.filter(k => k.group === g).map(k => k.id); }
+// product id -> what it is; the same ids get created in App Store Connect and Google Play
+function shopProducts() {
+  const out = {};
+  SHOP_COLS.forEach(g => {
+    shopColSkins(g).forEach(id => { out['skin_' + id] = { kind: 'skin', name: skinById(id).name, skins: [id], price: '$0.99' }; });
+    out['col_' + g] = { kind: 'col', group: g, name: SKIN_GROUPS[g].name + ' Collection', skins: shopColSkins(g),
+      price: shopLaunch() ? '$2.99' : '$3.99', was: shopLaunch() ? '$3.99' : '' };
+  });
+  out.col_launch3 = { kind: 'bundle', name: 'All 3 Collections', skins: [].concat.apply([], SHOP_COLS.map(shopColSkins)), price: '$7.99',
+    note: SHOP_COLS.map(g => SKIN_GROUPS[g].name).join(', ') };
+  return out;
+}
+// costumes bought (ids). Test mode keeps pretend purchases on this device only.
+function shopOwned() { try { const a = JSON.parse(safeGet(SHOP_TEST ? 'fb_shop_test' : 'fb_skins_bought') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+function shopGive(ids) { const have = shopOwned(); ids.forEach(id => { if (have.indexOf(id) < 0) have.push(id); }); safeSet(SHOP_TEST ? 'fb_shop_test' : 'fb_skins_bought', JSON.stringify(have)); }
+function shopOwnedOf(ids) { const have = shopOwned(); return ids.filter(id => have.indexOf(id) >= 0); }
+// buying: the test site pretends; the apps will hand this to Apple / Google Play (through RevenueCat)
+async function shopBuy(pid) {
+  const p = shopProducts()[pid]; if (!p) throw new Error('Unknown item');
+  if (SHOP_TEST) { await new Promise(r => setTimeout(r, 600)); shopGive(p.skins); return p; }
+  throw new Error('Purchases are coming soon.');
+}
+async function shopRestore() {
+  if (SHOP_TEST) { await new Promise(r => setTimeout(r, 600)); return shopOwned().length; }
+  throw new Error('Purchases are coming soon.');
 }
 function curSkin() { const s = skinById(safeGet('fb_skin') || 'classic'); return skinUnlocked(s) ? s : SKINS[0]; }
 let skinNew = null;   // Game Over: the skins this game won (array)
@@ -2697,54 +2738,123 @@ function skinsOpen() {
       '#fb-skins .fbs-skin small{font:12px Arial;color:#c8a878}' +
       '#fb-skins .fbs-skin.on{border-color:#FFD700;background:rgba(255,215,0,.12)}#fb-skins .fbs-skin.on small{color:#FFD700}' +
       '#fb-skins .fbs-skin.lock{cursor:default}#fb-skins .fbs-skin{position:relative}#fb-skins .fbs-skin.lock img{filter:saturate(.85) opacity(.6)}#fb-skins .fbs-skin.lock::after{content:"🔒";position:absolute;top:6px;right:8px;font-size:16px}' +
+      '#fb-skins .fbs-deal{background:linear-gradient(135deg,rgba(255,102,0,.22),rgba(255,215,0,.12));border:2px solid #FFD700;border-radius:12px;padding:12px;margin:0 0 12px;text-align:left;cursor:pointer;width:100%;color:#f3e3c3;box-sizing:border-box;display:block;font:14px Arial}' +
+      '#fb-skins .fbs-deal b{color:#FFD700;font-size:16px}#fb-skins .fbs-deal .fbs-price{float:right;text-align:right}' +
+      '#fb-skins .fbs-was{text-decoration:line-through;color:#c8a878;font-size:13px;margin-right:6px}#fb-skins .fbs-now{color:#fff;font:bold 18px Arial}' +
+      '#fb-skins .fbs-tag{display:inline-block;background:#ff6600;color:#fff;border-radius:999px;padding:2px 8px;font:bold 11px Arial;margin:6px 0 4px}' +
+      '#fb-skins .fbs-inc{display:block;font-size:12px;color:#c8a878;margin-top:4px;clear:both}#fb-skins .fbs-own{display:block;font-size:12px;color:#9be29b;margin-top:4px}' +
+      '#fb-skins .fbs-skin .fbs-p{color:#fff;font:bold 13px Arial;background:#ff6600;border-radius:999px;padding:1px 8px}' +
+      '#fb-skins .fbs-buy{text-align:center}#fb-skins .fbs-buy img{width:110px;height:64px;object-fit:contain;margin:2px}#fb-skins .fbs-buy .fbs-pics{display:flex;flex-wrap:wrap;justify-content:center;margin:6px 0}' +
+      '#fb-skins .fbs-buy .fbs-pics img{width:62px;height:40px}#fb-skins .fbs-buy h3{margin:4px 0;color:#FFD700;font:bold 19px Arial}#fb-skins .fbs-buy ul{text-align:left;margin:8px 0;padding-left:20px;font-size:13px;columns:2}' +
+      '#fb-skins .fbs-buy li.own{color:#9be29b}#fb-skins .fbs-go{display:block;width:100%;margin:12px 0 0;padding:13px;border:none;border-radius:999px;background:#ff6600;color:#fff;font:bold 17px Arial;cursor:pointer}' +
+      '#fb-skins .fbs-go[disabled]{opacity:.6}#fb-skins .fbs-msg{text-align:center;color:#9be29b;font-size:13px;margin:8px 0 0;min-height:1em}#fb-skins .fbs-msg.err{color:#ff9b7a}' +
+      '#fb-skins .fbs-link{display:block;margin:6px auto 0;background:none;border:none;color:#ffb347;text-decoration:underline;font:13px Arial;cursor:pointer;padding:6px}' +
+      '#fb-skins .fbs-test{text-align:center;font:bold 11px Arial;color:#1a0f05;background:#9be29b;border-radius:6px;padding:3px;margin:0 0 8px}' +
       '#fb-skins .fbs-close{flex:none;font:600 15px Arial;border-radius:999px;padding:11px 16px;border:1px solid rgba(255,179,71,.5);background:transparent;color:#ffb347;cursor:pointer;width:100%;margin:12px 0 0}';
     document.head.appendChild(css);
     box.addEventListener('click', e => {
-      const t = e.target.closest('[data-skin],[data-a],[data-tab]');
-      if (t && t.hasAttribute('data-tab')) { skinsTab = t.getAttribute('data-tab'); sndStreak(); skinsRender(); return; }
-      if (t && t.getAttribute('data-a') === 'home') { skinsTab = null; sndStreak(); skinsRender(); return; }
+      const t = e.target.closest('[data-skin],[data-a],[data-tab],[data-buy]');
+      if (t && t.hasAttribute('data-tab')) { skinsTab = t.getAttribute('data-tab'); skinsBuy = null; skinsMsg = ''; sndStreak(); skinsRender(); return; }
+      if (t && t.getAttribute('data-a') === 'home') { if (skinsBuy) skinsBuy = null; else skinsTab = null; skinsMsg = ''; sndStreak(); skinsRender(); return; }
+      if (t && t.hasAttribute('data-buy')) { if (!skinsBusy) { skinsBuy = t.getAttribute('data-buy'); skinsMsg = ''; sndStreak(); skinsRender(); } return; }
+      if (t && t.getAttribute('data-a') === 'pay') { skinsPay(); return; }
+      if (t && t.getAttribute('data-a') === 'restore') { skinsRestore(); return; }
+      if (t && t.getAttribute('data-a') === 'shopreset') { safeSet('fb_shop_test', '[]'); skinsMsg = 'Test purchases cleared.'; skinsRender(); return; }
       if (e.target === box || (t && t.getAttribute('data-a') === 'close')) { skinsClose(); return; }
       if (!t || !t.hasAttribute('data-skin')) return;
       const s = skinById(t.getAttribute('data-skin'));
-      if (!skinUnlocked(s)) return;
+      if (!skinUnlocked(s)) { if (skinHow(s) === 'shop' && !skinsBusy) { skinsBuy = 'skin_' + s.id; skinsMsg = ''; sndStreak(); skinsRender(); } return; }
       safeSet('fb_skin', s.id); skinPreload(s); sndStreak(); skinsRender();
     });
     ['touchstart', 'touchend', 'mousedown', 'pointerdown', 'keydown'].forEach(t => box.addEventListener(t, e => e.stopPropagation(), { passive: true }));
     document.body.appendChild(box);
   }
-  box.style.display = 'flex'; skinsTab = null; skinsRender();
+  box.style.display = 'flex'; skinsTab = null; skinsBuy = null; skinsMsg = ''; skinsRender();
 }
 let skinsTab = null;   // null: the Collections list; otherwise the SKIN_GROUPS key being shown
 function skinsGroupList(gid) { return SKINS.filter(s => (s.group || 'earn') === gid && (SKINS_ALL || skinHow(s) !== 'hidden')); }
 function skinsPic(s) { return s.frames ? 'skin-' + s.id + '-fly.png' : 'sp-frank.png'; }
+let skinsBuy = null, skinsMsg = '', skinsMsgErr = false, skinsBusy = false;   // shop: product being looked at
+// a Collection / bundle deal card: price (launch offer crossed out), exactly which costumes, and how many you own
+function skinsDeal(pid) {
+  const p = shopProducts()[pid], own = shopOwnedOf(p.skins).length, all = own === p.skins.length;
+  return '<button type="button" class="fbs-deal" data-buy="' + pid + '"' + (all ? ' disabled' : '') + '><span class="fbs-price">' +
+    (all ? '<span class="fbs-now">✓ All owned</span>' : (p.was ? '<span class="fbs-was">' + p.was + '</span>' : '') + '<span class="fbs-now">' + p.price + '</span>') + '</span>' +
+    '<b>' + (p.kind === 'bundle' ? '🛍️ ' : '') + packsEsc(p.name) + '</b><br>' +
+    (p.was && !all ? '<span class="fbs-tag">Launch offer · through Jan 15</span>' : '') +
+    '<span class="fbs-inc">' + (p.kind === 'bundle' ? 'These ' + p.skins.length + ' costumes: every costume in ' + packsEsc(p.note) :
+      'These ' + p.skins.length + ' costumes: ' + p.skins.map(id => packsEsc(skinById(id).name)).join(', ')) + '</span>' +
+    (own && !all ? '<span class="fbs-own">You already own ' + own + ' of these ' + p.skins.length + '</span>' : '') + '</button>';
+}
+async function skinsPay() {
+  if (skinsBusy || !skinsBuy) return;
+  skinsBusy = true; skinsMsg = ''; skinsRender();
+  try {
+    const p = await shopBuy(skinsBuy);
+    skinsBuy = null; skinsMsgErr = false; skinsMsg = '🎉 ' + p.name + ' is yours!';
+    if (p.skins.length === 1) { safeSet('fb_skin', p.skins[0]); skinPreload(skinById(p.skins[0])); skinsMsg += ' You’re wearing it now.'; }
+  } catch (e) { skinsMsgErr = true; skinsMsg = (e && e.message) || 'That didn’t go through. Nothing was charged.'; }
+  skinsBusy = false; skinsRender();
+}
+async function skinsRestore() {
+  if (skinsBusy) return;
+  skinsBusy = true; skinsMsg = 'Checking your purchases…'; skinsMsgErr = false; skinsRender();
+  try { const n = await shopRestore(); skinsMsg = n ? '✓ Restored ' + n + ' costume' + (n > 1 ? 's' : '') + '.' : 'No purchases found for this account.'; }
+  catch (e) { skinsMsgErr = true; skinsMsg = (e && e.message) || 'Couldn’t check purchases right now.'; }
+  skinsBusy = false; skinsRender();
+}
 function skinsRender() {
   const box = document.getElementById('fb-skins'); if (!box) return;
   const cur = curSkin(), groups = Object.keys(SKIN_GROUPS).filter(g => skinsGroupList(g).length);
   if (skinsTab && groups.indexOf(skinsTab) < 0) skinsTab = null;
+  const buyP = skinsBuy && shopProducts()[skinsBuy];
+  if (!buyP) skinsBuy = null;
+  const title = buyP ? (buyP.kind === 'skin' ? 'Get Costume' : 'Get Collection') : skinsTab ? SKIN_GROUPS[skinsTab].name : '🎭 SKINS';
   let h = '<div class="fbs-card"><div class="fbs-top">' +
-    (skinsTab ? '<button type="button" class="fbs-back" data-a="home" aria-label="All collections">‹</button>' : '<span class="fbs-x" style="visibility:hidden" aria-hidden="true"></span>') +
-    '<h2>' + (skinsTab ? packsEsc(SKIN_GROUPS[skinsTab].name) : '🎭 SKINS') + '</h2>' +
+    (skinsTab || buyP ? '<button type="button" class="fbs-back" data-a="home" aria-label="Back">‹</button>' : '<span class="fbs-x" style="visibility:hidden" aria-hidden="true"></span>') +
+    '<h2>' + packsEsc(title) + '</h2>' +
     '<button type="button" class="fbs-x" data-a="close" aria-label="Close">✕</button></div><div class="fbs-body">';
-  if (!skinsTab) {
+  if (SHOP_TEST) h += '<div class="fbs-test">TEST SHOP · pretend purchases, nothing is charged</div>';
+  const msg = skinsMsg ? '<p class="fbs-msg' + (skinsMsgErr ? ' err' : '') + '">' + packsEsc(skinsMsg) + '</p>' : '';
+  if (buyP) {
+    // confirm screen: exactly what you get, what you already own, the price
+    const own = shopOwnedOf(buyP.skins), n = buyP.skins.length, left = n - own.length;
+    h += '<div class="fbs-buy">';
+    if (buyP.kind === 'skin') h += '<img src="' + skinsPic(skinById(buyP.skins[0])) + '" alt=""><h3>' + packsEsc(buyP.name) + '</h3><p>One costume, yours to keep.</p>';
+    else {
+      h += '<h3>' + packsEsc(buyP.name) + '</h3>' + (buyP.was ? '<span class="fbs-tag">Launch offer · through Jan 15</span>' : '') +
+        '<p>These ' + n + ' costumes' + (buyP.kind === 'bundle' ? ' (' + packsEsc(buyP.note) + ')' : '') + ':</p><ul>' +
+        buyP.skins.map(id => '<li' + (own.indexOf(id) >= 0 ? ' class="own"' : '') + '>' + packsEsc(skinById(id).name) + (own.indexOf(id) >= 0 ? ' ✓' : '') + '</li>').join('') + '</ul>';
+      if (own.length) h += '<p class="fbs-own">You already own ' + own.length + ' of these ' + n + ' (marked ✓). This adds the other ' + left + '.</p>';
+      h += '<p style="font-size:12px;color:#c8a878">Future costumes aren’t included.</p>';
+    }
+    h += '<p>' + (buyP.was ? '<span class="fbs-was">' + buyP.was + '</span>' : '') + '<span class="fbs-now">' + buyP.price + '</span></p>' +
+      '<button type="button" class="fbs-go" data-a="pay"' + (skinsBusy ? ' disabled' : '') + '>' + (skinsBusy ? 'One moment…' : 'Buy for ' + buyP.price) + '</button>' + msg + '</div>';
+  } else if (!skinsTab) {
     // Collections: one row per group, newest groups just get added to SKIN_GROUPS
-    h += '<p class="fbs-sub">Wearing: <b>' + packsEsc(cur.name) + '</b></p>';
+    h += '<p class="fbs-sub">Wearing: <b>' + packsEsc(cur.name) + '</b></p>' + msg;
     groups.forEach(g => {
-      const list = skinsGroupList(g), open = list.filter(s => skinUnlocked(s)).length, soon = !SKINS_ALL && skinHow(list[0]) === 'soon';
+      const list = skinsGroupList(g), open = list.filter(s => skinUnlocked(s)).length, how = SKINS_ALL ? '' : skinHow(list[0]), soon = how === 'soon';
       const here = list.indexOf(cur) >= 0;
       h += '<button type="button" class="fbs-col' + (here ? ' on' : '') + '" data-tab="' + g + '"><span class="fbs-col-t"><b>' + packsEsc(SKIN_GROUPS[g].name) + '</b>' +
-        '<small>' + (soon ? '🔒 Coming soon · ' + list.length + ' costumes' : open + ' of ' + list.length + ' unlocked') + '</small></span><span class="fbs-col-p">';
+        '<small>' + (soon ? '🔒 Coming soon · ' + list.length + ' costumes' : how === 'shop' ? (open === list.length ? '✓ All ' + list.length + ' owned' : (open ? open + ' of ' + list.length + ' owned · ' : list.length + ' costumes · ') + 'from $0.99') : open + ' of ' + list.length + ' unlocked') + '</small></span><span class="fbs-col-p">';
       (here ? [cur].concat(list.filter(s => s !== cur)) : list).slice(0, 3).forEach(s => { h += '<img src="' + skinsPic(s) + '" alt="" loading="lazy">'; });
       h += '</span><span class="fbs-col-a">›</span></button>';
     });
+    if (SHOP_ON && !SKINS_ALL) h += skinsDeal('col_launch3') + '<button type="button" class="fbs-link" data-a="restore">Restore Purchases</button>' +
+      (SHOP_TEST ? '<button type="button" class="fbs-link" data-a="shopreset">Clear test purchases</button>' : '');
   } else {
-    const list = skinsGroupList(skinsTab), soon = !SKINS_ALL && skinHow(list[0]) === 'soon';
+    const list = skinsGroupList(skinsTab), how0 = SKINS_ALL ? '' : skinHow(list[0]), soon = how0 === 'soon';
     h += '<p class="fbs-sub">' + (soon ? 'Coming soon. Check back for these costumes!' :
-      skinsTab === 'earn' ? 'Win them in order, one per game: pull off the challenge in a single game.' : 'Dress up your frank.') + '</p><div class="fbs-grid">';
+      skinsTab === 'earn' ? 'Win them in order, one per game: pull off the challenge in a single game.' :
+      how0 === 'shop' ? 'Get one costume for $0.99, or the whole Collection.' : 'Dress up your frank.') + '</p>' + msg;
+    if (how0 === 'shop') h += skinsDeal('col_' + skinsTab);
+    h += '<div class="fbs-grid">';
     list.forEach(s => {
       const open = skinUnlocked(s), on = s.id === cur.id, how = skinHow(s);
-      h += '<button type="button" class="fbs-skin' + (on ? ' on' : '') + (open ? '' : ' lock') + (open || how === 'earn' ? '' : ' soon') + '" data-skin="' + s.id + '"' +
-        (open ? '' : ' aria-disabled="true"') + '><img src="' + skinsPic(s) + '" alt="" loading="lazy">' + s.name +
-        '<small>' + (on ? '✓ Wearing' : open ? 'Tap to wear' : how === 'earn' ? '🔒 ' + (skinNext() === s || !skinPrev(s) ? '' : 'After ' + skinPrev(s).name + ': ') + s.goal.text : '🔒 ' + (s.note || 'Coming soon')) + '</small></button>';
+      h += '<button type="button" class="fbs-skin' + (on ? ' on' : '') + (open ? '' : ' lock') + (open || how === 'earn' || how === 'shop' ? '' : ' soon') + '" data-skin="' + s.id + '"' +
+        (open || how === 'shop' ? '' : ' aria-disabled="true"') + '><img src="' + skinsPic(s) + '" alt="" loading="lazy">' + s.name +
+        '<small>' + (on ? '✓ Wearing' : open ? 'Tap to wear' : how === 'shop' ? '<span class="fbs-p">$0.99</span>' : how === 'earn' ? '🔒 ' + (skinNext() === s || !skinPrev(s) ? '' : 'After ' + skinPrev(s).name + ': ') + s.goal.text : '🔒 ' + (s.note || 'Coming soon')) + '</small></button>';
     });
     h += '</div>';
   }
