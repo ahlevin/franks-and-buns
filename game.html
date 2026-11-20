@@ -2514,10 +2514,9 @@ function skinsOpen() {
       '#fb-skins{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(10,5,0,.86);padding:12px;box-sizing:border-box}' +
       '#fb-skins .fbs-card{max-width:420px;width:100%;max-height:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;background:#2a1a0a;color:#f3e3c3;border:2px solid rgba(255,215,0,.5);border-radius:16px;padding:16px;font:14px/1.4 -apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-overflow-scrolling:touch}' +
       '#fb-skins h2{margin:0;color:#FFD700;font:bold 22px Arial;text-align:center;flex:1}' +
-      '#fb-skins .fbs-top{display:flex;align-items:center;position:relative;flex:none}' +
-      '#fb-skins .fbs-x{position:absolute;right:-4px;top:-4px;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,179,71,.5);background:rgba(0,0,0,.3);color:#ffb347;font:bold 16px Arial;cursor:pointer;padding:0}' +
-      '#fb-skins .fbs-back{position:absolute;left:-4px;top:-4px;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,179,71,.5);background:rgba(0,0,0,.3);color:#ffb347;font:bold 24px/1 Arial;cursor:pointer;padding:0 0 3px}' +
-      '#fb-skins .fbs-top h2{padding:0 40px}' +
+      '#fb-skins .fbs-top{display:flex;align-items:center;gap:8px;flex:none;min-height:38px;margin-bottom:8px}' +
+      '#fb-skins .fbs-x,#fb-skins .fbs-back{flex:none;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,179,71,.5);background:rgba(0,0,0,.3);color:#ffb347;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;font:bold 16px/1 Arial}#fb-skins .fbs-back{font-size:24px;padding-bottom:3px}' +
+      '#fb-skins .fbs-top h2{min-width:0}' +
       '#fb-skins .fbs-col{display:flex;align-items:center;gap:8px;width:100%;margin:0 0 8px;padding:10px 10px 10px 14px;text-align:left;background:rgba(0,0,0,.25);border:2px solid rgba(255,215,0,.25);border-radius:12px;color:#f3e3c3;cursor:pointer;box-sizing:border-box}' +
       '#fb-skins .fbs-col.on{border-color:#FFD700}#fb-skins .fbs-col-t{flex:1;min-width:0;display:flex;flex-direction:column;font:15px Arial}#fb-skins .fbs-col-t b{color:#FFD700}' +
       '#fb-skins .fbs-col-t small{font:12px Arial;color:#c8a878;margin-top:2px}#fb-skins .fbs-col-p{display:flex;flex:none}#fb-skins .fbs-col-p img{width:46px;height:30px;object-fit:contain;margin-left:-6px}' +
@@ -2555,7 +2554,7 @@ function skinsRender() {
   const cur = curSkin(), groups = Object.keys(SKIN_GROUPS).filter(g => skinsGroupList(g).length);
   if (skinsTab && groups.indexOf(skinsTab) < 0) skinsTab = null;
   let h = '<div class="fbs-card"><div class="fbs-top">' +
-    (skinsTab ? '<button type="button" class="fbs-back" data-a="home" aria-label="All collections">‹</button>' : '') +
+    (skinsTab ? '<button type="button" class="fbs-back" data-a="home" aria-label="All collections">‹</button>' : '<span class="fbs-x" style="visibility:hidden" aria-hidden="true"></span>') +
     '<h2>' + (skinsTab ? packsEsc(SKIN_GROUPS[skinsTab].name) : '🎭 SKINS') + '</h2>' +
     '<button type="button" class="fbs-x" data-a="close" aria-label="Close">✕</button></div><div class="fbs-body">';
   if (!skinsTab) {
