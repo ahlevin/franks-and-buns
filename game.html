@@ -1731,6 +1731,7 @@ canvas.addEventListener('touchstart', e => {
   if (isCreditsTap(t.clientX, t.clientY)) { fbShowCredits(); return; }
   if (isGcTap(t.clientX, t.clientY)) { gcShowBoard(); return; }
   if (isPacksPillTap(t.clientX, t.clientY)) { packsOpenResults(); return; }
+  if (isSkinsGoTap(t.clientX, t.clientY)) return;
   if (handleScoresTap(t.clientX, t.clientY)) return;
   onTap();
 });
@@ -1741,6 +1742,7 @@ canvas.addEventListener('mousedown', e => {
   if (isCreditsTap(e.clientX, e.clientY)) { fbShowCredits(); return; }
   if (isGcTap(e.clientX, e.clientY)) { gcShowBoard(); return; }
   if (isPacksPillTap(e.clientX, e.clientY)) { packsOpenResults(); return; }
+  if (isSkinsGoTap(e.clientX, e.clientY)) return;
   if (handleScoresTap(e.clientX, e.clientY)) return;
   onTap();
 });
@@ -2354,7 +2356,8 @@ function drawFloatingTexts() {
 function drawHUD() {
   ctx.fillStyle='#fff'; ctx.font='bold 18px Arial'; ctx.textAlign='left'; ctx.fillText('Score: '+score,12,28);
   ctx.font='12px Arial'; ctx.fillStyle='#aaa'; ctx.fillText('Best: '+bestScore,12,44);
-  ctx.textAlign='right'; const lifeGap = lives>3 ? 30 : 38; for (let i=0; i<lives; i++) drawFrank(W-20-i*lifeGap,28,0.7,0.7);
+  ctx.textAlign='right'; const lifeGap = lives>3 ? 30 : 38; const ls=curSkin(), lz=ls.frames ? Math.min(0.7,(lifeGap-2)/ls.fly[2]) : 0.7;   // costumes shrink to fit the lives row
+  for (let i=0; i<lives; i++) drawFrank(W-20-i*lifeGap-(ls.frames ? (ls.fly[0]+ls.fly[2]/2)*lz : 0),28,lz,lz);
   const bbX=12,bbY=56,bbW=W-24,bbH=16;
   ctx.fillStyle='rgba(0,0,0,0.4)'; rrect(bbX,bbY,bbW,bbH,4); ctx.fill();
   const fw=(boxFranks/6)*bbW;
@@ -2415,6 +2418,23 @@ function drawMenuSkin() {
   ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.5; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.stroke();
   ctx.fillStyle = '#FFD700'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center';
   ctx.fillText('🎭 SKINS', r.x + r.w / 2, r.y + r.h / 2 + 4);
+}
+// Game Over: SKINS button in the top-right corner, so you can change costume between games
+function skinsGoRect() { const w = 96, h = 30; return { x: W - w - 10, y: 12, w: w, h: h }; }
+function skinsGoVisible() { return state === STATE.GAMEOVER && gameOverDelay > 20 && !skinsIsOpen() && !packsIsOpen(); }
+function drawSkinsGoButton() {
+  if (!skinsGoVisible()) return;
+  const r = skinsGoRect();
+  ctx.fillStyle = 'rgba(0,0,0,0.55)'; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.fill();
+  ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.5; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.stroke();
+  const t = '🎭 SKINS'; ctx.fillStyle = '#FFD700'; ctx.font = 'bold 13px Arial'; ctx.textAlign = 'left';
+  ctx.fillText(t, r.x + (r.w - ctx.measureText(t).width) / 2, r.y + r.h / 2 + 5); ctx.textAlign = 'center';
+}
+function isSkinsGoTap(clientX, clientY) {
+  if (!skinsGoVisible()) return false;
+  const p = toCanvasXY(clientX, clientY), r = skinsGoRect();
+  if (p.x >= r.x - 8 && p.x <= r.x + r.w + 8 && p.y >= r.y - 8 && p.y <= r.y + r.h + 8) { ensureAudio(); sndStreak(); skinsOpen(); return true; }
+  return false;
 }
 // --- Skins picker (HTML, like My Packs) ---
 function skinsClose() { const b = document.getElementById('fb-skins'); if (b) b.style.display = 'none'; }
@@ -2495,6 +2515,7 @@ function drawGameOver() {
   ctx.fillText('Franks Landed: '+franksLanded+'  ·  Boxes Packed: '+boxesCompleted,W/2,sy);
   ctx.fillText('Best Streak: '+bestStreak+'  ·  Best: '+bestScore.toLocaleString(),W/2,sy+24);
   drawPacksPill();
+  drawSkinsGoButton();
   if (gameOverDelay>40) { ctx.fillStyle='#FF6600'; ctx.font='bold 20px Arial'; ctx.globalAlpha=0.8+Math.sin(frameCount*0.06)*0.2; ctx.fillText('TAP TO RETRY',W/2,H*0.82); ctx.globalAlpha=1; }
   drawLeaderboard(H * 0.65);
   drawGcButton();
