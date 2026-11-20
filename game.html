@@ -680,14 +680,19 @@ function shopProducts() {
   return out;
 }
 // --- the store, in the apps (RevenueCat). Product ids are the same in App Store Connect and Google Play. ---
-const shopStore = { started: null, products: {} };
+const shopStore = { started: null, products: {}, uid: null };
 function shopStart() {
   if (!SHOP_APP) return Promise.resolve();
   if (shopStore.started) return shopStore.started;
   const P = shopPlugin(), ios = window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'ios';
   shopStore.started = (async () => {
-    // public SDK keys (made to ship inside apps; not secrets)
-    await P.configure({ apiKey: ios ? 'appl_fbOSmzHIeKwIwyNMMMmlFcRkfFb' : 'goog_pvKGaoJLIDqooemXcHvgYvzEgOO' });
+    // public SDK keys (made to ship inside apps; not secrets). Purchases belong to the player's Packs profile
+    // (buyer id below), so getting the profile back (iCloud or recovery code) brings them back on any device.
+    const uid = await shopBuyerId();
+    const cfg = { apiKey: ios ? 'appl_fbOSmzHIeKwIwyNMMMmlFcRkfFb' : 'goog_pvKGaoJLIDqooemXcHvgYvzEgOO' };
+    if (uid) cfg.appUserID = uid;
+    await P.configure(cfg);
+    shopStore.uid = uid;
     const ids = Object.keys(shopProducts());
     try {
       const r = await P.getProducts({ productIdentifiers: ids, type: 'NON_SUBSCRIPTION' });
@@ -698,6 +703,36 @@ function shopStart() {
     if (skinsIsOpen()) skinsRender();
   })().catch(e => { shopStore.started = null; throw e; });
   return shopStore.started;
+}
+// The buyer id RevenueCat knows the player by: made from the Packs recovery code, which only the player has,
+// so nobody can claim someone else's purchases by guessing an id. No profile: RevenueCat's anonymous id.
+async function shopBuyerId() {
+  const tok = packsToken(); if (!tok || !(window.crypto && crypto.subtle)) return null;
+  const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('franksandbuns-buyer:' + tok));
+  return 'fb_' + Array.from(new Uint8Array(h)).slice(0, 20).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+// profile made, restored, switched or deleted: point the store at it (its purchases come with it)
+function shopLink() {   // one at a time
+  shopStore.linking = (shopStore.linking || Promise.resolve()).then(shopLinkNow, shopLinkNow);
+  return shopStore.linking;
+}
+async function shopLinkNow() {
+  if (!SHOP_APP || !shopStore.started) return;
+  await shopStore.started;
+  const uid = await shopBuyerId(), P = shopPlugin();
+  if (uid === shopStore.uid) return;
+  let r = null;
+  if (uid) r = await P.logIn({ appUserID: uid });
+  else { try { r = { customerInfo: (await P.logOut()).customerInfo }; } catch (e) {} }
+  shopStore.uid = uid;
+  if (r && r.customerInfo) shopFromCustomer(r.customerInfo);
+  if (skinsIsOpen()) skinsRender();
+}
+// a purchase needs a profile to belong to: make the quiet, nameless one (same as for earned costumes)
+async function shopEnsureProfile() {
+  if (packsToken() || safeGet('fb_no_auto_profile')) return;
+  try { packsKeepMe(await packsCall('POST', 'player', { silent: true })); } catch (e) {}   // offline: buy anyway, Restore covers it
+  await shopLink().catch(() => {});
 }
 // everything this store account has bought -> costumes owned on this device
 function shopFromCustomer(ci) {
@@ -717,6 +752,7 @@ async function shopBuy(pid) {
   if (SHOP_TEST) { await new Promise(r => setTimeout(r, 600)); shopGive(p.skins); return p; }
   if (!SHOP_APP) throw new Error('Purchases are coming soon.');
   await shopStart();
+  await shopEnsureProfile();
   const sp = shopStore.products[pid];
   if (!sp) throw new Error('This isn’t available right now. Please try again later.');
   try {
@@ -1112,7 +1148,7 @@ async function packsCall(method, path, body) {
   return j;
 }
 function packsKeepMe(j) {
-  if (j && j.token) { safeSet('fb_pack_token', j.token); packsCloudSave(); }
+  if (j && j.token) { safeSet('fb_pack_token', j.token); packsCloudSave(); if (SHOP_APP) shopLink().catch(() => {}); }
   if (j && j.player) { packsMe = { player: j.player, packs: j.packs || [], requests: j.requests || [] }; skinsMerge(j.player.skins); }
 }
 function packsIsOpen() { const b = document.getElementById('fb-packs'); return !!(b && b.style.display !== 'none'); }
@@ -1410,6 +1446,7 @@ function packsClick(e) {
       await packsCall('POST', 'me/delete');
       safeSet('fb_pack_token', ''); safeSet('fb_pack_pending', ''); packsMe = null; packsCur = null; packsCloudClear();
       safeSet('fb_no_auto_profile', '1');   // they deleted it on purpose: don't quietly make another one
+      if (SHOP_APP) shopLink().catch(() => {});   // purchases stay on their Apple / Google account (Restore Purchases)
       packsView = 'home'; packsMsg = '✓ Your Packs profile was deleted.';
     });
   }
