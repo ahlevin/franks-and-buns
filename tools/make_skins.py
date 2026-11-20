@@ -17,13 +17,24 @@ BODY = {'bunny': (125, 670, 355, 525), 'dragon': (156, 621, 350, 518), 'rocket':
         # holiday set: the sausage between its tied ends (the classic frank has none)
         'midnight': (102, 654, 304, 520), 'cupid': (80, 680, 285, 550), 'lucky': (104, 656, 310, 538),
         'easter': (74, 680, 355, 545), 'yankee': (100, 695, 316, 520), 'frankula': (90, 660, 268, 496),
-        'gobble': (126, 684, 290, 540), 'santa': (72, 675, 298, 500)}
+        'gobble': (126, 684, 290, 540), 'santa': (72, 675, 298, 500),
+        # dog set: the costume's body between tail and nose (ears and tails stick out)
+        'bernedoodle': (80, 690, 330, 555), 'bernese': (76, 696, 350, 560), 'corgi': (40, 670, 300, 525),
+        'dachshund': (76, 691, 320, 540), 'dalmatian': (80, 690, 340, 550), 'frenchie': (40, 696, 300, 530),
+        'golden': (110, 700, 330, 555), 'husky': (96, 691, 350, 560), 'labradoodle': (70, 700, 300, 560),
+        'poodle': (126, 701, 320, 545), 'shiba': (50, 700, 330, 560)}
 # source strips for each skin (a second file is the B pose of a 2-frame flap)
 FRAMES = {'bunny': ['bunny-a', 'bunny-b'], 'dragon': ['dragon-a', 'dragon-b'], 'rocket': ['rocket'],
           'shark': ['shark'], 'superhero': ['superhero'], 'unicorn': ['unicorn'],
           'midnight': ['holiday/new-years-party'], 'cupid': ['holiday/valentines-cupid'], 'lucky': ['holiday/st-patricks-lucky'],
           'easter': ['holiday/easter-bunny'], 'yankee': ['holiday/july-fourth'], 'frankula': ['holiday/halloween-vampire'],
-          'gobble': ['holiday/thanksgiving-turkey'], 'santa': ['holiday/christmas-santa']}
+          'gobble': ['holiday/thanksgiving-turkey'], 'santa': ['holiday/christmas-santa'],
+          'bernedoodle': ['dogs/bernedoodle'], 'bernese': ['dogs/bernese-mountain-dog'], 'corgi': ['dogs/corgi'],
+          'dachshund': ['dogs/dachshund'], 'dalmatian': ['dogs/dalmatian'], 'frenchie': ['dogs/french-bulldog'],
+          'golden': ['dogs/golden-retriever'], 'husky': ['dogs/husky'], 'labradoodle': ['dogs/labradoodle'],
+          'poodle': ['dogs/poodle'], 'shiba': ['dogs/shiba-inu']}
+# bun widths measured by hand where the costume hides the bun's top (poodle fluff)
+BUN_PX = {'poodle': 560}
 ONLY = sys.argv[3:]   # optional: just these skins
 
 def runs(alpha):
@@ -50,7 +61,9 @@ for skin, frames in FRAMES.items():
     g = {}
     # plain bun: scale and centre from the first frame; grilled bun uses the same scale,
     # centred the same distance from the picture's right (face) end, since grill marks upset the colour check
-    bx0, bx1 = bun_box(ims[0], *rr[0][1]); sb = BUN_W / (bx1 - bx0)
+    bx0, bx1 = bun_box(ims[0], *rr[0][1])
+    if skin in BUN_PX: c = (bx0 + bx1) / 2; bx0, bx1 = c - BUN_PX[skin] / 2, c + BUN_PX[skin] / 2
+    sb = BUN_W / (bx1 - bx0)
     bun_cx = {1: (bx0 + bx1) / 2}
     gx0, gx1 = bun_box(ims[0], *rr[0][2])
     bun_cx[2] = (gx0 + gx1) / 2 if abs((gx1 - gx0) - (bx1 - bx0)) < 0.03 * (bx1 - bx0) else rr[0][2][1] - (rr[0][1][1] - bun_cx[1])

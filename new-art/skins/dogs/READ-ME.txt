@@ -1,0 +1,12 @@
+FRANKS & BUNS: DOG SKINS
+
+11 dog costumes, each with three states from left to right:
+1. Costumed frank alone
+2. Same costume in a plain golden bun
+3. Same costume in a grilled bun with two steam wisps
+
+Bernese Mountain Dog, Bernedoodle, Labradoodle, Dachshund, Corgi, Golden Retriever, French Bulldog, Husky, Dalmatian, Poodle, Shiba Inu.
+
+Created with the built-in image generator. Exact prompts are in prompts.txt; each starts with the user's style text with the costume substituted.
+
+These are source art strips, not yet integrated or tested in gameplay. Trim individual states with padding; align and normalize using the frank body rather than the ears, tail or steam. Do not expand collision boxes to include costume decorations. Check readability and compactness at the game's actual display size. No animation pairs are included in this collection.
