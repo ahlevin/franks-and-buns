@@ -445,19 +445,15 @@ const SKINS = [
 const SKIN_GROUPS = { earn: { name: 'Free and earned', how: 'earn' }, holiday: { name: 'Holiday', how: 'soon' } };
 function skinHow(s) { return s.how || (SKIN_GROUPS[s.group || 'earn'] || SKIN_GROUPS.earn).how; }
 // costumes won so far (ids), kept on this device
-function skinsWon() { try { const a = JSON.parse(safeGet('fb_skins_won') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+function skinsWon() { try { const a = JSON.parse(safeGet('fb_skins_earned') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
 function skinGoalMet(s, st) { return !!(s.goal && st && (st[s.goal.stat] || 0) >= s.goal.n); }
 // one game's stats -> skins it wins; returns the newly won ones
 function skinsAward(st) {
   const won = skinsWon(), fresh = SKINS.filter(s => skinHow(s) === 'earn' && won.indexOf(s.id) < 0 && skinGoalMet(s, st));
-  if (fresh.length) safeSet('fb_skins_won', JSON.stringify(won.concat(fresh.map(s => s.id))));
+  if (fresh.length) safeSet('fb_skins_earned', JSON.stringify(won.concat(fresh.map(s => s.id))));
   return fresh;
 }
-let skinsBackfilled = false;
-function skinsBackfill() {   // players from before skins: their saved top runs count (streak and boxes)
-  if (skinsBackfilled) return; skinsBackfilled = true;
-  try { loadRuns(); (bestRuns || []).forEach(r => skinsAward({ streak: r.streak || 0, boxes: r.boxes || 0 })); } catch (e) {}
-}
+
 const skinImg = {};   // 'dragon-fly-b' -> Image, loaded when first needed
 function skinPic(id, part) {
   const k = id + '-' + part;
@@ -473,8 +469,7 @@ function skinUnlocked(s) {
   const how = skinHow(s);
   if (how === 'free') return true;
   if (how !== 'earn') return false;   // 'soon' and 'hidden' stay locked until they go on sale
-  skinsBackfill();
-  return skinsWon().indexOf(s.id) >= 0;
+  return skinsWon().indexOf(s.id) >= 0;   // only games played since skins arrived count
 }
 function curSkin() { const s = skinById(safeGet('fb_skin') || 'classic'); return skinUnlocked(s) ? s : SKINS[0]; }
 let skinNew = null;   // Game Over: the skins this game won (array)
@@ -2148,7 +2143,6 @@ function loseLife() {
   if (lives<=0) {
     state=STATE.GAMEOVER; frank.alive=false; sndGameOver();
     if (score>bestScore) { bestScore=score; safeSet('fb_best',bestScore.toString()); }
-    skinsBackfill();
     const fresh = SKINS_ALL ? [] : skinsAward({ chili: chiliCaught, streak: bestStreak, boxes: boxesCompleted });
     skinNew = fresh.length ? fresh : null;
     fresh.forEach(skinPreload);
