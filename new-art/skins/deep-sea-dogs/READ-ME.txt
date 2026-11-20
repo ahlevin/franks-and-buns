@@ -1,0 +1,24 @@
+FRANKS & BUNS — Deep Sea Dogs
+
+5 costume skins, created with the built-in image generator.
+Each transparent PNG is 2172 x 724 pixels and contains three states:
+LEFT: costumed frank alone.
+CENTER: same costume in a plain golden bun.
+RIGHT: same costume in a grilled bun with steam.
+
+Included skins:
+- anglerfish
+- axolotl
+- jellyfish
+- octopus
+- pufferfish
+
+PREPARING FOR THE GAME
+These are source art strips, not yet integrated or tested in gameplay.
+Separate the three states, trim transparent padding and align the sausage
+body anchor and scale to the existing game sprites. Inspect each crop rather
+than assuming identical visual bounds. Keep costume decorations out of
+collision calculations. Test readability at actual mobile display size.
+Steam, sparkles, lightning and other effects are baked into the images;
+independent animation needs separate layers. No animation pose pairs included.
+Exact generation prompts are included in prompts.txt.

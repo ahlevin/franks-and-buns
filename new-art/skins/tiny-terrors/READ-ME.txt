@@ -1,0 +1,18 @@
+FRANKS & BUNS: TINY TERRORS
+
+Created with the built-in image generator. Exact prompts included.
+Each transparent PNG strip contains three states from left to right:
+1. Costumed frank alone
+2. Same costume in a plain golden bun
+3. Same costume in a grilled bun with steam
+
+These are source art strips, not yet integrated or tested in gameplay. Trim each state with padding. Normalize scale and body anchors; do not expand collision geometry to costume appendages or effects. Check compactness and readability at actual game size. No animation pairs or separate effect layers included.
+
+
+Included skins:
+jurassic-pork
+triceratops
+stegosaurus
+pterodactyl
+baby-kaiju
+

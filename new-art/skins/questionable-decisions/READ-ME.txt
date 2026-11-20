@@ -1,0 +1,22 @@
+FRANKS & BUNS: QUESTIONABLE DECISIONS
+
+Created with the built-in image generator. Exact prompts included.
+Each transparent PNG strip contains three states from left to right:
+1. Costumed frank alone
+2. Same costume in a plain golden bun
+3. Same costume in a grilled bun with steam
+
+These are source art strips, not yet integrated or tested in gameplay. Trim each state with padding. Normalize scale and body anchors; do not expand collision geometry to costume appendages or effects. Check compactness and readability at actual game size. No animation pairs or separate effect layers included.
+
+Buffering's loading ring and Overcooked's flame are baked into the art. For independent animation, separate those elements and remove them from the body image first. Bun in Disguise intentionally has nested bun layers. Fork Impostor is cosmetic; keep it distinguishable from actual fork hazards during gameplay testing.
+
+Included skins:
+incogni-dog
+definitely-a-carrot
+emotional-baggage
+fork-impostor
+bun-in-disguise
+overcooked
+business-casualty
+buffering
+

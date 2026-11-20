@@ -42,6 +42,26 @@ FRAMES = {'bunny': ['bunny-a', 'bunny-b'], 'dragon': ['dragon-a', 'dragon-b'], '
           'siamese': ['cats/siamese'], 'sphynx': ['cats/sphynx'], 'tuxedo': ['cats/tuxedo']}
 # bun widths measured by hand where the costume hides the bun's top (poodle fluff)
 BUN_PX = {'poodle': 560, 'ragdoll': 600, 'persian': 600}
+# Collections cut by automatic body measurement (folder -> skins); ids are the file names without hyphens
+AUTO_SETS = ['questionable-decisions', 'space-cases', 'tiny-terrors', 'deep-sea-dogs', 'final-boss-franks', 'mythical-misfits',
+             'trash-pack', 'sports', 'snack-pack', 'cozy-crew', 'main-character-energy']
+import glob, os
+for folder in AUTO_SETS:
+    for f in sorted(glob.glob(f'{SRC}/{folder}/*.png')):
+        sid = os.path.basename(f)[:-4].replace('-', '')[:24]
+        assert sid not in FRAMES, sid
+        FRAMES[sid] = [f'{folder}/{os.path.basename(f)[:-4]}']
+# Automatic body measurement: the band of rows at least 75% as wide as the widest, corrected by the average
+# difference from the 34 hand-measured costumes (tails widen the band and pull it left and up a little).
+AUTO_DX, AUTO_DY, AUTO_W = 3.5, 1.5, 1.06   # game pixels right, game pixels down, width ratio
+def auto_body(a, x0, x1):
+    al = a[:, x0:x1 + 1, 3] > 128
+    w = al.sum(1); rows = np.where(w > 0.75 * w.max())[0]
+    xs = [np.where(al[y])[0] for y in rows]
+    cx = np.mean([(r.min() + r.max()) / 2 for r in xs]) + x0
+    bw = np.mean([r.max() - r.min() for r in xs]) / AUTO_W
+    s = BODY_W / bw
+    return s, cx + AUTO_DX / s, (rows.min() + rows.max()) / 2 + AUTO_DY / s
 ONLY = sys.argv[3:]   # optional: just these skins
 
 def runs(alpha):
@@ -70,7 +90,18 @@ for skin, frames in FRAMES.items():
     # centred the same distance from the picture's right (face) end, since grill marks upset the colour check
     bx0, bx1 = bun_box(ims[0], *rr[0][1])
     if skin in BUN_PX: c = (bx0 + bx1) / 2; bx0, bx1 = c - BUN_PX[skin] / 2, c + BUN_PX[skin] / 2
+    elif skin not in BODY:   # automatic sets: cross-check the colour measurement against the bun's bottom edge
+        x0_, x1_ = rr[0][1]; al = ims[0][:, x0_:x1_ + 1, 3]; bot = np.where((al > 20).any(1))[0].max()
+        xs = np.where(al[bot - 70] > 200)[0]; edge = (xs.max() - xs.min()) * 1.035
+        if not 0.97 <= (bx1 - bx0) / edge <= 1.08:
+            print(skin, 'bun colour', bx1 - bx0, '-> edge', round(edge), file=sys.stderr)
+            c = x0_ + (xs.min() + xs.max()) / 2; bx0, bx1 = c - edge / 2, c + edge / 2   # centre from the bun's bottom edge too
     sb = BUN_W / (bx1 - bx0)
+    if skin not in BODY:   # keep the bun within 8% of what the body size predicts (1.01x across the hand-checked costumes)
+        ref = 1.01 * auto_body(ims[0], *rr[0][0])[0]
+        if not 0.92 * ref <= sb <= 1.08 * ref:
+            print(skin, 'bun scale', round(sb / ref, 2), '-> body-based', file=sys.stderr)
+            sb = min(max(sb, 0.92 * ref), 1.08 * ref)
     bun_cx = {1: (bx0 + bx1) / 2}
     gx0, gx1 = bun_box(ims[0], *rr[0][2])
     bun_cx[2] = (gx0 + gx1) / 2 if abs((gx1 - gx0) - (bx1 - bx0)) < 0.03 * (bx1 - bx0) else rr[0][2][1] - (rr[0][1][1] - bun_cx[1])
@@ -80,7 +111,8 @@ for skin, frames in FRAMES.items():
         ys = [np.where((im[:, r[state][0]:r[state][1] + 1, 3] > 20).any(1))[0] for im, r in zip(ims, rr)]
         y0 = max(0, min(y.min() for y in ys) - 4); y1 = min(ims[0].shape[0] - 1, max(y.max() for y in ys) + 4)
         if state == 0:
-            bx = BODY[skin]; s = BODY_W / (bx[1] - bx[0]); cx = (bx[0] + bx[1]) / 2; cy = (bx[2] + bx[3]) / 2
+            if skin in BODY: bx = BODY[skin]; s = BODY_W / (bx[1] - bx[0]); cx = (bx[0] + bx[1]) / 2; cy = (bx[2] + bx[3]) / 2
+            else: s, cx, cy = auto_body(ims[0], *rr[0][0])
             dx, dy = (x0 - cx) * s, (y0 - cy) * s
         else:
             s = sb; cx = bun_cx[state]
