@@ -726,7 +726,15 @@ async function shopBuy(pid) {
     return p;
   } catch (e) {
     if (e && (e.userCancelled || e.code === '1' || e.code === 1 || /cancel/i.test(e.message || ''))) { const c = new Error(''); c.cancelled = true; throw c; }
-    throw new Error('The purchase didn’t go through. You weren’t charged.');
+    // the store may have taken the payment even though the confirmation came back with an error:
+    // ask again (and resync) before telling the player it failed
+    try {
+      let c = await shopPlugin().getCustomerInfo();
+      if (!((c && c.customerInfo && c.customerInfo.allPurchasedProductIdentifiers) || []).includes(pid)) { c = await shopPlugin().restorePurchases(); }
+      if (((c && c.customerInfo && c.customerInfo.allPurchasedProductIdentifiers) || []).includes(pid)) { shopFromCustomer(c.customerInfo); shopGive(p.skins); return p; }
+    } catch (e2) {}
+    const code = e && (e.code || (e.userInfo && e.userInfo.readableErrorCode));
+    throw new Error('The purchase didn’t finish' + (code ? ' (error ' + code + ')' : '') + '. If you were charged, tap Restore Purchases.');
   }
 }
 async function shopRestore() {
