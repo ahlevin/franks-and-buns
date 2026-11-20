@@ -1194,7 +1194,9 @@ function packsRender() {
     h += '<p class="fbp-small">Every game you play counts in all your Packs.</p>' + packsMsgHtml();
     if (p.isOwner) {
       if (packsEdit) {
-        h += '<label>Wienerboard opens to</label><div class="fbp-choice"><button type="button" data-a="setdef" data-v="week" class="' + (p.defaultBoard === 'week' ? '' : 'fbp-ghost') + '">This Week</button><button type="button" data-a="setdef" data-v="all" class="' + (p.defaultBoard === 'all' ? '' : 'fbp-ghost') + '">All-Time</button></div>' +
+        h += '<form><label for="fbp-rename">Pack name</label><input id="fbp-rename" type="text" maxlength="24" value="' + packsEsc(p.name) + '">' +
+          '<button type="submit" data-a="rename-pack"' + busy + '>Save Pack name</button></form>' +
+          '<label>Wienerboard opens to</label><div class="fbp-choice"><button type="button" data-a="setdef" data-v="week" class="' + (p.defaultBoard === 'week' ? '' : 'fbp-ghost') + '">This Week</button><button type="button" data-a="setdef" data-v="all" class="' + (p.defaultBoard === 'all' ? '' : 'fbp-ghost') + '">All-Time</button></div>' +
           '<label>Who can join</label><div class="fbp-choice"><button type="button" data-a="setappr" data-v="1" class="' + (p.approval ? '' : 'fbp-ghost') + '">Players I let in</button><button type="button" data-a="setappr" data-v="0" class="' + (p.approval ? 'fbp-ghost' : '') + '">Anyone with the code</button></div>' +
           '<label>Pack code</label><button type="button" class="fbp-ghost" data-a="newcode">' + (packsConfirm === 'newcode' ? 'Tap again: ' + packsEsc(p.code) + ' will stop working' : 'Get a new code') + '</button>' +
           '<p class="fbp-small">A new code stops old invites from working. Players already in your Pack stay in.</p>' +
@@ -1288,6 +1290,13 @@ function packsClick(e) {
     const name = (packsCur.requests.find(r => r.id === id) || {}).name || 'Player';
     packsCur = await packsCall('POST', 'packs/' + packsCur.pack.id + '/' + a, { playerId: id, board: packsCur.board });
     packsMsg = a === 'approve' ? '✓ ' + name + ' is in!' : '✓ Request declined.';
+  });
+  if (a === 'rename-pack') packsDo(async keep => {
+    const name = (keep['fbp-rename'] || '').trim();
+    if (!name) throw { message: 'Give your Pack a name.' };
+    if (name === packsCur.pack.name) { packsMsg = '✓ That\'s already the name.'; return; }
+    packsCur = await packsCall('POST', 'packs/' + packsCur.pack.id + '/settings', { name: name, board: packsCur.board });
+    packsMsg = '✓ Pack renamed.'; packsRefreshMe();
   });
   if (a === 'setappr') packsDo(async () => { packsCur = await packsCall('POST', 'packs/' + packsCur.pack.id + '/settings', { approval: v === '1', board: packsCur.board }); packsMsg = '✓ Saved.'; });
   if (a === 'newcode') {
