@@ -368,6 +368,8 @@ async function route(request, env, path) {
   }
   if (method === 'POST' && path === 'score') {
     const p = await needPlayer(db, request);
+    // nameless profiles only keep costumes: their scores are never stored (the privacy policy promises this)
+    if (!p.nickname) return { ok: true, score: Number(body.score) || 0, weekBest: 0, newWeekBest: false, packs: [] };
     const run = { score: body.score, frames: body.frames, franks: body.franks, boxes: body.boxes };
     if (!plausible(run)) fail(422, 'That score could not be checked.');
     const secs = run.frames / 60;

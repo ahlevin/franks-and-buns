@@ -486,9 +486,37 @@ function skinNudge() {
 // earned costumes come in order (Superhero, Rocket, Unicorn, Dragon), at most one per game
 function skinNext() { const won = skinsWon(); return SKINS.find(s => skinHow(s) === 'earn' && s.goal && won.indexOf(s.id) < 0) || null; }
 function skinPrev(s) { const list = SKINS.filter(k => skinHow(k) === 'earn' && k.goal), i = list.indexOf(s); return i > 0 ? list[i - 1] : null; }
+// Costumes are also saved with the player's Packs profile, so the recovery code brings them back on any device.
+// A player with no profile gets a nameless one made quietly the first time they win a costume.
+let skinsPushing = false;
+function skinsMerge(serverList) {   // called with the profile's saved costumes whenever the server answers
+  if (!Array.isArray(serverList)) return;
+  const won = skinsWon(), all = won.slice();
+  serverList.forEach(id => { if (all.indexOf(id) < 0 && SKINS.some(s => s.id === id)) all.push(id); });
+  if (all.length !== won.length) safeSet('fb_skins_earned', JSON.stringify(all));
+  if (won.some(id => serverList.indexOf(id) < 0)) skinsPush();
+}
+async function skinsPush() {
+  if (skinsPushing || SKINS_ALL || !skinsWon().length) return;
+  skinsPushing = true;
+  try {
+    if (!packsToken()) {
+      if (safeGet('fb_no_auto_profile')) { skinsPushing = false; return; }
+      packsKeepMe(await packsCall('POST', 'player', { silent: true }));
+    }
+    packsKeepMe(await packsCall('POST', 'me/skins', { skins: skinsWon() }));
+  } catch (e) {}   // offline: they're still saved on this device and go up next time
+  skinsPushing = false;
+}
+function skinsSyncOnLoad() {
+  if (SKINS_ALL) return;
+  if (packsToken()) packsCall('GET', 'me').then(packsKeepMe, () => {});
+  else skinsPush();
+}
+window.addEventListener('load', () => setTimeout(skinsSyncOnLoad, 1500));
 function skinsAward(st) {
   const won = skinsWon(), nx = skinNext(), fresh = nx && skinGoalMet(nx, st) ? [nx] : [];
-  if (fresh.length) safeSet('fb_skins_earned', JSON.stringify(won.concat(fresh.map(s => s.id))));
+  if (fresh.length) { safeSet('fb_skins_earned', JSON.stringify(won.concat(fresh.map(s => s.id)))); skinsPush(); }
   return fresh;
 }
 
@@ -876,7 +904,7 @@ async function packsCall(method, path, body) {
 }
 function packsKeepMe(j) {
   if (j && j.token) safeSet('fb_pack_token', j.token);
-  if (j && j.player) packsMe = { player: j.player, packs: j.packs || [], requests: j.requests || [] };
+  if (j && j.player) { packsMe = { player: j.player, packs: j.packs || [], requests: j.requests || [] }; skinsMerge(j.player.skins); }
 }
 function packsIsOpen() { const b = document.getElementById('fb-packs'); return !!(b && b.style.display !== 'none'); }
 function packsClose() { const b = document.getElementById('fb-packs'); if (b) b.style.display = 'none'; }
@@ -944,8 +972,9 @@ async function packsRefreshMe() {
   }
 }
 function packsGo(view) { packsView = view; packsRender(); }
+function packsNeedsName() { return !packsToken() || !!(packsMe && !packsMe.player.nickname); }
 function packsNameField() {
-  return packsToken() ? '' : '<label for="fbp-nick">Your name on Wienerboards</label><input id="fbp-nick" type="text" maxlength="16" autocomplete="nickname" placeholder="2 to 16 characters">';
+  return !packsNeedsName() ? '' : '<label for="fbp-nick">Your name on Wienerboards</label><input id="fbp-nick" type="text" maxlength="16" autocomplete="nickname" placeholder="2 to 16 characters">';
 }
 function packsMsgHtml() { return packsMsg ? '<p class="fbp-msg' + (packsMsg.charAt(0) === '✓' ? ' fbp-ok' : '') + '">' + packsEsc(packsMsg) + '</p>' : ''; }
 function packsRender() {
@@ -976,7 +1005,7 @@ function packsRender() {
     if (full) h += '<p class="fbp-small">You\'re in 5 Packs, the most allowed. Leave one to make or join another.</p>';
     h += packsMsgHtml();
     if (packsToken() && packsMe && !safeGet('fb_pack_code_seen')) h += '<div class="fbp-note">📌 <b>Save your recovery code.</b> You\'ll need it to get your Packs back on a new phone or after reinstalling. <button type="button" class="fbp-link" data-a="go-code">Show my code</button></div>';
-    if (packsToken() && packsMe) h += '<div class="fbp-foot"><span>Playing as <b>' + packsEsc(packsMe.player.nickname) + '</b></span><button type="button" class="fbp-link" data-a="go-name">Change name</button><button type="button" class="fbp-link" data-a="go-code">Recovery code</button><button type="button" class="fbp-link" data-a="go-help">How Packs work</button></div>';
+    if (packsToken() && packsMe) h += '<div class="fbp-foot"><span>' + (packsMe.player.nickname ? 'Playing as <b>' + packsEsc(packsMe.player.nickname) + '</b>' : 'No Wienerboard name yet') + '</span><button type="button" class="fbp-link" data-a="go-name">' + (packsMe.player.nickname ? 'Change name' : 'Pick a name') + '</button><button type="button" class="fbp-link" data-a="go-code">Recovery code</button><button type="button" class="fbp-link" data-a="go-restore">Use a different recovery code</button><button type="button" class="fbp-link" data-a="go-help">How Packs work</button></div>';
     else if (!packsToken()) h += '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="go-help">How Packs work</button><button type="button" class="fbp-link" data-a="go-restore">Already in Packs on another device?</button></div>';
     h += '<button type="button" class="fbp-ghost" data-a="close">Close</button>';
   } else if (packsView === 'results' && packsResult && packsResult.packs) {
@@ -1008,27 +1037,27 @@ function packsRender() {
       '<button type="submit" data-a="join"' + busy + '>Join Pack</button></form>' + packsMsgHtml() +
       '<button type="button" class="fbp-ghost" data-a="home">Back</button>';
   } else if (packsView === 'name') {
-    h += '<h2>CHANGE NAME</h2><form><label for="fbp-nick2">Your name on Wienerboards</label><input id="fbp-nick2" type="text" maxlength="16" value="' + packsEsc(packsMe ? packsMe.player.nickname : '') + '">' +
+    h += '<h2>' + (packsMe && packsMe.player.nickname ? 'CHANGE NAME' : 'PICK A NAME') + '</h2><form><label for="fbp-nick2">Your name on Wienerboards</label><input id="fbp-nick2" type="text" maxlength="16" value="' + packsEsc(packsMe ? packsMe.player.nickname : '') + '">' +
       '<button type="submit" data-a="rename"' + busy + '>Save</button></form>' + packsMsgHtml() + '<button type="button" class="fbp-ghost" data-a="home">Back</button>';
   } else if (packsView === 'code') {
     safeSet('fb_pack_code_seen', '1');
-    h += '<h2>RECOVERY CODE</h2><p class="fbp-sub">This code is your Packs sign-in. Write it down or take a screenshot. It\'s the only way to get your name and Packs back on a new phone or browser. Don\'t share it.</p>' +
+    h += '<h2>RECOVERY CODE</h2><p class="fbp-sub">This code is your Packs sign-in. Write it down or take a screenshot. It\'s the only way to get your name, Packs and costumes back on a new phone or browser. Don\'t share it.</p>' +
       '<div class="fbp-code">' + packsEsc(packsToken()) + '</div><button type="button" data-a="copy-code">Copy code</button>' + packsMsgHtml() +
       '<button type="button" class="fbp-ghost" data-a="home">Back</button>' +
-      '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="delete-me">' + (packsConfirm === 'delete' ? 'Tap again to delete your name, scores and Pack memberships for good' : 'Delete my Packs profile') + '</button></div>';
+      '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="delete-me">' + (packsConfirm === 'delete' ? 'Tap again to delete your name, scores, Pack memberships and saved costumes for good' : 'Delete my Packs profile') + '</button></div>';
   } else if (packsView === 'help') {
     h += '<h2>HOW PACKS WORK</h2><div class="fbp-help">' +
       '<p>A Pack is a private Wienerboard for you and your friends. Make one, invite people, and find out who\'s top dog.</p>' +
       '<p><b>Invite friends:</b> on your Pack, tap Invite friends to text a link, or share the 6-character Pack code. Friends enter it under Join a Pack.</p>' +
       '<p><b>Who gets in:</b> if your Pack is set to <i>Players I let in</i>, new players wait until you tap Let in. In Pack settings you can switch to <i>Anyone with the code</i>, remove players, or get a new code so old invites stop working.</p>' +
       '<p><b>Scores:</b> every game you play counts in all your Packs. This Week starts fresh every week; All-Time keeps everyone\'s best. After each game, the Game Over screen shows where you rank.</p>' +
-      '<p><b>Your recovery code:</b> your Packs are saved online, but each place you play (this app, a browser, another phone) needs its own sign-in. Enter your recovery code there under <i>Already in Packs on another device?</i>. You\'ll also need it after reinstalling the app or getting a new phone. Keep it private.</p>' +
+      '<p><b>Your recovery code:</b> your Packs and costumes are saved online, but each place you play (this app, a browser, another phone) needs its own sign-in. Enter your recovery code there under <i>Already in Packs on another device?</i> (or <i>Use a different recovery code</i>). You\'ll also need it after reinstalling the app or getting a new phone. Keep it private.</p>' +
       '<p><b>Limits:</b> up to 5 Packs per player and 50 players per Pack.</p>' +
       '<p>To leave a Pack, open it and tap Leave Pack. To delete your Packs profile, go to Recovery code.</p>' +
       '<p><b>See an offensive name?</b> Open the Pack and tap Report a name or Pack. Pack leaders can also remove players.</p></div>' +
       '<button type="button" class="fbp-ghost" data-a="home">Back</button>';
   } else if (packsView === 'restore') {
-    h += '<h2>RESTORE PACKS</h2><form><p class="fbp-sub">Enter the recovery code from My Packs on your other device.</p><label for="fbp-rc">Recovery code</label><input id="fbp-rc" type="text" maxlength="24" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX">' +
+    h += '<h2>RESTORE PACKS</h2><form><p class="fbp-sub">Enter the recovery code from My Packs on your other device.' + (packsToken() ? ' This switches this device to that profile. Save this device\'s code first (My Packs → Recovery code) if you want to come back to it. Costumes won here come with you.' : '') + '</p><label for="fbp-rc">Recovery code</label><input id="fbp-rc" type="text" maxlength="24" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX">' +
       '<button type="submit" data-a="restore"' + busy + '>Restore</button></form>' + packsMsgHtml() + '<button type="button" class="fbp-ghost" data-a="home">Back</button>';
   } else if (packsView === 'pack' && packsCur) {
     const c = packsCur, p = c.pack;
@@ -1069,7 +1098,7 @@ function packsVal(id) { const el = document.getElementById(id); return el ? el.v
 function packsKeepInputs() { const keep = {}; document.querySelectorAll('#fb-packs input[type=text]').forEach(i => { keep[i.id] = i.value; }); return keep; }
 function packsPutInputs(keep) { Object.keys(keep).forEach(id => { const el = document.getElementById(id); if (el) el.value = keep[id]; }); }
 async function packsEnsurePlayer(nick) {
-  if (packsToken()) return;
+  if (packsToken()) return;   // a nameless profile sends its new name with the create or join
   packsKeepMe(await packsCall('POST', 'player', { nickname: nick }));
 }
 async function packsDo(fn) {
@@ -1108,13 +1137,13 @@ function packsClick(e) {
   if (a === 'create') packsDo(async keep => {
     if (!(keep['fbp-pname'] || '').trim()) throw { message: 'Give your Pack a name.' };
     await packsEnsurePlayer(keep['fbp-nick']);
-    packsCur = await packsCall('POST', 'packs', { name: keep['fbp-pname'], defaultBoard: packsBoard, approval: packsApproval });
+    packsCur = await packsCall('POST', 'packs', { name: keep['fbp-pname'], defaultBoard: packsBoard, approval: packsApproval, nickname: keep['fbp-nick'] });
     packsView = 'pack'; packsMsg = '✓ Pack made! Tap Invite friends to share the code.' + (safeGet('fb_pack_code_seen') ? '' : ' Then save your recovery code from My Packs.'); packsRefreshMe();
   });
   if (a === 'join') packsDo(async keep => {
     if (!(keep['fbp-code'] || '').trim()) throw { message: 'Enter the 6-character Pack code.' };
     await packsEnsurePlayer(keep['fbp-nick']);
-    const j = await packsCall('POST', 'packs/join', { code: keep['fbp-code'] });
+    const j = await packsCall('POST', 'packs/join', { code: keep['fbp-code'], nickname: keep['fbp-nick'] });
     packsPrefill = '';
     if (j.pending) { packsKeepMe(j); packsView = 'home'; packsMsg = '✓ Asked to join ' + j.pending.name + '. You\'ll be in once the Pack leader lets you in.'; return; }
     packsCur = j; packsView = 'pack'; packsMsg = '✓ You\'re in!'; packsRefreshMe();
@@ -1122,7 +1151,9 @@ function packsClick(e) {
   if (a === 'rename') packsDo(async keep => { packsKeepMe(await packsCall('POST', 'me/name', { nickname: keep['fbp-nick2'] })); packsView = 'home'; packsMsg = '✓ Name saved.'; });
   if (a === 'restore') packsDo(async keep => {
     const j = await packsCall('POST', 'recover', { code: keep['fbp-rc'] });
-    packsKeepMe(j); packsView = 'home'; packsMsg = '✓ Welcome back, ' + j.player.nickname + '!';
+    const before = packsToken();
+    packsKeepMe(j); packsView = 'home'; packsMsg = '✓ Welcome back' + (j.player.nickname ? ', ' + j.player.nickname : '') + '!';
+    if (before && before !== packsToken()) skinsPush();   // costumes won on this device join the restored profile
   });
   if (a === 'copy-code') { packsCopy(packsToken()).then(ok => { packsMsg = ok ? '✓ Copied.' : 'Copy didn\'t work here. Write the code down instead.'; packsRender(); }); return; }
   if (a === 'pack') packsDo(async () => { packsEdit = false; await packsShowPack(id); });
@@ -1157,6 +1188,7 @@ function packsClick(e) {
     packsDo(async () => {
       await packsCall('POST', 'me/delete');
       safeSet('fb_pack_token', ''); safeSet('fb_pack_pending', ''); packsMe = null; packsCur = null;
+      safeSet('fb_no_auto_profile', '1');   // they deleted it on purpose: don't quietly make another one
       packsView = 'home'; packsMsg = '✓ Your Packs profile was deleted.';
     });
   }
@@ -1178,6 +1210,7 @@ function packsClick(e) {
 // Scores: each finished game is sent once you're in Packs. If you're offline, the best unsent game waits and goes next time.
 function packsSubmit(run) {
   if (!packsToken() || !(run.score > 0)) return;
+  if (packsMe && !packsMe.player.nickname) return;   // a nameless profile (made only to keep costumes) never sends scores
   let pend = null; try { pend = JSON.parse(safeGet('fb_pack_pending') || 'null'); } catch (e) {}
   if (!pend || run.score > pend.score) safeSet('fb_pack_pending', JSON.stringify(run));
   packsResult = 'wait';
