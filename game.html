@@ -621,7 +621,8 @@ function skinPic(id, part) {
 }
 function skinById(id) { return SKINS.find(s => s.id === id) || SKINS[0]; }
 // try every skin on the preview site with ?skins=all (never on franksandbuns.com or in the apps)
-const SKINS_ALL = new URLSearchParams(location.search).get('skins') === 'all' && location.hostname !== 'franksandbuns.com' &&
+// preview.franks-and-buns.pages.dev is Alan's test site: every costume is unlocked there without the ?skins=all
+const SKINS_ALL = (new URLSearchParams(location.search).get('skins') === 'all' || location.hostname === 'preview.franks-and-buns.pages.dev') && location.hostname !== 'franksandbuns.com' &&
   location.protocol !== 'capacitor:' && !(location.hostname === 'localhost' && !location.port);
 function skinUnlocked(s) {
   if (SKINS_ALL) return true;
