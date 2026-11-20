@@ -462,7 +462,7 @@ const SKINS = [
 // Skin groups. how: 'earn' = unlocked by doing its goal in one game, 'soon' = shown locked (Coming soon),
 // 'hidden' = not shown, 'free' = everyone has them. A skin's own how (e.g. free Bunny) beats its group's.
 // The holiday set waits here until buying skins is built.
-const SKIN_GROUPS = { earn: { name: 'Free and earned', how: 'earn' }, holiday: { name: 'Holiday', how: 'soon' },
+const SKIN_GROUPS = { earn: { name: 'Free & Earned', how: 'earn' }, holiday: { name: 'Holiday', how: 'soon' },
   dogs: { name: 'Dogs', how: 'soon' },
   cats: { name: 'Cats', how: 'soon' } };
 function skinHow(s) { return s.how || (SKIN_GROUPS[s.group || 'earn'] || SKIN_GROUPS.earn).how; }
@@ -2512,20 +2512,30 @@ function skinsOpen() {
     const css = document.createElement('style');
     css.textContent =
       '#fb-skins{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(10,5,0,.86);padding:12px;box-sizing:border-box}' +
-      '#fb-skins .fbs-card{max-width:420px;width:100%;max-height:100%;overflow-y:auto;box-sizing:border-box;background:#2a1a0a;color:#f3e3c3;border:2px solid rgba(255,215,0,.5);border-radius:16px;padding:16px;font:14px/1.4 -apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-overflow-scrolling:touch}' +
-      '#fb-skins h2{margin:0 0 4px;color:#FFD700;font:bold 22px Arial;text-align:center}' +
+      '#fb-skins .fbs-card{max-width:420px;width:100%;max-height:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;background:#2a1a0a;color:#f3e3c3;border:2px solid rgba(255,215,0,.5);border-radius:16px;padding:16px;font:14px/1.4 -apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-overflow-scrolling:touch}' +
+      '#fb-skins h2{margin:0;color:#FFD700;font:bold 22px Arial;text-align:center;flex:1}' +
+      '#fb-skins .fbs-top{display:flex;align-items:center;position:relative;flex:none}' +
+      '#fb-skins .fbs-x{position:absolute;right:-4px;top:-4px;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,179,71,.5);background:rgba(0,0,0,.3);color:#ffb347;font:bold 16px Arial;cursor:pointer;padding:0}' +
+      '#fb-skins .fbs-back{position:absolute;left:-4px;top:-4px;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,179,71,.5);background:rgba(0,0,0,.3);color:#ffb347;font:bold 24px/1 Arial;cursor:pointer;padding:0 0 3px}' +
+      '#fb-skins .fbs-top h2{padding:0 40px}' +
+      '#fb-skins .fbs-col{display:flex;align-items:center;gap:8px;width:100%;margin:0 0 8px;padding:10px 10px 10px 14px;text-align:left;background:rgba(0,0,0,.25);border:2px solid rgba(255,215,0,.25);border-radius:12px;color:#f3e3c3;cursor:pointer;box-sizing:border-box}' +
+      '#fb-skins .fbs-col.on{border-color:#FFD700}#fb-skins .fbs-col-t{flex:1;min-width:0;display:flex;flex-direction:column;font:15px Arial}#fb-skins .fbs-col-t b{color:#FFD700}' +
+      '#fb-skins .fbs-col-t small{font:12px Arial;color:#c8a878;margin-top:2px}#fb-skins .fbs-col-p{display:flex;flex:none}#fb-skins .fbs-col-p img{width:46px;height:30px;object-fit:contain;margin-left:-6px}' +
+      '#fb-skins .fbs-col-a{flex:none;color:#ffb347;font:bold 22px Arial}' +
+      '#fb-skins .fbs-body{overflow-y:auto;flex:1;min-height:0;-webkit-overflow-scrolling:touch}' +
       '#fb-skins .fbs-sub{text-align:center;color:#c8a878;font-size:13px;margin:0 0 12px}' +
-      '#fb-skins .fbs-h{margin:14px 0 6px;color:#FFD700;font:bold 15px Arial;text-align:left}#fb-skins .fbs-h:first-of-type{margin-top:0}' +
       '#fb-skins .fbs-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}' +
       '#fb-skins .fbs-skin{background:rgba(0,0,0,.25);border:2px solid rgba(255,215,0,.25);border-radius:12px;padding:8px 6px;color:#f3e3c3;font:600 14px Arial;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px}' +
       '#fb-skins .fbs-skin img{width:100%;max-width:150px;height:64px;object-fit:contain}' +
       '#fb-skins .fbs-skin small{font:12px Arial;color:#c8a878}' +
       '#fb-skins .fbs-skin.on{border-color:#FFD700;background:rgba(255,215,0,.12)}#fb-skins .fbs-skin.on small{color:#FFD700}' +
       '#fb-skins .fbs-skin.lock{cursor:default}#fb-skins .fbs-skin{position:relative}#fb-skins .fbs-skin.lock img{filter:saturate(.85) opacity(.6)}#fb-skins .fbs-skin.lock::after{content:"🔒";position:absolute;top:6px;right:8px;font-size:16px}' +
-      '#fb-skins .fbs-close{font:600 15px Arial;border-radius:999px;padding:11px 16px;border:1px solid rgba(255,179,71,.5);background:transparent;color:#ffb347;cursor:pointer;width:100%;margin:12px 0 0}';
+      '#fb-skins .fbs-close{flex:none;font:600 15px Arial;border-radius:999px;padding:11px 16px;border:1px solid rgba(255,179,71,.5);background:transparent;color:#ffb347;cursor:pointer;width:100%;margin:12px 0 0}';
     document.head.appendChild(css);
     box.addEventListener('click', e => {
-      const t = e.target.closest('[data-skin],[data-a]');
+      const t = e.target.closest('[data-skin],[data-a],[data-tab]');
+      if (t && t.hasAttribute('data-tab')) { skinsTab = t.getAttribute('data-tab'); sndStreak(); skinsRender(); return; }
+      if (t && t.getAttribute('data-a') === 'home') { skinsTab = null; sndStreak(); skinsRender(); return; }
       if (e.target === box || (t && t.getAttribute('data-a') === 'close')) { skinsClose(); return; }
       if (!t || !t.hasAttribute('data-skin')) return;
       const s = skinById(t.getAttribute('data-skin'));
@@ -2535,27 +2545,45 @@ function skinsOpen() {
     ['touchstart', 'touchend', 'mousedown', 'pointerdown', 'keydown'].forEach(t => box.addEventListener(t, e => e.stopPropagation(), { passive: true }));
     document.body.appendChild(box);
   }
-  box.style.display = 'flex'; skinsRender();
+  box.style.display = 'flex'; skinsTab = null; skinsRender();
 }
+let skinsTab = null;   // null: the Collections list; otherwise the SKIN_GROUPS key being shown
+function skinsGroupList(gid) { return SKINS.filter(s => (s.group || 'earn') === gid && (SKINS_ALL || skinHow(s) !== 'hidden')); }
+function skinsPic(s) { return s.frames ? 'skin-' + s.id + '-fly.png' : 'sp-frank.png'; }
 function skinsRender() {
   const box = document.getElementById('fb-skins'); if (!box) return;
-  const cur = curSkin();
-  let h = '<div class="fbs-card"><h2>🎭 SKINS</h2><p class="fbs-sub">Dress up your frank. Win them in order, one per game: pull off the challenge in a single game.</p>';
-  Object.keys(SKIN_GROUPS).forEach(gid => {
-  const list = SKINS.filter(s => (s.group || 'earn') === gid && (SKINS_ALL || skinHow(s) !== 'hidden'));
-  if (!list.length) return;
-  h += '<h3 class="fbs-h">' + SKIN_GROUPS[gid].name + (skinHow(list[0]) === 'soon' && !SKINS_ALL ? ' · coming soon' : '') + '</h3><div class="fbs-grid">';
-  list.forEach(s => {
-    const open = skinUnlocked(s), on = s.id === cur.id, how = skinHow(s);
-    const pic = s.frames ? 'skin-' + s.id + '-fly.png' : 'sp-frank.png';
-    h += '<button type="button" class="fbs-skin' + (on ? ' on' : '') + (open ? '' : ' lock') + (open || how === 'earn' ? '' : ' soon') + '" data-skin="' + s.id + '"' +
-      (open ? '' : ' aria-disabled="true"') + '><img src="' + pic + '" alt="">' + s.name +
-      '<small>' + (on ? '✓ Wearing' : open ? 'Tap to wear' : how === 'earn' ? '🔒 ' + (skinNext() === s || !skinPrev(s) ? '' : 'After ' + skinPrev(s).name + ': ') + s.goal.text : '🔒 ' + (s.note || 'Coming soon')) + '</small></button>';
-  });
-  h += '</div>';
-  });
-  h += '<button type="button" class="fbs-close" data-a="close">Close</button></div>';
+  const cur = curSkin(), groups = Object.keys(SKIN_GROUPS).filter(g => skinsGroupList(g).length);
+  if (skinsTab && groups.indexOf(skinsTab) < 0) skinsTab = null;
+  let h = '<div class="fbs-card"><div class="fbs-top">' +
+    (skinsTab ? '<button type="button" class="fbs-back" data-a="home" aria-label="All collections">‹</button>' : '') +
+    '<h2>' + (skinsTab ? packsEsc(SKIN_GROUPS[skinsTab].name) : '🎭 SKINS') + '</h2>' +
+    '<button type="button" class="fbs-x" data-a="close" aria-label="Close">✕</button></div><div class="fbs-body">';
+  if (!skinsTab) {
+    // Collections: one row per group, newest groups just get added to SKIN_GROUPS
+    h += '<p class="fbs-sub">Wearing: <b>' + packsEsc(cur.name) + '</b></p>';
+    groups.forEach(g => {
+      const list = skinsGroupList(g), open = list.filter(s => skinUnlocked(s)).length, soon = !SKINS_ALL && skinHow(list[0]) === 'soon';
+      const here = list.indexOf(cur) >= 0;
+      h += '<button type="button" class="fbs-col' + (here ? ' on' : '') + '" data-tab="' + g + '"><span class="fbs-col-t"><b>' + packsEsc(SKIN_GROUPS[g].name) + '</b>' +
+        '<small>' + (soon ? '🔒 Coming soon · ' + list.length + ' costumes' : open + ' of ' + list.length + ' unlocked') + '</small></span><span class="fbs-col-p">';
+      (here ? [cur].concat(list.filter(s => s !== cur)) : list).slice(0, 3).forEach(s => { h += '<img src="' + skinsPic(s) + '" alt="" loading="lazy">'; });
+      h += '</span><span class="fbs-col-a">›</span></button>';
+    });
+  } else {
+    const list = skinsGroupList(skinsTab), soon = !SKINS_ALL && skinHow(list[0]) === 'soon';
+    h += '<p class="fbs-sub">' + (soon ? 'Coming soon. Check back for these costumes!' :
+      skinsTab === 'earn' ? 'Win them in order, one per game: pull off the challenge in a single game.' : 'Dress up your frank.') + '</p><div class="fbs-grid">';
+    list.forEach(s => {
+      const open = skinUnlocked(s), on = s.id === cur.id, how = skinHow(s);
+      h += '<button type="button" class="fbs-skin' + (on ? ' on' : '') + (open ? '' : ' lock') + (open || how === 'earn' ? '' : ' soon') + '" data-skin="' + s.id + '"' +
+        (open ? '' : ' aria-disabled="true"') + '><img src="' + skinsPic(s) + '" alt="" loading="lazy">' + s.name +
+        '<small>' + (on ? '✓ Wearing' : open ? 'Tap to wear' : how === 'earn' ? '🔒 ' + (skinNext() === s || !skinPrev(s) ? '' : 'After ' + skinPrev(s).name + ': ') + s.goal.text : '🔒 ' + (s.note || 'Coming soon')) + '</small></button>';
+    });
+    h += '</div>';
+  }
+  h += '</div><button type="button" class="fbs-close" data-a="close">Close</button></div>';
   box.innerHTML = h;
+  const body = box.querySelector('.fbs-body'); if (body) body.scrollTop = 0;
 }
 function scoresPanelRect() { const pw = Math.min(W - 32, 340), ph = gcPlugin() ? 350 : 300; return { x: W / 2 - pw / 2, y: H * 0.5 - ph / 2, w: pw, h: ph }; }
 function drawScoresPanel() {
