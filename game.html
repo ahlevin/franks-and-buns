@@ -974,7 +974,7 @@ async function packsRefreshMe() {
 function packsGo(view) { packsView = view; packsRender(); }
 function packsNeedsName() { return !packsToken() || !!(packsMe && !packsMe.player.nickname); }
 function packsNameField() {
-  return !packsNeedsName() ? '' : '<label for="fbp-nick">Your name on Wienerboards</label><input id="fbp-nick" type="text" maxlength="16" autocomplete="nickname" placeholder="2 to 16 characters">';
+  return !packsNeedsName() ? '' : '<label for="fbp-nick">Your name on Wienerboards</label><input id="fbp-nick" type="text" maxlength="64" autocomplete="nickname" placeholder="2 to 16 characters, emoji welcome 🌭">';
 }
 function packsMsgHtml() { return packsMsg ? '<p class="fbp-msg' + (packsMsg.charAt(0) === '✓' ? ' fbp-ok' : '') + '">' + packsEsc(packsMsg) + '</p>' : ''; }
 function packsRender() {
@@ -1037,7 +1037,7 @@ function packsRender() {
       '<button type="submit" data-a="join"' + busy + '>Join Pack</button></form>' + packsMsgHtml() +
       '<button type="button" class="fbp-ghost" data-a="home">Back</button>';
   } else if (packsView === 'name') {
-    h += '<h2>' + (packsMe && packsMe.player.nickname ? 'CHANGE NAME' : 'PICK A NAME') + '</h2><form><label for="fbp-nick2">Your name on Wienerboards</label><input id="fbp-nick2" type="text" maxlength="16" value="' + packsEsc(packsMe ? packsMe.player.nickname : '') + '">' +
+    h += '<h2>' + (packsMe && packsMe.player.nickname ? 'CHANGE NAME' : 'PICK A NAME') + '</h2><form><label for="fbp-nick2">Your name on Wienerboards</label><input id="fbp-nick2" type="text" maxlength="64" value="' + packsEsc(packsMe ? packsMe.player.nickname : '') + '">' +
       '<button type="submit" data-a="rename"' + busy + '>Save</button></form>' + packsMsgHtml() + '<button type="button" class="fbp-ghost" data-a="home">Back</button>';
   } else if (packsView === 'code') {
     safeSet('fb_pack_code_seen', '1');

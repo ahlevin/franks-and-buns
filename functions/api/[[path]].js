@@ -80,15 +80,25 @@ function isRude(name) {
   const words = unleet(name).split(/[^a-z]+/).filter(Boolean);
   return words.some(w => BLOCK_WORD.includes(w) || BLOCK_WORD.includes(w.replace(/(.)\1+/g, '$1')));
 }
-function cleanName(raw, min, max, what) {
+// Emoji rude enough to block in names (checked after removing skin tones and variation marks)
+const BLOCK_EMOJI = ['🖕', '🍆', '🍑', '💦', '🔞', '👅', '🩲', '🫦', '👙', '🍒', '🌮', '🥒', '🔫', '💉', '💊', '🚬', '🍺', '🍻', '🍷', '🥃', '🍸', '🍾', '🌿', '🍁', '🤬', '💀', '☠', '⚰', '🪦', '卐', '卍'];
+const EMOJI_PART = /[\p{Extended_Pictographic}\p{Emoji_Modifier}\p{Regional_Indicator}\u200d\ufe0f\u20e3]/u;
+// Length in characters as people see them: a family emoji or a flag counts as one
+function seen(s) { try { return [...new Intl.Segmenter('en', { granularity: 'grapheme' }).segment(s)].length; } catch (e) { return [...s].length; } }
+function cleanName(raw, min, max, what, emoji) {
   if (typeof raw !== 'string') fail(400, `Please enter a ${what}.`);
-  const s = raw.normalize('NFKC').replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g, '')
-    .replace(/\s+/g, ' ').trim();
-  const len = [...s].length;
+  // keep the zero-width joiner (it glues emoji like 👨‍👩‍👧 together) only when emoji are allowed
+  const hidden = emoji ? /[\u0000-\u001f\u007f-\u009f\u200b\u200c\u200e\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g : /[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g;
+  const s = raw.normalize('NFKC').replace(hidden, '').replace(/\s+/g, ' ').trim();
+  const len = seen(s);
   if (len < min) fail(400, `Your ${what} needs at least ${min} characters.`);
   if (len > max) fail(400, `Your ${what} can be up to ${max} characters.`);
-  if (!/^[\p{L}\p{N}\p{M} _.'!&-]+$/u.test(s)) fail(400, `Use letters, numbers, spaces and . _ - ' ! & in your ${what}.`);
-  if (isRude(s)) fail(400, `Please pick a different ${what}.`);
+  const ok = emoji ? /^(?:[\p{L}\p{N}\p{M} _.'!&-]|[\p{Extended_Pictographic}\p{Emoji_Modifier}\p{Regional_Indicator}\u200d\ufe0f\u20e3])+$/u
+                   : /^[\p{L}\p{N}\p{M} _.'!&-]+$/u;
+  if (!ok.test(s)) fail(400, `Use letters, numbers, ${emoji ? 'emoji, ' : ''}spaces and . _ - ' ! & in your ${what}.`);
+  if (emoji && !/[\p{L}\p{N}]/u.test(s) && !EMOJI_PART.test(s)) fail(400, `Please pick a different ${what}.`);
+  const bare = s.replace(/[\p{Emoji_Modifier}\ufe0f]/gu, '');
+  if (isRude(s) || (emoji && BLOCK_EMOJI.some(e => bare.includes(e.replace(/\ufe0f/g, ''))))) fail(400, `Please pick a different ${what}.`);
   return s;
 }
 
@@ -135,7 +145,7 @@ const skinList = p => String(p.skins || '').split(',').filter(Boolean);
 async function needName(db, p, body) {
   if (p.nickname) return;
   if (!body.nickname) fail(400, 'Pick your name on Wienerboards first.');
-  p.nickname = cleanName(body.nickname, 2, 16, 'name');
+  p.nickname = cleanName(body.nickname, 2, 16, 'name', true);
   await db.prepare('UPDATE players SET nickname = ? WHERE id = ?').bind(p.nickname, p.id).run();
 }
 async function meResponse(db, p, extra) {
@@ -230,7 +240,7 @@ async function route(request, env, path) {
   if (method === 'POST' && path === 'player') {
     // silent: the game makes a nameless profile in the background to keep a player's costumes
     const silent = body.silent === true;
-    const nickname = silent ? '' : cleanName(body.nickname, 2, 16, 'name');
+    const nickname = silent ? '' : cleanName(body.nickname, 2, 16, 'name', true);
     if (!(await underLimit(db, (silent ? 'ns:' : 'np:') + (await sha256(ip + today())), silent ? NEW_SILENT_PLAYERS_PER_IP_PER_DAY : NEW_PLAYERS_PER_IP_PER_DAY))) fail(429, 'Too many new players from here today. Try again tomorrow.');
     await db.prepare('DELETE FROM limits WHERE day <> ?').bind(today()).run();
     const id = randCode(12), token = randCode(16);
@@ -256,7 +266,7 @@ async function route(request, env, path) {
   }
   if (method === 'POST' && path === 'me/name') {
     const p = await needPlayer(db, request);
-    const nickname = cleanName(body.nickname, 2, 16, 'name');
+    const nickname = cleanName(body.nickname, 2, 16, 'name', true);
     await db.prepare('UPDATE players SET nickname = ? WHERE id = ?').bind(nickname, p.id).run();
     p.nickname = nickname;
     return meResponse(db, p);
