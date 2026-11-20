@@ -601,9 +601,23 @@ async function skinsPush() {
   } catch (e) {}   // offline: they're still saved on this device and go up next time
   skinsPushing = false;
 }
-function skinsSyncOnLoad() {
+// iPhone app: the Packs sign-in is also kept in the player's iCloud (CloudKey plugin), so deleting and
+// reinstalling the app, or a new iPhone on the same Apple ID, brings back their name, Packs and costumes.
+function packsCloud() { const p = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CloudKey; return p && p.get ? p : null; }
+function packsCloudSave() { const c = packsCloud(), t = packsToken(); if (c && t) c.set({ token: t }).catch(() => {}); }
+function packsCloudClear() { const c = packsCloud(); if (c) c.clear().catch(() => {}); }
+async function packsCloudRestore() {
+  const c = packsCloud(); if (!c || packsToken()) return false;
+  let code = '';
+  try { const r = await c.get(); code = (r && r.token) || ''; } catch (e) { return false; }
+  if (!code) return false;
+  try { packsKeepMe(await packsCall('POST', 'recover', { code: code })); return true; }
+  catch (e) { if (e && e.status === 404) packsCloudClear(); return false; }   // that profile was deleted
+}
+async function skinsSyncOnLoad() {
+  if (await packsCloudRestore()) return;   // restored profile: packsKeepMe already merged its costumes
   if (SKINS_ALL) return;
-  if (packsToken()) packsCall('GET', 'me').then(packsKeepMe, () => {});
+  if (packsToken()) { packsCloudSave(); packsCall('GET', 'me').then(packsKeepMe, () => {}); }
   else skinsPush();
 }
 window.addEventListener('load', () => setTimeout(skinsSyncOnLoad, 1500));
@@ -999,7 +1013,7 @@ async function packsCall(method, path, body) {
   return j;
 }
 function packsKeepMe(j) {
-  if (j && j.token) safeSet('fb_pack_token', j.token);
+  if (j && j.token) { safeSet('fb_pack_token', j.token); packsCloudSave(); }
   if (j && j.player) { packsMe = { player: j.player, packs: j.packs || [], requests: j.requests || [] }; skinsMerge(j.player.skins); }
 }
 function packsIsOpen() { const b = document.getElementById('fb-packs'); return !!(b && b.style.display !== 'none'); }
@@ -1150,7 +1164,7 @@ function packsRender() {
       '<p><b>Invite friends:</b> on your Pack, tap Invite friends to text a link, or share the 6-character Pack code. Friends enter it under Join a Pack.</p>' +
       '<p><b>Who gets in:</b> if your Pack is set to <i>Players I let in</i>, new players wait until you tap Let in. In Pack settings you can switch to <i>Anyone with the code</i>, remove players, or get a new code so old invites stop working.</p>' +
       '<p><b>Scores:</b> every game you play counts in all your Packs. This Week starts fresh every week; All-Time keeps everyone\'s best. After each game, the Game Over screen shows where you rank.</p>' +
-      '<p><b>Your recovery code:</b> your Packs and costumes are saved online, but each place you play (this app, a browser, another phone) needs its own sign-in. Enter your recovery code there under <i>Already in Packs on another device?</i> (or <i>Use a different recovery code</i>). You\'ll also need it after reinstalling the app or getting a new phone. Keep it private.</p>' +
+      '<p><b>Your recovery code:</b> your Packs and costumes are saved online, but each place you play (this app, a browser, another phone) needs its own sign-in. Enter your recovery code there under <i>Already in Packs on another device?</i> (or <i>Use a different recovery code</i>). On iPhone, the app also keeps it in your iCloud, so reinstalling the app or a new iPhone with the same Apple ID brings your Packs back by itself. Keep your code private.</p>' +
       '<p><b>Limits:</b> up to 5 Packs per player and 50 players per Pack.</p>' +
       '<p>To leave a Pack, open it and tap Leave Pack. To delete your Packs profile, go to Recovery code.</p>' +
       '<p><b>See an offensive name?</b> Open the Pack and tap Report a name or Pack. Pack leaders can also remove players.</p></div>' +
@@ -1286,7 +1300,7 @@ function packsClick(e) {
     packsConfirm = '';
     packsDo(async () => {
       await packsCall('POST', 'me/delete');
-      safeSet('fb_pack_token', ''); safeSet('fb_pack_pending', ''); packsMe = null; packsCur = null;
+      safeSet('fb_pack_token', ''); safeSet('fb_pack_pending', ''); packsMe = null; packsCur = null; packsCloudClear();
       safeSet('fb_no_auto_profile', '1');   // they deleted it on purpose: don't quietly make another one
       packsView = 'home'; packsMsg = '✓ Your Packs profile was deleted.';
     });
