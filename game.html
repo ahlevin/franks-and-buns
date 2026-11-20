@@ -423,13 +423,13 @@ function artReady(k) { const im = bgArt[k]; return !!(im && im.complete && im.na
 // fly/bun/grill = [x, y, width, height] in game pixels: fly is placed around the hot dog body (hit checks are
 // unchanged, so wings, ears and tails never cost a life); bun and grill sit in a caught bun (y is added to hh).
 const SKINS = [
-  { id: 'classic', name: 'Classic', need: 0 },
-  { id: 'bunny', name: 'Bunny', need: 2500, frames: 2, fly: [-49.9, -38.6, 89.4, 58.3], bun: [-45.6, -57.6, 90.7, 59.6], grill: [-45.9, -57.7, 90.9, 59.8] },
-  { id: 'shark', name: 'Shark', need: 5000, frames: 1, fly: [-59.5, -35.6, 98.7, 54.7], bun: [-49.5, -61.4, 92.6, 63.3], grill: [-49.9, -72.8, 92.1, 74.7] },
-  { id: 'superhero', name: 'Superhero', need: 10000, frames: 1, fly: [-47.1, -24.5, 85.8, 41.2], bun: [-48.2, -54.3, 92.7, 56.2], grill: [-48.0, -69.9, 92.4, 71.9] },
-  { id: 'rocket', name: 'Rocket', need: 20000, frames: 1, fly: [-56.9, -22.7, 96.8, 43.6], bun: [-51.6, -52.4, 99.0, 54.4], grill: [-51.8, -67.4, 99.1, 69.4] },
-  { id: 'unicorn', name: 'Unicorn', need: 35000, frames: 1, fly: [-46.0, -33.3, 86.6, 46.9], bun: [-45.2, -54.3, 89.6, 56.3], grill: [-45.6, -66.3, 90.0, 68.2] },
-  { id: 'dragon', name: 'Dragon', need: 50000, frames: 2, fly: [-56.6, -36.9, 108.5, 51.6], bun: [-53.6, -60.3, 109.9, 62.6], grill: [-54.1, -74.8, 111.7, 77.0] },
+  { id: 'classic', name: 'Classic', how: 'free' },
+  { id: 'bunny', name: 'Bunny', how: 'free', frames: 2, fly: [-49.9, -38.6, 89.4, 58.3], bun: [-45.6, -57.6, 90.7, 59.6], grill: [-45.9, -57.7, 90.9, 59.8] },
+  { id: 'shark', name: 'Shark', how: 'free', frames: 1, fly: [-59.5, -35.6, 98.7, 54.7], bun: [-49.5, -61.4, 92.6, 63.3], grill: [-49.9, -72.8, 92.1, 74.7] },
+  { id: 'superhero', name: 'Superhero', goal: { stat: 'chili', n: 1, text: 'Catch a Chili Dog' }, frames: 1, fly: [-47.1, -24.5, 85.8, 41.2], bun: [-48.2, -54.3, 92.7, 56.2], grill: [-48.0, -69.9, 92.4, 71.9] },
+  { id: 'rocket', name: 'Rocket', goal: { stat: 'streak', n: 10, text: 'Land 10 in a row' }, frames: 1, fly: [-56.9, -22.7, 96.8, 43.6], bun: [-51.6, -52.4, 99.0, 54.4], grill: [-51.8, -67.4, 99.1, 69.4] },
+  { id: 'unicorn', name: 'Unicorn', goal: { stat: 'boxes', n: 4, text: 'Reach the Dog Parade' }, frames: 1, fly: [-46.0, -33.3, 86.6, 46.9], bun: [-45.2, -54.3, 89.6, 56.3], grill: [-45.6, -66.3, 90.0, 68.2] },
+  { id: 'dragon', name: 'Dragon', goal: { stat: 'boxes', n: 8, text: 'Pack 8 boxes in a game' }, frames: 2, fly: [-56.6, -36.9, 108.5, 51.6], bun: [-53.6, -60.3, 109.9, 62.6], grill: [-54.1, -74.8, 111.7, 77.0] },
   { id: 'midnight', name: 'Midnight Frank', group: 'holiday', note: 'New Year\'s', frames: 1, fly: [-48.6, -31.7, 91.8, 47.6], bun: [-43.8, -54.7, 89.5, 56.6], grill: [-45.6, -61.2, 92.0, 63.1] },
   { id: 'cupid', name: 'Love at First Bite', group: 'holiday', note: 'Valentine\'s Day', frames: 1, fly: [-46.7, -27.9, 85.8, 47.1], bun: [-46.1, -54.1, 90.3, 56.1], grill: [-46.8, -66.2, 90.3, 68.1] },
   { id: 'lucky', name: 'Lucky Dog', group: 'holiday', note: 'St. Patrick\'s Day', frames: 1, fly: [-48.3, -34.3, 93.2, 51.6], bun: [-42.8, -54.5, 85.7, 56.4], grill: [-43.0, -65.5, 86.8, 67.4] },
@@ -439,11 +439,25 @@ const SKINS = [
   { id: 'gobble', name: 'Gobble Dog', group: 'holiday', note: 'Thanksgiving', frames: 1, fly: [-53.3, -30.4, 92.2, 49.4], bun: [-50.3, -55.5, 95.3, 57.5], grill: [-50.5, -66.8, 95.5, 68.7] },
   { id: 'santa', name: 'Santa Frank', group: 'holiday', note: 'Christmas', frames: 1, fly: [-44.3, -28.9, 84.1, 44.7], bun: [-44.4, -59.9, 98.2, 61.9], grill: [-44.4, -71.1, 98.3, 73.1] }
 ];
-// Skin groups. how: 'earn' = unlocked by best score (need), 'soon' = shown locked (Coming soon),
-// 'hidden' = not shown, 'free' = everyone has them. Skins without a group are 'earn'.
+// Skin groups. how: 'earn' = unlocked by doing its goal in one game, 'soon' = shown locked (Coming soon),
+// 'hidden' = not shown, 'free' = everyone has them. A skin's own how (e.g. free Bunny) beats its group's.
 // The holiday set waits here until buying skins is built.
-const SKIN_GROUPS = { earn: { name: 'Earn them', how: 'earn' }, holiday: { name: 'Holiday', how: 'soon' } };
-function skinHow(s) { return (SKIN_GROUPS[s.group || 'earn'] || SKIN_GROUPS.earn).how; }
+const SKIN_GROUPS = { earn: { name: 'Free and earned', how: 'earn' }, holiday: { name: 'Holiday', how: 'soon' } };
+function skinHow(s) { return s.how || (SKIN_GROUPS[s.group || 'earn'] || SKIN_GROUPS.earn).how; }
+// costumes won so far (ids), kept on this device
+function skinsWon() { try { const a = JSON.parse(safeGet('fb_skins_won') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+function skinGoalMet(s, st) { return !!(s.goal && st && (st[s.goal.stat] || 0) >= s.goal.n); }
+// one game's stats -> skins it wins; returns the newly won ones
+function skinsAward(st) {
+  const won = skinsWon(), fresh = SKINS.filter(s => skinHow(s) === 'earn' && won.indexOf(s.id) < 0 && skinGoalMet(s, st));
+  if (fresh.length) safeSet('fb_skins_won', JSON.stringify(won.concat(fresh.map(s => s.id))));
+  return fresh;
+}
+let skinsBackfilled = false;
+function skinsBackfill() {   // players from before skins: their saved top runs count (streak and boxes)
+  if (skinsBackfilled) return; skinsBackfilled = true;
+  try { loadRuns(); (bestRuns || []).forEach(r => skinsAward({ streak: r.streak || 0, boxes: r.boxes || 0 })); } catch (e) {}
+}
 const skinImg = {};   // 'dragon-fly-b' -> Image, loaded when first needed
 function skinPic(id, part) {
   const k = id + '-' + part;
@@ -454,16 +468,16 @@ function skinById(id) { return SKINS.find(s => s.id === id) || SKINS[0]; }
 // try every skin on the preview site with ?skins=all (never on franksandbuns.com or in the apps)
 const SKINS_ALL = new URLSearchParams(location.search).get('skins') === 'all' && location.hostname !== 'franksandbuns.com' &&
   location.protocol !== 'capacitor:' && !(location.hostname === 'localhost' && !location.port);
-function skinBest() { return Math.max(bestScore, (packsMe && packsMe.player && packsMe.player.best) || 0); }
-function skinUnlocked(s, best) {
+function skinUnlocked(s) {
   if (SKINS_ALL) return true;
   const how = skinHow(s);
   if (how === 'free') return true;
   if (how !== 'earn') return false;   // 'soon' and 'hidden' stay locked until they go on sale
-  return (best === undefined ? skinBest() : best) >= s.need;
+  skinsBackfill();
+  return skinsWon().indexOf(s.id) >= 0;
 }
 function curSkin() { const s = skinById(safeGet('fb_skin') || 'classic'); return skinUnlocked(s) ? s : SKINS[0]; }
-let skinNew = null;   // Game Over: the skin this game unlocked
+let skinNew = null;   // Game Over: the skins this game won (array)
 function skinPreload(s) { if (s.frames) ['fly', 'bun', 'grill'].forEach(p => { skinPic(s.id, p); if (s.frames > 1) skinPic(s.id, p + '-b'); }); }
 // draws a skin's picture for part 'fly', 'bun' or 'grill' with its top-left at (ox, oy); false if not loaded yet
 function drawSkinPart(s, part, b, ox, oy) {
@@ -1244,7 +1258,7 @@ function safeGet(k) { try { return localStorage.getItem(k); } catch (e) { return
 function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 let bestScore = parseInt(safeGet('fb_best') || '0', 10);
 if (!(bestScore >= 0 && bestScore < 1e9)) bestScore = 0;
-let lives = 3, streak = 0, bestStreak = 0;
+let lives = 3, streak = 0, bestStreak = 0, chiliCaught = 0;
 let franksLanded = 0, boxFranks = 0, boxesCompleted = 0, boxFlash = 0;
 let scrollSpeed = 2.2, scrollX = 0;
 let tapping = false, frameCount = 0, shakeAmount = 0;
@@ -1647,7 +1661,7 @@ function resetGame() {
   stopChaseEffects(); wavDuckUntil = 0;   // skipping the intro cuts the chase foley; gameplay music starts once
   frank = { x:70, y:H*0.4, vy:0, squash:1, stretch:1, alive:true };
   buns=[]; splats=[]; particles=[]; floatingTexts=[]; forks=[]; gameDogs=[];
-  score=0; runFrames=0; packsResult=null; lives=3; streak=0; bestStreak=0;
+  score=0; runFrames=0; packsResult=null; lives=3; streak=0; bestStreak=0; chiliCaught=0;
   franksLanded=0; boxFranks=0; boxesCompleted=0; boxFlash=0;
   scrollSpeed=2.2; scrollX=0; nextBunDist=0;
   shakeAmount=0; streakText=''; streakTimer=0; gameOverDelay=0; gracePeriod=0;
@@ -2031,7 +2045,7 @@ function updateChili() {
   chili.x = chili.cx + Math.cos(chili.angle) * chili.r;
   chili.y = chili.cy + Math.sin(chili.angle) * chili.r;
   if (frank.alive && Math.abs(frank.x - chili.x) < 30 + frankGrowX() && Math.abs(frank.y - chili.y) < 28 + frankGrowY()) {
-    chiliRush = CHILI_RUSH_FRAMES; score += 500;
+    chiliRush = CHILI_RUSH_FRAMES; score += 500; chiliCaught++;
     sndChiliCatch(); if (!playWavEffect('chili-sizzle', .24)) sndSizzle(); shakeAmount = 8;
     addParticles(chili.x, chili.y, '#FF4500', 22); addParticles(chili.x, chili.y, '#FFD700', 12);
     addFloatingText(W / 2, H / 2 - 50, 'CHILI RUSH!', '#FF3300', 34);
@@ -2133,10 +2147,11 @@ function loseLife() {
   shakeAmount=8;
   if (lives<=0) {
     state=STATE.GAMEOVER; frank.alive=false; sndGameOver();
-    const oldBest = skinBest();
     if (score>bestScore) { bestScore=score; safeSet('fb_best',bestScore.toString()); }
-    skinNew = null; SKINS.forEach(s => { if (!SKINS_ALL && skinHow(s) === 'earn' && score >= s.need && oldBest < s.need) skinNew = s; });
-    if (skinNew) skinPreload(skinNew);
+    skinsBackfill();
+    const fresh = SKINS_ALL ? [] : skinsAward({ chili: chiliCaught, streak: bestStreak, boxes: boxesCompleted });
+    skinNew = fresh.length ? fresh : null;
+    fresh.forEach(skinPreload);
     recordRun();
   } else { frank.y=H*0.35; frank.vy=0; }
 }
@@ -2492,19 +2507,18 @@ function skinsOpen() {
 }
 function skinsRender() {
   const box = document.getElementById('fb-skins'); if (!box) return;
-  const cur = curSkin(), best = skinBest();
-  let h = '<div class="fbs-card"><h2>🎭 SKINS</h2><p class="fbs-sub">Dress up your frank. Beat a best score to unlock a costume.' +
-    (best > 0 ? '<br>Your best: ' + best.toLocaleString() : '') + '</p>';
+  const cur = curSkin();
+  let h = '<div class="fbs-card"><h2>🎭 SKINS</h2><p class="fbs-sub">Dress up your frank. Pull off a costume\'s challenge in one game to win it.</p>';
   Object.keys(SKIN_GROUPS).forEach(gid => {
   const list = SKINS.filter(s => (s.group || 'earn') === gid && (SKINS_ALL || skinHow(s) !== 'hidden'));
   if (!list.length) return;
   h += '<h3 class="fbs-h">' + SKIN_GROUPS[gid].name + (skinHow(list[0]) === 'soon' && !SKINS_ALL ? ' · coming soon' : '') + '</h3><div class="fbs-grid">';
   list.forEach(s => {
-    const open = skinUnlocked(s, best), on = s.id === cur.id, how = skinHow(s);
+    const open = skinUnlocked(s), on = s.id === cur.id, how = skinHow(s);
     const pic = s.frames ? 'skin-' + s.id + '-fly.png' : 'sp-frank.png';
     h += '<button type="button" class="fbs-skin' + (on ? ' on' : '') + (open ? '' : ' lock') + (open || how === 'earn' ? '' : ' soon') + '" data-skin="' + s.id + '"' +
       (open ? '' : ' aria-disabled="true"') + '><img src="' + pic + '" alt="">' + s.name +
-      '<small>' + (on ? '✓ Wearing' : open ? 'Tap to wear' : how === 'earn' ? '🔒 Score ' + s.need.toLocaleString() : '🔒 ' + (s.note || 'Coming soon')) + '</small></button>';
+      '<small>' + (on ? '✓ Wearing' : open ? 'Tap to wear' : how === 'earn' ? '🔒 ' + s.goal.text : '🔒 ' + (s.note || 'Coming soon')) + '</small></button>';
   });
   h += '</div>';
   });
@@ -2534,7 +2548,8 @@ function drawGameOver() {
   ctx.fillStyle='#aaa'; ctx.font='14px Arial'; ctx.fillText('SCORE',W/2,H*0.34+20);
   if (score>=bestScore&&score>0) { ctx.fillStyle='#FF6600'; ctx.font='bold 16px Arial'; ctx.fillText('★ NEW BEST! ★',W/2,H*0.34+42); }
   if (skinNew) {   // left-aligned and measured: iOS misplaces centred canvas text that has an emoji
-    const t='🎭 NEW SKIN: '+skinNew.name.toUpperCase()+'!'; ctx.fillStyle='#7CFC00'; ctx.font='bold 16px Arial'; ctx.textAlign='left';
+    const t='🎭 NEW SKIN'+(skinNew.length>1?'S':'')+': '+skinNew.map(k=>k.name.toUpperCase()).join(' + ')+'!'; ctx.fillStyle='#7CFC00'; ctx.font='bold 16px Arial'; ctx.textAlign='left';
+    if (ctx.measureText(t).width>W-20) ctx.font='bold '+Math.max(10,Math.floor(16*(W-20)/ctx.measureText(t).width))+'px Arial';
     ctx.fillText(t,(W-ctx.measureText(t).width)/2,H*0.34+64); ctx.textAlign='center';
   }
   const sy=H*0.50; ctx.fillStyle='#ddd'; ctx.font='14px Arial';
