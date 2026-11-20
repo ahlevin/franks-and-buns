@@ -1,2 +1,2 @@
 # Pack invites: franksandbuns.com/join/CODE shows the join page (the app opens instead when installed)
-/join/*  /join.html  200
+/join/*  /join  200
