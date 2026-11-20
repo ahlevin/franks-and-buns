@@ -426,9 +426,9 @@ const SKINS = [
   { id: 'classic', name: 'Classic', how: 'free' },
   { id: 'bunny', name: 'Bunny', how: 'free', frames: 2, fly: [-49.9, -38.6, 89.4, 58.3], bun: [-45.6, -57.6, 90.7, 59.6], grill: [-45.9, -57.7, 90.9, 59.8] },
   { id: 'shark', name: 'Shark', how: 'free', frames: 1, fly: [-59.5, -35.6, 98.7, 54.7], bun: [-49.5, -61.4, 92.6, 63.3], grill: [-49.9, -72.8, 92.1, 74.7] },
-  { id: 'superhero', name: 'Superhero', goal: { stat: 'streak', n: 5, text: 'Land 5 in a row' }, frames: 1, fly: [-47.1, -24.5, 85.8, 41.2], bun: [-48.2, -54.3, 92.7, 56.2], grill: [-48.0, -69.9, 92.4, 71.9] },
-  { id: 'rocket', name: 'Rocket', goal: { stat: 'streak', n: 10, text: 'Land 10 in a row' }, frames: 1, fly: [-56.9, -22.7, 96.8, 43.6], bun: [-51.6, -52.4, 99.0, 54.4], grill: [-51.8, -67.4, 99.1, 69.4] },
-  { id: 'unicorn', name: 'Unicorn', goal: { stat: 'boxes', n: 4, text: 'Reach the Dog Parade' }, frames: 1, fly: [-46.0, -33.3, 86.6, 46.9], bun: [-45.2, -54.3, 89.6, 56.3], grill: [-45.6, -66.3, 90.0, 68.2] },
+  { id: 'superhero', name: 'Superhero', goal: { stat: 'streak', n: 10, text: 'Land 10 in a row' }, frames: 1, fly: [-47.1, -24.5, 85.8, 41.2], bun: [-48.2, -54.3, 92.7, 56.2], grill: [-48.0, -69.9, 92.4, 71.9] },
+  { id: 'rocket', name: 'Rocket', goal: { stat: 'boxes', n: 4, text: 'Reach the Dog Parade' }, frames: 1, fly: [-56.9, -22.7, 96.8, 43.6], bun: [-51.6, -52.4, 99.0, 54.4], grill: [-51.8, -67.4, 99.1, 69.4] },
+  { id: 'unicorn', name: 'Unicorn', goal: { stat: 'streak', n: 20, text: 'Land 20 in a row' }, frames: 1, fly: [-46.0, -33.3, 86.6, 46.9], bun: [-45.2, -54.3, 89.6, 56.3], grill: [-45.6, -66.3, 90.0, 68.2] },
   { id: 'dragon', name: 'Dragon', goal: { stat: 'boxes', n: 8, text: 'Pack 8 boxes in a game' }, frames: 2, fly: [-56.6, -36.9, 108.5, 51.6], bun: [-53.6, -60.3, 109.9, 62.6], grill: [-54.1, -74.8, 111.7, 77.0] },
   { id: 'midnight', name: 'Midnight Frank', group: 'holiday', note: 'New Year\'s', frames: 1, fly: [-48.6, -31.7, 91.8, 47.6], bun: [-43.8, -54.7, 89.5, 56.6], grill: [-45.6, -61.2, 92.0, 63.1] },
   { id: 'cupid', name: 'Love at First Bite', group: 'holiday', note: 'Valentine\'s Day', frames: 1, fly: [-46.7, -27.9, 85.8, 47.1], bun: [-46.1, -54.1, 90.3, 56.1], grill: [-46.8, -66.2, 90.3, 68.1] },
@@ -464,20 +464,20 @@ function skinGoalMet(s, st) { return !!(s.goal && st && (st[s.goal.stat] || 0) >
 function skinNudge() {
   if (SKINS_ALL) return '';
   const st = { streak: bestStreak, boxes: boxesCompleted };
-  let best = null;
-  SKINS.forEach(s => {
-    if (skinHow(s) !== 'earn' || skinUnlocked(s) || !s.goal) return;
-    const have = st[s.goal.stat] || 0, frac = have / s.goal.n;
-    if (!best || frac > best.frac) best = { s: s, frac: frac, left: s.goal.n - have };
-  });
+  const nx = skinNext(); if (!nx) return '';
+  const have = st[nx.goal.stat] || 0, best = { s: nx, frac: have / nx.goal.n, left: nx.goal.n - have };
+  if (best.left <= 0) return 'Next game: ' + nx.name + ' is yours if you do it again!';
   if (!best || best.frac <= 0) return best ? 'Next costume: ' + best.s.name + ' · ' + best.s.goal.text : '';
   const g = best.s.goal;
   if (g.stat === 'streak') return best.left + ' more in a row for ' + best.s.name + '!';
   if (g.stat === 'boxes') return best.left + ' more box' + (best.left > 1 ? 'es' : '') + ' for ' + best.s.name + '!';
   return 'Next costume: ' + best.s.name + ' · ' + g.text;
 }
+// earned costumes come in order (Superhero, Rocket, Unicorn, Dragon), at most one per game
+function skinNext() { const won = skinsWon(); return SKINS.find(s => skinHow(s) === 'earn' && s.goal && won.indexOf(s.id) < 0) || null; }
+function skinPrev(s) { const list = SKINS.filter(k => skinHow(k) === 'earn' && k.goal), i = list.indexOf(s); return i > 0 ? list[i - 1] : null; }
 function skinsAward(st) {
-  const won = skinsWon(), fresh = SKINS.filter(s => skinHow(s) === 'earn' && won.indexOf(s.id) < 0 && skinGoalMet(s, st));
+  const won = skinsWon(), nx = skinNext(), fresh = nx && skinGoalMet(nx, st) ? [nx] : [];
   if (fresh.length) safeSet('fb_skins_earned', JSON.stringify(won.concat(fresh.map(s => s.id))));
   return fresh;
 }
@@ -2530,7 +2530,7 @@ function skinsOpen() {
 function skinsRender() {
   const box = document.getElementById('fb-skins'); if (!box) return;
   const cur = curSkin();
-  let h = '<div class="fbs-card"><h2>🎭 SKINS</h2><p class="fbs-sub">Dress up your frank. Pull off a costume\'s challenge in one game to win it.</p>';
+  let h = '<div class="fbs-card"><h2>🎭 SKINS</h2><p class="fbs-sub">Dress up your frank. Win them in order, one per game: pull off the challenge in a single game.</p>';
   Object.keys(SKIN_GROUPS).forEach(gid => {
   const list = SKINS.filter(s => (s.group || 'earn') === gid && (SKINS_ALL || skinHow(s) !== 'hidden'));
   if (!list.length) return;
@@ -2540,7 +2540,7 @@ function skinsRender() {
     const pic = s.frames ? 'skin-' + s.id + '-fly.png' : 'sp-frank.png';
     h += '<button type="button" class="fbs-skin' + (on ? ' on' : '') + (open ? '' : ' lock') + (open || how === 'earn' ? '' : ' soon') + '" data-skin="' + s.id + '"' +
       (open ? '' : ' aria-disabled="true"') + '><img src="' + pic + '" alt="">' + s.name +
-      '<small>' + (on ? '✓ Wearing' : open ? 'Tap to wear' : how === 'earn' ? '🔒 ' + s.goal.text : '🔒 ' + (s.note || 'Coming soon')) + '</small></button>';
+      '<small>' + (on ? '✓ Wearing' : open ? 'Tap to wear' : how === 'earn' ? '🔒 ' + (skinNext() === s || !skinPrev(s) ? '' : 'After ' + skinPrev(s).name + ': ') + s.goal.text : '🔒 ' + (s.note || 'Coming soon')) + '</small></button>';
   });
   h += '</div>';
   });
