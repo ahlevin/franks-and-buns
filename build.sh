@@ -8,7 +8,10 @@ rm -rf dist
 mkdir -p dist
 
 # Site pages, images and config files at the top level (same list as the old dashboard command)
-cp *.html *.png *.jpg *.ico ads.txt robots.txt sitemap.xml _headers dist/
+cp *.html *.png *.jpg *.ico ads.txt robots.txt sitemap.xml _headers _redirects dist/
+
+# App links: lets Pack invite links (franksandbuns.com/join/CODE) open the iPhone and Android apps
+cp -R .well-known dist/
 
 # Game sound files (WAV effects, intro, music) and their attribution
 if [ -d audio ]; then

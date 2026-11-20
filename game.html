@@ -953,7 +953,9 @@ window.fbShowCredits = fbShowCredits;
 const PACKS_API = (location.protocol === 'capacitor:' || location.protocol === 'file:' ||
   (location.hostname === 'localhost' && !location.port)) ? 'https://franksandbuns.com/api/' : '/api/';
 // Invites point at the site you're on (so preview invites stay on the preview); the apps invite to franksandbuns.com
-const PACKS_SHARE_URL = (PACKS_API.indexOf('https://') === 0 ? 'https://franksandbuns.com/game.html' : location.origin + location.pathname) + '?pack=';
+// franksandbuns.com/join/CODE opens the app when it's installed (iPhone Universal Links, Android App Links),
+// otherwise a join page with app-store and play-in-browser buttons (join.html)
+const PACKS_SHARE_URL = (PACKS_API.indexOf('https://') === 0 ? 'https://franksandbuns.com' : location.origin) + '/join/';
 let packsResult = null;   // Game Over: null, 'wait', 'off' (couldn't reach Packs) or the server's answer for this game
 let packsApproval = true;   // new Packs: the leader lets each player in, unless they pick "Anyone with the code"
 let packsMe = null, packsView = 'home', packsCur = null, packsBoard = 'week', packsBusy = false, packsMsg = '', packsConfirm = '', packsEdit = false, packsPrefill = '';
@@ -1337,6 +1339,18 @@ function packsOpenResults() { packsOpen(packsToken() && packsResult && packsResu
   try { code = (new URLSearchParams(location.search).get('pack') || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 6).toUpperCase(); } catch (e) {}
   if (code) { packsPrefill = code; window.addEventListener('load', () => packsOpen('join')); }
   if (packsToken()) setTimeout(packsFlush, 3000);
+})();
+// In the apps: a Pack invite link that opened the app (or brought it back) goes straight to Join a Pack
+(function packsAppLinks() {
+  const capApp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+  if (!capApp || !capApp.addListener) return;
+  const handle = url => {
+    const m = String(url || '').match(/\/join\/([A-Za-z0-9]{6})(?![A-Za-z0-9])|[?&]pack=([A-Za-z0-9]{6})/);
+    if (m) packsOpen('join', (m[1] || m[2]).toUpperCase());
+  };
+  try { capApp.addListener('appUrlOpen', e => handle(e && e.url)); } catch (e) {}
+  const launch = () => { try { capApp.getLaunchUrl().then(r => handle(r && r.url), () => {}); } catch (e) {} };
+  if (document.readyState === 'complete') launch(); else window.addEventListener('load', launch);
 })();
 
 function sndFlap()      {

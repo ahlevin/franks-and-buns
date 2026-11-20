@@ -1,0 +1,14 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["G245UL7Y68.com.franksandbuns.game"],
+        "components": [
+          { "/": "/join/*", "comment": "Pack invites open the app when it's installed" },
+          { "/": "/game.html", "?": { "pack": "?*" }, "comment": "older Pack invites" },
+          { "/": "/game", "?": { "pack": "?*" }, "comment": "older Pack invites (address without .html)" }
+        ]
+      }
+    ]
+  }
+}

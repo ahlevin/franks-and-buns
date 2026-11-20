@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.franksandbuns.game",
+      "sha256_cert_fingerprints": ["FF:93:10:B6:AA:06:46:4F:E8:D0:6B:95:A9:B7:82:F7:67:EA:62:6E:C5:E1:6B:71:94:A4:87:1D:48:66:97:68"]
+    }
+  }
+]
