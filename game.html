@@ -616,6 +616,7 @@ const wavBuffers = new Map();
 const chaseSounds = new Set();
 
 // Fetch and decode every WAV once, silently, before it is needed (no sound until the player taps)
+let wavLoadNote = '';   // e.g. "22 of 22", shown small in Credits to help check a build
 function prepareWavs() {
   if (audioCtx && !wavEffectsBus) { wavEffectsBus = audioCtx.createGain(); wavEffectsBus.connect(audioCtx.destination); }
   if (wavLoading) return wavLoading;
@@ -626,10 +627,26 @@ function prepareWavs() {
     const d = decoder || audioCtx; if (!d) return bad(new Error('no audio'));
     const r = d.decodeAudioData(buf, ok, bad); if (r && r.then) r.then(ok, bad);
   });
+  // Read a sound file. Judge it by its bytes, not the HTTP status: the iPhone app (Capacitor) serves .wav
+  // files without an HTTP status, which fetch reports as status 0 even though the whole file arrived.
+  const isWav = ab => ab && ab.byteLength > 44 && String.fromCharCode.apply(null, new Uint8Array(ab, 0, 4)) === 'RIFF';
+  const viaXhr = url => new Promise((ok, bad) => {
+    const x = new XMLHttpRequest(); x.open('GET', url); x.responseType = 'arraybuffer';
+    x.onload = () => ok(x.response); x.onerror = () => bad(new Error(url)); x.send();
+  });
+  const readWav = async url => {
+    let ab = null;
+    try { ab = await (await fetch(url)).arrayBuffer(); } catch (e) {}
+    if (!isWav(ab)) { try { ab = await viaXhr(url); } catch (e) {} }
+    if (!isWav(ab)) throw new Error('not a WAV: ' + url);
+    return ab;
+  };
   wavLoading = Promise.allSettled(Object.entries(WAV_FILES).map(async ([name, url]) => {
-    const res = await fetch(url); if (!res.ok) throw new Error(url);
-    wavBuffers.set(name, await decode(await res.arrayBuffer()));
-  })).then(results => { wavFailed = results.some(r => r.status === 'rejected'); });
+    wavBuffers.set(name, await decode(await readWav(url)));
+  })).then(results => {
+    wavFailed = results.some(r => r.status === 'rejected');
+    wavLoadNote = (Object.keys(WAV_FILES).length - results.filter(r => r.status === 'rejected').length) + ' of ' + Object.keys(WAV_FILES).length;
+  });
   return wavLoading;
 }
 
@@ -706,7 +723,7 @@ prepareWavs();   // start loading right away; nothing plays until the first tap 
 // --- Music credits (CC BY 4.0 attribution), opened from the Credits button and the page footer ---
 function fbShowCredits() {
   let box = document.getElementById('fb-credits');
-  if (box) { box.style.display = 'flex'; return false; }
+  if (box) { box.style.display = 'flex'; fbCreditsSoundNote(); return false; }
   box = document.createElement('div');
   box.id = 'fb-credits'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'Credits');
   box.innerHTML =
@@ -716,6 +733,7 @@ function fbShowCredits() {
     '<p>Original track (ISRC USUAN1500040):<br><a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1500040" target="_blank" rel="noopener">incompetech.com/music/royalty-free/index.html?isrc=USUAN1500040</a></p>' +
     '<p>Changes: excerpted, converted to mono, and edited into a 30.476-second gameplay loop.</p>' +
     '<p class="fbcr-small">The opening chase music, Dog Parade music and game sound effects are original cues made for Franks &amp; Buns.</p>' +
+    '<p class="fbcr-small" id="fbcr-sound"></p>' +
     '<button type="button" class="fbcr-close">Close</button></div>';
   const css = document.createElement('style');
   css.textContent =
@@ -728,8 +746,10 @@ function fbShowCredits() {
   ['touchstart', 'touchend', 'mousedown', 'pointerdown'].forEach(t => box.addEventListener(t, e => e.stopPropagation(), { passive: true }));
   box.addEventListener('click', e => { if (e.target === box || e.target.classList.contains('fbcr-close')) box.style.display = 'none'; });
   (document.body || document.documentElement).appendChild(box);
+  fbCreditsSoundNote();
   return false;
 }
+function fbCreditsSoundNote() { const n = document.getElementById('fbcr-sound'); if (n) n.textContent = wavLoadNote ? 'Sound files loaded: ' + wavLoadNote : ''; }
 window.fbShowCredits = fbShowCredits;
 
 // --- Packs: private Wienerboards for groups of friends (My Packs, Create a Pack, Join a Pack) ---
