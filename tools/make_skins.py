@@ -22,7 +22,11 @@ BODY = {'bunny': (125, 670, 355, 525), 'dragon': (156, 621, 350, 518), 'rocket':
         'bernedoodle': (80, 690, 330, 555), 'bernese': (76, 696, 350, 560), 'corgi': (40, 670, 300, 525),
         'dachshund': (76, 691, 320, 540), 'dalmatian': (80, 690, 340, 550), 'frenchie': (40, 696, 300, 530),
         'golden': (110, 700, 330, 555), 'husky': (96, 691, 350, 560), 'labradoodle': (70, 700, 300, 560),
-        'poodle': (126, 701, 320, 545), 'shiba': (50, 700, 330, 560)}
+        'poodle': (126, 701, 320, 545), 'shiba': (50, 700, 330, 560),
+        # cat set
+        'british': (95, 690, 310, 535), 'calico': (116, 686, 320, 530), 'mainecoon': (120, 680, 300, 525),
+        'tabby': (106, 681, 330, 530), 'persian': (90, 700, 310, 550), 'ragdoll': (136, 691, 330, 550),
+        'siamese': (110, 695, 310, 525), 'sphynx': (80, 696, 320, 525), 'tuxedo': (100, 690, 335, 550)}
 # source strips for each skin (a second file is the B pose of a 2-frame flap)
 FRAMES = {'bunny': ['bunny-a', 'bunny-b'], 'dragon': ['dragon-a', 'dragon-b'], 'rocket': ['rocket'],
           'shark': ['shark'], 'superhero': ['superhero'], 'unicorn': ['unicorn'],
@@ -32,9 +36,12 @@ FRAMES = {'bunny': ['bunny-a', 'bunny-b'], 'dragon': ['dragon-a', 'dragon-b'], '
           'bernedoodle': ['dogs/bernedoodle'], 'bernese': ['dogs/bernese-mountain-dog'], 'corgi': ['dogs/corgi'],
           'dachshund': ['dogs/dachshund'], 'dalmatian': ['dogs/dalmatian'], 'frenchie': ['dogs/french-bulldog'],
           'golden': ['dogs/golden-retriever'], 'husky': ['dogs/husky'], 'labradoodle': ['dogs/labradoodle'],
-          'poodle': ['dogs/poodle'], 'shiba': ['dogs/shiba-inu']}
+          'poodle': ['dogs/poodle'], 'shiba': ['dogs/shiba-inu'],
+          'british': ['cats/british-shorthair'], 'calico': ['cats/calico'], 'mainecoon': ['cats/maine-coon'],
+          'tabby': ['cats/orange-tabby'], 'persian': ['cats/persian'], 'ragdoll': ['cats/ragdoll'],
+          'siamese': ['cats/siamese'], 'sphynx': ['cats/sphynx'], 'tuxedo': ['cats/tuxedo']}
 # bun widths measured by hand where the costume hides the bun's top (poodle fluff)
-BUN_PX = {'poodle': 560}
+BUN_PX = {'poodle': 560, 'ragdoll': 600, 'persian': 600}
 ONLY = sys.argv[3:]   # optional: just these skins
 
 def runs(alpha):

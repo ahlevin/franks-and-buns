@@ -1,0 +1,11 @@
+FRANKS & BUNS CAT SKINS
+
+Nine transparent source PNG strips created with the built-in image generator.
+Persian, Orange Tabby, Tuxedo, Siamese, Calico, British Shorthair, Maine Coon, Ragdoll, Sphynx.
+Tabby, tuxedo and calico describe coat patterns rather than breeds.
+
+Each strip has three states from left to right: costumed frank alone, plain golden bun, grilled bun with two steam wisps.
+
+These are source artwork, not yet integrated or tested in gameplay. Trim individual states with padding, normalize scale and align using the frank body. Keep ears, tails, fur and steam outside collision geometry. Check readability at actual game size. No animation pairs included.
+
+Exact prompts are included. Every prompt begins with the user's style text with its costume substituted.
