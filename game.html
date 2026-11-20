@@ -419,6 +419,41 @@ if (ART_SET === 'a' || ART_SET === 'b') {
 function spriteReady(k) { const im = sp[k]; return !!(im && im.complete && im.naturalWidth > 0); }
 function artReady(k) { const im = bgArt[k]; return !!(im && im.complete && im.naturalWidth > 0); }
 
+// --- Skins: costumes for the hot dog, unlocked by best score (art: new-art/skins, cut by tools/make_skins.py) ---
+// fly/bun/grill = [x, y, width, height] in game pixels: fly is placed around the hot dog body (hit checks are
+// unchanged, so wings, ears and tails never cost a life); bun and grill sit in a caught bun (y is added to hh).
+const SKINS = [
+  { id: 'classic', name: 'Classic', need: 0 },
+  { id: 'bunny', name: 'Bunny', need: 2500, frames: 2, fly: [-49.9, -38.6, 89.4, 58.3], bun: [-45.6, -57.6, 90.7, 59.6], grill: [-45.9, -57.7, 90.9, 59.8] },
+  { id: 'shark', name: 'Shark', need: 5000, frames: 1, fly: [-59.5, -35.6, 98.7, 54.7], bun: [-49.5, -61.4, 92.6, 63.3], grill: [-49.9, -72.8, 92.1, 74.7] },
+  { id: 'superhero', name: 'Superhero', need: 10000, frames: 1, fly: [-47.1, -24.5, 85.8, 41.2], bun: [-48.2, -54.3, 92.7, 56.2], grill: [-48.0, -69.9, 92.4, 71.9] },
+  { id: 'rocket', name: 'Rocket', need: 20000, frames: 1, fly: [-56.9, -22.7, 96.8, 43.6], bun: [-51.6, -52.4, 99.0, 54.4], grill: [-51.8, -67.4, 99.1, 69.4] },
+  { id: 'unicorn', name: 'Unicorn', need: 35000, frames: 1, fly: [-46.0, -33.3, 86.6, 46.9], bun: [-45.2, -54.3, 89.6, 56.3], grill: [-45.6, -66.3, 90.0, 68.2] },
+  { id: 'dragon', name: 'Dragon', need: 50000, frames: 2, fly: [-56.6, -36.9, 108.5, 51.6], bun: [-53.6, -60.3, 109.9, 62.6], grill: [-54.1, -74.8, 111.7, 77.0] }
+];
+const skinImg = {};   // 'dragon-fly-b' -> Image, loaded when first needed
+function skinPic(id, part) {
+  const k = id + '-' + part;
+  if (!skinImg[k]) { const im = new Image(); im.src = 'skin-' + k + '.png'; skinImg[k] = im; }
+  const im = skinImg[k]; return (im.complete && im.naturalWidth > 0) ? im : null;
+}
+function skinById(id) { return SKINS.find(s => s.id === id) || SKINS[0]; }
+// try every skin on the preview site with ?skins=all (never on franksandbuns.com or in the apps)
+const SKINS_ALL = new URLSearchParams(location.search).get('skins') === 'all' && location.hostname !== 'franksandbuns.com' &&
+  location.protocol !== 'capacitor:' && !(location.hostname === 'localhost' && !location.port);
+function skinBest() { return Math.max(bestScore, (packsMe && packsMe.player && packsMe.player.best) || 0); }
+function skinUnlocked(s, best) { return SKINS_ALL || (best === undefined ? skinBest() : best) >= s.need; }
+function curSkin() { const s = skinById(safeGet('fb_skin') || 'classic'); return skinUnlocked(s) ? s : SKINS[0]; }
+let skinNew = null;   // Game Over: the skin this game unlocked
+function skinPreload(s) { if (s.frames) ['fly', 'bun', 'grill'].forEach(p => { skinPic(s.id, p); if (s.frames > 1) skinPic(s.id, p + '-b'); }); }
+// draws a skin's picture for part 'fly', 'bun' or 'grill' with its top-left at (ox, oy); false if not loaded yet
+function drawSkinPart(s, part, b, ox, oy) {
+  if (!s.frames) return false;
+  const im = (b && s.frames > 1 && skinPic(s.id, part + '-b')) || skinPic(s.id, part);
+  if (!im) return false;
+  const g = s[part]; ctx.drawImage(im, ox + g[0], oy + g[1], g[2], g[3]); return true;
+}
+
 // --- Preload intro images ---
 const imgs = {};
 ['chef','dog','dognodog','hotdog','chefarm','gamedog'].forEach(name => {
@@ -1655,6 +1690,8 @@ function handleScoresTap(clientX, clientY) {
   if (p.x >= r.x - 6 && p.x <= r.x + r.w + 4 && p.y >= r.y - 6 && p.y <= r.y + r.h + 6) { ensureAudio(); loadRuns(); lastRunIndex = -1; scoresOpen = true; sndStreak(); return true; }
   const k = packsBtnRect();
   if (p.x >= k.x - 4 && p.x <= k.x + k.w + 6 && p.y >= k.y - 6 && p.y <= k.y + k.h + 6) { ensureAudio(); sndStreak(); packsOpen(); return true; }
+  const sk = skinsBtnRect();   // SKINS button, or the hot dog above it
+  if (p.x >= W / 2 - 70 && p.x <= W / 2 + 70 && p.y >= sk.y - 62 && p.y <= sk.y + sk.h + 6) { ensureAudio(); sndStreak(); skinsOpen(); return true; }
   return false;
 }
 
@@ -1709,7 +1746,7 @@ canvas.addEventListener('mousedown', e => {
 });
 canvas.addEventListener('mouseup', onRelease);
 document.addEventListener('keydown', e => {
-  if (e.code === 'Space') { if (packsIsOpen()) return; e.preventDefault(); if (scoresOpen) { scoresOpen = false; return; } onTap(); }
+  if (e.code === 'Space') { if (packsIsOpen() || skinsIsOpen()) return; e.preventDefault(); if (scoresOpen) { scoresOpen = false; return; } onTap(); }
 });
 document.addEventListener('keyup',   e => { if (e.code === 'Space') onRelease(); });
 
@@ -2075,7 +2112,10 @@ function loseLife() {
   shakeAmount=8;
   if (lives<=0) {
     state=STATE.GAMEOVER; frank.alive=false; sndGameOver();
+    const oldBest = skinBest();
     if (score>bestScore) { bestScore=score; safeSet('fb_best',bestScore.toString()); }
+    skinNew = null; SKINS.forEach(s => { if (!SKINS_ALL && score >= s.need && oldBest < s.need) skinNew = s; });
+    if (skinNew) skinPreload(skinNew);
     recordRun();
   } else { frank.y=H*0.35; frank.vy=0; }
 }
@@ -2086,7 +2126,9 @@ function loseLife() {
 function drawFrank(x, y, sq, st) {
   ctx.save(); ctx.translate(x,y); ctx.scale(sq,st);
   const hw=FRANK_W/2, hh=FRANK_H/2;
-  if (spriteReady('frank')) {
+  if (drawSkinPart(curSkin(), 'fly', sq > 1.08, 0, 0)) {
+    // costume skin
+  } else if (spriteReady('frank')) {
     ctx.drawImage(sp.frank, -41, -14, 82, 28);   // 78x24 body plus outline glow; hit checks use FRANK_ART_W/H
   } else {
   // shadow
@@ -2158,6 +2200,8 @@ function drawBun(b) {
   ctx.beginPath(); ctx.ellipse(0,-hh-4,hw-14,2.5,0,0,Math.PI*2); ctx.fillStyle='rgba(255,245,210,0.22)'; ctx.fill();
   // slit
   ctx.beginPath(); ctx.moveTo(-hw+5,0); ctx.lineTo(hw-5,0); ctx.strokeStyle='rgba(80,35,5,0.55)'; ctx.lineWidth=1.8; ctx.stroke();
+  } else if (b.scored && drawSkinPart(curSkin(), b.grilled ? 'grill' : 'bun', false, 0, hh)) {
+    // costume skin lying in the bun
   } else if (b.scored && spriteReady(b.grilled ? 'grilled-frank' : 'bun-frank')) {
     ctx.drawImage(sp[b.grilled ? 'grilled-frank' : 'bun-frank'], -44, hh+5-37, 88, 37);   // caught: hot dog inside the bun
   } else if (b.grilled && spriteReady('grilled')) {
@@ -2233,7 +2277,7 @@ function drawBun(b) {
     ctx.fillText('5x BONUS', 0, -hh-26);
     ctx.restore();
   }
-  if (b.scored && spriteReady('bun-frank')) {
+  if (b.scored && (curSkin().frames ? skinPic(curSkin().id, b.grilled ? 'grill' : 'bun') : spriteReady('bun-frank'))) {
     // hot dog is already drawn inside the caught-bun picture
   } else if (b.scored && spriteReady('frank')) {
     ctx.drawImage(sp.frank, -39, -15, 78, 30);
@@ -2337,7 +2381,7 @@ function drawMenu() {
   ctx.fillRect(0,0,W,H);
   ctx.fillStyle='#FFD700'; ctx.font='bold 38px Arial'; ctx.textAlign='center';
   ctx.fillText('FRANKS',W/2,H*0.25); ctx.fillText('& BUNS',W/2,H*0.25+42);
-  ctx.font='60px Arial'; ctx.fillText('🌭',W/2,H*0.48);
+  drawMenuSkin();
   ctx.fillStyle='#ddd'; ctx.font='16px Arial';
   ctx.fillText('TAP to boost your frank up',W/2,H*0.58);
   ctx.fillText('RELEASE to let it drop',W/2,H*0.58+24);
@@ -2356,6 +2400,70 @@ function drawMenu() {
   ctx.fillStyle = '#FFD700'; ctx.font = 'bold ' + (k.w < 150 ? 13 : 15) + 'px Arial';
   ctx.fillText('🌭 MY PACKS', k.x + k.w / 2, k.y + k.h / 2 + 6);
   if (scoresOpen) drawScoresPanel();
+}
+function skinsBtnRect() { const w = 112, h = 24; return { x: W / 2 - w / 2, y: H * 0.44 + 24, w: w, h: h }; }
+function drawMenuSkin() {
+  const s = curSkin(), cy = H * 0.44, flap = Math.floor(frameCount / 18) % 2 === 1;
+  ctx.save(); ctx.translate(W / 2, cy + Math.sin(frameCount * 0.05) * 3); ctx.scale(1.25, 1.25);
+  if (!drawSkinPart(s, 'fly', flap, 0, 0)) {
+    if (spriteReady('frank')) ctx.drawImage(sp.frank, -41, -14, 82, 28);
+    else { ctx.font = '48px Arial'; ctx.textAlign = 'center'; ctx.fillText('🌭', 0, 16); }
+  }
+  ctx.restore();
+  const r = skinsBtnRect();
+  ctx.fillStyle = 'rgba(0,0,0,0.45)'; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.fill();
+  ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.5; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.stroke();
+  ctx.fillStyle = '#FFD700'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center';
+  ctx.fillText('🎭 SKINS', r.x + r.w / 2, r.y + r.h / 2 + 4);
+}
+// --- Skins picker (HTML, like My Packs) ---
+function skinsClose() { const b = document.getElementById('fb-skins'); if (b) b.style.display = 'none'; }
+function skinsIsOpen() { const b = document.getElementById('fb-skins'); return !!(b && b.style.display !== 'none'); }
+function skinsOpen() {
+  let box = document.getElementById('fb-skins');
+  if (!box) {
+    box = document.createElement('div'); box.id = 'fb-skins'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'Skins');
+    const css = document.createElement('style');
+    css.textContent =
+      '#fb-skins{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(10,5,0,.86);padding:12px;box-sizing:border-box}' +
+      '#fb-skins .fbs-card{max-width:420px;width:100%;max-height:100%;overflow-y:auto;box-sizing:border-box;background:#2a1a0a;color:#f3e3c3;border:2px solid rgba(255,215,0,.5);border-radius:16px;padding:16px;font:14px/1.4 -apple-system,Segoe UI,Roboto,Arial,sans-serif;-webkit-overflow-scrolling:touch}' +
+      '#fb-skins h2{margin:0 0 4px;color:#FFD700;font:bold 22px Arial;text-align:center}' +
+      '#fb-skins .fbs-sub{text-align:center;color:#c8a878;font-size:13px;margin:0 0 12px}' +
+      '#fb-skins .fbs-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}' +
+      '#fb-skins .fbs-skin{background:rgba(0,0,0,.25);border:2px solid rgba(255,215,0,.25);border-radius:12px;padding:8px 6px;color:#f3e3c3;font:600 14px Arial;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px}' +
+      '#fb-skins .fbs-skin img{width:100%;max-width:150px;height:64px;object-fit:contain}' +
+      '#fb-skins .fbs-skin small{font:12px Arial;color:#c8a878}' +
+      '#fb-skins .fbs-skin.on{border-color:#FFD700;background:rgba(255,215,0,.12)}#fb-skins .fbs-skin.on small{color:#FFD700}' +
+      '#fb-skins .fbs-skin.lock{cursor:default}#fb-skins .fbs-skin.lock img{filter:brightness(0) opacity(.45)}' +
+      '#fb-skins .fbs-close{font:600 15px Arial;border-radius:999px;padding:11px 16px;border:1px solid rgba(255,179,71,.5);background:transparent;color:#ffb347;cursor:pointer;width:100%;margin:12px 0 0}';
+    document.head.appendChild(css);
+    box.addEventListener('click', e => {
+      const t = e.target.closest('[data-skin],[data-a]');
+      if (e.target === box || (t && t.getAttribute('data-a') === 'close')) { skinsClose(); return; }
+      if (!t || !t.hasAttribute('data-skin')) return;
+      const s = skinById(t.getAttribute('data-skin'));
+      if (!skinUnlocked(s)) return;
+      safeSet('fb_skin', s.id); skinPreload(s); sndStreak(); skinsRender();
+    });
+    ['touchstart', 'touchend', 'mousedown', 'pointerdown', 'keydown'].forEach(t => box.addEventListener(t, e => e.stopPropagation(), { passive: true }));
+    document.body.appendChild(box);
+  }
+  box.style.display = 'flex'; skinsRender();
+}
+function skinsRender() {
+  const box = document.getElementById('fb-skins'); if (!box) return;
+  const cur = curSkin(), best = skinBest();
+  let h = '<div class="fbs-card"><h2>🎭 SKINS</h2><p class="fbs-sub">Dress up your frank. Beat a best score to unlock each costume.' +
+    (best > 0 ? '<br>Your best: ' + best.toLocaleString() : '') + '</p><div class="fbs-grid">';
+  SKINS.forEach(s => {
+    const open = skinUnlocked(s, best), on = s.id === cur.id;
+    const pic = s.frames ? 'skin-' + s.id + '-fly.png' : 'sp-frank.png';
+    h += '<button type="button" class="fbs-skin' + (on ? ' on' : '') + (open ? '' : ' lock') + '" data-skin="' + s.id + '"' +
+      (open ? '' : ' aria-disabled="true"') + '><img src="' + pic + '" alt="">' + s.name +
+      '<small>' + (on ? '✓ Wearing' : open ? 'Tap to wear' : '🔒 Score ' + s.need.toLocaleString()) + '</small></button>';
+  });
+  h += '</div><button type="button" class="fbs-close" data-a="close">Close</button></div>';
+  box.innerHTML = h;
 }
 function scoresPanelRect() { const pw = Math.min(W - 32, 340), ph = gcPlugin() ? 350 : 300; return { x: W / 2 - pw / 2, y: H * 0.5 - ph / 2, w: pw, h: ph }; }
 function drawScoresPanel() {
@@ -2379,6 +2487,10 @@ function drawGameOver() {
   ctx.fillStyle='#FFD700'; ctx.font='bold 28px Arial'; ctx.fillText(score.toLocaleString(),W/2,H*0.34);
   ctx.fillStyle='#aaa'; ctx.font='14px Arial'; ctx.fillText('SCORE',W/2,H*0.34+20);
   if (score>=bestScore&&score>0) { ctx.fillStyle='#FF6600'; ctx.font='bold 16px Arial'; ctx.fillText('★ NEW BEST! ★',W/2,H*0.34+42); }
+  if (skinNew) {   // left-aligned and measured: iOS misplaces centred canvas text that has an emoji
+    const t='🎭 NEW SKIN: '+skinNew.name.toUpperCase()+'!'; ctx.fillStyle='#7CFC00'; ctx.font='bold 16px Arial'; ctx.textAlign='left';
+    ctx.fillText(t,(W-ctx.measureText(t).width)/2,H*0.34+64); ctx.textAlign='center';
+  }
   const sy=H*0.50; ctx.fillStyle='#ddd'; ctx.font='14px Arial';
   ctx.fillText('Franks Landed: '+franksLanded+'  ·  Boxes Packed: '+boxesCompleted,W/2,sy);
   ctx.fillText('Best Streak: '+bestStreak+'  ·  Best: '+bestScore.toLocaleString(),W/2,sy+24);

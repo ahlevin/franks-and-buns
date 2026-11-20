@@ -1,0 +1,17 @@
+FRANKS & BUNS COSTUME SPRITES
+
+Created with the built-in image generation tool.
+Eight transparent PNG strips, each with three states from left to right:
+1. Costumed frank alone
+2. Costumed frank in plain golden bun
+3. Costumed frank in grilled bun with steam
+
+dragon-a / dragon-b: wings up / lowered.
+bunny-a / bunny-b: ears up / lowered.
+rocket, superhero, shark, unicorn: single poses.
+
+These are source art strips, not yet integrated into the game.
+Trim each state with padding. Preserve a shared body anchor and scale across A/B frames to prevent animation jitter; do not independently fit each frame to its visible bounds. Check compactness at the actual game sprite size, especially the bunny ears and dragon wings. Keep collision geometry tied to the frank body rather than decorative appendages.
+The flame is already painted into the dragon strips. A separate tap-triggered flame would require separating it from the art or another art pass.
+
+The exact generation and edit prompts are included. Every prompt starts with the requested style text with its costume substituted.
