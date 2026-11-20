@@ -1,0 +1,28 @@
+FRANKS & BUNS — Bugged Out
+4 skins created with the built-in image generator.
+
+Each transparent PNG strip is 2172 x 724 pixels.
+LEFT: costumed frank alone.
+CENTER: same costume in plain golden bun.
+RIGHT: same costume in grilled bun with two steam wisps.
+These are three game states, not animation frames.
+
+SKINS
+- buzz-bun
+- lucky-bug
+- social-butterfly
+- glow-getter
+
+PREPARING FOR THE GAME
+These source strips have not been integrated or tested in gameplay.
+Separate the three states and trim transparent padding. Align the sausage
+body anchor and scale to your existing sprites. Inspect each crop's visual
+bounds; do not assume identical dimensions. Ignore near-transparent pixels
+when finding trim bounds (Professor Frank and Special Delivery include
+corner pixels with alpha 1/255). Keep costume decorations outside collision
+calculations. Test readability at mobile size, especially report-card grades.
+Effects, wings, steam and accessories are baked into the artwork. Independent
+animation requires separate layers or additional poses. No animation pairs
+are included. The firefly light is static, not an animated glow.
+
+Exact generation prompts are included in prompts.txt.

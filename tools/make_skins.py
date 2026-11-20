@@ -44,11 +44,13 @@ FRAMES = {'bunny': ['bunny-a', 'bunny-b'], 'dragon': ['dragon-a', 'dragon-b'], '
 BUN_PX = {'poodle': 560, 'ragdoll': 600, 'persian': 600}
 # Collections cut by automatic body measurement (folder -> skins); ids are the file names without hyphens
 AUTO_SETS = ['questionable-decisions', 'space-cases', 'tiny-terrors', 'deep-sea-dogs', 'final-boss-franks', 'mythical-misfits',
-             'trash-pack', 'sports', 'snack-pack', 'cozy-crew', 'main-character-energy']
+             'trash-pack', 'sports', 'snack-pack', 'cozy-crew', 'main-character-energy',
+             'academic', 'bugged-out', 'side-hustles', 'throwback-franks', 'wild-things']
 import glob, os
 for folder in AUTO_SETS:
     for f in sorted(glob.glob(f'{SRC}/{folder}/*.png')):
-        sid = os.path.basename(f)[:-4].replace('-', '')[:24]
+        # ids are letters only (the Packs server keeps costumes by id): y2k-byte -> ytwokbyte
+        sid = os.path.basename(f)[:-4].replace('-', '').replace('2', 'two')[:24]
         assert sid not in FRAMES, sid
         FRAMES[sid] = [f'{folder}/{os.path.basename(f)[:-4]}']
 # Automatic body measurement: the band of rows at least 75% as wide as the widest, corrected by the average
