@@ -448,6 +448,22 @@ function skinHow(s) { return s.how || (SKIN_GROUPS[s.group || 'earn'] || SKIN_GR
 function skinsWon() { try { const a = JSON.parse(safeGet('fb_skins_earned') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
 function skinGoalMet(s, st) { return !!(s.goal && st && (st[s.goal.stat] || 0) >= s.goal.n); }
 // one game's stats -> skins it wins; returns the newly won ones
+// Game Over hint: the locked costume this game came closest to, e.g. '4 more in a row for Rocket'
+function skinNudge() {
+  if (SKINS_ALL) return '';
+  const st = { streak: bestStreak, boxes: boxesCompleted };
+  let best = null;
+  SKINS.forEach(s => {
+    if (skinHow(s) !== 'earn' || skinUnlocked(s) || !s.goal) return;
+    const have = st[s.goal.stat] || 0, frac = have / s.goal.n;
+    if (!best || frac > best.frac) best = { s: s, frac: frac, left: s.goal.n - have };
+  });
+  if (!best || best.frac <= 0) return best ? 'Next costume: ' + best.s.name + ' · ' + best.s.goal.text : '';
+  const g = best.s.goal;
+  if (g.stat === 'streak') return best.left + ' more in a row for ' + best.s.name + '!';
+  if (g.stat === 'boxes') return best.left + ' more box' + (best.left > 1 ? 'es' : '') + ' for ' + best.s.name + '!';
+  return 'Next costume: ' + best.s.name + ' · ' + g.text;
+}
 function skinsAward(st) {
   const won = skinsWon(), fresh = SKINS.filter(s => skinHow(s) === 'earn' && won.indexOf(s.id) < 0 && skinGoalMet(s, st));
   if (fresh.length) safeSet('fb_skins_earned', JSON.stringify(won.concat(fresh.map(s => s.id))));
@@ -2483,7 +2499,7 @@ function skinsOpen() {
       '#fb-skins .fbs-skin img{width:100%;max-width:150px;height:64px;object-fit:contain}' +
       '#fb-skins .fbs-skin small{font:12px Arial;color:#c8a878}' +
       '#fb-skins .fbs-skin.on{border-color:#FFD700;background:rgba(255,215,0,.12)}#fb-skins .fbs-skin.on small{color:#FFD700}' +
-      '#fb-skins .fbs-skin.lock{cursor:default}#fb-skins .fbs-skin.lock img{filter:brightness(0) opacity(.45)}#fb-skins .fbs-skin.lock.soon img{filter:opacity(.6)}' +
+      '#fb-skins .fbs-skin.lock{cursor:default}#fb-skins .fbs-skin{position:relative}#fb-skins .fbs-skin.lock img{filter:saturate(.85) opacity(.6)}#fb-skins .fbs-skin.lock::after{content:"🔒";position:absolute;top:6px;right:8px;font-size:16px}' +
       '#fb-skins .fbs-close{font:600 15px Arial;border-radius:999px;padding:11px 16px;border:1px solid rgba(255,179,71,.5);background:transparent;color:#ffb347;cursor:pointer;width:100%;margin:12px 0 0}';
     document.head.appendChild(css);
     box.addEventListener('click', e => {
@@ -2541,6 +2557,8 @@ function drawGameOver() {
   ctx.fillStyle='#FFD700'; ctx.font='bold 28px Arial'; ctx.fillText(score.toLocaleString(),W/2,H*0.34);
   ctx.fillStyle='#aaa'; ctx.font='14px Arial'; ctx.fillText('SCORE',W/2,H*0.34+20);
   if (score>=bestScore&&score>0) { ctx.fillStyle='#FF6600'; ctx.font='bold 16px Arial'; ctx.fillText('★ NEW BEST! ★',W/2,H*0.34+42); }
+  const nudge = skinNew ? '' : skinNudge();
+  if (nudge) { ctx.fillStyle='#ffb347'; ctx.font='bold 14px Arial'; const nw=ctx.measureText(nudge).width; if (nw>W-20) ctx.font='bold '+Math.max(10,Math.floor(14*(W-20)/nw))+'px Arial'; ctx.fillText(nudge,W/2,H*0.34+64); }
   if (skinNew) {   // left-aligned and measured: iOS misplaces centred canvas text that has an emoji
     const t='🎭 NEW SKIN'+(skinNew.length>1?'S':'')+': '+skinNew.map(k=>k.name.toUpperCase()).join(' + ')+'!'; ctx.fillStyle='#7CFC00'; ctx.font='bold 16px Arial'; ctx.textAlign='left';
     if (ctx.measureText(t).width>W-20) ctx.font='bold '+Math.max(10,Math.floor(16*(W-20)/ctx.measureText(t).width))+'px Arial';
