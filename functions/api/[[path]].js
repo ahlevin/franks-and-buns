@@ -6,6 +6,8 @@ const ALPHA = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';   // 32 symbols, no 0/O/1/I to
 const MAX_PACKS_PER_PLAYER = 5;
 const MAX_MEMBERS = 50;
 const NEW_PLAYERS_PER_IP_PER_DAY = 20;
+const NEW_SILENT_PLAYERS_PER_IP_PER_DAY = 200;   // nameless profiles the game makes to keep costumes (schools and phone networks share IPs)
+const MAX_SKINS = 300;
 const NEW_PACKS_PER_PLAYER_PER_DAY = 10;
 const ALLOWED_ORIGINS = new Set(['capacitor://localhost', 'https://localhost', 'http://localhost', 'ionic://localhost']);
 
@@ -31,6 +33,8 @@ async function ensureSchema(db) {
   await db.batch(SCHEMA.map(s => db.prepare(s)));
   // Packs made before "approve to join" existed get the column (it already exists everywhere after the first run)
   try { await db.prepare('ALTER TABLE packs ADD COLUMN approval INTEGER NOT NULL DEFAULT 1').run(); } catch (e) {}
+  // Costumes won, kept with the profile so they come back with the recovery code (comma-separated skin ids)
+  try { await db.prepare("ALTER TABLE players ADD COLUMN skins TEXT NOT NULL DEFAULT ''").run(); } catch (e) {}
   schemaReady = true;
 }
 
@@ -126,8 +130,16 @@ async function myRequests(db, playerId) {
     'SELECT p.id, p.name FROM requests r JOIN packs p ON p.id = r.pack_id WHERE r.player_id = ? ORDER BY r.requested_at').bind(playerId).all();
   return results.map(r => ({ id: r.id, name: r.name }));
 }
+const skinList = p => String(p.skins || '').split(',').filter(Boolean);
+// A profile the game made silently has no name yet; it needs one before it can make or join a Pack
+async function needName(db, p, body) {
+  if (p.nickname) return;
+  if (!body.nickname) fail(400, 'Pick your name on Wienerboards first.');
+  p.nickname = cleanName(body.nickname, 2, 16, 'name');
+  await db.prepare('UPDATE players SET nickname = ? WHERE id = ?').bind(p.nickname, p.id).run();
+}
 async function meResponse(db, p, extra) {
-  return Object.assign({ player: { id: p.id, nickname: p.nickname, best: p.best }, packs: await myPacks(db, p.id),
+  return Object.assign({ player: { id: p.id, nickname: p.nickname, best: p.best, skins: skinList(p) }, packs: await myPacks(db, p.id),
     requests: await myRequests(db, p.id) }, extra || {});
 }
 
@@ -216,8 +228,10 @@ async function route(request, env, path) {
   const ip = request.headers.get('CF-Connecting-IP') || 'local';
 
   if (method === 'POST' && path === 'player') {
-    const nickname = cleanName(body.nickname, 2, 16, 'name');
-    if (!(await underLimit(db, 'np:' + (await sha256(ip + today())), NEW_PLAYERS_PER_IP_PER_DAY))) fail(429, 'Too many new players from here today. Try again tomorrow.');
+    // silent: the game makes a nameless profile in the background to keep a player's costumes
+    const silent = body.silent === true;
+    const nickname = silent ? '' : cleanName(body.nickname, 2, 16, 'name');
+    if (!(await underLimit(db, (silent ? 'ns:' : 'np:') + (await sha256(ip + today())), silent ? NEW_SILENT_PLAYERS_PER_IP_PER_DAY : NEW_PLAYERS_PER_IP_PER_DAY))) fail(429, 'Too many new players from here today. Try again tomorrow.');
     await db.prepare('DELETE FROM limits WHERE day <> ?').bind(today()).run();
     const id = randCode(12), token = randCode(16);
     await db.prepare('INSERT INTO players (id, token_hash, nickname, created_at) VALUES (?, ?, ?, ?)')
@@ -233,6 +247,13 @@ async function route(request, env, path) {
     return meResponse(db, p, { token: fmtToken(tok) });
   }
   if (method === 'GET' && path === 'me') return meResponse(db, await needPlayer(db, request));
+  if (method === 'POST' && path === 'me/skins') {   // adds costumes won on this device (never removes any)
+    const p = await needPlayer(db, request);
+    const have = skinList(p), add = (Array.isArray(body.skins) ? body.skins : []).filter(k => typeof k === 'string' && /^[a-z]{2,24}$/.test(k));
+    const all = have.concat(add.filter((k, i) => have.indexOf(k) < 0 && add.indexOf(k) === i)).slice(0, MAX_SKINS);
+    if (all.length !== have.length) { p.skins = all.join(','); await db.prepare('UPDATE players SET skins = ? WHERE id = ?').bind(p.skins, p.id).run(); }
+    return meResponse(db, p);
+  }
   if (method === 'POST' && path === 'me/name') {
     const p = await needPlayer(db, request);
     const nickname = cleanName(body.nickname, 2, 16, 'name');
@@ -254,6 +275,7 @@ async function route(request, env, path) {
   }
   if (method === 'POST' && path === 'packs') {
     const p = await needPlayer(db, request);
+    await needName(db, p, body);
     const name = cleanName(body.name, 3, 24, 'Pack name');
     const defaultBoard = body.defaultBoard === 'all' ? 'all' : 'week';
     const approval = body.approval === false ? 0 : 1;
@@ -269,6 +291,7 @@ async function route(request, env, path) {
   }
   if (method === 'POST' && path === 'packs/join') {
     const p = await needPlayer(db, request);
+    await needName(db, p, body);
     const code = cleanCode(body.code);
     if (code.length !== 6) fail(400, 'Pack codes have 6 letters and numbers.');
     const pack = await db.prepare('SELECT * FROM packs WHERE code = ?').bind(code).first();
