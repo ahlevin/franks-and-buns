@@ -923,7 +923,8 @@ function packsRender() {
       '<p><b>Scores:</b> every game you play counts in all your Packs. This Week starts fresh every week; All-Time keeps everyone\'s best. After each game, the Game Over screen shows where you rank.</p>' +
       '<p><b>Your recovery code:</b> your Packs are saved online, but each place you play (this app, a browser, another phone) needs its own sign-in. Enter your recovery code there under <i>Already in Packs on another device?</i>. You\'ll also need it after reinstalling the app or getting a new phone. Keep it private.</p>' +
       '<p><b>Limits:</b> up to 5 Packs per player and 50 players per Pack.</p>' +
-      '<p>To leave a Pack, open it and tap Leave Pack. To delete your Packs profile, go to Recovery code.</p></div>' +
+      '<p>To leave a Pack, open it and tap Leave Pack. To delete your Packs profile, go to Recovery code.</p>' +
+      '<p><b>See an offensive name?</b> Open the Pack and tap Report a name or Pack. Pack leaders can also remove players.</p></div>' +
       '<button type="button" class="fbp-ghost" data-a="home">Back</button>';
   } else if (packsView === 'restore') {
     h += '<h2>RESTORE PACKS</h2><form><p class="fbp-sub">Enter the recovery code from My Packs on your other device.</p><label for="fbp-rc">Recovery code</label><input id="fbp-rc" type="text" maxlength="24" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX">' +
@@ -958,6 +959,7 @@ function packsRender() {
       } else h += '<button type="button" class="fbp-ghost" data-a="edit">Pack settings</button>';
     }
     h += '<button type="button" class="fbp-ghost" data-a="leave">' + (packsConfirm === 'leave' ? 'Tap again to leave this Pack' : 'Leave Pack') + '</button>' +
+      '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="report">Report a name or Pack</button></div>' +
       '<button type="button" class="fbp-ghost" data-a="home">My Packs</button>';
   }
   card.innerHTML = h;
@@ -1056,6 +1058,15 @@ function packsClick(e) {
       safeSet('fb_pack_token', ''); safeSet('fb_pack_pending', ''); packsMe = null; packsCur = null;
       packsView = 'home'; packsMsg = '✓ Your Packs profile was deleted.';
     });
+  }
+  if (a === 'report') {   // emails us the Pack's code; we can rename or remove names and Packs that break the rules
+    const p = packsCur.pack, me = packsMe && packsMe.player ? packsMe.player.nickname : '';
+    const body = 'Pack: ' + p.name + ' (code ' + p.code + ')\nReported by: ' + me + '\n\nWhich name is the problem, and why?\n';
+    const link = document.createElement('a');
+    link.href = 'mailto:admin@slaelabs.com?subject=' + encodeURIComponent('Franks & Buns Pack report: ' + p.code) + '&body=' + encodeURIComponent(body);
+    link.style.display = 'none'; document.body.appendChild(link); link.click(); link.remove();
+    packsMsg = '✓ Opening an email to us. If nothing opens, write to admin@slaelabs.com with the Pack code ' + p.code + '.'; packsRender();
+    return;
   }
   if (a === 'share') {
     const p = packsCur.pack, text = 'Join my Franks & Buns Pack "' + p.name + '"! Code: ' + p.code, url = PACKS_SHARE_URL + p.code;
