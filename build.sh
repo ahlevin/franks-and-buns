@@ -7,8 +7,8 @@ set -euo pipefail
 rm -rf dist
 mkdir -p dist
 
-# Site pages, images and config files at the top level (same list as the old dashboard command)
-cp *.html *.png *.jpg *.ico ads.txt robots.txt sitemap.xml _headers _redirects dist/
+# Site pages, images, videos (how-to-play.mp4) and config files at the top level
+cp *.html *.png *.jpg *.mp4 *.ico ads.txt robots.txt sitemap.xml _headers _redirects dist/
 
 # App links: lets Pack invite links (franksandbuns.com/join/CODE) open the iPhone and Android apps
 cp -R .well-known dist/
