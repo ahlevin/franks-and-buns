@@ -639,13 +639,18 @@ function skinById(id) { return SKINS.find(s => s.id === id) || SKINS[0]; }
 // preview.franks-and-buns.pages.dev is Alan's test site: every costume is unlocked there without the ?skins=all
 // Collections shop. Test mode (pretend purchases, nothing charged): the test site with ?shop=test.
 // In the iPhone/Android apps the shop is real: Apple / Google Play purchases through RevenueCat (Purchases plugin).
-// On franksandbuns.com the Collections stay "Coming soon" until web checkout exists (SHOP_LIVE).
+// On the website the shop is real too: card / Apple Pay / Google Pay checkout by Stripe (seller of record, handles
+// sales tax), through RevenueCat Web Billing. franksandbuns.com stays "Coming soon" until SHOP_LIVE; the test site
+// can try the real web checkout with ?shop=web (real charges: refund them in Stripe).
 const SHOP_LIVE = false;
 function shopPlugin() { const P = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Purchases; return P && P.configure ? P : null; }
 const SHOP_APP = !!shopPlugin() && location.hostname !== 'franksandbuns.com';
 const SHOP_TEST = new URLSearchParams(location.search).get('shop') === 'test' && location.hostname !== 'franksandbuns.com' && location.protocol !== 'capacitor:';
-const SHOP_ON = SHOP_LIVE || SHOP_TEST || SHOP_APP;
-const SKINS_ALL = !SHOP_TEST && (new URLSearchParams(location.search).get('skins') === 'all' || location.hostname === 'preview.franks-and-buns.pages.dev') && location.hostname !== 'franksandbuns.com' &&
+const SHOP_WEB = !SHOP_APP && location.protocol !== 'capacitor:' && !SHOP_TEST &&
+  (location.hostname === 'franksandbuns.com' ? SHOP_LIVE : new URLSearchParams(location.search).get('shop') === 'web');
+const SHOP_ON = SHOP_LIVE || SHOP_TEST || SHOP_APP || SHOP_WEB;
+const SHOP_STORE = SHOP_APP || SHOP_WEB;   // real purchases (store prices, buyer account)
+const SKINS_ALL = !SHOP_TEST && !SHOP_WEB && (new URLSearchParams(location.search).get('skins') === 'all' || location.hostname === 'preview.franks-and-buns.pages.dev') && location.hostname !== 'franksandbuns.com' &&
   location.protocol !== 'capacitor:' && !(location.hostname === 'localhost' && !location.port);
 function skinUnlocked(s) {
   if (SKINS_ALL) return true;
@@ -667,8 +672,8 @@ function shopColSkins(g) { return SKINS.filter(k => k.group === g).map(k => k.id
 function shopProducts() {
   const out = {}, st = shopStore.products;
   // in the apps the price comes from the store (the player's own currency); the crossed-out price only in dollars
-  const real = (pid, usd) => SHOP_APP ? (st[pid] ? st[pid].priceString : '') : usd;
-  const usdStore = pid => !SHOP_APP || (st[pid] && st[pid].currencyCode === 'USD');
+  const real = (pid, usd) => SHOP_STORE ? (st[pid] ? st[pid].priceString : '') : usd;
+  const usdStore = pid => !SHOP_STORE || (st[pid] && st[pid].currencyCode === 'USD');
   SHOP_COLS.forEach(g => {
     shopColSkins(g).forEach(id => { out['skin_' + id] = { kind: 'skin', name: skinById(id).name, skins: [id], price: real('skin_' + id, '$0.99') }; });
     const cid = 'col_' + g;
@@ -681,7 +686,67 @@ function shopProducts() {
 }
 // --- the store, in the apps (RevenueCat). Product ids are the same in App Store Connect and Google Play. ---
 const shopStore = { started: null, products: {}, uid: null };
+// The website's products are Stripe prices (sold through RevenueCat's "web_shop" offering, one package per product
+// id below). The apps see website purchases under these Stripe ids, so they are listed here for every platform.
+const SHOP_STRIPE = {
+  skin_midnight: ['price_1Ue2E16LJdPzXq2boGxQDR5Y', 'prod_VfMxza34j6Fv4r'], skin_cupid: ['price_1Ue2GI6LJdPzXq2bq1Y1zFzw', 'prod_VfMzaPcUN5fyW7'],
+  skin_lucky: ['price_1Ue2I56LJdPzXq2bBcH6kv0l', 'prod_VfN2iXMLVlKO91'], skin_easter: ['price_1Ue2IU6LJdPzXq2bT9zJc7d1', 'prod_VfN2RDnZgaV2UX'],
+  skin_yankee: ['price_1Ue2Io6LJdPzXq2bcebiWzhz', 'prod_VfN2736K48jqbF'], skin_frankula: ['price_1Ue2J96LJdPzXq2bvEydEdVp', 'prod_VfN33sNThhtJlS'],
+  skin_gobble: ['price_1Ue2Je6LJdPzXq2bAwQ0vo3R', 'prod_VfN3L6W4Ea6fNm'], skin_santa: ['price_1Ue2Jp6LJdPzXq2bTRvv9bcl', 'prod_VfN3tdk5WBKI7H'],
+  skin_dachshund: ['price_1Ue2KM6LJdPzXq2bG0Tbq9FS', 'prod_VfN4YW4CEby9lt'], skin_corgi: ['price_1Ue2KX6LJdPzXq2bK1faEOvA', 'prod_VfN4CFGLCbqIr1'],
+  skin_golden: ['price_1Ue2Ki6LJdPzXq2bhHdbJwlI', 'prod_VfN4CkTag2mUIB'], skin_frenchie: ['price_1Ue2LZ6LJdPzXq2bYNL7ml5U', 'prod_VfN5tzazaPrZmR'],
+  skin_husky: ['price_1Ue2Lk6LJdPzXq2bllXSlenC', 'prod_VfN5Lb5H7gfL8e'], skin_dalmatian: ['price_1Ue2Lv6LJdPzXq2bOrF7oqmH', 'prod_VfN6NA8lbLckCR'],
+  skin_poodle: ['price_1Ue2M66LJdPzXq2biSma4oUg', 'prod_VfN6sNDTj2CbMu'], skin_shiba: ['price_1Ue2N56LJdPzXq2b3bc6pbMm', 'prod_VfN7Dt3ZNLBG8K'],
+  skin_bernese: ['price_1Ue2NH6LJdPzXq2bcdFEFamt', 'prod_VfN7zC3F2zFTih'], skin_bernedoodle: ['price_1Ue2NR6LJdPzXq2bnduDDu2H', 'prod_VfN7waUAFHqRvt'],
+  skin_labradoodle: ['price_1Ue2Nc6LJdPzXq2bbke15Zrv', 'prod_VfN7vkUtje6FDz'], skin_tabby: ['price_1Ue2OC6LJdPzXq2byFG2Ptse', 'prod_VfN8H9y4FlbsZS'],
+  skin_tuxedo: ['price_1Ue2ON6LJdPzXq2bToUd2rzp', 'prod_VfN82zmtcnW80y'], skin_calico: ['price_1Ue2OY6LJdPzXq2bo663gdFg', 'prod_VfN8Xdch5dPy5F'],
+  skin_siamese: ['price_1Ue2Oi6LJdPzXq2b5ZBa1LyF', 'prod_VfN9lUz5ind01Y'], skin_persian: ['price_1Ue2PU6LJdPzXq2bsXX9yee9', 'prod_VfN9a1KFYM9eZ2'],
+  skin_british: ['price_1Ue2Pf6LJdPzXq2bWnlZK9A2', 'prod_VfN9HH7RfTvcUQ'], skin_mainecoon: ['price_1Ue2Pq6LJdPzXq2b1IYagVt2', 'prod_VfNAwGYK2ky0HT'],
+  skin_ragdoll: ['price_1Ue2Q16LJdPzXq2brK0GFPtA', 'prod_VfNAad6jWfAqtp'], skin_sphynx: ['price_1Ue2Qw6LJdPzXq2b8nweEZU7', 'prod_VfNBEX5PBR3eJK'],
+  col_holiday: ['price_1Ue2Ri6LJdPzXq2bhp4C3qNi', 'prod_VfNCt1vXv5SSXA'], col_dogs: ['price_1Ue2Rv6LJdPzXq2bz4qu0bCm', 'prod_VfNCXClBV2jlJT'],
+  col_cats: ['price_1Ue2S76LJdPzXq2bfWLiM1W2', 'prod_VfNCJmhQrAERLi'], col_launch3: ['price_1Ue2Sb6LJdPzXq2bw7IfNhyJ', 'prod_VfNDW8ll1fYkUY']
+};
+function shopIdOf(storeId) {
+  if (shopProducts()[storeId]) return storeId;
+  for (const pid in SHOP_STRIPE) if (SHOP_STRIPE[pid].indexOf(storeId) >= 0) return pid;
+  return null;
+}
+// the website store: RevenueCat's web SDK, loaded only when the shop is used
+const SHOP_WEB_KEY = 'strp_SolepsYiJMilaBvgjLDLeiiOvCr';   // public web key (made to ship in web pages; not a secret)
+function shopWebSdk() {
+  if (window.Purchases && window.Purchases.Purchases) return Promise.resolve(window.Purchases.Purchases);
+  if (!shopStore.sdk) shopStore.sdk = new Promise((ok, no) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://unpkg.com/@revenuecat/purchases-js@1.74.0/dist/Purchases.umd.js';
+    sc.onload = () => window.Purchases && window.Purchases.Purchases ? ok(window.Purchases.Purchases) : no(new Error('store'));
+    sc.onerror = () => { shopStore.sdk = null; no(new Error('The shop couldn’t load. Check your connection and try again.')); };
+    document.head.appendChild(sc);
+  });
+  return shopStore.sdk;
+}
+// no profile yet on this browser: a RevenueCat anonymous id (nothing is bought under it: buying makes a profile first)
+function shopWebAnon(P) { let a = safeGet('fb_rc_anon'); if (!a) { a = P.generateRevenueCatAnonymousAppUserId(); safeSet('fb_rc_anon', a); } return a; }
+function shopStartWeb() {
+  shopStore.started = (async () => {
+    const P = await shopWebSdk();
+    const uid = await shopBuyerId();
+    const rc = P.configure({ apiKey: SHOP_WEB_KEY, appUserId: uid || shopWebAnon(P) });
+    shopStore.rc = rc; shopStore.uid = uid;
+    try {
+      const offs = await rc.getOfferings(), off = offs && offs.all && offs.all.web_shop;
+      ((off && off.availablePackages) || []).forEach(pk => {
+        const pr = pk.webBillingProduct && pk.webBillingProduct.currentPrice;
+        if (pr) shopStore.products[pk.identifier] = { pkg: pk, priceString: pr.formattedPrice, currencyCode: pr.currency };
+      });
+    } catch (e) {}
+    shopStore.loaded = true;
+    try { shopFromCustomer(await rc.getCustomerInfo()); } catch (e) {}
+    if (skinsIsOpen()) skinsRender();
+  })().catch(e => { shopStore.started = null; throw e; });
+  return shopStore.started;
+}
 function shopStart() {
+  if (SHOP_WEB) return shopStore.started || shopStartWeb();
   if (!SHOP_APP) return Promise.resolve();
   if (shopStore.started) return shopStore.started;
   const P = shopPlugin(), ios = window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'ios';
@@ -717,10 +782,17 @@ function shopLink() {   // one at a time
   return shopStore.linking;
 }
 async function shopLinkNow() {
-  if (!SHOP_APP || !shopStore.started) return;
+  if (!SHOP_STORE || !shopStore.started) return;
   await shopStore.started;
-  const uid = await shopBuyerId(), P = shopPlugin();
+  const uid = await shopBuyerId();
   if (uid === shopStore.uid) return;
+  if (SHOP_WEB) {
+    const ci = await shopStore.rc.changeUser(uid || shopWebAnon(window.Purchases.Purchases));
+    shopStore.uid = uid; shopFromCustomer(ci);
+    if (skinsIsOpen()) skinsRender();
+    return;
+  }
+  const P = shopPlugin();
   let r = null;
   if (uid) r = await P.logIn({ appUserID: uid });
   else { try { r = { customerInfo: (await P.logOut()).customerInfo }; } catch (e) {} }
@@ -735,13 +807,20 @@ async function shopEnsureProfile() {
   await shopLink().catch(() => {});
 }
 // everything this store account has bought -> costumes owned on this device
+// (the store ids: App Store / Google Play ids are ours; website purchases show up as Stripe ids)
+function shopBoughtIds(ci) {
+  const out = [];
+  ((ci && ci.allPurchasedProductIdentifiers) || []).concat(((ci && ci.nonSubscriptionTransactions) || []).map(t => t && t.productIdentifier))
+    .forEach(x => { const pid = x && shopIdOf(x); if (pid && out.indexOf(pid) < 0) out.push(pid); });
+  return out;
+}
 function shopFromCustomer(ci) {
-  const bought = (ci && ci.allPurchasedProductIdentifiers) || [], all = shopProducts(), ids = [];
+  const bought = shopBoughtIds(ci), all = shopProducts(), ids = [];
   bought.forEach(pid => { const p = all[pid]; if (p) p.skins.forEach(id => { if (ids.indexOf(id) < 0) ids.push(id); }); });
   if (ids.length) shopGive(ids);
   return ids.length;
 }
-window.addEventListener('load', () => { if (SHOP_APP) setTimeout(() => shopStart().catch(() => {}), 1200); });
+window.addEventListener('load', () => { if (SHOP_STORE) setTimeout(() => shopStart().catch(() => {}), 1200); });
 // costumes bought (ids). Test mode keeps pretend purchases on this device only.
 function shopOwned() { try { const a = JSON.parse(safeGet(SHOP_TEST ? 'fb_shop_test' : 'fb_skins_bought') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
 function shopGive(ids) { const have = shopOwned(); ids.forEach(id => { if (have.indexOf(id) < 0) have.push(id); }); safeSet(SHOP_TEST ? 'fb_shop_test' : 'fb_skins_bought', JSON.stringify(have)); }
@@ -750,9 +829,10 @@ function shopOwnedOf(ids) { const have = shopOwned(); return ids.filter(id => ha
 async function shopBuy(pid) {
   const p = shopProducts()[pid]; if (!p) throw new Error('Unknown item');
   if (SHOP_TEST) { await new Promise(r => setTimeout(r, 600)); shopGive(p.skins); return p; }
-  if (!SHOP_APP) throw new Error('Purchases are coming soon.');
+  if (!SHOP_STORE) throw new Error('Purchases are coming soon.');
   await shopStart();
   await shopEnsureProfile();
+  if (SHOP_WEB) return shopBuyWeb(pid, p);
   const sp = shopStore.products[pid];
   if (!sp) throw new Error('This isn’t available right now. Please try again later.');
   try {
@@ -773,10 +853,27 @@ async function shopBuy(pid) {
     throw new Error('The purchase didn’t finish' + (code ? ' (error ' + code + ')' : '') + '. If you were charged, tap Restore Purchases.');
   }
 }
+// the website: RevenueCat's checkout (Stripe) opens over the page
+async function shopBuyWeb(pid, p) {
+  const sp = shopStore.products[pid];
+  if (!sp || !shopStore.rc) throw new Error('This isn’t available right now. Please try again later.');
+  try {
+    const r = await shopStore.rc.purchase({ rcPackage: sp.pkg, termsAndConditionsUrl: 'https://franksandbuns.com/terms.html' });
+    shopFromCustomer(r && r.customerInfo);
+    shopGive(p.skins);
+    return p;
+  } catch (e) {
+    if (e && (e.errorCode === 1 || /cancel/i.test(e.message || ''))) { const c = new Error(''); c.cancelled = true; throw c; }
+    try { if (shopBoughtIds(await shopStore.rc.getCustomerInfo()).indexOf(pid) >= 0) { shopGive(p.skins); return p; } } catch (e2) {}
+    const code = e && e.errorCode;
+    throw new Error('The purchase didn’t finish' + (code ? ' (error ' + code + ')' : '') + '. If you were charged, tap Restore Purchases.');
+  }
+}
 async function shopRestore() {
   if (SHOP_TEST) { await new Promise(r => setTimeout(r, 600)); return shopOwned().length; }
-  if (!SHOP_APP) throw new Error('Purchases are coming soon.');
+  if (!SHOP_STORE) throw new Error('Purchases are coming soon.');
   await shopStart();
+  if (SHOP_WEB) return shopFromCustomer(await shopStore.rc.getCustomerInfo());
   const r = await shopPlugin().restorePurchases();
   return shopFromCustomer(r && r.customerInfo);
 }
@@ -1148,7 +1245,7 @@ async function packsCall(method, path, body) {
   return j;
 }
 function packsKeepMe(j) {
-  if (j && j.token) { safeSet('fb_pack_token', j.token); packsCloudSave(); if (SHOP_APP) shopLink().catch(() => {}); }
+  if (j && j.token) { safeSet('fb_pack_token', j.token); packsCloudSave(); if (SHOP_STORE) shopLink().catch(() => {}); }
   if (j && j.player) { packsMe = { player: j.player, packs: j.packs || [], requests: j.requests || [] }; skinsMerge(j.player.skins); }
 }
 function packsIsOpen() { const b = document.getElementById('fb-packs'); return !!(b && b.style.display !== 'none'); }
@@ -1446,7 +1543,7 @@ function packsClick(e) {
       await packsCall('POST', 'me/delete');
       safeSet('fb_pack_token', ''); safeSet('fb_pack_pending', ''); packsMe = null; packsCur = null; packsCloudClear();
       safeSet('fb_no_auto_profile', '1');   // they deleted it on purpose: don't quietly make another one
-      if (SHOP_APP) shopLink().catch(() => {});   // purchases stay on their Apple / Google account (Restore Purchases)
+      if (SHOP_STORE) shopLink().catch(() => {});   // purchases stay on their Apple / Google account (Restore Purchases)
       packsView = 'home'; packsMsg = '✓ Your Packs profile was deleted.';
     });
   }
@@ -2865,7 +2962,7 @@ function skinsOpen() {
     document.body.appendChild(box);
   }
   box.style.display = 'flex'; skinsTab = null; skinsBuy = null; skinsMsg = ''; skinsRender();
-  if (SHOP_APP) shopStart().catch(() => {});
+  if (SHOP_STORE) shopStart().catch(() => {});
 }
 let skinsTab = null;   // null: the Collections list; otherwise the SKIN_GROUPS key being shown
 function skinsGroupList(gid) { return SKINS.filter(s => (s.group || 'earn') === gid && (SKINS_ALL || skinHow(s) !== 'hidden')); }
