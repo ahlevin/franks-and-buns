@@ -2883,16 +2883,15 @@ function drawMenu() {
   const r = scoresBtnRect();
   ctx.fillStyle = 'rgba(0,0,0,0.45)'; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.fill();
   ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.stroke();
-  ctx.fillStyle = '#FFD700'; ctx.font = 'bold ' + (r.w < 150 ? 13 : 15) + 'px Arial'; ctx.textAlign = 'center';
+  const k = packsBtnRect(), dhLabel = k.w < 150 ? '🏠 DOG HOUSES' : '🏠 MY DOG HOUSES';
+  let btnSize = k.w < 150 ? 13 : 15;   // one size for both buttons: the largest that fits MY DOG HOUSES inside its rounded ends
+  while (btnSize > 9) { ctx.font = 'bold ' + btnSize + 'px Arial'; if (ctx.measureText(dhLabel).width <= k.w - 30) break; btnSize--; }
+  ctx.fillStyle = '#FFD700'; ctx.font = 'bold ' + btnSize + 'px Arial'; ctx.textAlign = 'center';
   ctx.fillText('🏆 MY SCORES', r.x + r.w / 2, r.y + r.h / 2 + (bestScore > 0 ? -1 : 6));
   if (bestScore > 0) { ctx.fillStyle = '#ddd'; ctx.font = '11px Arial'; ctx.fillText('Best: ' + bestScore.toLocaleString(), r.x + r.w / 2, r.y + r.h / 2 + 13); }
-  const k = packsBtnRect();
   ctx.fillStyle = 'rgba(0,0,0,0.45)'; rrect(k.x, k.y, k.w, k.h, k.h / 2); ctx.fill();
   ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2; rrect(k.x, k.y, k.w, k.h, k.h / 2); ctx.stroke();
-  ctx.fillStyle = '#FFD700'; ctx.font = 'bold ' + (k.w < 150 ? 13 : 15) + 'px Arial';
-  const dhLabel = k.w < 150 ? '🏠 DOG HOUSES' : '🏠 MY DOG HOUSES';
-  let dhSize = k.w < 150 ? 13 : 15;   // shrink until the label clears the rounded ends
-  while (dhSize > 9) { ctx.font = 'bold ' + dhSize + 'px Arial'; if (ctx.measureText(dhLabel).width <= k.w - 30) break; dhSize--; }
+  ctx.fillStyle = '#FFD700'; ctx.font = 'bold ' + btnSize + 'px Arial';
   ctx.fillText(dhLabel, k.x + k.w / 2, k.y + k.h / 2 - 1);
   ctx.fillStyle = '#ddd'; ctx.font = '11px Arial'; ctx.fillText('Compete with friends', k.x + k.w / 2, k.y + k.h / 2 + 13);
   if (scoresOpen) drawScoresPanel();
