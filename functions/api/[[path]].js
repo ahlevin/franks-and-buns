@@ -122,7 +122,7 @@ async function authPlayer(db, request) {
 }
 async function needPlayer(db, request) {
   const p = await authPlayer(db, request);
-  if (!p) fail(401, 'Your Packs sign-in was not found on this device. Use your recovery code to restore it.');
+  if (!p) fail(401, 'Your Dog House sign-in was not found on this device. Use your recovery code to restore it.');
   return p;
 }
 async function myPacks(db, playerId) {
@@ -156,9 +156,9 @@ async function meResponse(db, p, extra) {
 // ---------- packs ----------
 async function packForMember(db, packId, playerId) {
   const pack = await db.prepare('SELECT * FROM packs WHERE id = ?').bind(packId).first();
-  if (!pack) fail(404, 'That Pack no longer exists.');
+  if (!pack) fail(404, 'That Dog House no longer exists.');
   const mem = await db.prepare('SELECT 1 FROM members WHERE pack_id = ? AND player_id = ?').bind(packId, playerId).first();
-  if (!mem) fail(403, 'You are not in that Pack.');
+  if (!mem) fail(403, 'You are not in that Dog House.');
   return pack;
 }
 async function packCount(db, playerId) {
@@ -211,7 +211,7 @@ async function newPackCode(db) {
     const c = randCode(6);
     if (!(await db.prepare('SELECT 1 FROM packs WHERE code = ?').bind(c).first())) return c;
   }
-  fail(503, 'Could not make a Pack code. Please try again.');
+  fail(503, 'Could not make a Dog House code. Please try again.');
 }
 
 // ---------- scores ----------
@@ -231,7 +231,7 @@ function plausible(b) {
 // ---------- router ----------
 async function route(request, env, path) {
   const db = env.DB;
-  if (!db) fail(503, 'Packs are not switched on yet.');
+  if (!db) fail(503, 'Dog Houses are not switched on yet.');
   await ensureSchema(db);
   const method = request.method, now = Date.now();
   const body = method === 'POST' ? await request.json().catch(() => ({})) : {};
@@ -286,11 +286,11 @@ async function route(request, env, path) {
   if (method === 'POST' && path === 'packs') {
     const p = await needPlayer(db, request);
     await needName(db, p, body);
-    const name = cleanName(body.name, 3, 24, 'Pack name');
+    const name = cleanName(body.name, 3, 24, 'Dog House name');
     const defaultBoard = body.defaultBoard === 'all' ? 'all' : 'week';
     const approval = body.approval === false ? 0 : 1;
-    if ((await packCount(db, p.id)) >= MAX_PACKS_PER_PLAYER) fail(409, `You can be in up to ${MAX_PACKS_PER_PLAYER} Packs. Leave one to make a new one.`);
-    if (!(await underLimit(db, 'nk:' + p.id, NEW_PACKS_PER_PLAYER_PER_DAY))) fail(429, 'That is a lot of new Packs for one day. Try again tomorrow.');
+    if ((await packCount(db, p.id)) >= MAX_PACKS_PER_PLAYER) fail(409, `You can be in up to ${MAX_PACKS_PER_PLAYER} Dog Houses. Quit one to make a new one.`);
+    if (!(await underLimit(db, 'nk:' + p.id, NEW_PACKS_PER_PLAYER_PER_DAY))) fail(429, 'That is a lot of new Dog Houses for one day. Try again tomorrow.');
     const id = randCode(12), code = await newPackCode(db);
     await db.batch([
       db.prepare('INSERT INTO packs (id, code, name, owner_id, default_board, created_at, approval) VALUES (?, ?, ?, ?, ?, ?, ?)').bind(id, code, name, p.id, defaultBoard, now, approval),
@@ -303,21 +303,21 @@ async function route(request, env, path) {
     const p = await needPlayer(db, request);
     await needName(db, p, body);
     const code = cleanCode(body.code);
-    if (code.length !== 6) fail(400, 'Pack codes have 6 letters and numbers.');
+    if (code.length !== 6) fail(400, 'Dog House codes have 6 letters and numbers.');
     const pack = await db.prepare('SELECT * FROM packs WHERE code = ?').bind(code).first();
-    if (!pack) fail(404, 'No Pack has that code. Check it and try again.');
+    if (!pack) fail(404, 'No Dog House has that code. Check it and try again.');
     const already = await db.prepare('SELECT 1 FROM members WHERE pack_id = ? AND player_id = ?').bind(pack.id, p.id).first();
     if (!already) {
-      if ((await packCount(db, p.id)) >= MAX_PACKS_PER_PLAYER) fail(409, `You can be in up to ${MAX_PACKS_PER_PLAYER} Packs. Leave one to join this one.`);
+      if ((await packCount(db, p.id)) >= MAX_PACKS_PER_PLAYER) fail(409, `You can be in up to ${MAX_PACKS_PER_PLAYER} Dog Houses. Quit one to join this one.`);
       const n = await db.prepare('SELECT COUNT(*) AS n FROM members WHERE pack_id = ?').bind(pack.id).first();
-      if (n && n.n >= MAX_MEMBERS) fail(409, `That Pack is full (${MAX_MEMBERS} players).`);
+      if (n && n.n >= MAX_MEMBERS) fail(409, `That Dog House is full (${MAX_MEMBERS} players).`);
       if (pack.approval) {   // the leader lets each new player in
         const asked = await db.prepare('SELECT 1 FROM requests WHERE pack_id = ? AND player_id = ?').bind(pack.id, p.id).first();
         if (!asked) {
           const mine = await db.prepare('SELECT COUNT(*) AS n FROM requests WHERE player_id = ?').bind(p.id).first();
-          if (mine && mine.n >= MAX_REQUESTS_PER_PLAYER) fail(409, `You're already waiting on ${MAX_REQUESTS_PER_PLAYER} Packs. Cancel one to ask to join another.`);
+          if (mine && mine.n >= MAX_REQUESTS_PER_PLAYER) fail(409, `You're already waiting on ${MAX_REQUESTS_PER_PLAYER} Dog Houses. Cancel one to ask to join another.`);
           const waiting = await db.prepare('SELECT COUNT(*) AS n FROM requests WHERE pack_id = ?').bind(pack.id).first();
-          if (waiting && waiting.n >= MAX_WAITING_PER_PACK) fail(409, 'That Pack has too many players waiting. Try again later.');
+          if (waiting && waiting.n >= MAX_WAITING_PER_PACK) fail(409, 'That Dog House has too many players waiting. Try again later.');
           await db.prepare('INSERT INTO requests (pack_id, player_id, requested_at) VALUES (?, ?, ?)').bind(pack.id, p.id, now).run();
         }
         return meResponse(db, p, { pending: { id: pack.id, name: pack.name } });
@@ -343,19 +343,19 @@ async function route(request, env, path) {
     }
     if (method === 'POST' && action === 'leave') { await leavePack(db, pack, p.id); return meResponse(db, p); }
     if (method === 'POST' && action) {
-      if (pack.owner_id !== p.id) fail(403, 'Only the Pack leader can do that.');
+      if (pack.owner_id !== p.id) fail(403, 'Only the Dog House leader can do that.');
       const who = String(body.playerId || '');
       if (action === 'remove') {
-        if (who === p.id) fail(400, 'Use Leave Pack to leave your own Pack.');
+        if (who === p.id) fail(400, 'Use Quit this Dog House to leave your own Dog House.');
         await db.prepare('DELETE FROM members WHERE pack_id = ? AND player_id = ?').bind(pack.id, who).run();
       } else if (action === 'approve') {
         const asked = await db.prepare('SELECT 1 FROM requests WHERE pack_id = ? AND player_id = ?').bind(pack.id, who).first();
         if (!asked) fail(404, 'That request is gone. The player may have cancelled it.');
         const n = await db.prepare('SELECT COUNT(*) AS n FROM members WHERE pack_id = ?').bind(pack.id).first();
-        if (n && n.n >= MAX_MEMBERS) fail(409, `Your Pack is full (${MAX_MEMBERS} players).`);
+        if (n && n.n >= MAX_MEMBERS) fail(409, `Your Dog House is full (${MAX_MEMBERS} players).`);
         if ((await packCount(db, who)) >= MAX_PACKS_PER_PLAYER) {
           await db.prepare('DELETE FROM requests WHERE pack_id = ? AND player_id = ?').bind(pack.id, who).run();
-          fail(409, `That player is already in ${MAX_PACKS_PER_PLAYER} Packs, so they can't join. Their request was removed.`);
+          fail(409, `That player is already in ${MAX_PACKS_PER_PLAYER} Dog Houses, so they can't join. Their request was removed.`);
         }
         await db.batch([
           db.prepare('INSERT OR IGNORE INTO members (pack_id, player_id, joined_at) VALUES (?, ?, ?)').bind(pack.id, who, now),
@@ -369,7 +369,7 @@ async function route(request, env, path) {
       } else {
         const defaultBoard = body.defaultBoard === 'all' ? 'all' : body.defaultBoard === 'week' ? 'week' : pack.default_board;
         const approval = body.approval === undefined ? pack.approval : (body.approval ? 1 : 0);
-        const name = body.name === undefined ? pack.name : cleanName(body.name, 3, 24, 'Pack name');
+        const name = body.name === undefined ? pack.name : cleanName(body.name, 3, 24, 'Dog House name');
         await db.prepare('UPDATE packs SET default_board = ?, name = ?, approval = ? WHERE id = ?').bind(defaultBoard, name, approval, pack.id).run();
         pack.default_board = defaultBoard; pack.name = name; pack.approval = approval;
       }

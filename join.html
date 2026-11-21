@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Join a Pack — Franks &amp; Buns</title>
-<meta name="description" content="You're invited to a Franks and Buns Pack: a private Wienerboard for friends.">
+<title>Join a Dog House — Franks &amp; Buns</title>
+<meta name="description" content="You're invited to a Franks and Buns Dog House: a private Wienerboard for friends.">
 <meta name="robots" content="noindex">
 <link rel="icon" href="/favicon.ico">
 <link rel="apple-touch-icon" href="/favicon-180.png">
-<!-- Shown when someone opens a Pack invite (franksandbuns.com/join/CODE) without an up-to-date app.
+<!-- Shown when someone opens a Dog House invite (franksandbuns.com/join/CODE) without an up-to-date app.
      With the app installed and updated, iPhone and Android open the app instead of this page. -->
 <style>
   :root { color-scheme: dark; }
@@ -34,14 +34,14 @@
 <main>
   <div class="dog">🌭</div>
   <h1>You're invited!</h1>
-  <p class="sub">Join a Franks &amp; Buns Pack: a private Wienerboard where friends find out who's top dog.</p>
+  <p class="sub">Join a Franks &amp; Buns Dog House: a private Wienerboard where friends find out who's top dog.</p>
   <div class="code" id="code">······</div>
-  <button class="copy" id="copy" type="button">Copy Pack code</button>
+  <button class="copy" id="copy" type="button">Copy Dog House code</button>
   <p id="msg"></p>
 
   <div id="phone">
     <h2>Got the app?</h2>
-    <p>If the Franks and Buns app is installed and up to date, this invite opens it. Landed here instead? <b>Update the app</b>, then tap the invite link again, or open the app and enter the code under <b>My Packs → Join a Pack</b>.</p>
+    <p>If the Franks and Buns app is installed and up to date, this invite opens it. Landed here instead? <b>Update the app</b>, then tap the invite link again, or open the app and enter the code under <b>My Dog Houses → Join a Dog House</b>.</p>
     <a class="btn" id="store" href="https://apps.apple.com/app/franks-buns/id6761290671">Get or update the app</a>
   </div>
   <a class="btn ghost" id="web" href="/game.html">Play in your browser instead</a>
@@ -57,7 +57,7 @@
   var ua = navigator.userAgent || '';
   var ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
   var android = /Android/.test(ua);
-  // A computer can't have the app, so go straight to the game with the Pack code filled in
+  // A computer can't have the app, so go straight to the game with the Dog House code filled in
   if (!ios && !android) { location.replace(web); return; }
   if (android) document.getElementById('store').href = 'https://play.google.com/store/apps/details?id=com.franksandbuns.game';
   document.getElementById('copy').onclick = function () {

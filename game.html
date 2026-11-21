@@ -1232,7 +1232,7 @@ const PACKS_API = (location.protocol === 'capacitor:' || location.protocol === '
 // franksandbuns.com/join/CODE opens the app when it's installed (iPhone Universal Links, Android App Links),
 // otherwise a join page with app-store and play-in-browser buttons (join.html)
 const PACKS_SHARE_URL = (PACKS_API.indexOf('https://') === 0 ? 'https://franksandbuns.com' : location.origin) + '/join/';
-let packsResult = null;   // Game Over: null, 'wait', 'off' (couldn't reach Packs) or the server's answer for this game
+let packsResult = null;   // Game Over: null, 'wait', 'off' (couldn't reach Dog Houses) or the server's answer for this game
 let packsApproval = true;   // new Packs: the leader lets each player in, unless they pick "Anyone with the code"
 let packsMe = null, packsView = 'home', packsCur = null, packsBoard = 'week', packsBusy = false, packsMsg = '', packsConfirm = '', packsEdit = false, packsPrefill = '';
 function packsToken() { return safeGet('fb_pack_token') || ''; }
@@ -1242,7 +1242,7 @@ async function packsCall(method, path, body) {
   if (tok) headers.Authorization = 'Bearer ' + tok;
   let r;
   try { r = await fetch(PACKS_API + path, { method, headers, body: body ? JSON.stringify(body) : undefined }); }
-  catch (e) { throw { offline: true, message: 'Packs need an internet connection. Check your connection and try again.' }; }
+  catch (e) { throw { offline: true, message: 'Dog Houses need an internet connection. Check your connection and try again.' }; }
   let j = null; try { j = await r.json(); } catch (e) {}
   if (!r.ok) throw { status: r.status, message: (j && j.error) || 'Something went wrong. Please try again.' };
   return j;
@@ -1252,12 +1252,18 @@ function packsKeepMe(j) {
   if (j && j.player) { packsMe = { player: j.player, packs: j.packs || [], requests: j.requests || [] }; skinsMerge(j.player.skins); }
 }
 function packsIsOpen() { const b = document.getElementById('fb-packs'); return !!(b && b.style.display !== 'none'); }
+// Play button in My Dog Houses: close it and start a game (from the start screen or Game Over)
+function packsPlay() {
+  ensureAudio(); prepareWavs(); scoresOpen = false;
+  if (state === STATE.MENU) startIntro();
+  else if (state === STATE.GAMEOVER) resetGame();
+}
 function packsClose() { const b = document.getElementById('fb-packs'); if (b) b.style.display = 'none'; }
 function packsBox() {
   let box = document.getElementById('fb-packs');
   if (box) return box;
   box = document.createElement('div');
-  box.id = 'fb-packs'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'My Packs');
+  box.id = 'fb-packs'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'My Dog Houses');
   const css = document.createElement('style');
   css.textContent =
     '#fb-packs{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(10,5,0,.86);padding:12px;box-sizing:border-box}' +
@@ -1270,6 +1276,11 @@ function packsBox() {
     '#fb-packs button:disabled{opacity:.5;cursor:default}' +
     '#fb-packs .fbp-row{display:flex;align-items:center;justify-content:space-between;gap:8px;background:rgba(0,0,0,.25);border:1px solid rgba(255,215,0,.25);border-radius:12px;padding:10px 12px;margin:6px 0 0;color:#f3e3c3;text-align:left;font:15px Arial;width:100%}' +
     '#fb-packs .fbp-row small{color:#c8a878;font-size:12px;white-space:nowrap}' +
+    '#fb-packs button.fbp-row{cursor:pointer;background:linear-gradient(#4a2a0c,#341c07);border:2px solid #ff6600;box-shadow:0 3px 0 #7a3300;margin:10px 0 0;padding:12px 12px;font-weight:600;transition:transform .08s}' +
+    '#fb-packs button.fbp-row:active{transform:translateY(2px);box-shadow:0 1px 0 #7a3300}#fb-packs button.fbp-row>span:first-child{color:#FFD700;font:bold 17px Arial;word-break:break-word}' +
+    '#fb-packs .fbp-open{display:inline-block;margin-left:6px;background:#ff6600;color:#fff;border-radius:999px;padding:3px 10px;font:bold 12px Arial}' +
+    '#fb-packs button.fbp-play{background:#2e9e3e;border-color:#2e9e3e;font-size:17px;padding:12px 16px}' +
+    '#fb-packs .fbp-leave{margin-top:18px;padding-top:12px;border-top:1px solid rgba(255,215,0,.15)}#fb-packs .fbp-leave button{background:transparent;color:#ff8a65;border-color:rgba(255,138,101,.6)}' +
     '#fb-packs label{display:block;margin:10px 0 4px;color:#FFD700;font:bold 13px Arial}' +
     '#fb-packs input[type=text]{width:100%;box-sizing:border-box;font:16px Arial;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,215,0,.4);background:#1a0f05;color:#fff}' +
     '#fb-packs .fbp-choice{display:flex;gap:8px}#fb-packs .fbp-choice button{margin:0}' +
@@ -1329,18 +1340,18 @@ function packsRender() {
   const busy = packsBusy ? ' disabled' : '';
   let h = '';
   if (packsView === 'home') {
-    h += '<h2>MY PACKS</h2>';
+    h += '<h2>MY DOG HOUSES</h2>';
     if (packsToken() && packsMe) h += '<div class="fbp-me"><span>' + (packsMe.player.nickname ? 'Playing as <b>' + packsEsc(packsMe.player.nickname) + '</b>' : 'No Wienerboard name yet') + '</span><button type="button" data-a="go-name">✏️ ' + (packsMe.player.nickname ? 'Change name' : 'Pick a name') + '</button></div>';
     const list = packsMe ? packsMe.packs : [];
     if (!packsToken()) {
-      h += '<p class="fbp-sub">Packs are private Wienerboards for you and your friends. Make a Pack, share its code, and find out who\'s top dog.</p>';
+      h += '<p class="fbp-sub">Dog Houses are private Wienerboards for you and your friends. Make a Dog House, share its code, and find out who\'s top dog.</p>';
     } else if (!packsMe) {
-      h += '<p class="fbp-sub">Loading your Packs…</p>';
+      h += '<p class="fbp-sub">Loading your Dog Houses…</p>';
     } else if (!list.length) {
-      h += '<p class="fbp-sub">You\'re not in a Pack yet. Make one or join a friend\'s.</p>';
+      h += '<p class="fbp-sub">You\'re not in a Dog House yet. Make one or join a friend\'s.</p>';
     } else {
-      h += '<p class="fbp-sub">Tap a Pack to see its Wienerboard.</p>';
-      list.forEach(p => { h += '<button type="button" class="fbp-row" data-a="pack" data-id="' + p.id + '"><span>' + packsEsc(p.name) + '</span><small>' + (p.waiting ? '<b class="fbp-badge">' + p.waiting + ' waiting</b> ' : '') + p.members + (p.members === 1 ? ' player' : ' players') + ' ›</small></button>'; });
+      h += '<p class="fbp-sub">Tap a Dog House below to open its Wienerboard.</p>';
+      list.forEach(p => { h += '<button type="button" class="fbp-row" data-a="pack" data-id="' + p.id + '"><span>' + packsEsc(p.name) + '</span><small>' + (p.waiting ? '<b class="fbp-badge">' + p.waiting + ' waiting</b> ' : '') + p.members + (p.members === 1 ? ' player' : ' players') + '<span class="fbp-open">Open ›</span></small></button>'; });
     }
     const reqs = packsMe ? packsMe.requests : [];
     if (reqs.length) {
@@ -1348,77 +1359,79 @@ function packsRender() {
       reqs.forEach(r => { h += '<div class="fbp-row"><span>' + packsEsc(r.name) + '</span><button type="button" class="fbp-link" data-a="cancel-req" data-id="' + r.id + '">Cancel</button></div>'; });
     }
     const full = packsMe && list.length >= 5;
-    h += '<button type="button" data-a="go-create"' + (full ? ' disabled' : '') + '>Create a Pack</button>';
-    h += '<button type="button" class="fbp-ghost" data-a="go-join"' + (full ? ' disabled' : '') + '>Join a Pack</button>';
-    if (full) h += '<p class="fbp-small">You\'re in 5 Packs, the most allowed. Leave one to make or join another.</p>';
+    if (list && list.length) h += '<button type="button" class="fbp-play" data-a="play">▶ Play a game</button>';
+    h += '<button type="button"' + (list && list.length ? ' class="fbp-ghost"' : '') + ' data-a="go-create"' + (full ? ' disabled' : '') + '>Create a Dog House</button>';
+    h += '<button type="button" class="fbp-ghost" data-a="go-join"' + (full ? ' disabled' : '') + '>Join a Dog House</button>';
+    if (full) h += '<p class="fbp-small">You\'re in 5 Dog Houses, the most allowed. Quit one to make or join another.</p>';
     h += packsMsgHtml();
-    if (packsToken() && packsMe && !safeGet('fb_pack_code_seen')) h += '<div class="fbp-note">📌 <b>Save your recovery code.</b> You\'ll need it to get your Packs back on a new phone or after reinstalling. <button type="button" class="fbp-link" data-a="go-code">Show my code</button></div>';
-    if (packsToken() && packsMe) h += '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="go-code">Recovery code</button><button type="button" class="fbp-link" data-a="go-restore">Use a different recovery code</button><button type="button" class="fbp-link" data-a="go-help">How Packs work</button></div>';
-    else if (!packsToken()) h += '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="go-help">How Packs work</button><button type="button" class="fbp-link" data-a="go-restore">Already in Packs on another device?</button></div>';
+    if (packsToken() && packsMe && !safeGet('fb_pack_code_seen')) h += '<div class="fbp-note">📌 <b>Save your recovery code.</b> You\'ll need it to get your Dog Houses back on a new phone or after reinstalling. <button type="button" class="fbp-link" data-a="go-code">Show my code</button></div>';
+    if (packsToken() && packsMe) h += '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="go-code">Recovery code</button><button type="button" class="fbp-link" data-a="go-restore">Use a different recovery code</button><button type="button" class="fbp-link" data-a="go-help">How Dog Houses work</button></div>';
+    else if (!packsToken()) h += '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="go-help">How Dog Houses work</button><button type="button" class="fbp-link" data-a="go-restore">Already in Dog Houses on another device?</button></div>';
     h += '<button type="button" class="fbp-ghost" data-a="close">Close</button>';
   } else if (packsView === 'results' && packsResult && packsResult.packs) {
     const r = packsResult;
     h += '<h2>THIS GAME</h2><p class="fbp-sub"><b style="color:#FFD700;font-size:20px">' + r.score.toLocaleString() + '</b><br>' +
       (r.newWeekBest ? 'Your best this week!' : 'Your best this week: ' + r.weekBest.toLocaleString()) + '</p>';
-    if (!r.packs.length) h += '<p class="fbp-sub">You\'re not in a Pack yet. Make one or join a friend\'s to see where you rank.</p>';
+    if (!r.packs.length) h += '<p class="fbp-sub">You\'re not in a Dog House yet. Make one or join a friend\'s to see where you rank.</p>';
     else {
       h += '<label>Where you rank this week</label>';
       r.packs.forEach(p => {
         const place = p.rank === 1 ? '🥇 Top dog' : p.rank === 2 ? '🥈 #2' : p.rank === 3 ? '🥉 #3' : '#' + p.rank;
-        h += '<button type="button" class="fbp-row" data-a="pack" data-id="' + p.id + '"><span>' + packsEsc(p.name) + '</span><small><b style="color:#FFD700">' + place + '</b> of ' + p.players + ' ›</small></button>';
+        h += '<button type="button" class="fbp-row" data-a="pack" data-id="' + p.id + '"><span>' + packsEsc(p.name) + '</span><small><b style="color:#FFD700">' + place + '</b> of ' + p.players + '<span class="fbp-open">Open ›</span></small></button>';
       });
-      h += '<p class="fbp-small">Tap a Pack to see its Wienerboard.</p>';
+      h += '<p class="fbp-small">Tap a Dog House to see its Wienerboard.</p>';
     }
-    h += packsMsgHtml() + '<button type="button" class="fbp-ghost" data-a="home">My Packs</button><button type="button" class="fbp-ghost" data-a="close">Close</button>';
+    h += packsMsgHtml() + '<button type="button" class="fbp-play" data-a="play">▶ Play again</button><button type="button" class="fbp-ghost" data-a="home">My Dog Houses</button><button type="button" class="fbp-ghost" data-a="close">Close</button>';
   } else if (packsView === 'create') {
-    h += '<h2>CREATE A PACK</h2><form>' + packsNameField() +
-      '<label for="fbp-pname">Pack name</label><input id="fbp-pname" type="text" maxlength="24" placeholder="e.g. Levin Family">' +
+    h += '<h2>CREATE A DOG HOUSE</h2><form>' + packsNameField() +
+      '<label for="fbp-pname">Dog House name</label><input id="fbp-pname" type="text" maxlength="24" placeholder="e.g. Levin Family">' +
       '<label>Wienerboard opens to</label><div class="fbp-choice"><button type="button" data-a="pick" data-v="week" class="' + (packsBoard === 'week' ? '' : 'fbp-ghost') + '">This Week</button><button type="button" data-a="pick" data-v="all" class="' + (packsBoard === 'all' ? '' : 'fbp-ghost') + '">All-Time</button></div>' +
       '<p class="fbp-small">Everyone can switch between both. This picks which one shows first.</p>' +
       '<label>Who can join</label><div class="fbp-choice"><button type="button" data-a="pick-appr" data-v="1" class="' + (packsApproval ? '' : 'fbp-ghost') + '">Players I let in</button><button type="button" data-a="pick-appr" data-v="0" class="' + (packsApproval ? 'fbp-ghost' : '') + '">Anyone with the code</button></div>' +
       '<p class="fbp-small">' + (packsApproval ? 'New players ask to join and wait until you let them in.' : 'Anyone you give the code to joins right away.') + '</p>' +
-      '<button type="submit" data-a="create"' + busy + '>Create Pack</button></form>' + packsMsgHtml() +
+      '<button type="submit" data-a="create"' + busy + '>Create Dog House</button></form>' + packsMsgHtml() +
       '<button type="button" class="fbp-ghost" data-a="home">Back</button>';
   } else if (packsView === 'join') {
-    h += '<h2>JOIN A PACK</h2><form>' + packsNameField() +
-      '<label for="fbp-code">Pack code</label><input id="fbp-code" type="text" maxlength="12" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="6 letters and numbers" value="' + packsEsc(packsPrefill) + '">' +
-      '<button type="submit" data-a="join"' + busy + '>Join Pack</button></form>' + packsMsgHtml() +
+    h += '<h2>JOIN A DOG HOUSE</h2><form>' + packsNameField() +
+      '<label for="fbp-code">Dog House code</label><input id="fbp-code" type="text" maxlength="12" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="6 letters and numbers" value="' + packsEsc(packsPrefill) + '">' +
+      '<button type="submit" data-a="join"' + busy + '>Join Dog House</button></form>' + packsMsgHtml() +
       '<button type="button" class="fbp-ghost" data-a="home">Back</button>';
   } else if (packsView === 'name') {
-    h += '<h2>' + (packsMe && packsMe.player.nickname ? 'CHANGE NAME' : 'PICK A NAME') + '</h2><form><p class="fbp-sub">This is the name everyone in your Packs sees. Emoji welcome 🌭</p><label for="fbp-nick2">Your name on Wienerboards</label><input id="fbp-nick2" type="text" maxlength="64" value="' + packsEsc(packsMe ? packsMe.player.nickname : '') + '">' +
+    h += '<h2>' + (packsMe && packsMe.player.nickname ? 'CHANGE NAME' : 'PICK A NAME') + '</h2><form><p class="fbp-sub">This is the name everyone in your Dog Houses sees. Emoji welcome 🌭</p><label for="fbp-nick2">Your name on Wienerboards</label><input id="fbp-nick2" type="text" maxlength="64" value="' + packsEsc(packsMe ? packsMe.player.nickname : '') + '">' +
       '<button type="submit" data-a="rename"' + busy + '>Save</button></form>' + packsMsgHtml() + '<button type="button" class="fbp-ghost" data-a="home">Back</button>';
   } else if (packsView === 'code') {
     safeSet('fb_pack_code_seen', '1');
-    h += '<h2>RECOVERY CODE</h2><p class="fbp-sub">This code is your Packs sign-in. Write it down or take a screenshot. It\'s the only way to get your name, Packs and costumes back on a new phone or browser. Don\'t share it.</p>' +
+    h += '<h2>RECOVERY CODE</h2><p class="fbp-sub">This code is your Dog House sign-in. Write it down or take a screenshot. It\'s the only way to get your name, Dog Houses and costumes back on a new phone or browser. Don\'t share it.</p>' +
       '<div class="fbp-code">' + packsEsc(packsToken()) + '</div><button type="button" data-a="copy-code">Copy code</button>' + packsMsgHtml() +
       '<button type="button" class="fbp-ghost" data-a="home">Back</button>' +
-      '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="delete-me">' + (packsConfirm === 'delete' ? 'Tap again to delete your name, scores, Pack memberships and saved costumes for good' : 'Delete my Packs profile') + '</button></div>';
+      '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="delete-me">' + (packsConfirm === 'delete' ? 'Tap again to delete your name, scores, Dog House memberships and saved costumes for good' : 'Delete my Dog House profile') + '</button></div>';
   } else if (packsView === 'help') {
-    h += '<h2>HOW PACKS WORK</h2><div class="fbp-help">' +
-      '<p>A Pack is a private Wienerboard for you and your friends. Make one, invite people, and find out who\'s top dog.</p>' +
-      '<p><b>Invite friends:</b> on your Pack, tap Invite friends to text a link, or share the 6-character Pack code. Friends enter it under Join a Pack.</p>' +
-      '<p><b>Who gets in:</b> if your Pack is set to <i>Players I let in</i>, new players wait until you tap Let in. In Pack settings you can switch to <i>Anyone with the code</i>, remove players, or get a new code so old invites stop working.</p>' +
-      '<p><b>Scores:</b> every game you play counts in all your Packs. This Week starts fresh every week; All-Time keeps everyone\'s best. After each game, the Game Over screen shows where you rank.</p>' +
-      '<p><b>Your recovery code:</b> your Packs and costumes are saved online, but each place you play (this app, a browser, another phone) needs its own sign-in. Enter your recovery code there under <i>Already in Packs on another device?</i> (or <i>Use a different recovery code</i>). On iPhone, the app also keeps it in your iCloud, so reinstalling the app or a new iPhone with the same Apple ID brings your Packs back by itself. Keep your code private.</p>' +
-      '<p><b>Limits:</b> up to 5 Packs per player and 50 players per Pack.</p>' +
-      '<p>To leave a Pack, open it and tap Leave Pack. To delete your Packs profile, go to Recovery code.</p>' +
-      '<p><b>See an offensive name?</b> Open the Pack and tap Report a name or Pack. Pack leaders can also remove players.</p></div>' +
+    h += '<h2>HOW DOG HOUSES WORK</h2><div class="fbp-help">' +
+      '<p>A Dog House is a private Wienerboard for you and your friends. Make one, invite people, and find out who\'s top dog.</p>' +
+      '<p><b>Invite friends:</b> on your Dog House, tap Invite friends to text a link, or share the 6-character Dog House code. Friends enter it under Join a Dog House.</p>' +
+      '<p><b>Who gets in:</b> if your Dog House is set to <i>Players I let in</i>, new players wait until you tap Let in. In Dog House settings you can switch to <i>Anyone with the code</i>, remove players, or get a new code so old invites stop working.</p>' +
+      '<p><b>Scores:</b> every game you play counts in all your Dog Houses. This Week starts fresh every week; All-Time keeps everyone\'s best. After each game, the Game Over screen shows where you rank.</p>' +
+      '<p><b>Your recovery code:</b> your Dog Houses and costumes are saved online, but each place you play (this app, a browser, another phone) needs its own sign-in. Enter your recovery code there under <i>Already in Dog Houses on another device?</i> (or <i>Use a different recovery code</i>). On iPhone, the app also keeps it in your iCloud, so reinstalling the app or a new iPhone with the same Apple ID brings your Dog Houses back by itself. Keep your code private.</p>' +
+      '<p><b>Limits:</b> up to 5 Dog Houses per player and 50 players per Dog House.</p>' +
+      '<p>To leave a Dog House, open it and tap Quit this Dog House at the bottom. To delete your Dog House profile, go to Recovery code.</p>' +
+      '<p><b>See an offensive name?</b> Open the Dog House and tap Report a name or Dog House. Dog House leaders can also remove players.</p></div>' +
       '<button type="button" class="fbp-ghost" data-a="home">Back</button>';
   } else if (packsView === 'restore') {
-    h += '<h2>RESTORE PACKS</h2><form><p class="fbp-sub">Enter the recovery code from My Packs on your other device.' + (packsToken() ? ' This switches this device to that profile. Save this device\'s code first (My Packs → Recovery code) if you want to come back to it. Costumes won here come with you.' : '') + '</p><label for="fbp-rc">Recovery code</label><input id="fbp-rc" type="text" maxlength="24" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX">' +
+    h += '<h2>RESTORE DOG HOUSES</h2><form><p class="fbp-sub">Enter the recovery code from My Dog Houses on your other device.' + (packsToken() ? ' This switches this device to that profile. Save this device\'s code first (My Dog Houses → Recovery code) if you want to come back to it. Costumes won here come with you.' : '') + '</p><label for="fbp-rc">Recovery code</label><input id="fbp-rc" type="text" maxlength="24" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX">' +
       '<button type="submit" data-a="restore"' + busy + '>Restore</button></form>' + packsMsgHtml() + '<button type="button" class="fbp-ghost" data-a="home">Back</button>';
   } else if (packsView === 'pack' && packsCur) {
     const c = packsCur, p = c.pack;
-    h += '<h2>' + packsEsc(p.name) + '</h2><p class="fbp-sub">Pack code <b style="color:#fff;letter-spacing:1px">' + packsEsc(p.code) + '</b> <button type="button" class="fbp-link" data-a="copy-pack" style="padding:2px 4px">Copy code</button> · ' + p.members + (p.members === 1 ? ' player' : ' players') + '</p>' +
+    h += '<h2>' + packsEsc(p.name) + '</h2><p class="fbp-sub">Dog House code <b style="color:#fff;letter-spacing:1px">' + packsEsc(p.code) + '</b> <button type="button" class="fbp-link" data-a="copy-pack" style="padding:2px 4px">Copy code</button> · ' + p.members + (p.members === 1 ? ' player' : ' players') + '</p>' +
       (p.isOwner ? '<p class="fbp-small" style="margin-top:-8px">' + (p.approval ? 'You let in each new player.' : 'Anyone with the code can join.') + '</p>' : '') +
-      '<button type="button" data-a="share">Invite friends</button>' +
+      '<button type="button" class="fbp-play" data-a="play">▶ Play a game</button>' +
+      '<button type="button" class="fbp-ghost" data-a="share">Invite friends</button>' +
       '<div class="fbp-tabs"><button type="button" data-a="tab" data-v="week" class="' + (c.board === 'week' ? '' : 'fbp-ghost') + '">This Week</button><button type="button" data-a="tab" data-v="all" class="' + (c.board === 'all' ? '' : 'fbp-ghost') + '">All-Time</button></div>' +
       (c.requests && c.requests.length ? '<label>Waiting to join (' + c.requests.length + ')</label>' + c.requests.map(r => '<div class="fbp-req"><span>' + packsEsc(r.name) + '</span><button type="button" data-a="approve" data-id="' + r.id + '">Let in</button><button type="button" class="fbp-ghost" data-a="decline" data-id="' + r.id + '">No</button></div>').join('') : '') +
       '<p class="fbp-top">Who\'s top dog?</p><p class="fbp-wb">🌭 WIENERBOARD</p><table>';
     const medals = ['🥇', '🥈', '🥉'];
     c.rows.forEach((r, i) => {
       const rank = r.score > 0 ? (medals[i] || (i + 1)) : '·';
-      h += '<tr' + (r.you ? ' class="you"' : '') + '><td class="r">' + rank + '</td><td class="n">' + packsEsc(r.name) + (r.you ? ' <small style="color:#ffb347">(you)</small>' : '') + (r.owner ? ' <small title="Pack leader">👑</small>' : '') + '</td><td class="s">' + (r.score > 0 ? r.score.toLocaleString() : '—') + '</td>' +
+      h += '<tr' + (r.you ? ' class="you"' : '') + '><td class="r">' + rank + '</td><td class="n">' + packsEsc(r.name) + (r.you ? ' <small style="color:#ffb347">(you)</small>' : '') + (r.owner ? ' <small title="Dog House leader">👑</small>' : '') + '</td><td class="s">' + (r.score > 0 ? r.score.toLocaleString() : '—') + '</td>' +
         (packsEdit ? (r.you ? '<td class="x"></td>' : '<td class="x"><button type="button" data-a="remove" data-id="' + r.id + '" aria-label="Remove ' + packsEsc(r.name) + '">' + (packsConfirm === 'rm' + r.id ? '?' : '✕') + '</button></td>') : '') + '</tr>';
     });
     h += '</table>';
@@ -1426,21 +1439,22 @@ function packsRender() {
       if (c.resetsAt) h += '<p class="fbp-small">New week starts ' + new Date(c.resetsAt).toLocaleString([], { weekday: 'long', hour: 'numeric', minute: '2-digit' }) + '</p>';
       if (c.lastWeekTop) h += '<p class="fbp-small">Last week\'s top dog: <b>' + packsEsc(c.lastWeekTop.name) + '</b> (' + c.lastWeekTop.score.toLocaleString() + ')</p>';
     }
-    h += '<p class="fbp-small">Every game you play counts in all your Packs.</p>' + packsMsgHtml();
+    h += '<p class="fbp-small">Every game you play counts in all your Dog Houses.</p>' + packsMsgHtml();
     if (p.isOwner) {
       if (packsEdit) {
-        h += '<form><label for="fbp-rename">Pack name</label><input id="fbp-rename" type="text" maxlength="24" value="' + packsEsc(p.name) + '">' +
-          '<button type="submit" data-a="rename-pack"' + busy + '>Save Pack name</button></form>' +
+        h += '<form><label for="fbp-rename">Dog House name</label><input id="fbp-rename" type="text" maxlength="24" value="' + packsEsc(p.name) + '">' +
+          '<button type="submit" data-a="rename-pack"' + busy + '>Save Dog House name</button></form>' +
           '<label>Wienerboard opens to</label><div class="fbp-choice"><button type="button" data-a="setdef" data-v="week" class="' + (p.defaultBoard === 'week' ? '' : 'fbp-ghost') + '">This Week</button><button type="button" data-a="setdef" data-v="all" class="' + (p.defaultBoard === 'all' ? '' : 'fbp-ghost') + '">All-Time</button></div>' +
           '<label>Who can join</label><div class="fbp-choice"><button type="button" data-a="setappr" data-v="1" class="' + (p.approval ? '' : 'fbp-ghost') + '">Players I let in</button><button type="button" data-a="setappr" data-v="0" class="' + (p.approval ? 'fbp-ghost' : '') + '">Anyone with the code</button></div>' +
-          '<label>Pack code</label><button type="button" class="fbp-ghost" data-a="newcode">' + (packsConfirm === 'newcode' ? 'Tap again: ' + packsEsc(p.code) + ' will stop working' : 'Get a new code') + '</button>' +
-          '<p class="fbp-small">A new code stops old invites from working. Players already in your Pack stay in.</p>' +
+          '<label>Dog House code</label><button type="button" class="fbp-ghost" data-a="newcode">' + (packsConfirm === 'newcode' ? 'Tap again: ' + packsEsc(p.code) + ' will stop working' : 'Get a new code') + '</button>' +
+          '<p class="fbp-small">A new code stops old invites from working. Players already in your Dog House stay in.</p>' +
           '<p class="fbp-small">To remove a player, tap ✕ next to their name, then tap ? to confirm.</p><button type="button" class="fbp-ghost" data-a="edit">Done</button>';
-      } else h += '<button type="button" class="fbp-ghost" data-a="edit">Pack settings</button>';
+      } else h += '<button type="button" class="fbp-ghost" data-a="edit">Dog House settings</button>';
     }
-    h += '<button type="button" class="fbp-ghost" data-a="leave">' + (packsConfirm === 'leave' ? 'Tap again to leave this Pack' : 'Leave Pack') + '</button>' +
-      '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="report">Report a name or Pack</button></div>' +
-      '<button type="button" class="fbp-ghost" data-a="home">My Packs</button>';
+    h += '<button type="button" class="fbp-ghost" data-a="home">‹ Back to My Dog Houses</button>' +
+      '<div class="fbp-leave"><button type="button" data-a="leave">' + (packsConfirm === 'leave' ? 'Tap again to quit ' + packsEsc(p.name) : '🚪 Quit this Dog House') + '</button>' +
+      '<p class="fbp-small">' + (packsConfirm === 'leave' ? 'You\'ll come off its Wienerboard. You can join again later with its code.' : 'Removes you from ' + packsEsc(p.name) + ' and its Wienerboard. To just go back, use Back above.') + '</p></div>' +
+      '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="report">Report a name or Dog House</button></div>';
   }
   card.innerHTML = h;
 }
@@ -1480,22 +1494,23 @@ function packsClick(e) {
   const a = b.getAttribute('data-a'), id = b.getAttribute('data-id'), v = b.getAttribute('data-v');
   if (a !== 'leave' && a !== 'remove' && a !== 'delete-me' && a !== 'newcode') packsConfirm = '';
   if (a === 'close') { packsClose(); return; }
+  if (a === 'play') { packsClose(); packsPlay(); return; }
   if (a === 'home') { packsMsg = ''; packsEdit = false; packsGo('home'); if (packsToken()) packsRefreshMe(); return; }
   if (a.indexOf('go-') === 0) { packsMsg = ''; packsGo(a.slice(3)); return; }
   if (a === 'pick-appr') { const keep = packsKeepInputs(); packsApproval = v === '1'; packsRender(); packsPutInputs(keep); return; }
   if (a === 'pick') { const keep = packsKeepInputs(); packsBoard = v; packsRender(); packsPutInputs(keep); return; }
   if (a === 'create') packsDo(async keep => {
-    if (!(keep['fbp-pname'] || '').trim()) throw { message: 'Give your Pack a name.' };
+    if (!(keep['fbp-pname'] || '').trim()) throw { message: 'Give your Dog House a name.' };
     await packsEnsurePlayer(keep['fbp-nick']);
     packsCur = await packsCall('POST', 'packs', { name: keep['fbp-pname'], defaultBoard: packsBoard, approval: packsApproval, nickname: keep['fbp-nick'] });
-    packsView = 'pack'; packsMsg = '✓ Pack made! Tap Invite friends to share the code.' + (safeGet('fb_pack_code_seen') ? '' : ' Then save your recovery code from My Packs.'); packsRefreshMe();
+    packsView = 'pack'; packsMsg = '✓ Dog House made! Tap Invite friends to share the code.' + (safeGet('fb_pack_code_seen') ? '' : ' Then save your recovery code from My Dog Houses.'); packsRefreshMe();
   });
   if (a === 'join') packsDo(async keep => {
-    if (!(keep['fbp-code'] || '').trim()) throw { message: 'Enter the 6-character Pack code.' };
+    if (!(keep['fbp-code'] || '').trim()) throw { message: 'Enter the 6-character Dog House code.' };
     await packsEnsurePlayer(keep['fbp-nick']);
     const j = await packsCall('POST', 'packs/join', { code: keep['fbp-code'], nickname: keep['fbp-nick'] });
     packsPrefill = '';
-    if (j.pending) { packsKeepMe(j); packsView = 'home'; packsMsg = '✓ Asked to join ' + j.pending.name + '. You\'ll be in once the Pack leader lets you in.'; return; }
+    if (j.pending) { packsKeepMe(j); packsView = 'home'; packsMsg = '✓ Asked to join ' + j.pending.name + '. You\'ll be in once the Dog House leader lets you in.'; return; }
     packsCur = j; packsView = 'pack'; packsMsg = '✓ You\'re in!'; packsRefreshMe();
   });
   if (a === 'rename') packsDo(async keep => { packsKeepMe(await packsCall('POST', 'me/name', { nickname: keep['fbp-nick2'] })); packsView = 'home'; packsMsg = '✓ Name saved.'; });
@@ -1518,7 +1533,7 @@ function packsClick(e) {
   if (a === 'leave') {
     if (packsConfirm !== 'leave') { packsConfirm = 'leave'; packsRender(); return; }
     packsConfirm = '';
-    packsDo(async () => { packsKeepMe(await packsCall('POST', 'packs/' + packsCur.pack.id + '/leave')); packsCur = null; packsView = 'home'; packsMsg = '✓ You left the Pack.'; });
+    packsDo(async () => { packsKeepMe(await packsCall('POST', 'packs/' + packsCur.pack.id + '/leave')); packsCur = null; packsView = 'home'; packsMsg = '✓ You left the Dog House.'; });
   }
   if (a === 'cancel-req') packsDo(async () => { packsKeepMe(await packsCall('POST', 'packs/' + id + '/cancel')); packsMsg = '✓ Request cancelled.'; });
   if (a === 'approve' || a === 'decline') packsDo(async () => {
@@ -1528,10 +1543,10 @@ function packsClick(e) {
   });
   if (a === 'rename-pack') packsDo(async keep => {
     const name = (keep['fbp-rename'] || '').trim();
-    if (!name) throw { message: 'Give your Pack a name.' };
+    if (!name) throw { message: 'Give your Dog House a name.' };
     if (name === packsCur.pack.name) { packsMsg = '✓ That\'s already the name.'; return; }
     packsCur = await packsCall('POST', 'packs/' + packsCur.pack.id + '/settings', { name: name, board: packsCur.board });
-    packsMsg = '✓ Pack renamed.'; packsRefreshMe();
+    packsMsg = '✓ Dog House renamed.'; packsRefreshMe();
   });
   if (a === 'setappr') packsDo(async () => { packsCur = await packsCall('POST', 'packs/' + packsCur.pack.id + '/settings', { approval: v === '1', board: packsCur.board }); packsMsg = '✓ Saved.'; });
   if (a === 'newcode') {
@@ -1547,22 +1562,22 @@ function packsClick(e) {
       safeSet('fb_pack_token', ''); safeSet('fb_pack_pending', ''); packsMe = null; packsCur = null; packsCloudClear();
       safeSet('fb_no_auto_profile', '1');   // they deleted it on purpose: don't quietly make another one
       if (SHOP_STORE) shopLink().catch(() => {});   // purchases stay on their Apple / Google account (Restore Purchases)
-      packsView = 'home'; packsMsg = '✓ Your Packs profile was deleted.';
+      packsView = 'home'; packsMsg = '✓ Your Dog House profile was deleted.';
     });
   }
   if (a === 'report') {   // emails us the Pack's code; we can rename or remove names and Packs that break the rules
     const p = packsCur.pack, me = packsMe && packsMe.player ? packsMe.player.nickname : '';
-    const body = 'Pack: ' + p.name + ' (code ' + p.code + ')\nReported by: ' + me + '\n\nWhich name is the problem, and why?\n';
+    const body = 'Dog House: ' + p.name + ' (code ' + p.code + ')\nReported by: ' + me + '\n\nWhich name is the problem, and why?\n';
     const link = document.createElement('a');
-    link.href = 'mailto:admin@slaelabs.com?subject=' + encodeURIComponent('Franks & Buns Pack report: ' + p.code) + '&body=' + encodeURIComponent(body);
+    link.href = 'mailto:admin@slaelabs.com?subject=' + encodeURIComponent('Franks & Buns Dog House report: ' + p.code) + '&body=' + encodeURIComponent(body);
     link.style.display = 'none'; document.body.appendChild(link); link.click(); link.remove();
-    packsMsg = '✓ Opening an email to us. If nothing opens, write to admin@slaelabs.com with the Pack code ' + p.code + '.'; packsRender();
+    packsMsg = '✓ Opening an email to us. If nothing opens, write to admin@slaelabs.com with the Dog House code ' + p.code + '.'; packsRender();
     return;
   }
-  if (a === 'copy-pack') { const c = packsCur.pack.code; packsCopy(c).then(ok => { packsMsg = ok ? '✓ Pack code ' + c + ' copied.' : 'Copy didn\'t work here. The code is ' + c + '.'; packsRender(); }); return; }
+  if (a === 'copy-pack') { const c = packsCur.pack.code; packsCopy(c).then(ok => { packsMsg = ok ? '✓ Dog House code ' + c + ' copied.' : 'Copy didn\'t work here. The code is ' + c + '.'; packsRender(); }); return; }
   if (a === 'share') {
-    const p = packsCur.pack, text = 'Join my Franks & Buns Pack "' + p.name + '"! Code: ' + p.code, url = PACKS_SHARE_URL + p.code;
-    if (navigator.share) { navigator.share({ title: 'Franks & Buns Pack', text: text, url: url }).catch(() => {}); return; }
+    const p = packsCur.pack, text = 'Join my Franks & Buns Dog House "' + p.name + '"! Code: ' + p.code, url = PACKS_SHARE_URL + p.code;
+    if (navigator.share) { navigator.share({ title: 'Franks & Buns Dog House', text: text, url: url }).catch(() => {}); return; }
     packsCopy(text + ' ' + url).then(ok => { packsMsg = ok ? '✓ Invite copied. Paste it in a message to your friends.' : 'Share this code with your friends: ' + p.code; packsRender(); });
   }
 }
@@ -1595,16 +1610,16 @@ const PACKS_PILL = { w: 300, h: 32 };
 function packsPillRect() { const w = Math.min(PACKS_PILL.w, W - 32); return { x: W / 2 - w / 2, y: H * 0.50 + 36, w: w, h: PACKS_PILL.h }; }
 function packsPillVisible() { return state === STATE.GAMEOVER && gameOverDelay > 20 && !packsIsOpen(); }
 function packsPillLabel() {
-  if (!packsToken()) return '🌭 Play with friends: start a Pack ›';
-  if (packsResult === 'wait') return '🌭 Checking your Packs…';
+  if (!packsToken()) return '🏠 Play with friends: start a Dog House ›';
+  if (packsResult === 'wait') return '🌭 Checking your Dog Houses…';
   if (packsResult && packsResult.packs) {
     const list = packsResult.packs;
-    if (!list.length) return '🌭 Join a Pack to compare scores ›';
+    if (!list.length) return '🏠 Join a Dog House to compare scores ›';
     const top = list.slice().sort((a, b) => a.rank - b.rank)[0];
     let name = top.name; if (name.length > 16) name = name.slice(0, 15) + '…';
     return (top.rank === 1 ? '🥇 Top dog in ' : '🌭 #' + top.rank + ' in ') + name + (list.length > 1 ? ' +' + (list.length - 1) : '') + ' ›';
   }
-  return '🌭 MY PACKS ›';
+  return '🏠 MY DOG HOUSES ›';
 }
 function drawPacksPill() {
   if (!packsPillVisible()) return;
@@ -2875,7 +2890,9 @@ function drawMenu() {
   ctx.fillStyle = 'rgba(0,0,0,0.45)'; rrect(k.x, k.y, k.w, k.h, k.h / 2); ctx.fill();
   ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2; rrect(k.x, k.y, k.w, k.h, k.h / 2); ctx.stroke();
   ctx.fillStyle = '#FFD700'; ctx.font = 'bold ' + (k.w < 150 ? 13 : 15) + 'px Arial';
-  ctx.fillText('🌭 MY PACKS', k.x + k.w / 2, k.y + k.h / 2 - 1);
+  const dhLabel = k.w < 150 ? '🏠 DOG HOUSES' : '🏠 MY DOG HOUSES';
+  while (ctx.measureText(dhLabel).width > k.w - 22 && parseInt(ctx.font) > 10) ctx.font = 'bold ' + (parseInt(ctx.font.replace('bold ', '')) - 1) + 'px Arial';
+  ctx.fillText(dhLabel, k.x + k.w / 2, k.y + k.h / 2 - 1);
   ctx.fillStyle = '#ddd'; ctx.font = '11px Arial'; ctx.fillText('Compete with friends', k.x + k.w / 2, k.y + k.h / 2 + 13);
   if (scoresOpen) drawScoresPanel();
 }
