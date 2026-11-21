@@ -2871,7 +2871,8 @@ function drawMenu() {
   ctx.fillStyle = 'rgba(0,0,0,0.45)'; rrect(k.x, k.y, k.w, k.h, k.h / 2); ctx.fill();
   ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2; rrect(k.x, k.y, k.w, k.h, k.h / 2); ctx.stroke();
   ctx.fillStyle = '#FFD700'; ctx.font = 'bold ' + (k.w < 150 ? 13 : 15) + 'px Arial';
-  ctx.fillText('🌭 MY PACKS', k.x + k.w / 2, k.y + k.h / 2 + 6);
+  ctx.fillText('🌭 MY PACKS', k.x + k.w / 2, k.y + k.h / 2 - 1);
+  ctx.fillStyle = '#ddd'; ctx.font = '11px Arial'; ctx.fillText('Compete with friends', k.x + k.w / 2, k.y + k.h / 2 + 13);
   if (scoresOpen) drawScoresPanel();
 }
 function skinsBtnRect() { const w = 112, h = 24; return { x: W / 2 - w / 2, y: H * 0.44 + 24, w: w, h: h }; }
