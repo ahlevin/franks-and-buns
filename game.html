@@ -857,6 +857,9 @@ async function shopBuy(pid) {
 async function shopBuyWeb(pid, p) {
   const sp = shopStore.products[pid];
   if (!sp || !shopStore.rc) throw new Error('This isn’t available right now. Please try again later.');
+  // the checkout draws itself on the page: keep the costume picker out of its way until it closes
+  const pick = document.getElementById('fb-skins');
+  if (pick) pick.style.visibility = 'hidden';
   try {
     const r = await shopStore.rc.purchase({ rcPackage: sp.pkg, termsAndConditionsUrl: 'https://franksandbuns.com/terms.html' });
     shopFromCustomer(r && r.customerInfo);
@@ -867,7 +870,7 @@ async function shopBuyWeb(pid, p) {
     try { if (shopBoughtIds(await shopStore.rc.getCustomerInfo()).indexOf(pid) >= 0) { shopGive(p.skins); return p; } } catch (e2) {}
     const code = e && e.errorCode;
     throw new Error('The purchase didn’t finish' + (code ? ' (error ' + code + ')' : '') + '. If you were charged, tap Restore Purchases.');
-  }
+  } finally { if (pick) pick.style.visibility = ''; }
 }
 async function shopRestore() {
   if (SHOP_TEST) { await new Promise(r => setTimeout(r, 600)); return shopOwned().length; }
