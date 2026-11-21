@@ -2936,7 +2936,7 @@ function howtoOpen() {
     b = document.createElement('div'); b.id = 'fb-howto'; b.setAttribute('role', 'dialog'); b.setAttribute('aria-label', 'How to play');
     b.style.cssText = 'position:fixed;inset:0;z-index:2147483000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(10,5,0,.92);padding:12px;box-sizing:border-box';
     b.innerHTML = '<div style="position:relative;height:min(72vh,calc(100vw * 16 / 9 - 40px));aspect-ratio:9/16;max-width:100%">' +
-      '<video src="how-to-play.mp4" poster="how-to-play.jpg" controls playsinline preload="metadata" style="width:100%;height:100%;border-radius:14px;background:#000;border:2px solid rgba(255,215,0,.5);box-sizing:border-box"></video>' +
+      '<video src="how-to-play.mp4?v=2" poster="how-to-play.jpg" controls playsinline preload="metadata" style="width:100%;height:100%;border-radius:14px;background:#000;border:2px solid rgba(255,215,0,.5);box-sizing:border-box"></video>' +
       '<button type="button" data-a="x" aria-label="Close" style="position:absolute;top:-10px;right:-10px;width:38px;height:38px;border-radius:50%;border:2px solid #FFD700;background:#2a1a0a;color:#FFD700;font:bold 18px Arial;cursor:pointer">✕</button></div>' +
       '<button type="button" data-a="play" style="font:bold 17px Arial;border-radius:999px;padding:12px 28px;border:none;background:#2e9e3e;color:#fff;cursor:pointer">▶︎ Got it, let\'s play!</button>';
     b.addEventListener('click', e => {
