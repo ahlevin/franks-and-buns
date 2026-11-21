@@ -640,15 +640,15 @@ function skinById(id) { return SKINS.find(s => s.id === id) || SKINS[0]; }
 // Collections shop. Test mode (pretend purchases, nothing charged): the test site with ?shop=test.
 // In the iPhone/Android apps the shop is real: Apple / Google Play purchases through RevenueCat (Purchases plugin).
 // On the website the shop is real too: card / Apple Pay / Google Pay checkout by Stripe (seller of record, handles
-// sales tax), through RevenueCat Web Billing. franksandbuns.com stays "Coming soon" until SHOP_LIVE; the test site
+// sales tax), through RevenueCat Web Billing. Live on franksandbuns.com (SHOP_LIVE; Nov 20, 2026); the test site
 // can try the real web checkout with ?shop=web (real charges: refund them in Stripe).
-const SHOP_LIVE = false;
+const SHOP_LIVE = true;
 function shopPlugin() { const P = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Purchases; return P && P.configure ? P : null; }
 const SHOP_APP = !!shopPlugin() && location.hostname !== 'franksandbuns.com';
 const SHOP_TEST = new URLSearchParams(location.search).get('shop') === 'test' && location.hostname !== 'franksandbuns.com' && location.protocol !== 'capacitor:';
 const SHOP_WEB = !SHOP_APP && location.protocol !== 'capacitor:' && !SHOP_TEST &&
   (location.hostname === 'franksandbuns.com' ? SHOP_LIVE : new URLSearchParams(location.search).get('shop') === 'web');
-const SHOP_ON = SHOP_LIVE || SHOP_TEST || SHOP_APP || SHOP_WEB;
+const SHOP_ON = SHOP_TEST || SHOP_APP || SHOP_WEB;
 const SHOP_STORE = SHOP_APP || SHOP_WEB;   // real purchases (store prices, buyer account)
 const SKINS_ALL = !SHOP_TEST && !SHOP_WEB && (new URLSearchParams(location.search).get('skins') === 'all' || location.hostname === 'preview.franks-and-buns.pages.dev') && location.hostname !== 'franksandbuns.com' &&
   location.protocol !== 'capacitor:' && !(location.hostname === 'localhost' && !location.port);
