@@ -1359,7 +1359,7 @@ function packsRender() {
       reqs.forEach(r => { h += '<div class="fbp-row"><span>' + packsEsc(r.name) + '</span><button type="button" class="fbp-link" data-a="cancel-req" data-id="' + r.id + '">Cancel</button></div>'; });
     }
     const full = packsMe && list.length >= 5;
-    if (list && list.length) h += '<button type="button" class="fbp-play" data-a="play">▶ Play a game</button>';
+    if (list && list.length) h += '<button type="button" class="fbp-play" data-a="play">▶︎ Play a game</button>';
     h += '<button type="button"' + (list && list.length ? ' class="fbp-ghost"' : '') + ' data-a="go-create"' + (full ? ' disabled' : '') + '>Create a Dog House</button>';
     h += '<button type="button" class="fbp-ghost" data-a="go-join"' + (full ? ' disabled' : '') + '>Join a Dog House</button>';
     if (full) h += '<p class="fbp-small">You\'re in 5 Dog Houses, the most allowed. Quit one to make or join another.</p>';
@@ -1381,7 +1381,7 @@ function packsRender() {
       });
       h += '<p class="fbp-small">Tap a Dog House to see its Wienerboard.</p>';
     }
-    h += packsMsgHtml() + '<button type="button" class="fbp-play" data-a="play">▶ Play again</button><button type="button" class="fbp-ghost" data-a="home">My Dog Houses</button><button type="button" class="fbp-ghost" data-a="close">Close</button>';
+    h += packsMsgHtml() + '<button type="button" class="fbp-play" data-a="play">▶︎ Play again</button><button type="button" class="fbp-ghost" data-a="home">My Dog Houses</button><button type="button" class="fbp-ghost" data-a="close">Close</button>';
   } else if (packsView === 'create') {
     h += '<h2>CREATE A DOG HOUSE</h2><form>' + packsNameField() +
       '<label for="fbp-pname">Dog House name</label><input id="fbp-pname" type="text" maxlength="24" placeholder="e.g. Levin Family">' +
@@ -1423,7 +1423,7 @@ function packsRender() {
     const c = packsCur, p = c.pack;
     h += '<h2>' + packsEsc(p.name) + '</h2><p class="fbp-sub">Dog House code <b style="color:#fff;letter-spacing:1px">' + packsEsc(p.code) + '</b> <button type="button" class="fbp-link" data-a="copy-pack" style="padding:2px 4px">Copy code</button> · ' + p.members + (p.members === 1 ? ' player' : ' players') + '</p>' +
       (p.isOwner ? '<p class="fbp-small" style="margin-top:-8px">' + (p.approval ? 'You let in each new player.' : 'Anyone with the code can join.') + '</p>' : '') +
-      '<button type="button" class="fbp-play" data-a="play">▶ Play a game</button>' +
+      '<button type="button" class="fbp-play" data-a="play">▶︎ Play a game</button>' +
       '<button type="button" class="fbp-ghost" data-a="share">Invite friends</button>' +
       '<div class="fbp-tabs"><button type="button" data-a="tab" data-v="week" class="' + (c.board === 'week' ? '' : 'fbp-ghost') + '">This Week</button><button type="button" data-a="tab" data-v="all" class="' + (c.board === 'all' ? '' : 'fbp-ghost') + '">All-Time</button></div>' +
       (c.requests && c.requests.length ? '<label>Waiting to join (' + c.requests.length + ')</label>' + c.requests.map(r => '<div class="fbp-req"><span>' + packsEsc(r.name) + '</span><button type="button" data-a="approve" data-id="' + r.id + '">Let in</button><button type="button" class="fbp-ghost" data-a="decline" data-id="' + r.id + '">No</button></div>').join('') : '') +
@@ -2913,7 +2913,7 @@ function drawHowtoBtn() {
   ctx.restore();
   if (!glow) { ctx.strokeStyle = '#ffb347'; ctx.lineWidth = 1.5; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.stroke(); }
   ctx.fillStyle = glow ? '#fff' : '#ffb347'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center';
-  ctx.fillText('▶ How to play', W / 2, r.y + r.h / 2 + 4);
+  ctx.fillText('▶︎ How to play', W / 2, r.y + r.h / 2 + 4);
 }
 function isHowtoTap(clientX, clientY) {
   if (state !== STATE.MENU || scoresOpen) return false;
@@ -2938,7 +2938,7 @@ function howtoOpen() {
     b.innerHTML = '<div style="position:relative;height:min(72vh,calc(100vw * 16 / 9 - 40px));aspect-ratio:9/16;max-width:100%">' +
       '<video src="how-to-play.mp4" poster="how-to-play.jpg" controls playsinline preload="metadata" style="width:100%;height:100%;border-radius:14px;background:#000;border:2px solid rgba(255,215,0,.5);box-sizing:border-box"></video>' +
       '<button type="button" data-a="x" aria-label="Close" style="position:absolute;top:-10px;right:-10px;width:38px;height:38px;border-radius:50%;border:2px solid #FFD700;background:#2a1a0a;color:#FFD700;font:bold 18px Arial;cursor:pointer">✕</button></div>' +
-      '<button type="button" data-a="play" style="font:bold 17px Arial;border-radius:999px;padding:12px 28px;border:none;background:#2e9e3e;color:#fff;cursor:pointer">▶ Got it, let\'s play!</button>';
+      '<button type="button" data-a="play" style="font:bold 17px Arial;border-radius:999px;padding:12px 28px;border:none;background:#2e9e3e;color:#fff;cursor:pointer">▶︎ Got it, let\'s play!</button>';
     b.addEventListener('click', e => {
       const a = e.target.closest('[data-a]'); if (a) { howtoClose(a.getAttribute('data-a') === 'play'); return; }
       if (e.target === b) howtoClose(false);
