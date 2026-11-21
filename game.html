@@ -2201,17 +2201,19 @@ canvas.addEventListener('touchstart', e => {
   if (isCreditsTap(t.clientX, t.clientY)) { fbShowCredits(); return; }
   if (isGcTap(t.clientX, t.clientY)) { gcShowBoard(); return; }
   if (isPacksPillTap(t.clientX, t.clientY)) { packsOpenResults(); return; }
+  if (isShareGoTap(t.clientX, t.clientY)) { shareArmed = true; return; }
   if (isSkinsGoTap(t.clientX, t.clientY)) return;
   if (handleScoresTap(t.clientX, t.clientY)) return;
   onTap();
 });
-canvas.addEventListener('touchend',   e => { e.preventDefault(); onRelease(); });
+canvas.addEventListener('touchend',   e => { e.preventDefault(); if (shareArmed) { shareArmed = false; shareScore(); return; } onRelease(); });   // share sheets need touchend, not touchstart
 canvas.addEventListener('mousedown', e => {
   if (isMuteTap(e.clientX, e.clientY)) { muted = !muted; return; }
   if (isMusicTap(e.clientX, e.clientY)) { ensureAudio(); setMusic(!musicOn); return; }
   if (isCreditsTap(e.clientX, e.clientY)) { fbShowCredits(); return; }
   if (isGcTap(e.clientX, e.clientY)) { gcShowBoard(); return; }
   if (isPacksPillTap(e.clientX, e.clientY)) { packsOpenResults(); return; }
+  if (isShareGoTap(e.clientX, e.clientY)) { shareScore(); return; }
   if (isSkinsGoTap(e.clientX, e.clientY)) return;
   if (handleScoresTap(e.clientX, e.clientY)) return;
   onTap();
@@ -2907,6 +2909,73 @@ function isSkinsGoTap(clientX, clientY) {
   if (p.x >= r.x - 8 && p.x <= r.x + r.w + 8 && p.y >= r.y - 8 && p.y <= r.y + r.h + 8) { ensureAudio(); sndStreak(); skinsOpen(); return true; }
   return false;
 }
+// Game Over: SHARE button in the top-left corner (mirrors SKINS) makes a score picture and opens the share sheet
+let shareArmed = false, shareMsg = '', shareMsgT = 0;
+function shareGoRect() { const w = 96, h = 30; return { x: 10, y: 12, w: w, h: h }; }
+function shareGoVisible() { return state === STATE.GAMEOVER && gameOverDelay > 20 && score > 0 && !skinsIsOpen() && !packsIsOpen(); }
+function drawShareGoButton() {
+  if (shareMsg && frameCount - shareMsgT < 200) {
+    ctx.fillStyle = '#7CFC00'; ctx.font = 'bold 13px Arial'; ctx.textAlign = 'left';
+    ctx.fillText(shareMsg, (W - ctx.measureText(shareMsg).width) / 2, 64); ctx.textAlign = 'center';
+  }
+  if (!shareGoVisible()) return;
+  const r = shareGoRect();
+  ctx.fillStyle = 'rgba(0,0,0,0.55)'; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.fill();
+  ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.5; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.stroke();
+  const t = '📤 SHARE'; ctx.fillStyle = '#FFD700'; ctx.font = 'bold 13px Arial'; ctx.textAlign = 'left';
+  ctx.fillText(t, r.x + (r.w - ctx.measureText(t).width) / 2, r.y + r.h / 2 + 5); ctx.textAlign = 'center';
+}
+function isShareGoTap(clientX, clientY) {
+  if (!shareGoVisible()) return false;
+  const p = toCanvasXY(clientX, clientY), r = shareGoRect();
+  return p.x >= r.x - 8 && p.x <= r.x + r.w + 8 && p.y >= r.y - 8 && p.y <= r.y + r.h + 8;
+}
+// 1080x1350 picture: kitchen, the player's costume, the score and where to play
+function shareCardCanvas(pts, best) {
+  const c = document.createElement('canvas'); c.width = 1080; c.height = 1350;
+  const g = c.getContext('2d'), CW = 1080, CH = 1350;
+  const bg = artReady('start') ? bgArt.start : (artReady('wall') ? bgArt.wall : null);
+  if (bg) { const sc = Math.max(CW / bg.naturalWidth, CH / bg.naturalHeight), bw = bg.naturalWidth * sc, bh = bg.naturalHeight * sc; g.drawImage(bg, (CW - bw) / 2, (CH - bh) / 2, bw, bh); }
+  else { const gr = g.createLinearGradient(0, 0, 0, CH); gr.addColorStop(0, '#5a2a0a'); gr.addColorStop(1, '#1a0b03'); g.fillStyle = gr; g.fillRect(0, 0, CW, CH); }
+  g.fillStyle = 'rgba(20,8,2,0.72)'; g.fillRect(0, 0, CW, CH);
+  g.strokeStyle = '#FF6600'; g.lineWidth = 14; g.strokeRect(28, 28, CW - 56, CH - 56);
+  g.textAlign = 'center'; g.fillStyle = '#FFD700'; g.font = 'bold 104px Arial';
+  g.fillText('FRANKS & BUNS', CW / 2, 220);
+  // the costume, drawn big (game art is about 82x28 around the hot dog's centre)
+  const s = curSkin(); g.save(); g.translate(CW / 2, 510); g.scale(5, 5);
+  const im = s.frames ? skinPic(s.id, 'fly') : null;
+  if (im) { const f = s.fly; g.drawImage(im, f[0], f[1], f[2], f[3]); }
+  else if (spriteReady('frank')) g.drawImage(sp.frank, -41, -14, 82, 28);
+  else { g.font = '48px Arial'; g.fillText('🌭', 0, 16); }
+  g.restore();
+  g.fillStyle = '#ddd'; g.font = 'bold 54px Arial'; g.fillText('I SCORED', CW / 2, 720);
+  g.fillStyle = '#FFD700'; g.font = 'bold 190px Arial'; g.fillText(pts.toLocaleString(), CW / 2, 900);
+  if (best) { g.fillStyle = '#FF6600'; g.font = 'bold 56px Arial'; g.fillText('★ NEW PERSONAL BEST ★', CW / 2, 990); }
+  g.fillStyle = '#fff'; g.font = 'bold 72px Arial'; g.fillText('Can you beat me?', CW / 2, best ? 1105 : 1070);
+  g.fillStyle = '#FF6600'; g.font = 'bold 58px Arial'; g.fillText('franksandbuns.com', CW / 2, 1210);
+  g.fillStyle = '#bbb'; g.font = '36px Arial'; g.fillText('Free to play · App Store · Google Play', CW / 2, 1268);
+  return c;
+}
+function shareScore() {
+  const pts = score, best = score >= bestScore && score > 0;
+  const url = 'https://franksandbuns.com/?utm_source=share&utm_medium=score_card';
+  const text = 'I scored ' + pts.toLocaleString() + ' in Franks & Buns! 🌭 Can you beat me?';
+  try { if (typeof gtag === 'function') gtag('event', 'share_score', { score: pts }); } catch (e) {}
+  let file = null;
+  try {
+    const d = shareCardCanvas(pts, best).toDataURL('image/png'), bin = atob(d.split(',')[1]), u = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    file = new File([u], 'franks-and-buns-score.png', { type: 'image/png' });
+  } catch (e) {}
+  const done = m => { shareMsg = m; shareMsgT = frameCount; };
+  if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+    navigator.share({ files: [file], text: text + ' ' + url }).catch(() => {}); return;
+  }
+  if (navigator.share) { navigator.share({ title: 'Franks & Buns', text: text, url: url }).catch(() => {}); return; }
+  // no share sheet (desktop browsers): save the picture and copy the message
+  if (file) { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.style.display = 'none'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+  packsCopy(text + ' ' + url).then(ok => done(ok ? '✓ Picture saved and message copied' : '✓ Picture saved'));
+}
 // --- Skins picker (HTML, like My Packs) ---
 function skinsClose() { const b = document.getElementById('fb-skins'); if (b) b.style.display = 'none'; }
 function skinsIsOpen() { const b = document.getElementById('fb-skins'); return !!(b && b.style.display !== 'none'); }
@@ -3093,6 +3162,7 @@ function drawGameOver() {
   ctx.fillText('Best Streak: '+bestStreak+'  ·  Best: '+bestScore.toLocaleString(),W/2,sy+24);
   drawPacksPill();
   drawSkinsGoButton();
+  drawShareGoButton();
   if (gameOverDelay>40) { ctx.fillStyle='#FF6600'; ctx.font='bold 20px Arial'; ctx.globalAlpha=0.8+Math.sin(frameCount*0.06)*0.2; ctx.fillText('TAP TO RETRY',W/2,H*0.82); ctx.globalAlpha=1; }
   drawLeaderboard(H * 0.65);
   drawGcButton();
