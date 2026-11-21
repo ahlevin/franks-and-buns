@@ -2586,7 +2586,9 @@ function loseLife() {
   shakeAmount=8;
   if (lives<=0) {
     state=STATE.GAMEOVER; frank.alive=false; sndGameOver();
+    const wasBest = score>bestScore && bestScore>0;
     if (score>bestScore) { bestScore=score; safeSet('fb_best',bestScore.toString()); }
+    reviewMaybeAsk(wasBest);
     const fresh = SKINS_ALL ? [] : skinsAward({ chili: chiliCaught, streak: bestStreak, boxes: boxesCompleted });
     skinNew = fresh.length ? fresh : null;
     fresh.forEach(skinPreload);
@@ -2909,6 +2911,17 @@ function isSkinsGoTap(clientX, clientY) {
   if (p.x >= r.x - 8 && p.x <= r.x + r.w + 8 && p.y >= r.y - 8 && p.y <= r.y + r.h + 8) { ensureAudio(); sndStreak(); skinsOpen(); return true; }
   return false;
 }
+// Apps: ask for an App Store / Google Play rating at a happy moment (a new best, after a few games),
+// at most every 60 days; Apple and Google also limit how often the box really shows.
+function reviewMaybeAsk(newBest) {
+  const CP = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins;
+  const n = (parseInt(safeGet('fb_games') || '0', 10) || 0) + 1; safeSet('fb_games', String(n));
+  if (!CP || !CP.InAppReview || !CP.InAppReview.requestReview || !newBest || n < 5) return;
+  const last = parseInt(safeGet('fb_review_at') || '0', 10) || 0;
+  if (Date.now() - last < 60 * 864e5) return;
+  safeSet('fb_review_at', String(Date.now()));
+  setTimeout(() => { CP.InAppReview.requestReview().catch(() => {}); }, 1800);
+}
 // Game Over: SHARE button in the top-left corner (mirrors SKINS) makes a score picture and opens the share sheet
 let shareArmed = false, shareMsg = '', shareMsgT = 0;
 function shareGoRect() { const w = 96, h = 30; return { x: 10, y: 12, w: w, h: h }; }
@@ -2968,6 +2981,15 @@ function shareScore() {
     file = new File([u], 'franks-and-buns-score.png', { type: 'image/png' });
   } catch (e) {}
   const done = m => { shareMsg = m; shareMsgT = frameCount; };
+  // apps: the native share sheet (Capacitor Share + Filesystem plugins; Android's web view has no navigator.share)
+  const CP = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins;
+  if (CP && CP.Share && CP.Share.share) {
+    const b64 = file ? shareCardCanvas(pts, best).toDataURL('image/png').split(',')[1] : '';
+    const go = files => CP.Share.share(Object.assign({ title: 'Franks & Buns', text: text, url: url, dialogTitle: 'Share your score' }, files ? { files: files } : {})).catch(() => {});
+    if (b64 && CP.Filesystem && CP.Filesystem.writeFile) CP.Filesystem.writeFile({ path: 'franks-and-buns-score.png', data: b64, directory: 'CACHE' }).then(r => go([r.uri]), () => go(null));
+    else go(null);
+    return;
+  }
   if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
     navigator.share({ files: [file], text: text + ' ' + url }).catch(() => {}); return;
   }
