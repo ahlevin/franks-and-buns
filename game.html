@@ -2218,10 +2218,12 @@ canvas.addEventListener('touchstart', e => {
   if (isPacksPillTap(t.clientX, t.clientY)) { packsOpenResults(); return; }
   if (isShareGoTap(t.clientX, t.clientY)) { shareArmed = true; return; }
   if (isSkinsGoTap(t.clientX, t.clientY)) return;
+  if (isHowtoTap(t.clientX, t.clientY)) { howtoArmed = true; return; }   // opened on touchend, so the video may play with sound
   if (handleScoresTap(t.clientX, t.clientY)) return;
   onTap();
 });
-canvas.addEventListener('touchend',   e => { e.preventDefault(); if (shareArmed) { shareArmed = false; shareScore(); return; } onRelease(); });   // share sheets need touchend, not touchstart
+let howtoArmed = false;
+canvas.addEventListener('touchend',   e => { e.preventDefault(); if (howtoArmed) { howtoArmed = false; howtoOpen(); return; } if (shareArmed) { shareArmed = false; shareScore(); return; } onRelease(); });   // share sheets need touchend, not touchstart
 canvas.addEventListener('mousedown', e => {
   if (isMuteTap(e.clientX, e.clientY)) { muted = !muted; return; }
   if (isMusicTap(e.clientX, e.clientY)) { ensureAudio(); setMusic(!musicOn); return; }
@@ -2230,12 +2232,13 @@ canvas.addEventListener('mousedown', e => {
   if (isPacksPillTap(e.clientX, e.clientY)) { packsOpenResults(); return; }
   if (isShareGoTap(e.clientX, e.clientY)) { shareScore(); return; }
   if (isSkinsGoTap(e.clientX, e.clientY)) return;
+  if (isHowtoTap(e.clientX, e.clientY)) { howtoOpen(); return; }
   if (handleScoresTap(e.clientX, e.clientY)) return;
   onTap();
 });
 canvas.addEventListener('mouseup', onRelease);
 document.addEventListener('keydown', e => {
-  if (e.code === 'Space') { if (packsIsOpen() || skinsIsOpen()) return; e.preventDefault(); if (scoresOpen) { scoresOpen = false; return; } onTap(); }
+  if (e.code === 'Space') { if (packsIsOpen() || skinsIsOpen() || howtoIsOpen()) return; e.preventDefault(); if (scoresOpen) { scoresOpen = false; return; } onTap(); }
 });
 document.addEventListener('keyup',   e => { if (e.code === 'Space') onRelease(); });
 
@@ -2896,6 +2899,57 @@ function drawMenu() {
   ctx.fillStyle = '#ddd'; ctx.font = '11px Arial'; ctx.fillText('Compete with friends', k.x + k.w / 2, k.y + k.h / 2 + 13);
   if (scoresOpen) drawScoresPanel();
 }
+// --- How to play: a short video (how-to-play.mp4, bundled in the apps too), opened from a button on the start screen.
+// The button glows for a player's first 3 games; it never gets in the way of TAP TO START.
+let muteRowY = null;   // top of the sound buttons row (set where they're drawn; the apps move that row up)
+function howtoBtnRect() { const w = Math.min(120, W - 230), h = 28, y = (muteRowY === null ? H - 50 : muteRowY) + (36 - h) / 2; return { x: W / 2 - w / 2, y: y, w: w, h: h }; }   // centered between the sound buttons and Credits
+function howtoNew() { return (parseInt(safeGet('fb_games') || '0', 10) || 0) < 3 && !safeGet('fb_howto_seen'); }
+function drawHowtoBtn() {
+  if (scoresOpen) return;
+  const r = howtoBtnRect(), glow = howtoNew();
+  ctx.save();
+  if (glow) { ctx.shadowColor = '#FF6600'; ctx.shadowBlur = 10 + Math.sin(frameCount * 0.08) * 6; }
+  ctx.fillStyle = glow ? '#FF6600' : 'rgba(0,0,0,0.45)'; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.fill();
+  ctx.restore();
+  if (!glow) { ctx.strokeStyle = '#ffb347'; ctx.lineWidth = 1.5; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.stroke(); }
+  ctx.fillStyle = glow ? '#fff' : '#ffb347'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center';
+  ctx.fillText('▶ How to play', W / 2, r.y + r.h / 2 + 4);
+}
+function isHowtoTap(clientX, clientY) {
+  if (state !== STATE.MENU || scoresOpen) return false;
+  const p = toCanvasXY(clientX, clientY), r = howtoBtnRect();
+  return p.x >= r.x - 6 && p.x <= r.x + r.w + 6 && p.y >= r.y - 6 && p.y <= r.y + r.h + 6;
+}
+function howtoIsOpen() { const b = document.getElementById('fb-howto'); return !!(b && b.style.display !== 'none'); }
+function howtoClose(play) {
+  const b = document.getElementById('fb-howto'); if (!b) return;
+  const v = b.querySelector('video'); try { v.pause(); } catch (e) {}
+  b.style.display = 'none';
+  try { if (typeof audioCtx !== 'undefined' && audioCtx && audioCtx.state === 'suspended' && !document.hidden) audioCtx.resume(); } catch (e) {}
+  if (play) packsPlay();
+}
+function howtoOpen() {
+  safeSet('fb_howto_seen', '1');
+  try { if (typeof gtag === 'function') gtag('event', 'howto_video'); } catch (e) {}
+  let b = document.getElementById('fb-howto');
+  if (!b) {
+    b = document.createElement('div'); b.id = 'fb-howto'; b.setAttribute('role', 'dialog'); b.setAttribute('aria-label', 'How to play');
+    b.style.cssText = 'position:fixed;inset:0;z-index:2147483000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(10,5,0,.92);padding:12px;box-sizing:border-box';
+    b.innerHTML = '<div style="position:relative;height:min(72vh,calc(100vw * 16 / 9 - 40px));aspect-ratio:9/16;max-width:100%">' +
+      '<video src="how-to-play.mp4" poster="how-to-play.jpg" controls playsinline preload="metadata" style="width:100%;height:100%;border-radius:14px;background:#000;border:2px solid rgba(255,215,0,.5);box-sizing:border-box"></video>' +
+      '<button type="button" data-a="x" aria-label="Close" style="position:absolute;top:-10px;right:-10px;width:38px;height:38px;border-radius:50%;border:2px solid #FFD700;background:#2a1a0a;color:#FFD700;font:bold 18px Arial;cursor:pointer">✕</button></div>' +
+      '<button type="button" data-a="play" style="font:bold 17px Arial;border-radius:999px;padding:12px 28px;border:none;background:#2e9e3e;color:#fff;cursor:pointer">▶ Got it, let\'s play!</button>';
+    b.addEventListener('click', e => {
+      const a = e.target.closest('[data-a]'); if (a) { howtoClose(a.getAttribute('data-a') === 'play'); return; }
+      if (e.target === b) howtoClose(false);
+    });
+    ['touchstart', 'touchend', 'mousedown', 'pointerdown', 'keydown'].forEach(t => b.addEventListener(t, e => e.stopPropagation(), { passive: true }));
+    (document.body || document.documentElement).appendChild(b);
+  }
+  b.style.display = 'flex';
+  try { if (typeof audioCtx !== 'undefined' && audioCtx) audioCtx.suspend(); } catch (e) {}   // game music off while the video plays
+  const v = b.querySelector('video'); try { v.currentTime = 0; const pr = v.play(); if (pr && pr.catch) pr.catch(() => {}); } catch (e) {}
+}
 function skinsBtnRect() { const w = 112, h = 24; return { x: W / 2 - w / 2, y: H * 0.44 + 24, w: w, h: h }; }
 function drawMenuSkin() {
   const s = curSkin(), cy = H * 0.44, flap = Math.floor(frameCount / 18) % 2 === 1;
@@ -3361,6 +3415,8 @@ function drawMuteBtn() {
   ctx.globalAlpha = (musicOn && !muted) ? 1 : 0.4;
   ctx.fillText('🎵', mx + size/2, y + size/2);
   if (!musicOn) { ctx.strokeStyle = '#FF4444'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(mx + 8, y + 8); ctx.lineTo(mx + size - 8, y + size - 8); ctx.stroke(); }
+  muteRowY = y;
+  if (creditsBtnVisible()) { ctx.restore(); drawHowtoBtn(); ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; }
   if (creditsBtnVisible()) {   // music credit (CC BY 4.0) is one tap away
     const cw = CREDITS_BTN.w, ch = CREDITS_BTN.h, cx = W - 14 - cw, cy = y + (size - ch) / 2;
     ctx.globalAlpha = 0.85; ctx.fillStyle = 'rgba(0,0,0,0.55)'; rrect(cx, cy, cw, ch, ch / 2); ctx.fill();
