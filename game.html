@@ -2891,7 +2891,8 @@ function drawMenu() {
   ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2; rrect(k.x, k.y, k.w, k.h, k.h / 2); ctx.stroke();
   ctx.fillStyle = '#FFD700'; ctx.font = 'bold ' + (k.w < 150 ? 13 : 15) + 'px Arial';
   const dhLabel = k.w < 150 ? '🏠 DOG HOUSES' : '🏠 MY DOG HOUSES';
-  while (ctx.measureText(dhLabel).width > k.w - 22 && parseInt(ctx.font) > 10) ctx.font = 'bold ' + (parseInt(ctx.font.replace('bold ', '')) - 1) + 'px Arial';
+  let dhSize = k.w < 150 ? 13 : 15;   // shrink until the label clears the rounded ends
+  while (dhSize > 9) { ctx.font = 'bold ' + dhSize + 'px Arial'; if (ctx.measureText(dhLabel).width <= k.w - 30) break; dhSize--; }
   ctx.fillText(dhLabel, k.x + k.w / 2, k.y + k.h / 2 - 1);
   ctx.fillStyle = '#ddd'; ctx.font = '11px Arial'; ctx.fillText('Compete with friends', k.x + k.w / 2, k.y + k.h / 2 + 13);
   if (scoresOpen) drawScoresPanel();
