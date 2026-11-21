@@ -3074,7 +3074,21 @@ function skinsOpen() {
     document.body.appendChild(box);
   }
   box.style.display = 'flex'; skinsTab = null; skinsBuy = null; skinsMsg = ''; skinsRender();
-  if (SHOP_STORE) shopStart().catch(() => {});
+  if (SHOP_STORE) shopStart().then(shopRetryMissing).catch(() => {});
+}
+// Apps: products the store didn't return yet (new in-app purchases can take hours to reach every phone)
+// are asked for again each time the costume picker opens, at most once a minute
+let shopRetryAt = 0;
+async function shopRetryMissing() {
+  if (!SHOP_APP || !shopStore.loaded || Date.now() - shopRetryAt < 60000) return;
+  const missing = Object.keys(shopProducts()).filter(id => !shopStore.products[id]);
+  if (!missing.length) return;
+  shopRetryAt = Date.now();
+  try {
+    const r = await shopPlugin().getProducts({ productIdentifiers: missing, type: 'NON_SUBSCRIPTION' });
+    (r && r.products || []).forEach(sp => { shopStore.products[sp.identifier] = sp; });
+  } catch (e) {}
+  if (skinsIsOpen()) skinsRender();
 }
 let skinsTab = null;   // null: the Collections list; otherwise the SKIN_GROUPS key being shown
 function skinsGroupList(gid) { return SKINS.filter(s => (s.group || 'earn') === gid && (SKINS_ALL || skinHow(s) !== 'hidden')); }
