@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Get Franks &amp; Buns</title>
+<meta name="description" content="Franks and Buns: the free arcade game. Get it on the App Store or Google Play, or play in your browser.">
+<meta name="robots" content="noindex">
+<meta property="og:title" content="Franks &amp; Buns: can you beat my score?">
+<meta property="og:description" content="Free arcade game. Bounce the frank, land it in a bun. iPhone, Android, or your browser.">
+<meta property="og:image" content="https://franksandbuns.com/how-to-play.jpg">
+<link rel="icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/favicon-180.png">
+<!-- Shared links (Game Over SHARE): phones go to their app store first (the store shows Open if the app is installed);
+     computers go to the game on the website. -->
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; min-height: 100vh; background: #1a0f05; color: #f3e3c3; font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+         display: flex; align-items: center; justify-content: center; padding: 24px 16px; box-sizing: border-box; }
+  main { width: 100%; max-width: 420px; background: #2a1a0a; border: 2px solid rgba(255,215,0,.5); border-radius: 18px; padding: 24px 20px 20px; text-align: center; }
+  h1 { margin: 8px 0 14px; color: #FFD700; font: bold 26px Arial, sans-serif; }
+  .btn { display: block; margin: 10px 0 0; padding: 13px 16px; border-radius: 999px; font: 600 16px Arial, sans-serif; text-decoration: none; border: 1px solid #ff6600; background: #ff6600; color: #fff; }
+  .btn.ghost { background: transparent; color: #ffb347; border-color: rgba(255,179,71,.6); }
+</style>
+</head>
+<body>
+<main>
+  <div style="font-size:44px">🌭</div>
+  <h1>Franks &amp; Buns</h1>
+  <a class="btn" id="ios" href="https://apps.apple.com/app/franks-buns/id6761290671">Get it on the App Store</a>
+  <a class="btn" id="android" href="https://play.google.com/store/apps/details?id=com.franksandbuns.game&amp;referrer=utm_source%3Dshare%26utm_medium%3Dscore_card">Get it on Google Play</a>
+  <a class="btn ghost" id="web" href="/game.html">Play in your browser</a>
+</main>
+<script>
+(function () {
+  var ua = navigator.userAgent || '';
+  var ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  var android = /Android/.test(ua);
+  var go = ios ? 'ios' : android ? 'android' : 'web';
+  if (ios) document.getElementById('android').style.display = 'none';
+  if (android) document.getElementById('ios').style.display = 'none';
+  location.replace(document.getElementById(go).href);
+})();
+</script>
+</body>
+</html>

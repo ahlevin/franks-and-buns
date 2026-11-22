@@ -3042,7 +3042,7 @@ function shareCardCanvas(pts, best) {
 }
 function shareScore() {
   const pts = score, best = score >= bestScore && score > 0;
-  const url = 'https://franksandbuns.com/?utm_source=share&utm_medium=score_card';
+  const url = 'https://franksandbuns.com/get';   // phones: their app store first; computers: the game
   const text = 'I scored ' + pts.toLocaleString() + ' in Franks & Buns! 🌭 Can you beat me?';
   try { if (typeof gtag === 'function') gtag('event', 'share_score', { score: pts }); } catch (e) {}
   let file = null;

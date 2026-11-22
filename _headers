@@ -15,3 +15,6 @@
 
 /join.html
   X-Robots-Tag: noindex
+
+/get.html
+  X-Robots-Tag: noindex
