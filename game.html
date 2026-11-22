@@ -737,9 +737,10 @@ function drawBuxGameOver() {
   const r = buxResult;
   if (r && typeof r === 'object') {
     const t = r.earned > 0 ? '🪙 +' + r.earned + ' BunBux  ·  You have ' + r.bux.bux.toLocaleString()
-      : r.capped ? '🪙 Daily BunBux limit reached  ·  You have ' + r.bux.bux.toLocaleString() : '';
-    if (t) fbCenterText(t, H * 0.22 + 30, '#FFD700', 15, true);
+      : r.capped ? '🪙 Daily BunBux limit reached  ·  You have ' + r.bux.bux.toLocaleString() : '🪙 You have ' + r.bux.bux.toLocaleString() + ' BunBux';
+    fbCenterText(t, H * 0.22 + 30, '#FFD700', 15, true);
   } else if (r === 'wait') fbCenterText('🪙 …', H * 0.22 + 30, '#FFD700', 15, true);
+  else if (!SKINS_ALL) fbCenterText('🪙 You have ' + buxState().bux.toLocaleString() + ' BunBux', H * 0.22 + 30, '#FFD700', 15, true);
 }
 function dailyGameOverLine() {   // in the costume-hint slot: a challenge just done wins, then the next costume, then today's progress
   if (buxResult && buxResult.dailyDone) return { t: '✅ DAILY CHALLENGE DONE!  🔥 ' + buxResult.bux.streak + '-day streak' + (buxResult.bonus ? ' (+' + buxResult.bonus + ' bonus)' : ''), c: '#7CFC00' };
@@ -3130,7 +3131,7 @@ function buxIntroMaybe() {
   ['touchstart', 'touchend', 'mousedown', 'pointerdown', 'keydown'].forEach(t => b.addEventListener(t, e => e.stopPropagation(), { passive: true }));
   (document.body || document.documentElement).appendChild(b);
 }
-function skinsBtnRect() { const w = 112, h = 24; return { x: W / 2 - w / 2, y: H * 0.44 + 24, w: w, h: h }; }
+function skinsBtnRect() { const w = SKINS_ALL ? 112 : 176, h = 24; return { x: W / 2 - w / 2, y: H * 0.44 + 24, w: w, h: h }; }
 function drawMenuSkin() {
   const s = curSkin(), cy = H * 0.44, flap = Math.floor(frameCount / 18) % 2 === 1;
   ctx.save(); ctx.translate(W / 2, cy + Math.sin(frameCount * 0.05) * 3); ctx.scale(1.25, 1.25);
@@ -3143,7 +3144,8 @@ function drawMenuSkin() {
   ctx.fillStyle = 'rgba(0,0,0,0.45)'; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.fill();
   ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.5; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.stroke();
   ctx.fillStyle = '#FFD700'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center';
-  ctx.fillText('🎭 SKINS', r.x + r.w / 2, r.y + r.h / 2 + 4);
+  if (SKINS_ALL) ctx.fillText('🎭 SKINS', r.x + r.w / 2, r.y + r.h / 2 + 4);
+  else { const t = '🎭 SKINS  ·  🪙 ' + buxState().bux.toLocaleString(); ctx.textAlign = 'left'; ctx.fillText(t, r.x + (r.w - ctx.measureText(t).width) / 2, r.y + r.h / 2 + 4); ctx.textAlign = 'center'; }
 }
 // Game Over: SKINS button in the top-right corner, so you can change costume between games
 function skinsGoRect() { const w = 96, h = 30; return { x: W - w - 10, y: 12, w: w, h: h }; }
@@ -3290,6 +3292,7 @@ function skinsOpen() {
       '#fb-skins .fbs-test{text-align:center;font:bold 11px Arial;color:#1a0f05;background:#9be29b;border-radius:6px;padding:3px;margin:0 0 8px}' +
       '#fb-skins .fbs-ltd{display:inline-block;background:linear-gradient(135deg,#FFD700,#ffb347);color:#1a0f05;font:bold 10px Arial;letter-spacing:.5px;border-radius:999px;padding:2px 8px}' +
       '#fb-skins .fbs-ltd-c{position:absolute;top:6px;left:6px;z-index:1}' +
+      '#fb-skins .fbs-bal{text-align:center;font:13px Arial;color:#FFD700;background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.35);border-radius:999px;padding:5px 10px;margin:0 auto 10px;width:fit-content}' +
       '#fb-skins .fbs-go.fbs-bux{background:transparent;color:#FFD700;border:2px solid #FFD700;padding:11px}#fb-skins .fbs-buxnote{text-align:center;font-size:12px;color:#c8a878;margin:6px 0 0}' +
       '#fb-skins .fbs-close{flex:none;font:600 15px Arial;border-radius:999px;padding:11px 16px;border:1px solid rgba(255,179,71,.5);background:transparent;color:#ffb347;cursor:pointer;width:100%;margin:12px 0 0}';
     document.head.appendChild(css);
@@ -3375,6 +3378,7 @@ function skinsRender() {
     '<h2>' + packsEsc(title) + '</h2>' +
     '<button type="button" class="fbs-x" data-a="close" aria-label="Close">✕</button></div><div class="fbs-body">';
   if (SHOP_TEST) h += '<div class="fbs-test">TEST SHOP · pretend purchases, nothing is charged</div>';
+  if (!SKINS_ALL) h += '<div class="fbs-bal">🪙 You have <b>' + buxState().bux.toLocaleString() + '</b> BunBux</div>';
   const msg = skinsMsg ? '<p class="fbs-msg' + (skinsMsgErr ? ' err' : '') + '">' + packsEsc(skinsMsg) + '</p>' : '';
   if (buyP) {
     // confirm screen: exactly what you get, what you already own, the price
@@ -3399,7 +3403,7 @@ function skinsRender() {
     h += msg + '</div>';
   } else if (!skinsTab) {
     // Collections: one row per group, newest groups just get added to SKIN_GROUPS
-    h += '<p class="fbs-sub">Wearing: <b>' + packsEsc(cur.name) + '</b>' + (SHOP_ON && !SKINS_ALL ? ' · 🪙 ' + buxState().bux.toLocaleString() + ' BunBux' : '') + '</p>' + msg;
+    h += '<p class="fbs-sub">Wearing: <b>' + packsEsc(cur.name) + '</b>' + '</p>' + msg;
     groups.forEach(g => {
       const list = skinsGroupList(g), open = list.filter(s => skinUnlocked(s)).length, how = SKINS_ALL ? '' : skinHow(list[0]), soon = how === 'soon';
       const here = list.indexOf(cur) >= 0;
