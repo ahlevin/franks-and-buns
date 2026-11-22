@@ -9,7 +9,8 @@ const NEW_PLAYERS_PER_IP_PER_DAY = 20;
 const NEW_SILENT_PLAYERS_PER_IP_PER_DAY = 200;   // nameless profiles the game makes to keep costumes (schools and phone networks share IPs)
 const MAX_SKINS = 300;
 const NEW_PACKS_PER_PLAYER_PER_DAY = 10;
-const RECOVER_TRIES_PER_IP_PER_DAY = 60;   // recovery codes can't be guessed (80 random bits); this stops anyone hammering the server trying
+const RECOVER_TRIES_PER_IP_PER_DAY = 60;
+const WRONG_JOIN_CODES_PER_DAY = 30;   // per player and per network: Dog House codes are short, so guessing them has to stay slow   // recovery codes can't be guessed (80 random bits); this stops anyone hammering the server trying
 const ALLOWED_ORIGINS = new Set(['capacitor://localhost', 'https://localhost', 'http://localhost', 'ionic://localhost']);
 
 const SCHEMA = [
@@ -235,7 +236,9 @@ async function route(request, env, path) {
   if (!db) fail(503, 'Dog Houses are not switched on yet.');
   await ensureSchema(db);
   const method = request.method, now = Date.now();
-  const body = method === 'POST' ? await request.json().catch(() => ({})) : {};
+  if (method === 'POST' && Number(request.headers.get('Content-Length') || 0) > 16384) fail(413, 'That request is too big.');
+  let body = method === 'POST' ? await request.json().catch(() => ({})) : {};
+  if (!body || typeof body !== 'object' || Array.isArray(body)) body = {};
   const ip = request.headers.get('CF-Connecting-IP') || 'local';
 
   if (method === 'POST' && path === 'player') {
@@ -261,8 +264,11 @@ async function route(request, env, path) {
   if (method === 'GET' && path === 'me') return meResponse(db, await needPlayer(db, request));
   if (method === 'POST' && path === 'me/skins') {   // adds costumes won on this device (never removes any)
     const p = await needPlayer(db, request);
-    const have = skinList(p), add = (Array.isArray(body.skins) ? body.skins : []).filter(k => typeof k === 'string' && /^[a-z]{2,24}$/.test(k));
-    const all = have.concat(add.filter((k, i) => have.indexOf(k) < 0 && add.indexOf(k) === i)).slice(0, MAX_SKINS);
+    const have = skinList(p), seenIds = new Set(have), all = have.slice();
+    for (const k of (Array.isArray(body.skins) ? body.skins : []).slice(0, MAX_SKINS)) {
+      if (all.length >= MAX_SKINS) break;
+      if (typeof k === 'string' && /^[a-z]{2,24}$/.test(k) && !seenIds.has(k)) { seenIds.add(k); all.push(k); }
+    }
     if (all.length !== have.length) { p.skins = all.join(','); await db.prepare('UPDATE players SET skins = ? WHERE id = ?').bind(p.skins, p.id).run(); }
     return meResponse(db, p);
   }
@@ -306,8 +312,11 @@ async function route(request, env, path) {
     await needName(db, p, body);
     const code = cleanCode(body.code);
     if (code.length !== 6) fail(400, 'Dog House codes have 6 letters and numbers.');
+    const wrongKeys = ['jw:' + p.id, 'jw:' + (await sha256(ip + today()))];
+    const tooMany = async () => { for (const k of wrongKeys) { const r = await db.prepare('SELECT n, day FROM limits WHERE k = ?').bind(k).first(); if (r && r.day === today() && r.n >= WRONG_JOIN_CODES_PER_DAY) return true; } return false; };
+    if (await tooMany()) fail(429, 'Too many wrong Dog House codes today. Check the code with whoever invited you and try again tomorrow.');
     const pack = await db.prepare('SELECT * FROM packs WHERE code = ?').bind(code).first();
-    if (!pack) fail(404, 'No Dog House has that code. Check it and try again.');
+    if (!pack) { for (const k of wrongKeys) await underLimit(db, k, WRONG_JOIN_CODES_PER_DAY + 1); fail(404, 'No Dog House has that code. Check it and try again.'); }
     const already = await db.prepare('SELECT 1 FROM members WHERE pack_id = ? AND player_id = ?').bind(pack.id, p.id).first();
     if (!already) {
       if ((await packCount(db, p.id)) >= MAX_PACKS_PER_PLAYER) fail(409, `You can be in up to ${MAX_PACKS_PER_PLAYER} Dog Houses. Quit one to join this one.`);

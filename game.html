@@ -121,7 +121,7 @@
       cfg.client_id = cid;
       cfg.page_location = 'https://franksandbuns.com/app-' + platform + '/';
       cfg.page_title = 'Franks and Buns app (' + platform + ')';
-    }
+    } else cfg.page_location = location.origin + location.pathname;   // no ?pack=CODE etc. in analytics
     window.gtag('config', GA_ID, cfg);
     var s = document.createElement('script');
     s.async = true;
@@ -645,13 +645,13 @@ function skinById(id) { return SKINS.find(s => s.id === id) || SKINS[0]; }
 const SHOP_LIVE = true;
 function shopPlugin() { const P = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Purchases; return P && P.configure ? P : null; }
 const SHOP_APP = !!shopPlugin() && location.hostname !== 'franksandbuns.com';
-const SHOP_TEST = new URLSearchParams(location.search).get('shop') === 'test' && location.hostname !== 'franksandbuns.com' && location.protocol !== 'capacitor:';
+const SHOP_TESTHOST = location.hostname === 'preview.franks-and-buns.pages.dev' || ((location.hostname === 'localhost' || location.hostname === '127.0.0.1') && !!location.port);
+const SHOP_TEST = new URLSearchParams(location.search).get('shop') === 'test' && SHOP_TESTHOST;
 const SHOP_WEB = !SHOP_APP && location.protocol !== 'capacitor:' && !SHOP_TEST &&
   (location.hostname === 'franksandbuns.com' ? SHOP_LIVE : new URLSearchParams(location.search).get('shop') === 'web');
 const SHOP_ON = SHOP_TEST || SHOP_APP || SHOP_WEB;
 const SHOP_STORE = SHOP_APP || SHOP_WEB;   // real purchases (store prices, buyer account)
-const SKINS_ALL = !SHOP_TEST && !SHOP_WEB && (new URLSearchParams(location.search).get('skins') === 'all' || location.hostname === 'preview.franks-and-buns.pages.dev') && location.hostname !== 'franksandbuns.com' &&
-  location.protocol !== 'capacitor:' && !(location.hostname === 'localhost' && !location.port);
+const SKINS_ALL = !SHOP_TEST && !SHOP_WEB && SHOP_TESTHOST && (new URLSearchParams(location.search).get('skins') === 'all' || location.hostname === 'preview.franks-and-buns.pages.dev');
 function skinUnlocked(s) {
   if (SKINS_ALL) return true;
   const how = skinHow(s);
@@ -804,9 +804,14 @@ async function shopLinkNow() {
 }
 // a purchase needs a profile to belong to: make the quiet, nameless one (same as for earned costumes)
 async function shopEnsureProfile() {
-  if (packsToken() || safeGet('fb_no_auto_profile')) return;
-  try { packsKeepMe(await packsCall('POST', 'player', { silent: true })); } catch (e) {}   // offline: buy anyway, Restore covers it
+  if (packsToken()) return;
+  // Apple / Google keep their own record of the purchase (Restore Purchases finds it), so the apps can buy without one.
+  // A website (Stripe) purchase belongs only to the profile, so it always gets one, even after a deleted profile.
+  if (safeGet('fb_no_auto_profile') && !SHOP_WEB) return;
+  try { packsKeepMe(await packsCall('POST', 'player', { silent: true })); if (SHOP_WEB) safeSet('fb_no_auto_profile', ''); } catch (e) {}   // apps offline: buy anyway, Restore covers it
   await shopLink().catch(() => {});
+  if (SHOP_WEB && (!packsToken() || shopStore.uid !== await shopBuyerId()))
+    throw new Error('We couldn’t get your purchase ready. Check your connection and try again. Nothing was charged.');
 }
 // everything this store account has bought -> costumes owned on this device
 // (the store ids: App Store / Google Play ids are ours; website purchases show up as Stripe ids)
@@ -1406,7 +1411,7 @@ function packsRender() {
     h += '<h2>RECOVERY CODE</h2><p class="fbp-sub">This code is your Dog House sign-in. Write it down or take a screenshot. It\'s the only way to get your name, Dog Houses and costumes back on a new phone or browser. Don\'t share it.</p>' +
       '<div class="fbp-code">' + packsEsc(packsToken()) + '</div><button type="button" data-a="copy-code">Copy code</button>' + packsMsgHtml() +
       '<button type="button" class="fbp-ghost" data-a="home">Back</button>' +
-      '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="delete-me">' + (packsConfirm === 'delete' ? 'Tap again to delete your name, scores, Dog House memberships and saved costumes for good' : 'Delete my Dog House profile') + '</button></div>';
+      '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="delete-me">' + (packsConfirm === 'delete' ? 'Tap again to delete your name, scores, Dog House memberships and saved costumes for good' + (SHOP_WEB && shopOwned().length ? '. Costumes bought on this website belong to this profile and will be lost' : '') : 'Delete my Dog House profile') + '</button></div>';
   } else if (packsView === 'help') {
     h += '<h2>HOW DOG HOUSES WORK</h2><div class="fbp-help">' +
       '<p>A Dog House is a private Wienerboard for you and your friends. Make one, invite people, and find out who\'s top dog.</p>' +
@@ -1563,7 +1568,7 @@ function packsClick(e) {
       await packsCall('POST', 'me/delete');
       safeSet('fb_pack_token', ''); safeSet('fb_pack_pending', ''); packsMe = null; packsCur = null; packsCloudClear();
       safeSet('fb_no_auto_profile', '1');   // they deleted it on purpose: don't quietly make another one
-      if (SHOP_STORE) shopLink().catch(() => {});   // purchases stay on their Apple / Google account (Restore Purchases)
+      if (SHOP_STORE) shopLink().catch(() => {});   // app purchases stay on their Apple / Google account (Restore Purchases); website purchases go with the profile
       packsView = 'home'; packsMsg = '✓ Your Dog House profile was deleted.';
     });
   }
@@ -3168,6 +3173,7 @@ async function skinsPay() {
     const p = await shopBuy(skinsBuy);
     skinsBuy = null; skinsMsgErr = false; skinsMsg = '🎉 ' + p.name + ' is yours!';
     if (p.skins.length === 1) { safeSet('fb_skin', p.skins[0]); skinPreload(skinById(p.skins[0])); skinsMsg += ' You’re wearing it now.'; }
+    if (SHOP_WEB) skinsMsg += ' Save your recovery code (My Dog Houses → Recovery code): it brings your costumes back on another device or browser.';
   } catch (e) { skinsMsgErr = !(e && e.cancelled); skinsMsg = e && e.cancelled ? '' : (e && e.message) || 'That didn’t go through. Nothing was charged.'; }
   skinsBusy = false; skinsRender();
 }
