@@ -715,11 +715,22 @@ async function buxSubmit(st, run) {
     buxResult = j;
   } catch (e) { buxResult = 'off'; }
 }
+// The BunBux coin (bunbux.png): in canvas text, each 🪙 is drawn as the coin picture, so it looks the same on every device
+const BUX_IMG = new Image(); BUX_IMG.src = 'bunbux.png';
+const BUX_ICON_HTML = '<img src="bunbux.png" alt="" style="width:1.25em;height:1.25em;vertical-align:-0.3em">';
+function fbIconW(t, size) { const parts = t.split('🪙'); return parts.reduce((w, seg) => w + ctx.measureText(seg).width, 0) + (parts.length - 1) * size * 1.25; }
+function fbIconText(t, x, y, size) {   // left-aligned at x (baseline y), with the current font
+  const parts = t.split('🪙'), d = size * 1.25;
+  parts.forEach((seg, i) => {
+    ctx.fillText(seg, x, y); x += ctx.measureText(seg).width;
+    if (i < parts.length - 1) { if (BUX_IMG.complete && BUX_IMG.naturalWidth) ctx.drawImage(BUX_IMG, x, y - size * 0.98, d, d); x += d; }
+  });
+}
 // canvas text centred by measuring it (iOS misplaces centred canvas text that has an emoji), shrunk to fit the width
 function fbCenterText(t, y, color, size, bold) {
   ctx.font = (bold ? 'bold ' : '') + size + 'px Arial';
-  const w = ctx.measureText(t).width; if (w > W - 20) ctx.font = (bold ? 'bold ' : '') + Math.max(9, Math.floor(size * (W - 20) / w)) + 'px Arial';
-  ctx.fillStyle = color; ctx.textAlign = 'left'; ctx.fillText(t, (W - ctx.measureText(t).width) / 2, y); ctx.textAlign = 'center';
+  const w = fbIconW(t, size); if (w > W - 20) { size = Math.max(9, Math.floor(size * (W - 20) / w)); ctx.font = (bold ? 'bold ' : '') + size + 'px Arial'; }
+  ctx.fillStyle = color; ctx.textAlign = 'left'; fbIconText(t, (W - fbIconW(t, size)) / 2, y, size); ctx.textAlign = 'center';
 }
 // Start screen: today's challenge and the day streak (the balance is on the SKINS button; in place of the how-to lines after 3 games)
 function dailyCardShown() { return (parseInt(safeGet('fb_games') || '0', 10) || 0) >= 3 || buxState().bux > 0 || dailyStreakNow() > 0; }
@@ -3116,7 +3127,7 @@ function buxIntroMaybe() {
   b.style.cssText = 'position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(10,5,0,.86);padding:16px;box-sizing:border-box';
   const li = 'margin:0 0 9px;padding-left:30px;text-indent:-30px';
   b.innerHTML = '<div style="max-width:360px;width:100%;background:#2a1a0a;border:2px solid #FFD700;border-radius:18px;padding:20px 18px 16px;box-sizing:border-box;color:#f3e3c8;font:15px/1.4 Arial;max-height:100%;overflow-y:auto">' +
-    '<div style="text-align:center;font-size:40px;line-height:1">🪙</div>' +
+    '<div style="text-align:center;line-height:1"><img src="bunbux.png" alt="" style="width:64px;height:64px"></div>' +
     '<h2 style="margin:6px 0 4px;text-align:center;color:#FFD700;font:bold 24px Arial">New: BunBux!</h2>' +
     '<p style="margin:0 0 14px;text-align:center;color:#c8a878">Earn them by playing, then spend them on costumes.</p>' +
     '<ul style="list-style:none;margin:0;padding:0">' +
@@ -3145,7 +3156,7 @@ function drawMenuSkin() {
   ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.5; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.stroke();
   ctx.fillStyle = '#FFD700'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center';
   if (SKINS_ALL) ctx.fillText('🎭 SKINS', r.x + r.w / 2, r.y + r.h / 2 + 4);
-  else { const t = '🎭 SKINS  ·  🪙 ' + buxState().bux.toLocaleString(); ctx.textAlign = 'left'; ctx.fillText(t, r.x + (r.w - ctx.measureText(t).width) / 2, r.y + r.h / 2 + 4); ctx.textAlign = 'center'; }
+  else { const t = '🎭 SKINS  ·  🪙 ' + buxState().bux.toLocaleString(); ctx.textAlign = 'left'; fbIconText(t, r.x + (r.w - fbIconW(t, 12)) / 2, r.y + r.h / 2 + 4, 12); ctx.textAlign = 'center'; }
 }
 // Game Over: SKINS button in the top-right corner, so you can change costume between games
 function skinsGoRect() { const w = 96, h = 30; return { x: W - w - 10, y: 12, w: w, h: h }; }
@@ -3378,7 +3389,7 @@ function skinsRender() {
     '<h2>' + packsEsc(title) + '</h2>' +
     '<button type="button" class="fbs-x" data-a="close" aria-label="Close">✕</button></div><div class="fbs-body">';
   if (SHOP_TEST) h += '<div class="fbs-test">TEST SHOP · pretend purchases, nothing is charged</div>';
-  if (!SKINS_ALL) h += '<div class="fbs-bal">🪙 You have <b>' + buxState().bux.toLocaleString() + '</b> BunBux</div>';
+  if (!SKINS_ALL) h += '<div class="fbs-bal">' + BUX_ICON_HTML + ' You have <b>' + buxState().bux.toLocaleString() + '</b> BunBux</div>';
   const msg = skinsMsg ? '<p class="fbs-msg' + (skinsMsgErr ? ' err' : '') + '">' + packsEsc(skinsMsg) + '</p>' : '';
   if (buyP) {
     // confirm screen: exactly what you get, what you already own, the price
@@ -3397,7 +3408,7 @@ function skinsRender() {
     if (buyP.kind === 'skin' && skinLimited(buyP.skins[0])) h += '<p class="fbs-buxnote">★ Limited Edition: only for purchase, not for BunBux.</p>';
     else if (buyP.kind === 'skin') {   // or unlock it with BunBux
       const have = buxState().bux, can = have >= BUX_COST && !!packsToken();
-      h += '<button type="button" class="fbs-go fbs-bux" data-a="bux"' + (skinsBusy || !can ? ' disabled' : '') + '>🪙 Unlock for ' + BUX_COST + ' BunBux</button>' +
+      h += '<button type="button" class="fbs-go fbs-bux" data-a="bux"' + (skinsBusy || !can ? ' disabled' : '') + '>' + BUX_ICON_HTML + ' Unlock for ' + BUX_COST + ' BunBux</button>' +
         '<p class="fbs-buxnote">You have ' + have.toLocaleString() + ' BunBux.' + (can ? '' : ' Earn them by packing boxes and doing the daily challenge.') + '</p>';
     }
     h += msg + '</div>';
