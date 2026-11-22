@@ -1610,6 +1610,10 @@ function packsClick(e) {
 function packsSubmit(run) {
   if (!packsToken() || !(run.score > 0)) return;
   if (packsMe && !packsMe.player.nickname) return;   // a nameless profile (made only to keep costumes) never sends scores
+  // Not in any Dog House: weekly scores aren't shown anywhere, so only a new personal best goes up (for All-Time boards
+  // later). Keeps the server free for players who are in Dog Houses when lots of people play at once.
+  if (packsMe && Array.isArray(packsMe.packs) && !packsMe.packs.length && run.score <= (packsMe.player.best || 0)) return;
+  if (packsMe && run.score > (packsMe.player.best || 0)) packsMe.player.best = run.score;
   let pend = null; try { pend = JSON.parse(safeGet('fb_pack_pending') || 'null'); } catch (e) {}
   if (!pend || run.score > pend.score) safeSet('fb_pack_pending', JSON.stringify(run));
   packsResult = 'wait';

@@ -159,21 +159,6 @@ async function needPlayer(db, request) {
   if (!p) fail(401, 'Your Dog House sign-in was not found on this device. Use your recovery code to restore it.');
   return p;
 }
-async function myPacks(db, playerId) {
-  const { results } = await db.prepare(
-    `SELECT p.id, p.code, p.name, p.default_board, p.owner_id,
-            (SELECT COUNT(*) FROM members m2 WHERE m2.pack_id = p.id) AS members,
-            CASE WHEN p.owner_id = m.player_id THEN (SELECT COUNT(*) FROM requests r WHERE r.pack_id = p.id) ELSE 0 END AS waiting
-       FROM members m JOIN packs p ON p.id = m.pack_id
-      WHERE m.player_id = ? ORDER BY m.joined_at`).bind(playerId).all();
-  return results.map(r => ({ id: r.id, code: r.code, name: r.name, defaultBoard: r.default_board,
-    members: r.members, isOwner: r.owner_id === playerId, waiting: r.waiting }));
-}
-async function myRequests(db, playerId) {
-  const { results } = await db.prepare(
-    'SELECT p.id, p.name FROM requests r JOIN packs p ON p.id = r.pack_id WHERE r.player_id = ? ORDER BY r.requested_at').bind(playerId).all();
-  return results.map(r => ({ id: r.id, name: r.name }));
-}
 const skinList = p => String(p.skins || '').split(',').filter(Boolean);
 // A profile the game made silently has no name yet; it needs one before it can make or join a Pack
 async function needName(db, p, body, ip) {
@@ -185,8 +170,17 @@ async function needName(db, p, body, ip) {
   await db.prepare('UPDATE players SET nickname = ? WHERE id = ?').bind(p.nickname, p.id).run();
 }
 async function meResponse(db, p, extra) {
-  return Object.assign({ player: { id: p.id, nickname: p.nickname, best: p.best, skins: skinList(p), buyerId: p.rc_id || '' }, packs: await myPacks(db, p.id),
-    requests: await myRequests(db, p.id) }, extra || {});
+  const [packs, requests] = await db.batch([   // one trip to the database
+    db.prepare(`SELECT p.id, p.code, p.name, p.default_board, p.owner_id,
+            (SELECT COUNT(*) FROM members m2 WHERE m2.pack_id = p.id) AS members,
+            CASE WHEN p.owner_id = m.player_id THEN (SELECT COUNT(*) FROM requests r WHERE r.pack_id = p.id) ELSE 0 END AS waiting
+       FROM members m JOIN packs p ON p.id = m.pack_id WHERE m.player_id = ? ORDER BY m.joined_at`).bind(p.id),
+    db.prepare('SELECT p.id, p.name FROM requests r JOIN packs p ON p.id = r.pack_id WHERE r.player_id = ? ORDER BY r.requested_at').bind(p.id),
+  ]);
+  return Object.assign({ player: { id: p.id, nickname: p.nickname, best: p.best, skins: skinList(p), buyerId: p.rc_id || '' },
+    packs: packs.results.map(r => ({ id: r.id, code: r.code, name: r.name, defaultBoard: r.default_board,
+      members: r.members, isOwner: r.owner_id === p.id, waiting: r.waiting })),
+    requests: requests.results.map(r => ({ id: r.id, name: r.name })) }, extra || {});
 }
 
 // ---------- packs ----------
@@ -453,23 +447,21 @@ async function route(request, env, path) {
     const secs = run.frames / 60;
     if (p.last_score_at && now - p.last_score_at < Math.max(3000, secs * 700)) fail(429, 'Scores are coming in too fast.');
     const week = weekKey(now);
-    await db.batch([
+    // Save it and work out where it leaves you in each Dog House this week (Game Over screen), in one trip
+    const res = await db.batch([
       db.prepare('UPDATE players SET last_score_at = ?, best = MAX(best, ?), best_at = CASE WHEN ? > best THEN ? ELSE best_at END WHERE id = ?')
         .bind(now, run.score, run.score, now, p.id),
       db.prepare(`INSERT INTO weekly (player_id, week, best, best_at) VALUES (?, ?, ?, ?)
                   ON CONFLICT (player_id, week) DO UPDATE SET best = MAX(best, excluded.best),
                   best_at = CASE WHEN excluded.best > best THEN excluded.best_at ELSE best_at END`).bind(p.id, week, run.score, now),
-    ]);
-    // Where this leaves you in each of your Packs this week (shown on the Game Over screen)
-    const me = await db.prepare('SELECT best FROM weekly WHERE player_id = ? AND week = ?').bind(p.id, week).first();
-    const weekBest = me ? me.best : run.score;
-    const { results } = await db.prepare(
-      `SELECT p.id, p.name,
+      db.prepare('SELECT best FROM weekly WHERE player_id = ? AND week = ?').bind(p.id, week),
+      db.prepare(`SELECT p.id, p.name,
               (SELECT COUNT(*) FROM members m2 WHERE m2.pack_id = p.id) AS players,
               (SELECT COUNT(*) FROM members m3 JOIN weekly w ON w.player_id = m3.player_id AND w.week = ?
-                 WHERE m3.pack_id = p.id AND w.best > ?) AS ahead
-         FROM members m JOIN packs p ON p.id = m.pack_id WHERE m.player_id = ? ORDER BY m.joined_at`)
-      .bind(week, weekBest, p.id).all();
+                 WHERE m3.pack_id = p.id AND w.best > (SELECT best FROM weekly WHERE player_id = ? AND week = ?)) AS ahead
+         FROM members m JOIN packs p ON p.id = m.pack_id WHERE m.player_id = ? ORDER BY m.joined_at`).bind(week, p.id, week, p.id),
+    ]);
+    const me = res[2].results[0], weekBest = me ? me.best : run.score, results = res[3].results;
     return { ok: true, score: run.score, weekBest, newWeekBest: run.score >= weekBest,
       packs: results.map(r => ({ id: r.id, name: r.name, rank: r.ahead + 1, players: r.players })) };
   }
