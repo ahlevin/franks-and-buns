@@ -721,16 +721,16 @@ function fbCenterText(t, y, color, size, bold) {
   const w = ctx.measureText(t).width; if (w > W - 20) ctx.font = (bold ? 'bold ' : '') + Math.max(9, Math.floor(size * (W - 20) / w)) + 'px Arial';
   ctx.fillStyle = color; ctx.textAlign = 'left'; ctx.fillText(t, (W - ctx.measureText(t).width) / 2, y); ctx.textAlign = 'center';
 }
-// Start screen: today's challenge, the day streak and the BunBux balance (in place of the how-to lines after 3 games)
+// Start screen: today's challenge and the day streak (the balance is on the SKINS button; in place of the how-to lines after 3 games)
 function dailyCardShown() { return (parseInt(safeGet('fb_games') || '0', 10) || 0) >= 3 || buxState().bux > 0 || dailyStreakNow() > 0; }
 function drawDailyCard(y) {
-  const ch = dailyToday(), done = dailyDoneToday(), sk = dailyStreakNow(), bux = buxState().bux;
+  const ch = dailyToday(), done = dailyDoneToday(), sk = dailyStreakNow();
   const w = Math.min(320, W - 32), h = 64, x = W / 2 - w / 2;
   ctx.fillStyle = 'rgba(0,0,0,0.5)'; rrect(x, y, w, h, 12); ctx.fill();
   ctx.strokeStyle = done ? '#7CFC00' : '#FFD700'; ctx.lineWidth = 1.5; rrect(x, y, w, h, 12); ctx.stroke();
   fbCenterText(done ? "✓ TODAY'S CHALLENGE DONE" : "📅 TODAY'S CHALLENGE · +" + BUX_DAILY + ' BUNBUX', y + 17, done ? '#7CFC00' : '#ffb347', 11, true);
   fbCenterText(done ? 'New challenge tomorrow' : ch.text, y + 38, '#fff', 17, true);
-  fbCenterText((sk > 0 ? '🔥 ' + sk + '-day streak  ·  ' : '') + '🪙 ' + bux.toLocaleString() + ' BunBux', y + 56, '#FFD700', 12, false);
+  fbCenterText(sk > 0 ? '🔥 ' + sk + '-day streak' + (done ? '  ·  keep it going tomorrow' : '') : '🔥 Do it today to start a day streak', y + 56, '#FFD700', 12, false);
 }
 // Game Over: what this game earned, and the challenge
 function drawBuxGameOver() {
