@@ -9,6 +9,7 @@ const NEW_PLAYERS_PER_IP_PER_DAY = 20;
 const NEW_SILENT_PLAYERS_PER_IP_PER_DAY = 200;   // nameless profiles the game makes to keep costumes (schools and phone networks share IPs)
 const MAX_SKINS = 300;
 const NEW_PACKS_PER_PLAYER_PER_DAY = 10;
+const RECOVER_TRIES_PER_IP_PER_DAY = 60;   // recovery codes can't be guessed (80 random bits); this stops anyone hammering the server trying
 const ALLOWED_ORIGINS = new Set(['capacitor://localhost', 'https://localhost', 'http://localhost', 'ionic://localhost']);
 
 const SCHEMA = [
@@ -252,6 +253,7 @@ async function route(request, env, path) {
   if (method === 'POST' && path === 'recover') {
     const tok = cleanCode(body.code);
     if (tok.length !== 16) fail(400, 'Recovery codes have 16 letters and numbers.');
+    if (!(await underLimit(db, 'rc:' + (await sha256(ip + today())), RECOVER_TRIES_PER_IP_PER_DAY))) fail(429, 'Too many recovery code tries from here today. Try again tomorrow.');
     const p = await db.prepare('SELECT * FROM players WHERE token_hash = ?').bind(await sha256(tok)).first();
     if (!p) fail(404, 'That recovery code was not found. Check it and try again.');
     return meResponse(db, p, { token: fmtToken(tok) });

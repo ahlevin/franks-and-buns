@@ -672,7 +672,7 @@ function shopColSkins(g) { return SKINS.filter(k => k.group === g).map(k => k.id
 function shopProducts() {
   const out = {}, st = shopStore.products;
   // in the apps the price comes from the store (the player's own currency); the crossed-out price only in dollars
-  const real = (pid, usd) => SHOP_STORE ? (st[pid] ? st[pid].priceString : '') : usd;
+  const real = (pid, usd) => SHOP_STORE ? (st[pid] ? packsEsc(st[pid].priceString || '') : '') : usd;   // store text: escaped before it goes into the page
   const usdStore = pid => !SHOP_STORE || (st[pid] && st[pid].currencyCode === 'USD');
   SHOP_COLS.forEach(g => {
     shopColSkins(g).forEach(id => { out['skin_' + id] = { kind: 'skin', name: skinById(id).name, skins: [id], price: real('skin_' + id, '$0.99') }; });
@@ -718,6 +718,8 @@ function shopWebSdk() {
   if (!shopStore.sdk) shopStore.sdk = new Promise((ok, no) => {
     const sc = document.createElement('script');
     sc.src = 'https://unpkg.com/@revenuecat/purchases-js@1.74.0/dist/Purchases.umd.js';
+    // the exact file we checked (npm package 1.74.0): the browser refuses it if the CDN ever serves anything else
+    sc.integrity = 'sha384-IsQojQEo6pIiQnorSMj9fFmZ5FQl+Amjw8pQfqqWxUqpnjQtGHemKWxOoUVDJ9tD'; sc.crossOrigin = 'anonymous';
     sc.onload = () => window.Purchases && window.Purchases.Purchases ? ok(window.Purchases.Purchases) : no(new Error('store'));
     sc.onerror = () => { shopStore.sdk = null; no(new Error('The shop couldn’t load. Check your connection and try again.')); };
     document.head.appendChild(sc);
