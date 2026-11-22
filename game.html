@@ -658,8 +658,8 @@ const SKINS_ALL = !SHOP_TEST && !SHOP_WEB && SHOP_TESTHOST && (new URLSearchPara
 // recovery code brings them back, and caps what a day of games can earn at 100 (streak bonuses on top).
 // Any shop costume can be unlocked for 300 BunBux; Collections and bundles stay real-money only.
 const BUX_COST = 300, BUX_DAILY = 25;
-// Limited Edition: one costume per Collection that can only be bought, never unlocked with BunBux (same list as BUX_LIMITED in the API)
-const SKINS_LIMITED = ['santa', 'corgi', 'tabby', 'slamdunk', 'anglerfish', 'unidentifiedfryingobject', 'babykaiju', 'phoenix', 'shadowwizard',
+// Limited Edition: costumes (one or two per Collection) that can only be bought, never unlocked with BunBux (same list as BUX_LIMITED in the API)
+const SKINS_LIMITED = ['santa', 'bernedoodle', 'labradoodle', 'persian', 'mainecoon', 'slamdunk', 'goalgetter', 'axolotl', 'anglerfish', 'unidentifiedfryingobject', 'babykaiju', 'phoenix', 'shadowwizard',
   'glazedandconfused', 'blanketburrito', 'royaltreatment', 'raccoon', 'forkimpostor', 'professorfrank', 'glowgetter', 'specialdelivery',
   'discodog', 'maneevent'];
 function skinLimited(id) { return SKINS_LIMITED.indexOf(id) >= 0; }

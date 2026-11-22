@@ -15,7 +15,7 @@ const NEW_CODES_PER_PLAYER_PER_DAY = 5;   // "Get a new recovery code"
 // BunBux: earned by playing (never sold). Amounts agreed with Alan, Nov 22, 2026.
 const BUX = { perBox: 1, maxBoxes: 10, daily: 25, cap: 100, cost: 300 };   // cap: most BunBux a day from games and the challenge
 // Limited Edition costumes are purchase only (same list as SKINS_LIMITED in game.html)
-const BUX_LIMITED = new Set(['santa', 'corgi', 'tabby', 'slamdunk', 'anglerfish', 'unidentifiedfryingobject', 'babykaiju', 'phoenix', 'shadowwizard',
+const BUX_LIMITED = new Set(['santa', 'bernedoodle', 'labradoodle', 'persian', 'mainecoon', 'slamdunk', 'goalgetter', 'axolotl', 'anglerfish', 'unidentifiedfryingobject', 'babykaiju', 'phoenix', 'shadowwizard',
   'glazedandconfused', 'blanketburrito', 'royaltreatment', 'raccoon', 'forkimpostor', 'professorfrank', 'glowgetter', 'specialdelivery',
   'discodog', 'maneevent']);
 const BUX_MILESTONES = { 3: 25, 7: 75, 30: 200 };   // day-streak bonuses, on top of the daily cap
