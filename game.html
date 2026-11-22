@@ -542,13 +542,13 @@ const SKINS = [
 const SKIN_GROUPS = { earn: { name: 'Free & Earned', how: 'earn' }, holiday: { name: 'Holiday', how: 'shop' },
   dogs: { name: 'Dogs', how: 'shop' },
   cats: { name: 'Cats', how: 'shop' },
+  sports: { name: 'Sports', how: 'shop' },             // on sale from 1.9 (Nov 22, 2026)
+  deepseadogs: { name: 'Deep Sea Dogs', how: 'shop' },
   // hidden until Alan says to show them (switch how to 'soon' to show them locked as coming soon)
   spacecases: { name: 'Space Cases', how: 'hidden' },
   tinyterrors: { name: 'Tiny Terrors', how: 'hidden' },
-  deepseadogs: { name: 'Deep Sea Dogs', how: 'hidden' },
   mythicalmisfits: { name: 'Mythical Misfits', how: 'hidden' },
   finalbossfranks: { name: 'Final Boss Franks', how: 'hidden' },
-  sports: { name: 'Sports', how: 'hidden' },
   snackpack: { name: 'Snack Pack', how: 'hidden' },
   cozycrew: { name: 'Cozy Crew', how: 'hidden' },
   maincharacterenergy: { name: 'Main Character Energy', how: 'hidden' },
@@ -664,7 +664,8 @@ function skinUnlocked(s) {
 // Each Collection is sold as exactly the costumes listed here (never "every future Dog costume").
 // Prices: $0.99 per costume; $3.99 per Collection, $2.99 launch offer through Jan 15, 2027 (Pacific); all three $7.99.
 const SHOP_LAUNCH_END = Date.UTC(2027, 0, 16, 8);   // midnight at the end of Jan 15 in California
-const SHOP_COLS = ['holiday', 'dogs', 'cats'];
+const SHOP_COLS = ['holiday', 'dogs', 'cats', 'sports', 'deepseadogs'];   // Collections on sale
+const SHOP_LAUNCH3 = ['holiday', 'dogs', 'cats'];   // the fixed "All 3 Collections" bundle ($7.99): always exactly these three
 function shopNow() { const d = new URLSearchParams(location.search).get('shopdate'); return SHOP_TEST && d === 'after' ? SHOP_LAUNCH_END + 1 : Date.now(); }
 function shopLaunch() { return shopNow() < SHOP_LAUNCH_END; }
 function shopColSkins(g) { return SKINS.filter(k => k.group === g).map(k => k.id); }
@@ -680,8 +681,8 @@ function shopProducts() {
     out[cid] = { kind: 'col', group: g, name: SKIN_GROUPS[g].name + ' Collection', skins: shopColSkins(g),
       price: real(cid, shopLaunch() ? '$2.99' : '$3.99'), was: shopLaunch() && usdStore(cid) ? '$3.99' : '', launch: shopLaunch() };
   });
-  out.col_launch3 = { kind: 'bundle', name: 'All 3 Collections', skins: [].concat.apply([], SHOP_COLS.map(shopColSkins)), price: real('col_launch3', '$7.99'),
-    note: SHOP_COLS.map(g => SKIN_GROUPS[g].name).join(', ') };
+  out.col_launch3 = { kind: 'bundle', name: 'All 3 Collections', skins: [].concat.apply([], SHOP_LAUNCH3.map(shopColSkins)), price: real('col_launch3', '$7.99'),
+    note: SHOP_LAUNCH3.map(g => SKIN_GROUPS[g].name).join(', ') };
   return out;
 }
 // --- the store, in the apps (RevenueCat). Product ids are the same in App Store Connect and Google Play. ---
