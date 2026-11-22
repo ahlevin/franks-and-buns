@@ -1384,7 +1384,7 @@ function packsRender() {
     h += packsMsgHtml() + '<button type="button" class="fbp-play" data-a="play">▶︎ Play again</button><button type="button" class="fbp-ghost" data-a="home">My Dog Houses</button><button type="button" class="fbp-ghost" data-a="close">Close</button>';
   } else if (packsView === 'create') {
     h += '<h2>CREATE A DOG HOUSE</h2><form>' + packsNameField() +
-      '<label for="fbp-pname">Dog House name</label><input id="fbp-pname" type="text" maxlength="24" placeholder="e.g. Levin Family">' +
+      '<label for="fbp-pname">Dog House name</label><input id="fbp-pname" type="text" maxlength="24" placeholder="e.g. Smith Family">' +
       '<label>Wienerboard opens to</label><div class="fbp-choice"><button type="button" data-a="pick" data-v="week" class="' + (packsBoard === 'week' ? '' : 'fbp-ghost') + '">This Week</button><button type="button" data-a="pick" data-v="all" class="' + (packsBoard === 'all' ? '' : 'fbp-ghost') + '">All-Time</button></div>' +
       '<p class="fbp-small">Everyone can switch between both. This picks which one shows first.</p>' +
       '<label>Who can join</label><div class="fbp-choice"><button type="button" data-a="pick-appr" data-v="1" class="' + (packsApproval ? '' : 'fbp-ghost') + '">Players I let in</button><button type="button" data-a="pick-appr" data-v="0" class="' + (packsApproval ? 'fbp-ghost' : '') + '">Anyone with the code</button></div>' +
