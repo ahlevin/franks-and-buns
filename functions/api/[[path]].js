@@ -12,6 +12,17 @@ const NEW_PACKS_PER_PLAYER_PER_DAY = 10;
 const RECOVER_TRIES_PER_IP_PER_DAY = 60;   // recovery codes can't be guessed (80 random bits); this stops anyone hammering the server trying
 const WRONG_JOIN_CODES_PER_DAY = 30;   // per player and per network: Dog House codes are short, so guessing them has to stay slow
 const NEW_CODES_PER_PLAYER_PER_DAY = 5;   // "Get a new recovery code"
+// BunBux: earned by playing (never sold). Amounts agreed with Alan, Nov 22, 2026.
+const BUX = { perBox: 1, maxBoxes: 10, daily: 25, cap: 100, cost: 300 };   // cap: most BunBux a day from games and the challenge
+const BUX_MILESTONES = { 3: 25, 7: 75, 30: 200 };   // day-streak bonuses, on top of the daily cap
+// Daily challenge: everyone gets the same one each day (midnight Pacific). Same list and order as DAILY in game.html.
+const DAILY = [['streak', 10], ['boxes', 2], ['franks', 20], ['chili', 1], ['streak', 12], ['boxes', 3], ['franks', 25], ['streak', 15],
+  ['boxes', 4], ['chili', 2], ['franks', 30], ['streak', 8], ['boxes', 3], ['franks', 35], ['streak', 18], ['chili', 1], ['boxes', 5],
+  ['franks', 20], ['streak', 12], ['boxes', 2]];
+const pacDay = ms => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(ms));
+const dayNum = d => Math.round(Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)) / 864e5);
+const dayBefore = d => new Date((dayNum(d) - 1) * 864e5).toISOString().slice(0, 10);
+const dailyFor = d => { const c = DAILY[(dayNum(d) * 7) % DAILY.length]; return { stat: c[0], n: c[1] }; };
 const ALLOWED_ORIGINS = new Set(['capacitor://localhost', 'https://localhost', 'http://localhost', 'ionic://localhost']);
 
 const SCHEMA = [
@@ -38,7 +49,7 @@ async function ensureSchema(db) {
   // Every new server copy starts here, and with many players there are many copies: one quick look first,
   // and the full setup below only when a table, column or index is missing.
   try {
-    const r = await db.prepare(`SELECT (SELECT rc_id FROM players LIMIT 0) AS c,
+    const r = await db.prepare(`SELECT (SELECT rc_id FROM players LIMIT 0) AS c, (SELECT bux_skins FROM players LIMIT 0) AS b,
         (SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name IN ('weekly_week', 'limits_day', 'requests_player', 'members_player')) AS ix`).first();
     if (r && r.ix === 4) { schemaReady = true; return; }
   } catch (e) {}
@@ -50,6 +61,11 @@ async function ensureSchema(db) {
   // The RevenueCat buyer id, stored so the recovery code can be changed without losing purchases.
   // Filled from the code the first time each player is seen (same value the apps and website already work out).
   try { await db.prepare("ALTER TABLE players ADD COLUMN rc_id TEXT NOT NULL DEFAULT ''").run(); } catch (e) {}
+  // BunBux balance, today's BunBux (for the daily cap), the daily challenge streak, and costumes unlocked with BunBux
+  for (const col of ["bux INTEGER NOT NULL DEFAULT 0", "bux_day TEXT NOT NULL DEFAULT ''", "bux_today INTEGER NOT NULL DEFAULT 0",
+      "daily_last TEXT NOT NULL DEFAULT ''", "daily_streak INTEGER NOT NULL DEFAULT 0", "bux_skins TEXT NOT NULL DEFAULT ''"]) {
+    try { await db.prepare('ALTER TABLE players ADD COLUMN ' + col).run(); } catch (e) {}
+  }
   schemaReady = true;
 }
 
@@ -160,6 +176,8 @@ async function needPlayer(db, request) {
   return p;
 }
 const skinList = p => String(p.skins || '').split(',').filter(Boolean);
+// What the game shows: BunBux balance, costumes unlocked with BunBux, and the daily challenge streak
+const buxOf = p => ({ bux: p.bux || 0, skins: String(p.bux_skins || '').split(',').filter(Boolean), dailyLast: p.daily_last || '', streak: p.daily_streak || 0 });
 // A profile the game made silently has no name yet; it needs one before it can make or join a Pack
 async function needName(db, p, body, ip) {
   if (p.nickname) return;
@@ -177,7 +195,7 @@ async function meResponse(db, p, extra) {
        FROM members m JOIN packs p ON p.id = m.pack_id WHERE m.player_id = ? ORDER BY m.joined_at`).bind(p.id),
     db.prepare('SELECT p.id, p.name FROM requests r JOIN packs p ON p.id = r.pack_id WHERE r.player_id = ? ORDER BY r.requested_at').bind(p.id),
   ]);
-  return Object.assign({ player: { id: p.id, nickname: p.nickname, best: p.best, skins: skinList(p), buyerId: p.rc_id || '' },
+  return Object.assign({ player: { id: p.id, nickname: p.nickname, best: p.best, skins: skinList(p), buyerId: p.rc_id || '', bux: buxOf(p) },
     packs: packs.results.map(r => ({ id: r.id, code: r.code, name: r.name, defaultBoard: r.default_board,
       members: r.members, isOwner: r.owner_id === p.id, waiting: r.waiting })),
     requests: requests.results.map(r => ({ id: r.id, name: r.name })) }, extra || {});
@@ -307,6 +325,43 @@ async function route(request, env, path) {
     }
     if (all.length !== have.length) { p.skins = all.join(','); await db.prepare('UPDATE players SET skins = ? WHERE id = ?').bind(p.skins, p.id).run(); }
     return meResponse(db, p);
+  }
+  if (method === 'POST' && path === 'me/bux') {
+    // A finished game: 1 BunBux per box packed (up to 10), 25 for today's challenge (once a day), day-streak bonuses.
+    // The game runs on the player's device, so the daily cap is what keeps a faked game from earning more than a real day's play.
+    const p = await needPlayer(db, request);
+    const run = { score: body.score, frames: body.frames, franks: body.franks, boxes: body.boxes };
+    const st = { streak: body.streak, chili: body.chili, franks: body.franks, boxes: body.boxes };
+    if (!plausible(run) || ![st.streak, st.chili].every(v => Number.isInteger(v) && v >= 0) || st.streak > st.franks ||
+        st.chili > Math.floor(run.frames / 60 / 25) + 1) fail(422, 'That game could not be checked.');
+    // BUX_TEST=1 (only ever set on a test copy of the site) lets the game say which day it is, to try streaks without waiting
+    const day = env.BUX_TEST === '1' && /^\d{4}-\d{2}-\d{2}$/.test(String(body.testDay || '')) ? body.testDay : pacDay(now);
+    const ch = dailyFor(day);
+    let done = false, streak = p.daily_streak || 0, bonus = 0;
+    if ((st[ch.stat] || 0) >= ch.n) {   // one statement, so two games ending at once can't both claim it
+      const r = await db.prepare(`UPDATE players SET daily_streak = CASE WHEN daily_last = ? THEN daily_streak + 1 ELSE 1 END, daily_last = ?
+          WHERE id = ? AND daily_last <> ? RETURNING daily_streak`).bind(dayBefore(day), day, p.id, day).first();
+      if (r) { done = true; streak = r.daily_streak; bonus = BUX_MILESTONES[streak] || 0; }
+    }
+    const want = Math.min(run.boxes, BUX.maxBoxes) * BUX.perBox + (done ? BUX.daily : 0);
+    const earn = `MAX(0, MIN(?, ${BUX.cap} - CASE WHEN bux_day = ? THEN bux_today ELSE 0 END))`;
+    const r = await db.prepare(`UPDATE players SET bux = bux + ${earn} + ?, bux_today = CASE WHEN bux_day = ? THEN bux_today ELSE 0 END + ${earn},
+        bux_day = ? WHERE id = ? RETURNING bux, bux_today, bux_skins, daily_last, daily_streak`)
+      .bind(want, day, bonus, day, want, day, day, p.id).first();
+    const earned = Math.max(0, r.bux - (p.bux || 0));
+    return { bux: buxOf(r), day, earned, bonus, dailyDone: done, capped: r.bux_today >= BUX.cap };
+  }
+  if (method === 'POST' && path === 'me/bux/spend') {   // unlock one shop costume for BunBux
+    const p = await needPlayer(db, request);
+    const id = String(body.skin || '');
+    if (!/^[a-z]{2,24}$/.test(id)) fail(400, 'That costume was not found.');
+    const r = await db.prepare(`UPDATE players SET bux = bux - ${BUX.cost}, bux_skins = CASE WHEN bux_skins = '' THEN ? ELSE bux_skins || ',' || ? END
+        WHERE id = ? AND bux >= ${BUX.cost} AND instr(',' || bux_skins || ',', ?) = 0 AND length(bux_skins) < 8000
+        RETURNING bux, bux_skins, daily_last, daily_streak`).bind(id, id, p.id, ',' + id + ',').first();
+    if (r) return { bux: buxOf(r), unlocked: id };
+    const now2 = await db.prepare('SELECT * FROM players WHERE id = ?').bind(p.id).first();
+    if (buxOf(now2).skins.indexOf(id) >= 0) return { bux: buxOf(now2), unlocked: id };
+    fail(409, `This costume needs ${BUX.cost} BunBux. You have ${now2.bux || 0}.`);
   }
   if (method === 'POST' && path === 'me/newcode') {   // "Get a new recovery code": the old one stops working everywhere
     const p = await needPlayer(db, request);

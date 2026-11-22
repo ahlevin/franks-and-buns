@@ -652,11 +652,115 @@ const SHOP_WEB = !SHOP_APP && location.protocol !== 'capacitor:' && !SHOP_TEST &
 const SHOP_ON = SHOP_TEST || SHOP_APP || SHOP_WEB;
 const SHOP_STORE = SHOP_APP || SHOP_WEB;   // real purchases (store prices, buyer account)
 const SKINS_ALL = !SHOP_TEST && !SHOP_WEB && SHOP_TESTHOST && (new URLSearchParams(location.search).get('skins') === 'all' || location.hostname === 'preview.franks-and-buns.pages.dev');
+// --- BunBux and the daily challenge ---
+// BunBux are earned by playing, never sold: 1 per box packed (up to 10 a game), 25 for the daily challenge (once a day)
+// and day-streak bonuses (+25 at 3 days, +75 at 7, +200 at 30). The server keeps them with the Dog House profile, so the
+// recovery code brings them back, and caps what a day of games can earn at 100 (streak bonuses on top).
+// Any shop costume can be unlocked for 300 BunBux; Collections and bundles stay real-money only.
+const BUX_COST = 300, BUX_DAILY = 25;
+// Everyone gets the same challenge each day (midnight Pacific). Same list and order as DAILY in functions/api/[[path]].js
+const DAILY = [['streak', 10], ['boxes', 2], ['franks', 20], ['chili', 1], ['streak', 12], ['boxes', 3], ['franks', 25], ['streak', 15],
+  ['boxes', 4], ['chili', 2], ['franks', 30], ['streak', 8], ['boxes', 3], ['franks', 35], ['streak', 18], ['chili', 1], ['boxes', 5],
+  ['franks', 20], ['streak', 12], ['boxes', 2]];
+const DAILY_TEXT = { streak: n => 'Land ' + n + ' in a row', boxes: n => n === 4 ? 'Reach the Dog Parade' : 'Pack ' + n + ' boxes in one game',
+  franks: n => 'Land ' + n + ' franks in one game', chili: n => n === 1 ? 'Catch a chili dog' : 'Catch ' + n + ' chili dogs in one game' };
+// Test site only: ?day=2026-12-01 plays as if it were that day (the server goes along only where BUX_TEST=1 is set)
+const BUX_TESTDAY = SHOP_TESTHOST && /^\d{4}-\d{2}-\d{2}$/.test(new URLSearchParams(location.search).get('day') || '') ? new URLSearchParams(location.search).get('day') : '';
+function fbDay() {
+  if (BUX_TESTDAY) return BUX_TESTDAY;
+  try {
+    const parts = {}; new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit' })
+      .formatToParts(new Date()).forEach(x => { parts[x.type] = x.value; });
+    return parts.year + '-' + parts.month + '-' + parts.day;
+  } catch (e) { return new Date(Date.now() - 8 * 3600e3).toISOString().slice(0, 10); }
+}
+function fbDayNum(d) { return Math.round(Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)) / 864e5); }
+function fbDayBefore(d) { return new Date((fbDayNum(d) - 1) * 864e5).toISOString().slice(0, 10); }
+function dailyToday() { const d = fbDay(), c = DAILY[(fbDayNum(d) * 7) % DAILY.length]; return { day: d, stat: c[0], n: c[1], text: DAILY_TEXT[c[0]](c[1]) }; }
+function buxState() {
+  try { const b = JSON.parse(safeGet('fb_bux') || 'null'); if (b && typeof b.bux === 'number' && Array.isArray(b.skins)) return b; } catch (e) {}
+  return { bux: 0, skins: [], dailyLast: '', streak: 0 };
+}
+function buxKeep(b) {   // the server's word replaces what this device had
+  if (b && typeof b.bux === 'number' && Array.isArray(b.skins))
+    safeSet('fb_bux', JSON.stringify({ bux: b.bux, skins: b.skins.filter(x => typeof x === 'string'), dailyLast: String(b.dailyLast || ''), streak: b.streak | 0 }));
+}
+function buxOwned() { return buxState().skins; }
+function dailyDoneToday() { return buxState().dailyLast === fbDay(); }
+function dailyStreakNow() { const b = buxState(), d = fbDay(); return (b.dailyLast === d || b.dailyLast === fbDayBefore(d)) ? b.streak : 0; }
+function dailyBestToday() { try { const t = JSON.parse(safeGet('fb_daily_best') || 'null'); return t && t.day === fbDay() ? t.v | 0 : 0; } catch (e) { return 0; } }
+let buxResult = null;   // Game Over: null, 'wait', 'off' (couldn't reach the server) or the server's answer for this game
+async function buxSubmit(st, run) {
+  buxResult = null;
+  if (SKINS_ALL) return;
+  const ch = dailyToday(), v = st[ch.stat] || 0, met = v >= ch.n;
+  if (v > dailyBestToday()) safeSet('fb_daily_best', JSON.stringify({ day: ch.day, v: v }));
+  if (!(st.boxes > 0) && !(met && !dailyDoneToday())) return;   // nothing to earn: no trip to the server
+  if (!packsToken()) {
+    if (safeGet('fb_no_auto_profile')) return;   // they deleted their profile on purpose: don't quietly make another one
+    try { packsKeepMe(await packsCall('POST', 'player', { silent: true })); } catch (e) { buxResult = 'off'; return; }
+  }
+  buxResult = 'wait';
+  try {
+    const body = Object.assign({ score: run.score, frames: run.frames }, st);
+    if (BUX_TESTDAY) body.testDay = BUX_TESTDAY;
+    const j = await packsCall('POST', 'me/bux', body);
+    buxKeep(j.bux); if (packsMe && packsMe.player) packsMe.player.bux = j.bux;
+    if (j.dailyDone) sndBox();
+    buxResult = j;
+  } catch (e) { buxResult = 'off'; }
+}
+// canvas text centred by measuring it (iOS misplaces centred canvas text that has an emoji), shrunk to fit the width
+function fbCenterText(t, y, color, size, bold) {
+  ctx.font = (bold ? 'bold ' : '') + size + 'px Arial';
+  const w = ctx.measureText(t).width; if (w > W - 20) ctx.font = (bold ? 'bold ' : '') + Math.max(9, Math.floor(size * (W - 20) / w)) + 'px Arial';
+  ctx.fillStyle = color; ctx.textAlign = 'left'; ctx.fillText(t, (W - ctx.measureText(t).width) / 2, y); ctx.textAlign = 'center';
+}
+// Start screen: today's challenge, the day streak and the BunBux balance (in place of the how-to lines after 3 games)
+function dailyCardShown() { return (parseInt(safeGet('fb_games') || '0', 10) || 0) >= 3 || buxState().bux > 0 || dailyStreakNow() > 0; }
+function drawDailyCard(y) {
+  const ch = dailyToday(), done = dailyDoneToday(), sk = dailyStreakNow(), bux = buxState().bux;
+  const w = Math.min(320, W - 32), h = 64, x = W / 2 - w / 2;
+  ctx.fillStyle = 'rgba(0,0,0,0.5)'; rrect(x, y, w, h, 12); ctx.fill();
+  ctx.strokeStyle = done ? '#7CFC00' : '#FFD700'; ctx.lineWidth = 1.5; rrect(x, y, w, h, 12); ctx.stroke();
+  fbCenterText(done ? "✓ TODAY'S CHALLENGE DONE" : "📅 TODAY'S CHALLENGE · +" + BUX_DAILY + ' BUNBUX', y + 17, done ? '#7CFC00' : '#ffb347', 11, true);
+  fbCenterText(done ? 'New challenge tomorrow' : ch.text, y + 38, '#fff', 17, true);
+  fbCenterText((sk > 0 ? '🔥 ' + sk + '-day streak  ·  ' : '') + '🪙 ' + bux.toLocaleString() + ' BunBux', y + 56, '#FFD700', 12, false);
+}
+// Game Over: what this game earned, and the challenge
+function drawBuxGameOver() {
+  const r = buxResult;
+  if (r && typeof r === 'object') {
+    const t = r.earned > 0 ? '🪙 +' + r.earned + ' BunBux  ·  You have ' + r.bux.bux.toLocaleString()
+      : r.capped ? '🪙 Daily BunBux limit reached  ·  You have ' + r.bux.bux.toLocaleString() : '';
+    if (t) fbCenterText(t, H * 0.22 + 30, '#FFD700', 15, true);
+  } else if (r === 'wait') fbCenterText('🪙 …', H * 0.22 + 30, '#FFD700', 15, true);
+}
+function dailyGameOverLine() {   // in the costume-hint slot: a challenge just done wins, then the next costume, then today's progress
+  if (buxResult && buxResult.dailyDone) return { t: '✅ DAILY CHALLENGE DONE!  🔥 ' + buxResult.bux.streak + '-day streak' + (buxResult.bonus ? ' (+' + buxResult.bonus + ' bonus)' : ''), c: '#7CFC00' };
+  const nudge = skinNudge();
+  if (nudge) return { t: nudge, c: '#ffb347' };
+  if (dailyDoneToday()) return { t: "✓ Today's challenge is done. New one tomorrow!", c: '#9be29b' };
+  const ch = dailyToday(), best = Math.min(dailyBestToday(), ch.n);
+  return { t: '📅 Today: ' + ch.text + ' (best ' + best + ' of ' + ch.n + ')', c: '#ffb347' };
+}
+async function skinsBux() {   // unlock the costume on the confirm screen for BunBux
+  if (skinsBusy || !skinsBuy) return;
+  const p = shopProducts()[skinsBuy]; if (!p || p.kind !== 'skin') return;
+  skinsBusy = true; skinsMsg = ''; skinsRender();
+  try {
+    const j = await packsCall('POST', 'me/bux/spend', { skin: p.skins[0] });
+    buxKeep(j.bux); if (packsMe && packsMe.player) packsMe.player.bux = j.bux;
+    skinsBuy = null; skinsMsgErr = false; safeSet('fb_skin', p.skins[0]); skinPreload(skinById(p.skins[0]));
+    skinsMsg = '🎉 ' + p.name + ' is yours! You’re wearing it now.';
+  } catch (e) { skinsMsgErr = true; skinsMsg = (e && e.message) || 'That didn’t go through. Your BunBux are safe.'; }
+  skinsBusy = false; skinsRender();
+}
 function skinUnlocked(s) {
   if (SKINS_ALL) return true;
   const how = skinHow(s);
   if (how === 'free') return true;
-  if (how === 'shop') return shopOwned().indexOf(s.id) >= 0;
+  if (how === 'shop') return shopOwned().indexOf(s.id) >= 0 || buxOwned().indexOf(s.id) >= 0;   // bought, or unlocked with BunBux
   if (how !== 'earn') return false;   // 'soon' and 'hidden' stay locked until they go on sale
   return skinsWon().indexOf(s.id) >= 0;   // only games played since skins arrived count
 }
@@ -839,7 +943,7 @@ function shopFromCustomer(ci) {
   // (the apps' SDK lists allPurchasedProductIdentifiers; the website's SDK only nonSubscriptionTransactions)
   if (!SHOP_TEST && ci && (Array.isArray(ci.allPurchasedProductIdentifiers) || Array.isArray(ci.nonSubscriptionTransactions))) {
     const was = shopOwned(); safeSet('fb_skins_bought', JSON.stringify(ids));
-    const cur = safeGet('fb_skin'); if (cur && was.indexOf(cur) >= 0 && ids.indexOf(cur) < 0) safeSet('fb_skin', '');   // was wearing it
+    const cur = safeGet('fb_skin'); if (cur && was.indexOf(cur) >= 0 && ids.indexOf(cur) < 0 && buxOwned().indexOf(cur) < 0) safeSet('fb_skin', '');   // was wearing it
   } else if (ids.length) shopGive(ids);
   return ids.length;
 }
@@ -847,7 +951,7 @@ window.addEventListener('load', () => { if (SHOP_STORE) setTimeout(() => shopSta
 // costumes bought (ids). Test mode keeps pretend purchases on this device only.
 function shopOwned() { try { const a = JSON.parse(safeGet(SHOP_TEST ? 'fb_shop_test' : 'fb_skins_bought') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
 function shopGive(ids) { const have = shopOwned(); ids.forEach(id => { if (have.indexOf(id) < 0) have.push(id); }); safeSet(SHOP_TEST ? 'fb_shop_test' : 'fb_skins_bought', JSON.stringify(have)); }
-function shopOwnedOf(ids) { const have = shopOwned(); return ids.filter(id => have.indexOf(id) >= 0); }
+function shopOwnedOf(ids) { const have = shopOwned().concat(buxOwned()); return ids.filter(id => have.indexOf(id) >= 0); }
 // buying: the test site pretends; the apps go to Apple / Google Play through RevenueCat
 async function shopBuy(pid) {
   const p = shopProducts()[pid]; if (!p) throw new Error('Unknown item');
@@ -1276,7 +1380,7 @@ function packsKeepMe(j) {
   if (j && j.player && /^fb_[0-9a-f]{40}$/.test(j.player.buyerId || '')) { safeSet('fb_buyer_id', j.player.buyerId); safeSet('fb_buyer_tok', packsToken()); }
   if (j && j.token) { packsCloudSave(); if (SHOP_STORE) shopLink().catch(() => {}); }
   else if (j && j.player && SHOP_STORE) shopLink().catch(() => {});   // no-op unless the buyer id changed
-  if (j && j.player) { packsMe = { player: j.player, packs: j.packs || [], requests: j.requests || [] }; skinsMerge(j.player.skins); }
+  if (j && j.player) { packsMe = { player: j.player, packs: j.packs || [], requests: j.requests || [] }; skinsMerge(j.player.skins); buxKeep(j.player.bux); }
 }
 function packsIsOpen() { const b = document.getElementById('fb-packs'); return !!(b && b.style.display !== 'none'); }
 // Play button in My Dog Houses: close it and start a game (from the start screen or Game Over)
@@ -1596,7 +1700,7 @@ function packsClick(e) {
     packsConfirm = '';
     packsDo(async () => {
       await packsCall('POST', 'me/delete');
-      safeSet('fb_pack_token', ''); safeSet('fb_pack_pending', ''); packsMe = null; packsCur = null; packsCloudClear();
+      safeSet('fb_pack_token', ''); safeSet('fb_pack_pending', ''); safeSet('fb_bux', ''); packsMe = null; packsCur = null; packsCloudClear();
       safeSet('fb_no_auto_profile', '1');   // they deleted it on purpose: don't quietly make another one
       if (SHOP_STORE) shopLink().catch(() => {});   // app purchases stay on their Apple / Google account (Restore Purchases); website purchases go with the profile
       packsView = 'home'; packsMsg = '✓ Your Dog House profile was deleted.';
@@ -2154,7 +2258,7 @@ function resetGame() {
   stopChaseEffects(); wavDuckUntil = 0;   // skipping the intro cuts the chase foley; gameplay music starts once
   frank = { x:70, y:H*0.4, vy:0, squash:1, stretch:1, alive:true };
   buns=[]; splats=[]; particles=[]; floatingTexts=[]; forks=[]; gameDogs=[];
-  score=0; runFrames=0; packsResult=null; lives=3; streak=0; bestStreak=0; chiliCaught=0;
+  score=0; runFrames=0; packsResult=null; buxResult=null; lives=3; streak=0; bestStreak=0; chiliCaught=0;
   franksLanded=0; boxFranks=0; boxesCompleted=0; boxFlash=0;
   scrollSpeed=2.2; scrollX=0; nextBunDist=0;
   shakeAmount=0; streakText=''; streakTimer=0; gameOverDelay=0; gracePeriod=0;
@@ -2652,6 +2756,7 @@ function loseLife() {
     skinNew = fresh.length ? fresh : null;
     fresh.forEach(skinPreload);
     recordRun();
+    buxSubmit({ streak: bestStreak, boxes: boxesCompleted, franks: franksLanded, chili: chiliCaught }, { score: score, frames: runFrames });
   } else { frank.y=H*0.35; frank.vy=0; }
 }
 
@@ -2918,10 +3023,13 @@ function drawMenu() {
   ctx.fillStyle='#FFD700'; ctx.font='bold 38px Arial'; ctx.textAlign='center';
   ctx.fillText('FRANKS',W/2,H*0.25); ctx.fillText('& BUNS',W/2,H*0.25+42);
   drawMenuSkin();
-  ctx.fillStyle='#ddd'; ctx.font='16px Arial';
-  ctx.fillText('TAP to boost your frank up',W/2,H*0.58);
-  ctx.fillText('RELEASE to let it drop',W/2,H*0.58+24);
-  ctx.fillText('Land in buns to score!',W/2,H*0.58+48);
+  if (dailyCardShown()) drawDailyCard(H*0.58-20);
+  else {
+    ctx.fillStyle='#ddd'; ctx.font='16px Arial';
+    ctx.fillText('TAP to boost your frank up',W/2,H*0.58);
+    ctx.fillText('RELEASE to let it drop',W/2,H*0.58+24);
+    ctx.fillText('Land in buns to score!',W/2,H*0.58+48);
+  }
   ctx.fillStyle='#FF6600'; ctx.font='bold 22px Arial';
   ctx.globalAlpha=0.8+Math.sin(frameCount*0.06)*0.2; ctx.fillText('TAP TO START',W/2,Math.min(H*0.80,sideBtnY()-14)); ctx.globalAlpha=1;
   const r = scoresBtnRect();
@@ -3149,6 +3257,7 @@ function skinsOpen() {
       '#fb-skins .fbs-go[disabled]{opacity:.6}#fb-skins .fbs-msg{text-align:center;color:#9be29b;font-size:13px;margin:8px 0 0;min-height:1em}#fb-skins .fbs-msg.err{color:#ff9b7a}' +
       '#fb-skins .fbs-link{display:block;margin:6px auto 0;background:none;border:none;color:#ffb347;text-decoration:underline;font:13px Arial;cursor:pointer;padding:6px}' +
       '#fb-skins .fbs-test{text-align:center;font:bold 11px Arial;color:#1a0f05;background:#9be29b;border-radius:6px;padding:3px;margin:0 0 8px}' +
+      '#fb-skins .fbs-go.fbs-bux{background:transparent;color:#FFD700;border:2px solid #FFD700;padding:11px}#fb-skins .fbs-buxnote{text-align:center;font-size:12px;color:#c8a878;margin:6px 0 0}' +
       '#fb-skins .fbs-close{flex:none;font:600 15px Arial;border-radius:999px;padding:11px 16px;border:1px solid rgba(255,179,71,.5);background:transparent;color:#ffb347;cursor:pointer;width:100%;margin:12px 0 0}';
     document.head.appendChild(css);
     box.addEventListener('click', e => {
@@ -3157,6 +3266,7 @@ function skinsOpen() {
       if (t && t.getAttribute('data-a') === 'home') { if (skinsBuy) skinsBuy = null; else skinsTab = null; skinsMsg = ''; sndStreak(); skinsRender(); return; }
       if (t && t.hasAttribute('data-buy')) { if (!skinsBusy) { skinsBuy = t.getAttribute('data-buy'); skinsMsg = ''; sndStreak(); skinsRender(); } return; }
       if (t && t.getAttribute('data-a') === 'pay') { skinsPay(); return; }
+      if (t && t.getAttribute('data-a') === 'bux') { skinsBux(); return; }
       if (t && t.getAttribute('data-a') === 'restore') { skinsRestore(); return; }
       if (t && t.getAttribute('data-a') === 'shopreset') { safeSet('fb_shop_test', '[]'); skinsMsg = 'Test purchases cleared.'; skinsRender(); return; }
       if (e.target === box || (t && t.getAttribute('data-a') === 'close')) { skinsClose(); return; }
@@ -3246,10 +3356,16 @@ function skinsRender() {
       h += '<p style="font-size:12px;color:#c8a878">Future costumes aren’t included.</p>';
     }
     h += '<p>' + (buyP.was ? '<span class="fbs-was">' + buyP.was + '</span>' : '') + '<span class="fbs-now">' + (buyP.price || '…') + '</span></p>' +
-      '<button type="button" class="fbs-go" data-a="pay"' + (skinsBusy || !buyP.price ? ' disabled' : '') + '>' + (skinsBusy ? 'One moment…' : buyP.price ? 'Buy for ' + buyP.price : shopStore.loaded ? 'Not available yet' : 'Loading price…') + '</button>' + msg + '</div>';
+      '<button type="button" class="fbs-go" data-a="pay"' + (skinsBusy || !buyP.price ? ' disabled' : '') + '>' + (skinsBusy ? 'One moment…' : buyP.price ? 'Buy for ' + buyP.price : shopStore.loaded ? 'Not available yet' : 'Loading price…') + '</button>';
+    if (buyP.kind === 'skin') {   // or unlock it with BunBux
+      const have = buxState().bux, can = have >= BUX_COST && !!packsToken();
+      h += '<button type="button" class="fbs-go fbs-bux" data-a="bux"' + (skinsBusy || !can ? ' disabled' : '') + '>🪙 Unlock for ' + BUX_COST + ' BunBux</button>' +
+        '<p class="fbs-buxnote">You have ' + have.toLocaleString() + ' BunBux.' + (can ? '' : ' Earn them by packing boxes and doing the daily challenge.') + '</p>';
+    }
+    h += msg + '</div>';
   } else if (!skinsTab) {
     // Collections: one row per group, newest groups just get added to SKIN_GROUPS
-    h += '<p class="fbs-sub">Wearing: <b>' + packsEsc(cur.name) + '</b></p>' + msg;
+    h += '<p class="fbs-sub">Wearing: <b>' + packsEsc(cur.name) + '</b>' + (SHOP_ON && !SKINS_ALL ? ' · 🪙 ' + buxState().bux.toLocaleString() + ' BunBux' : '') + '</p>' + msg;
     groups.forEach(g => {
       const list = skinsGroupList(g), open = list.filter(s => skinUnlocked(s)).length, how = SKINS_ALL ? '' : skinHow(list[0]), soon = how === 'soon';
       const here = list.indexOf(cur) >= 0;
@@ -3264,7 +3380,7 @@ function skinsRender() {
     const list = skinsGroupList(skinsTab), how0 = SKINS_ALL ? '' : skinHow(list[0]), soon = how0 === 'soon';
     h += '<p class="fbs-sub">' + (soon ? 'Coming soon. Check back for these costumes!' :
       skinsTab === 'earn' ? 'Win them in order, one per game: pull off the challenge in a single game.' :
-      how0 === 'shop' ? 'Get one costume for ' + (shopProducts()['skin_' + list[0].id].price || '$0.99') + ', or the whole Collection.' : 'Dress up your frank.') + '</p>' + msg;
+      how0 === 'shop' ? 'Get one costume for ' + (shopProducts()['skin_' + list[0].id].price || '$0.99') + ' or ' + BUX_COST + ' BunBux, or the whole Collection.' : 'Dress up your frank.') + '</p>' + msg;
     if (how0 === 'shop') h += skinsDeal('col_' + skinsTab);
     h += '<div class="fbs-grid">';
     list.forEach(s => {
@@ -3301,8 +3417,9 @@ function drawGameOver() {
   ctx.fillStyle='#FFD700'; ctx.font='bold 28px Arial'; ctx.fillText(score.toLocaleString(),W/2,H*0.34);
   ctx.fillStyle='#aaa'; ctx.font='14px Arial'; ctx.fillText('SCORE',W/2,H*0.34+20);
   if (score>=bestScore&&score>0) { ctx.fillStyle='#FF6600'; ctx.font='bold 16px Arial'; ctx.fillText('★ NEW BEST! ★',W/2,H*0.34+42); }
-  const nudge = skinNew ? '' : skinNudge();
-  if (nudge) { ctx.fillStyle='#ffb347'; ctx.font='bold 14px Arial'; const nw=ctx.measureText(nudge).width; if (nw>W-20) ctx.font='bold '+Math.max(10,Math.floor(14*(W-20)/nw))+'px Arial'; ctx.fillText(nudge,W/2,H*0.34+64); }
+  drawBuxGameOver();
+  const nudge = skinNew ? null : dailyGameOverLine();
+  if (nudge) fbCenterText(nudge.t, H*0.34+64, nudge.c, 14, true);
   if (skinNew) {   // left-aligned and measured: iOS misplaces centred canvas text that has an emoji
     const t='🎭 NEW SKIN'+(skinNew.length>1?'S':'')+': '+skinNew.map(k=>k.name.toUpperCase()).join(' + ')+'!'; ctx.fillStyle='#7CFC00'; ctx.font='bold 16px Arial'; ctx.textAlign='left';
     if (ctx.measureText(t).width>W-20) ctx.font='bold '+Math.max(10,Math.floor(16*(W-20)/ctx.measureText(t).width))+'px Arial';
