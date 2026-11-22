@@ -9,8 +9,9 @@ const NEW_PLAYERS_PER_IP_PER_DAY = 20;
 const NEW_SILENT_PLAYERS_PER_IP_PER_DAY = 200;   // nameless profiles the game makes to keep costumes (schools and phone networks share IPs)
 const MAX_SKINS = 300;
 const NEW_PACKS_PER_PLAYER_PER_DAY = 10;
-const RECOVER_TRIES_PER_IP_PER_DAY = 60;
-const WRONG_JOIN_CODES_PER_DAY = 30;   // per player and per network: Dog House codes are short, so guessing them has to stay slow   // recovery codes can't be guessed (80 random bits); this stops anyone hammering the server trying
+const RECOVER_TRIES_PER_IP_PER_DAY = 60;   // recovery codes can't be guessed (80 random bits); this stops anyone hammering the server trying
+const WRONG_JOIN_CODES_PER_DAY = 30;   // per player and per network: Dog House codes are short, so guessing them has to stay slow
+const NEW_CODES_PER_PLAYER_PER_DAY = 5;   // "Get a new recovery code"
 const ALLOWED_ORIGINS = new Set(['capacitor://localhost', 'https://localhost', 'http://localhost', 'ionic://localhost']);
 
 const SCHEMA = [
@@ -27,6 +28,8 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS requests (pack_id TEXT NOT NULL, player_id TEXT NOT NULL, requested_at INTEGER NOT NULL,
      PRIMARY KEY (pack_id, player_id))`,
   `CREATE INDEX IF NOT EXISTS requests_player ON requests (player_id)`,
+  `CREATE INDEX IF NOT EXISTS weekly_week ON weekly (week, best)`,   // last week's top dog
+  `CREATE INDEX IF NOT EXISTS limits_day ON limits (day)`,            // clearing old counters
 ];
 const MAX_WAITING_PER_PACK = 50, MAX_REQUESTS_PER_PLAYER = 5;
 let schemaReady = false;
@@ -37,6 +40,9 @@ async function ensureSchema(db) {
   try { await db.prepare('ALTER TABLE packs ADD COLUMN approval INTEGER NOT NULL DEFAULT 1').run(); } catch (e) {}
   // Costumes won, kept with the profile so they come back with the recovery code (comma-separated skin ids)
   try { await db.prepare("ALTER TABLE players ADD COLUMN skins TEXT NOT NULL DEFAULT ''").run(); } catch (e) {}
+  // The RevenueCat buyer id, stored so the recovery code can be changed without losing purchases.
+  // Filled from the code the first time each player is seen (same value the apps and website already work out).
+  try { await db.prepare("ALTER TABLE players ADD COLUMN rc_id TEXT NOT NULL DEFAULT ''").run(); } catch (e) {}
   schemaReady = true;
 }
 
@@ -52,6 +58,15 @@ function randCode(n) {
 async function sha256(text) {
   const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
   return [...new Uint8Array(d)].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+// Same formula as shopBuyerId() in game.html: 'fb_' + the first 20 bytes of SHA-256('franksandbuns-buyer:' + code)
+async function buyerIdFor(tok) { return 'fb_' + (await sha256('franksandbuns-buyer:' + tok)).slice(0, 40); }
+// One key per network: an IPv4 address, or an IPv6 /64 (one home or phone gets a whole /64, so single addresses are free to rotate)
+function netOf(ip) {
+  if (!ip.includes(':')) return ip;
+  const [head, tail = ''] = ip.split('::'), h = head ? head.split(':') : [], t = tail ? tail.split(':') : [];
+  const full = h.concat(Array(Math.max(0, 8 - h.length - t.length)).fill('0'), t);
+  return full.slice(0, 4).map(x => (x || '0').toLowerCase()).join(':') + '::/64';
 }
 const cleanCode = raw => String(raw || '').toUpperCase().split('').filter(c => ALPHA.includes(c)).join('');
 const fmtToken = t => t.match(/.{4}/g).join('-');
@@ -105,13 +120,16 @@ function cleanName(raw, min, max, what, emoji) {
 }
 
 // ---------- limits ----------
+// One statement, so many requests at once can't slip past a limit (D1 runs each statement on its own)
 async function underLimit(db, key, max) {
-  const day = today();
-  const row = await db.prepare('SELECT n, day FROM limits WHERE k = ?').bind(key).first();
-  if (row && row.day === day && row.n >= max) return false;
-  if (!row || row.day !== day) await db.prepare('INSERT OR REPLACE INTO limits (k, n, day) VALUES (?, 1, ?)').bind(key, day).run();
-  else await db.prepare('UPDATE limits SET n = n + 1 WHERE k = ?').bind(key).run();
-  return true;
+  const r = await db.prepare(`INSERT INTO limits (k, n, day) VALUES (?, 1, ?)
+      ON CONFLICT (k) DO UPDATE SET n = CASE WHEN day = excluded.day THEN n + 1 ELSE 1 END, day = excluded.day RETURNING n`)
+    .bind(key, today()).first();
+  return !r || r.n <= max;
+}
+async function overLimit(db, key, max) {   // look without counting
+  const r = await db.prepare('SELECT n FROM limits WHERE k = ? AND day = ?').bind(key, today()).first();
+  return !!(r && r.n >= max);
 }
 
 // ---------- players ----------
@@ -120,7 +138,14 @@ async function authPlayer(db, request) {
   if (!m) return null;
   const tok = cleanCode(m[1]);
   if (tok.length !== 16) return null;
-  return db.prepare('SELECT * FROM players WHERE token_hash = ?').bind(await sha256(tok)).first();
+  const p = await db.prepare('SELECT * FROM players WHERE token_hash = ?').bind(await sha256(tok)).first();
+  if (p) await ensureBuyerId(db, p, tok);
+  return p;
+}
+async function ensureBuyerId(db, p, tok) {
+  if (p.rc_id) return;
+  p.rc_id = await buyerIdFor(tok);
+  await db.prepare("UPDATE players SET rc_id = ? WHERE id = ? AND rc_id = ''").bind(p.rc_id, p.id).run();
 }
 async function needPlayer(db, request) {
   const p = await authPlayer(db, request);
@@ -144,14 +169,16 @@ async function myRequests(db, playerId) {
 }
 const skinList = p => String(p.skins || '').split(',').filter(Boolean);
 // A profile the game made silently has no name yet; it needs one before it can make or join a Pack
-async function needName(db, p, body) {
+async function needName(db, p, body, ip) {
   if (p.nickname) return;
   if (!body.nickname) fail(400, 'Pick your name on Wienerboards first.');
-  p.nickname = cleanName(body.nickname, 2, 16, 'name', true);
+  const nick = cleanName(body.nickname, 2, 16, 'name', true);
+  if (!(await underLimit(db, 'np:' + (await sha256(netOf(ip) + today())), NEW_PLAYERS_PER_IP_PER_DAY))) fail(429, 'Too many new players from here today. Try again tomorrow.');
+  p.nickname = nick;
   await db.prepare('UPDATE players SET nickname = ? WHERE id = ?').bind(p.nickname, p.id).run();
 }
 async function meResponse(db, p, extra) {
-  return Object.assign({ player: { id: p.id, nickname: p.nickname, best: p.best, skins: skinList(p) }, packs: await myPacks(db, p.id),
+  return Object.assign({ player: { id: p.id, nickname: p.nickname, best: p.best, skins: skinList(p), buyerId: p.rc_id || '' }, packs: await myPacks(db, p.id),
     requests: await myRequests(db, p.id) }, extra || {});
 }
 
@@ -162,6 +189,16 @@ async function packForMember(db, packId, playerId) {
   const mem = await db.prepare('SELECT 1 FROM members WHERE pack_id = ? AND player_id = ?').bind(packId, playerId).first();
   if (!mem) fail(403, 'You are not in that Dog House.');
   return pack;
+}
+// Adds a member only if the Dog House has room and the player is in fewer than the most Dog Houses, in one statement
+// (so two requests at once can't both squeeze past the limits). Returns true if they were added (or already in).
+async function addMember(db, packId, playerId, now) {
+  const r = await db.prepare(`INSERT OR IGNORE INTO members (pack_id, player_id, joined_at)
+      SELECT ?, ?, ? WHERE (SELECT COUNT(*) FROM members WHERE pack_id = ?) < ${MAX_MEMBERS}
+                       AND (SELECT COUNT(*) FROM members WHERE player_id = ?) < ${MAX_PACKS_PER_PLAYER}`)
+    .bind(packId, playerId, now, packId, playerId).run();
+  if (((r && r.meta) ? r.meta.changes : (r && r.changes)) > 0) return true;
+  return !!(await db.prepare('SELECT 1 FROM members WHERE pack_id = ? AND player_id = ?').bind(packId, playerId).first());
 }
 async function packCount(db, playerId) {
   const r = await db.prepare('SELECT COUNT(*) AS n FROM members WHERE player_id = ?').bind(playerId).first();
@@ -245,20 +282,21 @@ async function route(request, env, path) {
     // silent: the game makes a nameless profile in the background to keep a player's costumes
     const silent = body.silent === true;
     const nickname = silent ? '' : cleanName(body.nickname, 2, 16, 'name', true);
-    if (!(await underLimit(db, (silent ? 'ns:' : 'np:') + (await sha256(ip + today())), silent ? NEW_SILENT_PLAYERS_PER_IP_PER_DAY : NEW_PLAYERS_PER_IP_PER_DAY))) fail(429, 'Too many new players from here today. Try again tomorrow.');
-    await db.prepare('DELETE FROM limits WHERE day <> ?').bind(today()).run();
+    if (!(await underLimit(db, (silent ? 'ns:' : 'np:') + (await sha256(netOf(ip) + today())), silent ? NEW_SILENT_PLAYERS_PER_IP_PER_DAY : NEW_PLAYERS_PER_IP_PER_DAY))) fail(429, 'Too many new players from here today. Try again tomorrow.');
+    if (Math.random() < 0.02) await db.prepare('DELETE FROM limits WHERE day < ?').bind(today()).run();   // yesterday's counters
     const id = randCode(12), token = randCode(16);
-    await db.prepare('INSERT INTO players (id, token_hash, nickname, created_at) VALUES (?, ?, ?, ?)')
-      .bind(id, await sha256(token), nickname, now).run();
+    await db.prepare('INSERT INTO players (id, token_hash, nickname, created_at, rc_id) VALUES (?, ?, ?, ?, ?)')
+      .bind(id, await sha256(token), nickname, now, await buyerIdFor(token)).run();
     const p = await db.prepare('SELECT * FROM players WHERE id = ?').bind(id).first();
     return meResponse(db, p, { token: fmtToken(token) });
   }
   if (method === 'POST' && path === 'recover') {
     const tok = cleanCode(body.code);
     if (tok.length !== 16) fail(400, 'Recovery codes have 16 letters and numbers.');
-    if (!(await underLimit(db, 'rc:' + (await sha256(ip + today())), RECOVER_TRIES_PER_IP_PER_DAY))) fail(429, 'Too many recovery code tries from here today. Try again tomorrow.');
+    if (!(await underLimit(db, 'rc:' + (await sha256(netOf(ip) + today())), RECOVER_TRIES_PER_IP_PER_DAY))) fail(429, 'Too many recovery code tries from here today. Try again tomorrow.');
     const p = await db.prepare('SELECT * FROM players WHERE token_hash = ?').bind(await sha256(tok)).first();
     if (!p) fail(404, 'That recovery code was not found. Check it and try again.');
+    await ensureBuyerId(db, p, tok);
     return meResponse(db, p, { token: fmtToken(tok) });
   }
   if (method === 'GET' && path === 'me') return meResponse(db, await needPlayer(db, request));
@@ -271,6 +309,13 @@ async function route(request, env, path) {
     }
     if (all.length !== have.length) { p.skins = all.join(','); await db.prepare('UPDATE players SET skins = ? WHERE id = ?').bind(p.skins, p.id).run(); }
     return meResponse(db, p);
+  }
+  if (method === 'POST' && path === 'me/newcode') {   // "Get a new recovery code": the old one stops working everywhere
+    const p = await needPlayer(db, request);
+    if (!(await underLimit(db, 'rk:' + p.id, NEW_CODES_PER_PLAYER_PER_DAY))) fail(429, 'That is a lot of new codes for one day. Try again tomorrow.');
+    const token = randCode(16);
+    await db.prepare('UPDATE players SET token_hash = ? WHERE id = ?').bind(await sha256(token), p.id).run();
+    return meResponse(db, p, { token: fmtToken(token) });
   }
   if (method === 'POST' && path === 'me/name') {
     const p = await needPlayer(db, request);
@@ -289,32 +334,41 @@ async function route(request, env, path) {
       db.prepare('DELETE FROM limits WHERE k = ?').bind('nk:' + p.id),
       db.prepare('DELETE FROM players WHERE id = ?').bind(p.id),
     ]);
+    // RevenueCat keeps a customer record per buyer id. Remove it too (Cloudflare Pages secret RC_SECRET_KEY, a RevenueCat
+    // secret API key). Apple / Google purchases stay on the player's store account and come back with Restore Purchases.
+    if (env.RC_SECRET_KEY && p.rc_id) {
+      try {
+        const r = await fetch('https://api.revenuecat.com/v1/subscribers/' + encodeURIComponent(p.rc_id),
+          { method: 'DELETE', headers: { Authorization: 'Bearer ' + env.RC_SECRET_KEY } });
+        if (!r.ok && r.status !== 404) console.error('revenuecat delete', r.status);
+      } catch (e) { console.error('revenuecat delete', e && e.message); }
+    }
     return { deleted: true };
   }
   if (method === 'POST' && path === 'packs') {
     const p = await needPlayer(db, request);
-    await needName(db, p, body);
+    await needName(db, p, body, ip);
     const name = cleanName(body.name, 3, 24, 'Dog House name');
     const defaultBoard = body.defaultBoard === 'all' ? 'all' : 'week';
     const approval = body.approval === false ? 0 : 1;
     if ((await packCount(db, p.id)) >= MAX_PACKS_PER_PLAYER) fail(409, `You can be in up to ${MAX_PACKS_PER_PLAYER} Dog Houses. Quit one to make a new one.`);
     if (!(await underLimit(db, 'nk:' + p.id, NEW_PACKS_PER_PLAYER_PER_DAY))) fail(429, 'That is a lot of new Dog Houses for one day. Try again tomorrow.');
     const id = randCode(12), code = await newPackCode(db);
-    await db.batch([
-      db.prepare('INSERT INTO packs (id, code, name, owner_id, default_board, created_at, approval) VALUES (?, ?, ?, ?, ?, ?, ?)').bind(id, code, name, p.id, defaultBoard, now, approval),
-      db.prepare('INSERT INTO members (pack_id, player_id, joined_at) VALUES (?, ?, ?)').bind(id, p.id, now),
-    ]);
+    await db.prepare('INSERT INTO packs (id, code, name, owner_id, default_board, created_at, approval) VALUES (?, ?, ?, ?, ?, ?, ?)').bind(id, code, name, p.id, defaultBoard, now, approval).run();
+    if (!(await addMember(db, id, p.id, now))) {
+      await db.prepare('DELETE FROM packs WHERE id = ?').bind(id).run();
+      fail(409, `You can be in up to ${MAX_PACKS_PER_PLAYER} Dog Houses. Quit one to make a new one.`);
+    }
     const pack = await db.prepare('SELECT * FROM packs WHERE id = ?').bind(id).first();
     return board(db, pack, p.id, defaultBoard, now);
   }
   if (method === 'POST' && path === 'packs/join') {
     const p = await needPlayer(db, request);
-    await needName(db, p, body);
+    await needName(db, p, body, ip);
     const code = cleanCode(body.code);
     if (code.length !== 6) fail(400, 'Dog House codes have 6 letters and numbers.');
-    const wrongKeys = ['jw:' + p.id, 'jw:' + (await sha256(ip + today()))];
-    const tooMany = async () => { for (const k of wrongKeys) { const r = await db.prepare('SELECT n, day FROM limits WHERE k = ?').bind(k).first(); if (r && r.day === today() && r.n >= WRONG_JOIN_CODES_PER_DAY) return true; } return false; };
-    if (await tooMany()) fail(429, 'Too many wrong Dog House codes today. Check the code with whoever invited you and try again tomorrow.');
+    const wrongKeys = ['jw:' + p.id, 'jw:' + (await sha256(netOf(ip) + today()))];
+    if ((await overLimit(db, wrongKeys[0], WRONG_JOIN_CODES_PER_DAY)) || (await overLimit(db, wrongKeys[1], WRONG_JOIN_CODES_PER_DAY))) fail(429, 'Too many wrong Dog House codes today. Check the code with whoever invited you and try again tomorrow.');
     const pack = await db.prepare('SELECT * FROM packs WHERE code = ?').bind(code).first();
     if (!pack) { for (const k of wrongKeys) await underLimit(db, k, WRONG_JOIN_CODES_PER_DAY + 1); fail(404, 'No Dog House has that code. Check it and try again.'); }
     const already = await db.prepare('SELECT 1 FROM members WHERE pack_id = ? AND player_id = ?').bind(pack.id, p.id).first();
@@ -329,11 +383,11 @@ async function route(request, env, path) {
           if (mine && mine.n >= MAX_REQUESTS_PER_PLAYER) fail(409, `You're already waiting on ${MAX_REQUESTS_PER_PLAYER} Dog Houses. Cancel one to ask to join another.`);
           const waiting = await db.prepare('SELECT COUNT(*) AS n FROM requests WHERE pack_id = ?').bind(pack.id).first();
           if (waiting && waiting.n >= MAX_WAITING_PER_PACK) fail(409, 'That Dog House has too many players waiting. Try again later.');
-          await db.prepare('INSERT INTO requests (pack_id, player_id, requested_at) VALUES (?, ?, ?)').bind(pack.id, p.id, now).run();
+          await db.prepare('INSERT OR IGNORE INTO requests (pack_id, player_id, requested_at) VALUES (?, ?, ?)').bind(pack.id, p.id, now).run();
         }
         return meResponse(db, p, { pending: { id: pack.id, name: pack.name } });
       }
-      await db.prepare('INSERT OR IGNORE INTO members (pack_id, player_id, joined_at) VALUES (?, ?, ?)').bind(pack.id, p.id, now).run();
+      if (!(await addMember(db, pack.id, p.id, now))) fail(409, `That Dog House is full, or you're already in ${MAX_PACKS_PER_PLAYER} Dog Houses.`);
     }
     return board(db, pack, p.id, pack.default_board, now);
   }
@@ -368,10 +422,8 @@ async function route(request, env, path) {
           await db.prepare('DELETE FROM requests WHERE pack_id = ? AND player_id = ?').bind(pack.id, who).run();
           fail(409, `That player is already in ${MAX_PACKS_PER_PLAYER} Dog Houses, so they can't join. Their request was removed.`);
         }
-        await db.batch([
-          db.prepare('INSERT OR IGNORE INTO members (pack_id, player_id, joined_at) VALUES (?, ?, ?)').bind(pack.id, who, now),
-          db.prepare('DELETE FROM requests WHERE pack_id = ? AND player_id = ?').bind(pack.id, who),
-        ]);
+        if (!(await addMember(db, pack.id, who, now))) fail(409, `Your Dog House is full (${MAX_MEMBERS} players), or that player is already in ${MAX_PACKS_PER_PLAYER} Dog Houses.`);
+        await db.prepare('DELETE FROM requests WHERE pack_id = ? AND player_id = ?').bind(pack.id, who).run();
       } else if (action === 'decline') {
         await db.prepare('DELETE FROM requests WHERE pack_id = ? AND player_id = ?').bind(pack.id, who).run();
       } else if (action === 'newcode') {   // the old code stops working right away

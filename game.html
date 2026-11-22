@@ -774,7 +774,10 @@ function shopStart() {
 // The buyer id RevenueCat knows the player by: made from the Packs recovery code, which only the player has,
 // so nobody can claim someone else's purchases by guessing an id. No profile: RevenueCat's anonymous id.
 async function shopBuyerId() {
-  const tok = packsToken(); if (!tok || !(window.crypto && crypto.subtle)) return null;
+  const tok = packsToken(); if (!tok) return null;
+  // the profile's stored buyer id (kept for this code on this device, so it's there before the server answers)
+  if (safeGet('fb_buyer_tok') === tok && /^fb_[0-9a-f]{40}$/.test(safeGet('fb_buyer_id') || '')) return safeGet('fb_buyer_id');
+  if (!(window.crypto && crypto.subtle)) return null;
   const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('franksandbuns-buyer:' + tok));
   return 'fb_' + Array.from(new Uint8Array(h)).slice(0, 20).map(b => b.toString(16).padStart(2, '0')).join('');
 }
@@ -824,7 +827,12 @@ function shopBoughtIds(ci) {
 function shopFromCustomer(ci) {
   const bought = shopBoughtIds(ci), all = shopProducts(), ids = [];
   bought.forEach(pid => { const p = all[pid]; if (p) p.skins.forEach(id => { if (ids.indexOf(id) < 0) ids.push(id); }); });
-  if (ids.length) shopGive(ids);
+  // A full answer from the store account replaces the list on this device, so refunded or switched-away purchases go.
+  // Anything else (offline, an error, no answer) changes nothing.
+  if (!SHOP_TEST && ci && Array.isArray(ci.allPurchasedProductIdentifiers)) {
+    const was = shopOwned(); safeSet('fb_skins_bought', JSON.stringify(ids));
+    const cur = safeGet('fb_skin'); if (cur && was.indexOf(cur) >= 0 && ids.indexOf(cur) < 0) safeSet('fb_skin', '');   // was wearing it
+  } else if (ids.length) shopGive(ids);
   return ids.length;
 }
 window.addEventListener('load', () => { if (SHOP_STORE) setTimeout(() => shopStart().catch(() => {}), 1200); });
@@ -1255,7 +1263,10 @@ async function packsCall(method, path, body) {
   return j;
 }
 function packsKeepMe(j) {
-  if (j && j.token) { safeSet('fb_pack_token', j.token); packsCloudSave(); if (SHOP_STORE) shopLink().catch(() => {}); }
+  if (j && j.token) safeSet('fb_pack_token', j.token);
+  if (j && j.player && /^fb_[0-9a-f]{40}$/.test(j.player.buyerId || '')) { safeSet('fb_buyer_id', j.player.buyerId); safeSet('fb_buyer_tok', packsToken()); }
+  if (j && j.token) { packsCloudSave(); if (SHOP_STORE) shopLink().catch(() => {}); }
+  else if (j && j.player && SHOP_STORE) shopLink().catch(() => {});   // no-op unless the buyer id changed
   if (j && j.player) { packsMe = { player: j.player, packs: j.packs || [], requests: j.requests || [] }; skinsMerge(j.player.skins); }
 }
 function packsIsOpen() { const b = document.getElementById('fb-packs'); return !!(b && b.style.display !== 'none'); }
@@ -1294,7 +1305,7 @@ function packsBox() {
     '#fb-packs .fbp-tabs{display:flex;gap:6px;margin:10px 0 4px}#fb-packs .fbp-tabs button{margin:0;padding:8px 10px}' +
     '#fb-packs .fbp-msg{color:#ff8a65;text-align:center;margin:8px 0 0;font-size:13px}' +
     '#fb-packs .fbp-ok{color:#9be29b}' +
-    '#fb-packs .fbp-code{font:bold 26px monospace;letter-spacing:3px;color:#fff;text-align:center;margin:4px 0 2px;word-break:break-all}' +
+    '#fb-packs .fbp-code{font:bold clamp(18px,6vw,26px) monospace;letter-spacing:1px;white-space:nowrap;color:#fff;text-align:center;margin:4px 0 2px;word-break:break-all}' +
     '#fb-packs .fbp-top{text-align:center;color:#ffb347;font:italic 15px Arial;margin:10px 0 2px}' +
     '#fb-packs .fbp-wb{text-align:center;color:#FFD700;font:bold 18px Arial;letter-spacing:1px;margin:0 0 4px}' +
     '#fb-packs table{width:100%;border-collapse:collapse;font:15px Arial}#fb-packs td{padding:7px 4px;border-bottom:1px solid rgba(255,215,0,.12)}' +
@@ -1411,6 +1422,7 @@ function packsRender() {
     h += '<h2>RECOVERY CODE</h2><p class="fbp-sub">This code is your Dog House sign-in. Write it down or take a screenshot. It\'s the only way to get your name, Dog Houses and costumes back on a new phone or browser. Don\'t share it.</p>' +
       '<div class="fbp-code">' + packsEsc(packsToken()) + '</div><button type="button" data-a="copy-code">Copy code</button>' + packsMsgHtml() +
       '<button type="button" class="fbp-ghost" data-a="home">Back</button>' +
+      '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="new-code">' + (packsConfirm === 'newcode-me' ? 'Tap again for a new code. This one stops working on every phone and browser, so you\'ll need the new one there. Your Dog Houses and costumes stay.' : 'Someone else has my code? Get a new one') + '</button></div>' +
       '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="delete-me">' + (packsConfirm === 'delete' ? 'Tap again to delete your name, scores, Dog House memberships and saved costumes for good' + (SHOP_WEB && shopOwned().length ? '. Costumes bought on this website belong to this profile and will be lost' : '') : 'Delete my Dog House profile') + '</button></div>';
   } else if (packsView === 'help') {
     h += '<h2>HOW DOG HOUSES WORK</h2><div class="fbp-help">' +
@@ -1499,7 +1511,7 @@ function packsClick(e) {
   if (e.target === box) { packsClose(); return; }
   const b = e.target.closest('button[data-a]'); if (!b || b.disabled) return;
   const a = b.getAttribute('data-a'), id = b.getAttribute('data-id'), v = b.getAttribute('data-v');
-  if (a !== 'leave' && a !== 'remove' && a !== 'delete-me' && a !== 'newcode') packsConfirm = '';
+  if (a !== 'leave' && a !== 'remove' && a !== 'delete-me' && a !== 'newcode' && a !== 'new-code') packsConfirm = '';
   if (a === 'close') { packsClose(); return; }
   if (a === 'play') { packsClose(); packsPlay(); return; }
   if (a === 'home') { packsMsg = ''; packsEdit = false; packsGo('home'); if (packsToken()) packsRefreshMe(); return; }
@@ -1527,6 +1539,12 @@ function packsClick(e) {
     packsKeepMe(j); packsView = 'home'; packsMsg = '✓ Welcome back' + (j.player.nickname ? ', ' + j.player.nickname : '') + '!';
     if (before && before !== packsToken()) skinsPush();   // costumes won on this device join the restored profile
   });
+  if (a === 'new-code') {
+    if (packsConfirm !== 'newcode-me') { packsConfirm = 'newcode-me'; packsRender(); return; }
+    packsConfirm = '';
+    packsDo(async () => { packsKeepMe(await packsCall('POST', 'me/newcode')); packsMsg = '✓ New recovery code. Write it down: the old one no longer works.'; });
+    return;
+  }
   if (a === 'copy-code') { packsCopy(packsToken()).then(ok => { packsMsg = ok ? '✓ Copied.' : 'Copy didn\'t work here. Write the code down instead.'; packsRender(); }); return; }
   if (a === 'pack') packsDo(async () => { packsEdit = false; await packsShowPack(id); });
   if (a === 'tab') packsDo(async () => { await packsShowPack(packsCur.pack.id, v); });
