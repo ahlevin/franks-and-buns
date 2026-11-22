@@ -652,11 +652,199 @@ const SHOP_WEB = !SHOP_APP && location.protocol !== 'capacitor:' && !SHOP_TEST &
 const SHOP_ON = SHOP_TEST || SHOP_APP || SHOP_WEB;
 const SHOP_STORE = SHOP_APP || SHOP_WEB;   // real purchases (store prices, buyer account)
 const SKINS_ALL = !SHOP_TEST && !SHOP_WEB && SHOP_TESTHOST && (new URLSearchParams(location.search).get('skins') === 'all' || location.hostname === 'preview.franks-and-buns.pages.dev');
+// --- BunBux and the daily challenge ---
+// BunBux are earned by playing, never sold: 1 per box packed (up to 10 a game), 25 for the daily challenge (once a day)
+// and day-streak bonuses (+25 at 3 days, +75 at 7, +200 at 30). The server keeps them with the Dog House profile, so the
+// recovery code brings them back, and caps what a day of games can earn at 100 (streak bonuses on top).
+// Any shop costume can be unlocked for 300 BunBux; Collections and bundles stay real-money only.
+const BUX_COST = 300, BUX_DAILY = 25;
+// Limited Edition: costumes (one or two per Collection) that can only be bought, never unlocked with BunBux (same list as BUX_LIMITED in the API)
+const SKINS_LIMITED = ['santa', 'bernedoodle', 'labradoodle', 'persian', 'mainecoon', 'slamdunk', 'goalgetter', 'axolotl', 'anglerfish', 'unidentifiedfryingobject', 'babykaiju', 'phoenix', 'shadowwizard',
+  'glazedandconfused', 'blanketburrito', 'royaltreatment', 'raccoon', 'forkimpostor', 'professorfrank', 'glowgetter', 'specialdelivery',
+  'discodog', 'maneevent'];
+function skinLimited(id) { return SKINS_LIMITED.indexOf(id) >= 0; }
+// Everyone gets the same challenge each day (midnight Pacific). Same list and order as DAILY in functions/api/[[path]].js
+const DAILY = [['streak', 10], ['boxes', 2], ['franks', 20], ['chili', 1], ['streak', 12], ['boxes', 3], ['franks', 25], ['streak', 15],
+  ['boxes', 4], ['chili', 2], ['franks', 30], ['streak', 8], ['boxes', 3], ['franks', 35], ['streak', 18], ['chili', 1], ['boxes', 5],
+  ['franks', 20], ['streak', 12], ['boxes', 2]];
+const DAILY_TEXT = { streak: n => 'Land ' + n + ' in a row', boxes: n => n === 4 ? 'Reach the Dog Parade' : 'Pack ' + n + ' boxes in one game',
+  franks: n => 'Land ' + n + ' franks in one game', chili: n => n === 1 ? 'Catch a chili dog' : 'Catch ' + n + ' chili dogs in one game' };
+// Test site only: ?day=2026-12-01 plays as if it were that day (the server goes along only where BUX_TEST=1 is set)
+const BUX_TESTDAY = SHOP_TESTHOST && /^\d{4}-\d{2}-\d{2}$/.test(new URLSearchParams(location.search).get('day') || '') ? new URLSearchParams(location.search).get('day') : '';
+function fbDay() {
+  if (BUX_TESTDAY) return BUX_TESTDAY;
+  try {
+    const parts = {}; new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit' })
+      .formatToParts(new Date()).forEach(x => { parts[x.type] = x.value; });
+    return parts.year + '-' + parts.month + '-' + parts.day;
+  } catch (e) { return new Date(Date.now() - 8 * 3600e3).toISOString().slice(0, 10); }
+}
+function fbDayNum(d) { return Math.round(Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)) / 864e5); }
+function fbDayBefore(d) { return new Date((fbDayNum(d) - 1) * 864e5).toISOString().slice(0, 10); }
+function dailyToday() { const d = fbDay(), c = DAILY[(fbDayNum(d) * 7) % DAILY.length]; return { day: d, stat: c[0], n: c[1], text: DAILY_TEXT[c[0]](c[1]) }; }
+function buxState() {
+  try { const b = JSON.parse(safeGet('fb_bux') || 'null'); if (b && typeof b.bux === 'number' && Array.isArray(b.skins)) return b; } catch (e) {}
+  return { bux: 0, skins: [], dailyLast: '', streak: 0 };
+}
+function buxKeep(b) {   // the server's word replaces what this device had
+  if (b && typeof b.bux === 'number' && Array.isArray(b.skins))
+    safeSet('fb_bux', JSON.stringify({ bux: b.bux, skins: b.skins.filter(x => typeof x === 'string'), dailyLast: String(b.dailyLast || ''), streak: b.streak | 0 }));
+}
+function buxOwned() { return buxState().skins; }
+function dailyDoneToday() { return buxState().dailyLast === fbDay(); }
+function dailyStreakNow() { const b = buxState(), d = fbDay(); return (b.dailyLast === d || b.dailyLast === fbDayBefore(d)) ? b.streak : 0; }
+function dailyBestToday() { try { const t = JSON.parse(safeGet('fb_daily_best') || 'null'); return t && t.day === fbDay() ? t.v | 0 : 0; } catch (e) { return 0; } }
+let buxResult = null;   // Game Over: null, 'wait', 'off' (couldn't reach the server) or the answer for this game
+// Saving BunBux in batches: games that only earned box BunBux wait on this device (fb_bux_pend) and go to the server together,
+// so most games cost no database write. They are sent when the daily challenge is met, when BUX_FLUSH or more are waiting,
+// when the player leaves the game (tab hidden or app in the background), on a new day, and before spending.
+const BUX_FLUSH = 25, BUX_CAP = 100;
+function buxPend() {
+  try { const q = JSON.parse(safeGet('fb_bux_pend') || 'null'); if (q && q.games > 0 && typeof q.bux === 'number') return q; } catch (e) {}
+  return null;
+}
+function buxShown() { const q = buxPend(); return buxState().bux + (q ? q.bux : 0); }   // the balance as the player sees it
+function buxPendAdd(st, run) {
+  const q = buxPend() || { day: fbDay(), games: 0, score: 0, frames: 0, franks: 0, boxes: 0, streak: 0, chili: 0, bux: 0 };
+  const today = q.day === fbDay() ? q.bux : 0;   // a rough local share of the daily cap; the server has the final say
+  const add = Math.max(0, Math.min(Math.min(st.boxes, 10), BUX_CAP - today));
+  q.games++; q.score += run.score; q.frames += run.frames; q.franks += st.franks; q.boxes += Math.min(st.boxes, 10);
+  q.streak += st.streak; q.chili += st.chili; q.bux += add; q.day = fbDay();
+  safeSet('fb_bux_pend', JSON.stringify(q));
+  return add;
+}
+function buxPendBody(q, best) {
+  const body = { games: q.games, score: q.score, frames: q.frames, franks: q.franks, boxes: q.boxes, streak: q.streak, chili: q.chili };
+  if (best) body.best = best;
+  if (BUX_TESTDAY) body.testDay = BUX_TESTDAY;
+  return body;
+}
+function buxPendBack(q) {   // a save that didn't go through: put its games back with any played since
+  const n = buxPend();
+  if (n) ['games', 'score', 'frames', 'franks', 'boxes', 'streak', 'chili', 'bux'].forEach(k => { q[k] += n[k]; });
+  safeSet('fb_bux_pend', JSON.stringify(q));
+}
+let buxFlushing = null;
+function buxFlush(best) {   // send the waiting games (and `best`, the game that met today's challenge); resolves to the answer or null
+  if (buxFlushing) return buxFlushing.then(() => buxFlush(best));
+  const q = buxPend(); if (!q) return Promise.resolve(null);
+  buxFlushing = (async () => {
+    if (!packsToken()) {
+      if (safeGet('fb_no_auto_profile')) return null;   // they deleted their profile on purpose: don't quietly make another one
+      try { packsKeepMe(await packsCall('POST', 'player', { silent: true })); } catch (e) { return null; }
+    }
+    safeSet('fb_bux_pend', '');
+    try {
+      const j = await packsCall('POST', 'me/bux', buxPendBody(q, best));
+      buxKeep(j.bux); if (packsMe && packsMe.player) packsMe.player.bux = j.bux;
+      return j;
+    } catch (e) {
+      if (e && e.status === 422) return null;   // the server couldn't check these games: drop them rather than retry forever
+      buxPendBack(q); return null;
+    }
+  })();
+  return buxFlushing.finally(() => { buxFlushing = null; });
+}
+function buxFlushLeaving() {   // the player is leaving: send what's waiting with keepalive, so it survives the page closing
+  const q = buxPend(), tok = packsToken();
+  if (!q || !tok || buxFlushing) return;
+  safeSet('fb_bux_pend', '');
+  try {
+    fetch(PACKS_API + 'me/bux', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok },
+      body: JSON.stringify(buxPendBody(q)) })
+      .then(r => r.ok ? r.json().then(j => buxKeep(j.bux)) : (r.status === 422 ? null : buxPendBack(q)))
+      .catch(() => buxPendBack(q));
+  } catch (e) { buxPendBack(q); }
+}
+async function buxSubmit(st, run) {
+  buxResult = null;
+  if (SKINS_ALL) return;
+  const ch = dailyToday(), v = st[ch.stat] || 0, met = v >= ch.n && !dailyDoneToday();
+  if (v > dailyBestToday()) safeSet('fb_daily_best', JSON.stringify({ day: ch.day, v: v }));
+  if (!(st.boxes > 0) && !met) return;   // nothing to earn
+  if (!packsToken() && safeGet('fb_no_auto_profile')) return;
+  const add = buxPendAdd(st, run);
+  const q = buxPend();
+  if (!met && q && q.bux < BUX_FLUSH && q.day === fbDay()) {   // keep it on this device for now
+    const b = buxState();
+    buxResult = { earned: add, bux: { bux: buxShown(), skins: b.skins, dailyLast: b.dailyLast, streak: b.streak }, pending: true };
+    return;
+  }
+  buxResult = 'wait';
+  const j = await buxFlush(met ? { streak: st.streak, chili: st.chili, franks: st.franks, boxes: st.boxes } : null);
+  if (!j) {
+    const b = buxState();
+    buxResult = buxPend() ? { earned: add, bux: { bux: buxShown(), skins: b.skins, dailyLast: b.dailyLast, streak: b.streak }, pending: true } : 'off';
+    return;
+  }
+  if (j.dailyDone) sndBox();
+  // this game's share: its boxes plus anything the challenge and streak added (earlier waiting games were already shown)
+  buxResult = Object.assign({}, j, { earned: Math.min(j.earned, add + (j.dailyDone ? BUX_DAILY + (j.bonus || 0) : 0)) });
+}
+// The BunBux coin (bunbux.png): in canvas text, each 🪙 is drawn as the coin picture, so it looks the same on every device
+const BUX_IMG = new Image(); BUX_IMG.src = 'bunbux.png';
+const BUX_ICON_HTML = '<img src="bunbux.png" alt="" style="width:1.25em;height:1.25em;vertical-align:-0.3em">';
+function fbIconW(t, size) { const parts = t.split('🪙'); return parts.reduce((w, seg) => w + ctx.measureText(seg).width, 0) + (parts.length - 1) * size * 1.25; }
+function fbIconText(t, x, y, size) {   // left-aligned at x (baseline y), with the current font
+  const parts = t.split('🪙'), d = size * 1.25;
+  parts.forEach((seg, i) => {
+    ctx.fillText(seg, x, y); x += ctx.measureText(seg).width;
+    if (i < parts.length - 1) { if (BUX_IMG.complete && BUX_IMG.naturalWidth) ctx.drawImage(BUX_IMG, x, y - size * 0.98, d, d); x += d; }
+  });
+}
+// canvas text centred by measuring it (iOS misplaces centred canvas text that has an emoji), shrunk to fit the width
+function fbCenterText(t, y, color, size, bold) {
+  ctx.font = (bold ? 'bold ' : '') + size + 'px Arial';
+  const w = fbIconW(t, size); if (w > W - 20) { size = Math.max(9, Math.floor(size * (W - 20) / w)); ctx.font = (bold ? 'bold ' : '') + size + 'px Arial'; }
+  ctx.fillStyle = color; ctx.textAlign = 'left'; fbIconText(t, (W - fbIconW(t, size)) / 2, y, size); ctx.textAlign = 'center';
+}
+// Start screen: today's challenge and the day streak (the balance is on the SKINS button; in place of the how-to lines after 3 games)
+function dailyCardShown() { return (parseInt(safeGet('fb_games') || '0', 10) || 0) >= 3 || buxShown() > 0 || dailyStreakNow() > 0; }
+function drawDailyCard(y) {
+  const ch = dailyToday(), done = dailyDoneToday(), sk = dailyStreakNow();
+  const w = Math.min(320, W - 32), h = 64, x = W / 2 - w / 2;
+  ctx.fillStyle = 'rgba(0,0,0,0.5)'; rrect(x, y, w, h, 12); ctx.fill();
+  ctx.strokeStyle = done ? '#7CFC00' : '#FFD700'; ctx.lineWidth = 1.5; rrect(x, y, w, h, 12); ctx.stroke();
+  fbCenterText(done ? "✓ TODAY'S CHALLENGE DONE" : "📅 TODAY'S CHALLENGE · +" + BUX_DAILY + ' BUNBUX', y + 17, done ? '#7CFC00' : '#ffb347', 11, true);
+  fbCenterText(done ? 'New challenge tomorrow' : ch.text, y + 38, '#fff', 17, true);
+  fbCenterText(sk > 0 ? '🔥 ' + sk + '-day streak' + (done ? '  ·  keep it going tomorrow' : '') : '🔥 Do it today to start a day streak', y + 56, '#FFD700', 12, false);
+}
+// Game Over: what this game earned, and the challenge
+function drawBuxGameOver() {
+  const r = buxResult;
+  if (r && typeof r === 'object') {
+    const t = r.earned > 0 ? '🪙 +' + r.earned + ' BunBux  ·  You have ' + r.bux.bux.toLocaleString()
+      : r.capped ? '🪙 Daily BunBux limit reached  ·  You have ' + r.bux.bux.toLocaleString() : '🪙 You have ' + r.bux.bux.toLocaleString() + ' BunBux';
+    fbCenterText(t, H * 0.22 + 30, '#FFD700', 15, true);
+  } else if (r === 'wait') fbCenterText('🪙 …', H * 0.22 + 30, '#FFD700', 15, true);
+  else if (!SKINS_ALL) fbCenterText('🪙 You have ' + buxShown().toLocaleString() + ' BunBux', H * 0.22 + 30, '#FFD700', 15, true);
+}
+function dailyGameOverLine() {   // in the costume-hint slot: a challenge just done wins, then the next costume, then today's progress
+  if (buxResult && buxResult.dailyDone) return { t: '✅ DAILY CHALLENGE DONE!  🔥 ' + buxResult.bux.streak + '-day streak' + (buxResult.bonus ? ' (+' + buxResult.bonus + ' bonus)' : ''), c: '#7CFC00' };
+  const nudge = skinNudge();
+  if (nudge) return { t: nudge, c: '#ffb347' };
+  if (dailyDoneToday()) return { t: "✓ Today's challenge is done. New one tomorrow!", c: '#9be29b' };
+  const ch = dailyToday(), best = Math.min(dailyBestToday(), ch.n);
+  return { t: '📅 Today: ' + ch.text + ' (best ' + best + ' of ' + ch.n + ')', c: '#ffb347' };
+}
+async function skinsBux() {   // unlock the costume on the confirm screen for BunBux
+  if (skinsBusy || !skinsBuy) return;
+  const p = shopProducts()[skinsBuy]; if (!p || p.kind !== 'skin' || skinLimited(p.skins[0])) return;
+  skinsBusy = true; skinsMsg = ''; skinsRender();
+  try {
+    await buxFlush();   // games still waiting on this device count toward the price
+    const j = await packsCall('POST', 'me/bux/spend', { skin: p.skins[0] });
+    buxKeep(j.bux); if (packsMe && packsMe.player) packsMe.player.bux = j.bux;
+    skinsBuy = null; skinsMsgErr = false; safeSet('fb_skin', p.skins[0]); skinPreload(skinById(p.skins[0]));
+    skinsMsg = '🎉 ' + p.name + ' is yours! You’re wearing it now.';
+  } catch (e) { skinsMsgErr = true; skinsMsg = (e && e.message) || 'That didn’t go through. Your BunBux are safe.'; }
+  skinsBusy = false; skinsRender();
+}
 function skinUnlocked(s) {
   if (SKINS_ALL) return true;
   const how = skinHow(s);
   if (how === 'free') return true;
-  if (how === 'shop') return shopOwned().indexOf(s.id) >= 0;
+  if (how === 'shop') return shopOwned().indexOf(s.id) >= 0 || buxOwned().indexOf(s.id) >= 0;   // bought, or unlocked with BunBux
   if (how !== 'earn') return false;   // 'soon' and 'hidden' stay locked until they go on sale
   return skinsWon().indexOf(s.id) >= 0;   // only games played since skins arrived count
 }
@@ -839,7 +1027,7 @@ function shopFromCustomer(ci) {
   // (the apps' SDK lists allPurchasedProductIdentifiers; the website's SDK only nonSubscriptionTransactions)
   if (!SHOP_TEST && ci && (Array.isArray(ci.allPurchasedProductIdentifiers) || Array.isArray(ci.nonSubscriptionTransactions))) {
     const was = shopOwned(); safeSet('fb_skins_bought', JSON.stringify(ids));
-    const cur = safeGet('fb_skin'); if (cur && was.indexOf(cur) >= 0 && ids.indexOf(cur) < 0) safeSet('fb_skin', '');   // was wearing it
+    const cur = safeGet('fb_skin'); if (cur && was.indexOf(cur) >= 0 && ids.indexOf(cur) < 0 && buxOwned().indexOf(cur) < 0) safeSet('fb_skin', '');   // was wearing it
   } else if (ids.length) shopGive(ids);
   return ids.length;
 }
@@ -847,7 +1035,7 @@ window.addEventListener('load', () => { if (SHOP_STORE) setTimeout(() => shopSta
 // costumes bought (ids). Test mode keeps pretend purchases on this device only.
 function shopOwned() { try { const a = JSON.parse(safeGet(SHOP_TEST ? 'fb_shop_test' : 'fb_skins_bought') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
 function shopGive(ids) { const have = shopOwned(); ids.forEach(id => { if (have.indexOf(id) < 0) have.push(id); }); safeSet(SHOP_TEST ? 'fb_shop_test' : 'fb_skins_bought', JSON.stringify(have)); }
-function shopOwnedOf(ids) { const have = shopOwned(); return ids.filter(id => have.indexOf(id) >= 0); }
+function shopOwnedOf(ids) { const have = shopOwned().concat(buxOwned()); return ids.filter(id => have.indexOf(id) >= 0); }
 // buying: the test site pretends; the apps go to Apple / Google Play through RevenueCat
 async function shopBuy(pid) {
   const p = shopProducts()[pid]; if (!p) throw new Error('Unknown item');
@@ -962,6 +1150,9 @@ function ensureAudio() {
 }
 // Pause audio cleanly when the game is hidden; the next tap resumes it.
 let __audioPaused = false;
+document.addEventListener('visibilitychange', () => { if (document.hidden) buxFlushLeaving(); });
+window.addEventListener('pagehide', () => buxFlushLeaving());
+setTimeout(() => { const q = buxPend(); if (q && q.day !== fbDay()) buxFlush(); }, 3000);   // games waiting from an earlier day
 document.addEventListener('visibilitychange', () => {
   if (!audioCtx) return;
   if (document.hidden) { __audioPaused = true; try { audioCtx.suspend(); } catch (e) {} }
@@ -1276,7 +1467,7 @@ function packsKeepMe(j) {
   if (j && j.player && /^fb_[0-9a-f]{40}$/.test(j.player.buyerId || '')) { safeSet('fb_buyer_id', j.player.buyerId); safeSet('fb_buyer_tok', packsToken()); }
   if (j && j.token) { packsCloudSave(); if (SHOP_STORE) shopLink().catch(() => {}); }
   else if (j && j.player && SHOP_STORE) shopLink().catch(() => {});   // no-op unless the buyer id changed
-  if (j && j.player) { packsMe = { player: j.player, packs: j.packs || [], requests: j.requests || [] }; skinsMerge(j.player.skins); }
+  if (j && j.player) { packsMe = { player: j.player, packs: j.packs || [], requests: j.requests || [] }; skinsMerge(j.player.skins); buxKeep(j.player.bux); }
 }
 function packsIsOpen() { const b = document.getElementById('fb-packs'); return !!(b && b.style.display !== 'none'); }
 // Play button in My Dog Houses: close it and start a game (from the start screen or Game Over)
@@ -1434,7 +1625,7 @@ function packsRender() {
       '<div class="fbp-code">' + packsEsc(packsToken()) + '</div><button type="button" data-a="copy-code">Copy code</button>' + packsMsgHtml() +
       '<button type="button" class="fbp-ghost" data-a="' + (packsAfterBuy ? 'close' : 'home') + '">' + (packsAfterBuy ? 'Done' : 'Back') + '</button>' +
       (packsAfterBuy ? '' : '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="new-code">' + (packsConfirm === 'newcode-me' ? 'Tap again for a new code. This one stops working on every phone and browser, so you\'ll need the new one there. Your Dog Houses and costumes stay.' : 'Someone else has my code? Get a new one') + '</button></div>' +
-      '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="delete-me">' + (packsConfirm === 'delete' ? 'Tap again to delete your name, scores, Dog House memberships and saved costumes for good' + (SHOP_WEB && shopOwned().length ? '. Costumes bought on this website belong to this profile and will be lost' : '') : 'Delete my Dog House profile') + '</button></div>');
+      '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="delete-me">' + (packsConfirm === 'delete' ? 'Tap again to delete your name, scores, Dog House memberships, saved costumes, BunBux and the costumes you unlocked with BunBux for good' + (SHOP_WEB && shopOwned().length ? '. Costumes bought on this website belong to this profile and will be lost' : '') : 'Delete my Dog House profile') + '</button></div>');
   } else if (packsView === 'help') {
     h += '<h2>HOW DOG HOUSES WORK</h2><div class="fbp-help">' +
       '<p>A Dog House is a private Wienerboard for you and your friends. Make one, invite people, and find out who\'s top dog.</p>' +
@@ -1596,7 +1787,7 @@ function packsClick(e) {
     packsConfirm = '';
     packsDo(async () => {
       await packsCall('POST', 'me/delete');
-      safeSet('fb_pack_token', ''); safeSet('fb_pack_pending', ''); packsMe = null; packsCur = null; packsCloudClear();
+      safeSet('fb_pack_token', ''); safeSet('fb_pack_pending', ''); safeSet('fb_bux', ''); safeSet('fb_bux_pend', ''); packsMe = null; packsCur = null; packsCloudClear();
       safeSet('fb_no_auto_profile', '1');   // they deleted it on purpose: don't quietly make another one
       if (SHOP_STORE) shopLink().catch(() => {});   // app purchases stay on their Apple / Google account (Restore Purchases); website purchases go with the profile
       packsView = 'home'; packsMsg = '✓ Your Dog House profile was deleted.';
@@ -2154,7 +2345,7 @@ function resetGame() {
   stopChaseEffects(); wavDuckUntil = 0;   // skipping the intro cuts the chase foley; gameplay music starts once
   frank = { x:70, y:H*0.4, vy:0, squash:1, stretch:1, alive:true };
   buns=[]; splats=[]; particles=[]; floatingTexts=[]; forks=[]; gameDogs=[];
-  score=0; runFrames=0; packsResult=null; lives=3; streak=0; bestStreak=0; chiliCaught=0;
+  score=0; runFrames=0; packsResult=null; buxResult=null; lives=3; streak=0; bestStreak=0; chiliCaught=0;
   franksLanded=0; boxFranks=0; boxesCompleted=0; boxFlash=0;
   scrollSpeed=2.2; scrollX=0; nextBunDist=0;
   shakeAmount=0; streakText=''; streakTimer=0; gameOverDelay=0; gracePeriod=0;
@@ -2652,6 +2843,7 @@ function loseLife() {
     skinNew = fresh.length ? fresh : null;
     fresh.forEach(skinPreload);
     recordRun();
+    buxSubmit({ streak: bestStreak, boxes: boxesCompleted, franks: franksLanded, chili: chiliCaught }, { score: score, frames: runFrames });
   } else { frank.y=H*0.35; frank.vy=0; }
 }
 
@@ -2918,10 +3110,13 @@ function drawMenu() {
   ctx.fillStyle='#FFD700'; ctx.font='bold 38px Arial'; ctx.textAlign='center';
   ctx.fillText('FRANKS',W/2,H*0.25); ctx.fillText('& BUNS',W/2,H*0.25+42);
   drawMenuSkin();
-  ctx.fillStyle='#ddd'; ctx.font='16px Arial';
-  ctx.fillText('TAP to boost your frank up',W/2,H*0.58);
-  ctx.fillText('RELEASE to let it drop',W/2,H*0.58+24);
-  ctx.fillText('Land in buns to score!',W/2,H*0.58+48);
+  if (dailyCardShown()) { drawDailyCard(H*0.58-20); if (frameCount % 30 === 0) buxIntroMaybe(); }
+  else {
+    ctx.fillStyle='#ddd'; ctx.font='16px Arial';
+    ctx.fillText('TAP to boost your frank up',W/2,H*0.58);
+    ctx.fillText('RELEASE to let it drop',W/2,H*0.58+24);
+    ctx.fillText('Land in buns to score!',W/2,H*0.58+48);
+  }
   ctx.fillStyle='#FF6600'; ctx.font='bold 22px Arial';
   ctx.globalAlpha=0.8+Math.sin(frameCount*0.06)*0.2; ctx.fillText('TAP TO START',W/2,Math.min(H*0.80,sideBtnY()-14)); ctx.globalAlpha=1;
   const r = scoresBtnRect();
@@ -2991,7 +3186,33 @@ function howtoOpen() {
   try { if (typeof audioCtx !== 'undefined' && audioCtx) audioCtx.suspend(); } catch (e) {}   // game music off while the video plays
   const v = b.querySelector('video'); try { v.currentTime = 0; const pr = v.play(); if (pr && pr.catch) pr.catch(() => {}); } catch (e) {}
 }
-function skinsBtnRect() { const w = 112, h = 24; return { x: W / 2 - w / 2, y: H * 0.44 + 24, w: w, h: h }; }
+// "New: BunBux!" pop-up: shown once, the first time the start screen shows the daily challenge card
+// (so current players see it on their first visit after the update, and new players after their third game)
+function buxIntroIsOpen() { const b = document.getElementById('fb-buxintro'); return !!(b && b.style.display !== 'none'); }
+function buxIntroMaybe() {
+  if (SKINS_ALL || safeGet('fb_bux_intro') || buxIntroIsOpen() || howtoIsOpen() || skinsIsOpen() || packsIsOpen() || scoresOpen) return;
+  safeSet('fb_bux_intro', '1');
+  try { if (typeof gtag === 'function') gtag('event', 'bux_intro'); } catch (e) {}
+  const b = document.createElement('div'); b.id = 'fb-buxintro'; b.setAttribute('role', 'dialog'); b.setAttribute('aria-label', 'New: BunBux');
+  b.style.cssText = 'position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(10,5,0,.86);padding:16px;box-sizing:border-box';
+  const li = 'margin:0 0 9px;padding-left:30px;text-indent:-30px';
+  b.innerHTML = '<div style="max-width:360px;width:100%;background:#2a1a0a;border:2px solid #FFD700;border-radius:18px;padding:20px 18px 16px;box-sizing:border-box;color:#f3e3c8;font:15px/1.4 Arial;max-height:100%;overflow-y:auto">' +
+    '<div style="text-align:center;line-height:1"><img src="bunbux.png" alt="" style="width:64px;height:64px"></div>' +
+    '<h2 style="margin:6px 0 4px;text-align:center;color:#FFD700;font:bold 24px Arial">New: BunBux!</h2>' +
+    '<p style="margin:0 0 14px;text-align:center;color:#c8a878">Earn them by playing, then spend them on costumes.</p>' +
+    '<ul style="list-style:none;margin:0;padding:0">' +
+    '<li style="' + li + '">📦&nbsp;&nbsp;<b>1 BunBux</b> for every box you pack (up to 10 a game)</li>' +
+    '<li style="' + li + '">📅&nbsp;&nbsp;<b>Daily challenge:</b> a new goal every day, worth <b>' + BUX_DAILY + ' BunBux</b></li>' +
+    '<li style="' + li + '">🔥&nbsp;&nbsp;<b>Streak bonuses:</b> +25 at 3 days in a row, +75 at 7, +200 at 30</li>' +
+    '<li style="' + li + '">🎭&nbsp;&nbsp;Unlock shop costumes for <b>' + BUX_COST + ' BunBux</b> (★ Limited Edition ones are purchase only)</li>' +
+    '</ul>' +
+    '<p style="margin:10px 0 0;text-align:center;font-size:12px;color:#c8a878">Today: <b style="color:#fff">' + packsEsc(dailyToday().text) + '</b></p>' +
+    '<button type="button" data-a="ok" style="display:block;width:100%;margin:14px 0 0;font:bold 17px Arial;border-radius:999px;padding:12px;border:none;background:#ff6600;color:#fff;cursor:pointer">Let\'s go!</button></div>';
+  b.addEventListener('click', e => { if (e.target.closest('[data-a]') || e.target === b) { b.style.display = 'none'; try { sndStreak(); } catch (x) {} } });
+  ['touchstart', 'touchend', 'mousedown', 'pointerdown', 'keydown'].forEach(t => b.addEventListener(t, e => e.stopPropagation(), { passive: true }));
+  (document.body || document.documentElement).appendChild(b);
+}
+function skinsBtnRect() { const w = SKINS_ALL ? 112 : 176, h = 24; return { x: W / 2 - w / 2, y: H * 0.44 + 24, w: w, h: h }; }
 function drawMenuSkin() {
   const s = curSkin(), cy = H * 0.44, flap = Math.floor(frameCount / 18) % 2 === 1;
   ctx.save(); ctx.translate(W / 2, cy + Math.sin(frameCount * 0.05) * 3); ctx.scale(1.25, 1.25);
@@ -3004,7 +3225,8 @@ function drawMenuSkin() {
   ctx.fillStyle = 'rgba(0,0,0,0.45)'; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.fill();
   ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.5; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.stroke();
   ctx.fillStyle = '#FFD700'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center';
-  ctx.fillText('🎭 SKINS', r.x + r.w / 2, r.y + r.h / 2 + 4);
+  if (SKINS_ALL) ctx.fillText('🎭 SKINS', r.x + r.w / 2, r.y + r.h / 2 + 4);
+  else { const t = '🎭 SKINS  ·  🪙 ' + buxShown().toLocaleString(); ctx.textAlign = 'left'; fbIconText(t, r.x + (r.w - fbIconW(t, 12)) / 2, r.y + r.h / 2 + 4, 12); ctx.textAlign = 'center'; }
 }
 // Game Over: SKINS button in the top-right corner, so you can change costume between games
 function skinsGoRect() { const w = 96, h = 30; return { x: W - w - 10, y: 12, w: w, h: h }; }
@@ -3149,6 +3371,10 @@ function skinsOpen() {
       '#fb-skins .fbs-go[disabled]{opacity:.6}#fb-skins .fbs-msg{text-align:center;color:#9be29b;font-size:13px;margin:8px 0 0;min-height:1em}#fb-skins .fbs-msg.err{color:#ff9b7a}' +
       '#fb-skins .fbs-link{display:block;margin:6px auto 0;background:none;border:none;color:#ffb347;text-decoration:underline;font:13px Arial;cursor:pointer;padding:6px}' +
       '#fb-skins .fbs-test{text-align:center;font:bold 11px Arial;color:#1a0f05;background:#9be29b;border-radius:6px;padding:3px;margin:0 0 8px}' +
+      '#fb-skins .fbs-ltd{display:inline-block;background:linear-gradient(135deg,#FFD700,#ffb347);color:#1a0f05;font:bold 10px Arial;letter-spacing:.5px;border-radius:999px;padding:2px 8px}' +
+      '#fb-skins .fbs-ltd-c{position:absolute;top:6px;left:6px;z-index:1}' +
+      '#fb-skins .fbs-bal{text-align:center;font:13px Arial;color:#FFD700;background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.35);border-radius:999px;padding:5px 10px;margin:0 auto 10px;width:fit-content}' +
+      '#fb-skins .fbs-go.fbs-bux{background:transparent;color:#FFD700;border:2px solid #FFD700;padding:11px}#fb-skins .fbs-buxnote{text-align:center;font-size:12px;color:#c8a878;margin:6px 0 0}' +
       '#fb-skins .fbs-close{flex:none;font:600 15px Arial;border-radius:999px;padding:11px 16px;border:1px solid rgba(255,179,71,.5);background:transparent;color:#ffb347;cursor:pointer;width:100%;margin:12px 0 0}';
     document.head.appendChild(css);
     box.addEventListener('click', e => {
@@ -3157,6 +3383,7 @@ function skinsOpen() {
       if (t && t.getAttribute('data-a') === 'home') { if (skinsBuy) skinsBuy = null; else skinsTab = null; skinsMsg = ''; sndStreak(); skinsRender(); return; }
       if (t && t.hasAttribute('data-buy')) { if (!skinsBusy) { skinsBuy = t.getAttribute('data-buy'); skinsMsg = ''; sndStreak(); skinsRender(); } return; }
       if (t && t.getAttribute('data-a') === 'pay') { skinsPay(); return; }
+      if (t && t.getAttribute('data-a') === 'bux') { skinsBux(); return; }
       if (t && t.getAttribute('data-a') === 'restore') { skinsRestore(); return; }
       if (t && t.getAttribute('data-a') === 'shopreset') { safeSet('fb_shop_test', '[]'); skinsMsg = 'Test purchases cleared.'; skinsRender(); return; }
       if (e.target === box || (t && t.getAttribute('data-a') === 'close')) { skinsClose(); return; }
@@ -3232,12 +3459,13 @@ function skinsRender() {
     '<h2>' + packsEsc(title) + '</h2>' +
     '<button type="button" class="fbs-x" data-a="close" aria-label="Close">✕</button></div><div class="fbs-body">';
   if (SHOP_TEST) h += '<div class="fbs-test">TEST SHOP · pretend purchases, nothing is charged</div>';
+  if (!SKINS_ALL) h += '<div class="fbs-bal">' + BUX_ICON_HTML + ' You have <b>' + buxShown().toLocaleString() + '</b> BunBux</div>';
   const msg = skinsMsg ? '<p class="fbs-msg' + (skinsMsgErr ? ' err' : '') + '">' + packsEsc(skinsMsg) + '</p>' : '';
   if (buyP) {
     // confirm screen: exactly what you get, what you already own, the price
     const own = shopOwnedOf(buyP.skins), n = buyP.skins.length, left = n - own.length;
     h += '<div class="fbs-buy">';
-    if (buyP.kind === 'skin') h += '<img src="' + skinsPic(skinById(buyP.skins[0])) + '" alt=""><h3>' + packsEsc(buyP.name) + '</h3><p>One costume, yours to keep.</p>';
+    if (buyP.kind === 'skin') h += (skinLimited(buyP.skins[0]) ? '<span class="fbs-ltd">★ LIMITED EDITION</span><br>' : '') + '<img src="' + skinsPic(skinById(buyP.skins[0])) + '" alt=""><h3>' + packsEsc(buyP.name) + '</h3><p>One costume, yours to keep.</p>';
     else {
       h += '<h3>' + packsEsc(buyP.name) + '</h3>' + (buyP.launch ? '<span class="fbs-tag">Launch offer · through Jan 15</span>' : '') +
         '<p>These ' + n + ' costumes' + (buyP.kind === 'bundle' ? ' (' + packsEsc(buyP.note) + ')' : '') + ':</p><ul>' +
@@ -3246,10 +3474,17 @@ function skinsRender() {
       h += '<p style="font-size:12px;color:#c8a878">Future costumes aren’t included.</p>';
     }
     h += '<p>' + (buyP.was ? '<span class="fbs-was">' + buyP.was + '</span>' : '') + '<span class="fbs-now">' + (buyP.price || '…') + '</span></p>' +
-      '<button type="button" class="fbs-go" data-a="pay"' + (skinsBusy || !buyP.price ? ' disabled' : '') + '>' + (skinsBusy ? 'One moment…' : buyP.price ? 'Buy for ' + buyP.price : shopStore.loaded ? 'Not available yet' : 'Loading price…') + '</button>' + msg + '</div>';
+      '<button type="button" class="fbs-go" data-a="pay"' + (skinsBusy || !buyP.price ? ' disabled' : '') + '>' + (skinsBusy ? 'One moment…' : buyP.price ? 'Buy for ' + buyP.price : shopStore.loaded ? 'Not available yet' : 'Loading price…') + '</button>';
+    if (buyP.kind === 'skin' && skinLimited(buyP.skins[0])) h += '<p class="fbs-buxnote">★ Limited Edition: only for purchase, not for BunBux.</p>';
+    else if (buyP.kind === 'skin') {   // or unlock it with BunBux
+      const have = buxShown(), can = have >= BUX_COST && !!packsToken();
+      h += '<button type="button" class="fbs-go fbs-bux" data-a="bux"' + (skinsBusy || !can ? ' disabled' : '') + '>' + BUX_ICON_HTML + ' Unlock for ' + BUX_COST + ' BunBux</button>' +
+        '<p class="fbs-buxnote">You have ' + have.toLocaleString() + ' BunBux.' + (can ? '' : ' Earn them by packing boxes and doing the daily challenge.') + '</p>';
+    }
+    h += msg + '</div>';
   } else if (!skinsTab) {
     // Collections: one row per group, newest groups just get added to SKIN_GROUPS
-    h += '<p class="fbs-sub">Wearing: <b>' + packsEsc(cur.name) + '</b></p>' + msg;
+    h += '<p class="fbs-sub">Wearing: <b>' + packsEsc(cur.name) + '</b>' + '</p>' + msg;
     groups.forEach(g => {
       const list = skinsGroupList(g), open = list.filter(s => skinUnlocked(s)).length, how = SKINS_ALL ? '' : skinHow(list[0]), soon = how === 'soon';
       const here = list.indexOf(cur) >= 0;
@@ -3264,13 +3499,13 @@ function skinsRender() {
     const list = skinsGroupList(skinsTab), how0 = SKINS_ALL ? '' : skinHow(list[0]), soon = how0 === 'soon';
     h += '<p class="fbs-sub">' + (soon ? 'Coming soon. Check back for these costumes!' :
       skinsTab === 'earn' ? 'Win them in order, one per game: pull off the challenge in a single game.' :
-      how0 === 'shop' ? 'Get one costume for ' + (shopProducts()['skin_' + list[0].id].price || '$0.99') + ', or the whole Collection.' : 'Dress up your frank.') + '</p>' + msg;
+      how0 === 'shop' ? 'Get one costume for ' + (shopProducts()['skin_' + list[0].id].price || '$0.99') + ' or ' + BUX_COST + ' BunBux (★ Limited Edition: purchase only), or the whole Collection.' : 'Dress up your frank.') + '</p>' + msg;
     if (how0 === 'shop') h += skinsDeal('col_' + skinsTab);
     h += '<div class="fbs-grid">';
     list.forEach(s => {
       const open = skinUnlocked(s), on = s.id === cur.id, how = skinHow(s);
       h += '<button type="button" class="fbs-skin' + (on ? ' on' : '') + (open ? '' : ' lock') + (open || how === 'earn' || how === 'shop' ? '' : ' soon') + '" data-skin="' + s.id + '"' +
-        (open || how === 'shop' ? '' : ' aria-disabled="true"') + '><img src="' + skinsPic(s) + '" alt="" loading="lazy">' + s.name +
+        (open || how === 'shop' ? '' : ' aria-disabled="true"') + '>' + (how === 'shop' && skinLimited(s.id) ? '<span class="fbs-ltd fbs-ltd-c">★ LIMITED</span>' : '') + '<img src="' + skinsPic(s) + '" alt="" loading="lazy">' + s.name +
         '<small>' + (on ? '✓ Wearing' : open ? 'Tap to wear' : how === 'shop' ? '<span class="fbs-p">' + (shopProducts()['skin_' + s.id].price || '…') + '</span>' : how === 'earn' ? '🔒 ' + (skinNext() === s || !skinPrev(s) ? '' : 'After ' + skinPrev(s).name + ': ') + s.goal.text : '🔒 ' + (s.note || 'Coming soon')) + '</small></button>';
     });
     h += '</div>';
@@ -3301,8 +3536,9 @@ function drawGameOver() {
   ctx.fillStyle='#FFD700'; ctx.font='bold 28px Arial'; ctx.fillText(score.toLocaleString(),W/2,H*0.34);
   ctx.fillStyle='#aaa'; ctx.font='14px Arial'; ctx.fillText('SCORE',W/2,H*0.34+20);
   if (score>=bestScore&&score>0) { ctx.fillStyle='#FF6600'; ctx.font='bold 16px Arial'; ctx.fillText('★ NEW BEST! ★',W/2,H*0.34+42); }
-  const nudge = skinNew ? '' : skinNudge();
-  if (nudge) { ctx.fillStyle='#ffb347'; ctx.font='bold 14px Arial'; const nw=ctx.measureText(nudge).width; if (nw>W-20) ctx.font='bold '+Math.max(10,Math.floor(14*(W-20)/nw))+'px Arial'; ctx.fillText(nudge,W/2,H*0.34+64); }
+  drawBuxGameOver();
+  const nudge = skinNew ? null : dailyGameOverLine();
+  if (nudge) fbCenterText(nudge.t, H*0.34+64, nudge.c, 14, true);
   if (skinNew) {   // left-aligned and measured: iOS misplaces centred canvas text that has an emoji
     const t='🎭 NEW SKIN'+(skinNew.length>1?'S':'')+': '+skinNew.map(k=>k.name.toUpperCase()).join(' + ')+'!'; ctx.fillStyle='#7CFC00'; ctx.font='bold 16px Arial'; ctx.textAlign='left';
     if (ctx.measureText(t).width>W-20) ctx.font='bold '+Math.max(10,Math.floor(16*(W-20)/ctx.measureText(t).width))+'px Arial';
