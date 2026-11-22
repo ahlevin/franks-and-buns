@@ -18,6 +18,15 @@ const BUX = { perBox: 1, maxBoxes: 10, daily: 25, cap: 100, cost: 300 };   // ca
 const BUX_LIMITED = new Set(['santa', 'bernedoodle', 'labradoodle', 'persian', 'mainecoon', 'slamdunk', 'goalgetter', 'axolotl', 'anglerfish', 'unidentifiedfryingobject', 'babykaiju', 'phoenix', 'shadowwizard',
   'glazedandconfused', 'blanketburrito', 'royaltreatment', 'raccoon', 'forkimpostor', 'professorfrank', 'glowgetter', 'specialdelivery',
   'discodog', 'maneevent']);
+// The only costumes BunBux can unlock: the ones in Collections that are on sale (SHOP_COLS in game.html), minus Limited Edition.
+// Anything else (Free & Earned, Collections not on sale yet) is refused. When a Collection goes on sale, add its costumes here.
+const BUX_SKINS = new Set([
+  'midnight', 'cupid', 'lucky', 'easter', 'yankee', 'frankula', 'gobble',   // Holiday
+  'dachshund', 'corgi', 'golden', 'frenchie', 'husky', 'dalmatian', 'poodle', 'shiba', 'bernese',   // Dogs
+  'tabby', 'tuxedo', 'calico', 'siamese', 'british', 'ragdoll', 'sphynx',   // Cats
+  'touchdown', 'kickflip', 'partee',   // Sports
+  'jellyfish', 'octopus', 'pufferfish',   // Deep Sea Dogs
+].filter(id => !BUX_LIMITED.has(id)));
 const BUX_MILESTONES = { 3: 25, 7: 75, 30: 200 };   // day-streak bonuses, on top of the daily cap
 // Daily challenge: everyone gets the same one each day (midnight Pacific). Same list and order as DAILY in game.html.
 const DAILY = [['streak', 10], ['boxes', 2], ['franks', 20], ['chili', 1], ['streak', 12], ['boxes', 3], ['franks', 25], ['streak', 15],
@@ -331,23 +340,39 @@ async function route(request, env, path) {
     return meResponse(db, p);
   }
   if (method === 'POST' && path === 'me/bux') {
-    // A finished game: 1 BunBux per box packed (up to 10), 25 for today's challenge (once a day), day-streak bonuses.
+    // Finished games: 1 BunBux per box packed (up to 10 a game), 25 for today's challenge (once a day), day-streak bonuses.
+    // To keep database writes down, the game saves several games in one go: `games` is how many, and the totals are added up.
+    // `best` is the single game that met today's challenge (the challenge is "in one game"), sent when there is one.
     // The game runs on the player's device, so the daily cap is what keeps a faked game from earning more than a real day's play.
     const p = await needPlayer(db, request);
+    const games = body.games === undefined ? 1 : body.games;
     const run = { score: body.score, frames: body.frames, franks: body.franks, boxes: body.boxes };
     const st = { streak: body.streak, chili: body.chili, franks: body.franks, boxes: body.boxes };
-    if (!plausible(run) || ![st.streak, st.chili].every(v => Number.isInteger(v) && v >= 0) || st.streak > st.franks ||
-        st.chili > Math.floor(run.frames / 60 / 25) + 1) fail(422, 'That game could not be checked.');
+    if (!Number.isInteger(games) || games < 1 || games > 200 || !plausible(run) ||
+        ![st.streak, st.chili].every(v => Number.isInteger(v) && v >= 0) || st.streak > st.franks ||
+        st.chili > Math.floor(run.frames / 60 / 25) + games) fail(422, 'That game could not be checked.');
+    let best = games === 1 ? st : null;
+    if (body.best && typeof body.best === 'object') {
+      const b = { streak: body.best.streak, chili: body.best.chili, franks: body.best.franks, boxes: body.best.boxes };
+      if (!['streak', 'chili', 'franks', 'boxes'].every(k => Number.isInteger(b[k]) && b[k] >= 0 && b[k] <= st[k]) ||
+          b.streak > b.franks || b.boxes > Math.floor(b.franks / 6)) fail(422, 'That game could not be checked.');
+      best = b;
+    }
     // BUX_TEST=1 (only ever set on a test copy of the site) lets the game say which day it is, to try streaks without waiting
     const day = env.BUX_TEST === '1' && /^\d{4}-\d{2}-\d{2}$/.test(String(body.testDay || '')) ? body.testDay : pacDay(now);
     const ch = dailyFor(day);
-    let done = false, streak = p.daily_streak || 0, bonus = 0;
-    if ((st[ch.stat] || 0) >= ch.n) {   // one statement, so two games ending at once can't both claim it
+    let done = false, bonus = 0;
+    if (best && (best[ch.stat] || 0) >= ch.n && p.daily_last !== day) {   // one statement, so two saves at once can't both claim it
       const r = await db.prepare(`UPDATE players SET daily_streak = CASE WHEN daily_last = ? THEN daily_streak + 1 ELSE 1 END, daily_last = ?
           WHERE id = ? AND daily_last <> ? RETURNING daily_streak`).bind(dayBefore(day), day, p.id, day).first();
-      if (r) { done = true; streak = r.daily_streak; bonus = BUX_MILESTONES[streak] || 0; }
+      if (r) { done = true; bonus = BUX_MILESTONES[r.daily_streak] || 0; }
     }
-    const want = Math.min(run.boxes, BUX.maxBoxes) * BUX.perBox + (done ? BUX.daily : 0);
+    const capLeft = BUX.cap - (p.bux_day === day ? p.bux_today || 0 : 0);
+    const want = Math.min(run.boxes, BUX.maxBoxes * games) * BUX.perBox + (done ? BUX.daily : 0);
+    if (!done && (want <= 0 || capLeft <= 0)) {   // nothing to add: no write
+      const p2 = await db.prepare('SELECT * FROM players WHERE id = ?').bind(p.id).first();
+      return { bux: buxOf(p2), day, earned: 0, bonus: 0, dailyDone: false, capped: capLeft <= 0 };
+    }
     const earn = `MAX(0, MIN(?, ${BUX.cap} - CASE WHEN bux_day = ? THEN bux_today ELSE 0 END))`;
     const r = await db.prepare(`UPDATE players SET bux = bux + ${earn} + ?, bux_today = CASE WHEN bux_day = ? THEN bux_today ELSE 0 END + ${earn},
         bux_day = ? WHERE id = ? RETURNING bux, bux_today, bux_skins, daily_last, daily_streak`)
@@ -360,6 +385,7 @@ async function route(request, env, path) {
     const id = String(body.skin || '');
     if (!/^[a-z]{2,24}$/.test(id)) fail(400, 'That costume was not found.');
     if (BUX_LIMITED.has(id)) fail(400, 'Limited Edition costumes can only be bought, not unlocked with BunBux.');
+    if (!BUX_SKINS.has(id)) fail(400, 'That costume can’t be unlocked with BunBux.');
     const r = await db.prepare(`UPDATE players SET bux = bux - ${BUX.cost}, bux_skins = CASE WHEN bux_skins = '' THEN ? ELSE bux_skins || ',' || ? END
         WHERE id = ? AND bux >= ${BUX.cost} AND instr(',' || bux_skins || ',', ?) = 0 AND length(bux_skins) < 8000
         RETURNING bux, bux_skins, daily_last, daily_streak`).bind(id, id, p.id, ',' + id + ',').first();

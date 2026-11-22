@@ -694,26 +694,92 @@ function buxOwned() { return buxState().skins; }
 function dailyDoneToday() { return buxState().dailyLast === fbDay(); }
 function dailyStreakNow() { const b = buxState(), d = fbDay(); return (b.dailyLast === d || b.dailyLast === fbDayBefore(d)) ? b.streak : 0; }
 function dailyBestToday() { try { const t = JSON.parse(safeGet('fb_daily_best') || 'null'); return t && t.day === fbDay() ? t.v | 0 : 0; } catch (e) { return 0; } }
-let buxResult = null;   // Game Over: null, 'wait', 'off' (couldn't reach the server) or the server's answer for this game
+let buxResult = null;   // Game Over: null, 'wait', 'off' (couldn't reach the server) or the answer for this game
+// Saving BunBux in batches: games that only earned box BunBux wait on this device (fb_bux_pend) and go to the server together,
+// so most games cost no database write. They are sent when the daily challenge is met, when BUX_FLUSH or more are waiting,
+// when the player leaves the game (tab hidden or app in the background), on a new day, and before spending.
+const BUX_FLUSH = 25, BUX_CAP = 100;
+function buxPend() {
+  try { const q = JSON.parse(safeGet('fb_bux_pend') || 'null'); if (q && q.games > 0 && typeof q.bux === 'number') return q; } catch (e) {}
+  return null;
+}
+function buxShown() { const q = buxPend(); return buxState().bux + (q ? q.bux : 0); }   // the balance as the player sees it
+function buxPendAdd(st, run) {
+  const q = buxPend() || { day: fbDay(), games: 0, score: 0, frames: 0, franks: 0, boxes: 0, streak: 0, chili: 0, bux: 0 };
+  const today = q.day === fbDay() ? q.bux : 0;   // a rough local share of the daily cap; the server has the final say
+  const add = Math.max(0, Math.min(Math.min(st.boxes, 10), BUX_CAP - today));
+  q.games++; q.score += run.score; q.frames += run.frames; q.franks += st.franks; q.boxes += Math.min(st.boxes, 10);
+  q.streak += st.streak; q.chili += st.chili; q.bux += add; q.day = fbDay();
+  safeSet('fb_bux_pend', JSON.stringify(q));
+  return add;
+}
+function buxPendBody(q, best) {
+  const body = { games: q.games, score: q.score, frames: q.frames, franks: q.franks, boxes: q.boxes, streak: q.streak, chili: q.chili };
+  if (best) body.best = best;
+  if (BUX_TESTDAY) body.testDay = BUX_TESTDAY;
+  return body;
+}
+function buxPendBack(q) {   // a save that didn't go through: put its games back with any played since
+  const n = buxPend();
+  if (n) ['games', 'score', 'frames', 'franks', 'boxes', 'streak', 'chili', 'bux'].forEach(k => { q[k] += n[k]; });
+  safeSet('fb_bux_pend', JSON.stringify(q));
+}
+let buxFlushing = null;
+function buxFlush(best) {   // send the waiting games (and `best`, the game that met today's challenge); resolves to the answer or null
+  if (buxFlushing) return buxFlushing.then(() => buxFlush(best));
+  const q = buxPend(); if (!q) return Promise.resolve(null);
+  buxFlushing = (async () => {
+    if (!packsToken()) {
+      if (safeGet('fb_no_auto_profile')) return null;   // they deleted their profile on purpose: don't quietly make another one
+      try { packsKeepMe(await packsCall('POST', 'player', { silent: true })); } catch (e) { return null; }
+    }
+    safeSet('fb_bux_pend', '');
+    try {
+      const j = await packsCall('POST', 'me/bux', buxPendBody(q, best));
+      buxKeep(j.bux); if (packsMe && packsMe.player) packsMe.player.bux = j.bux;
+      return j;
+    } catch (e) {
+      if (e && e.status === 422) return null;   // the server couldn't check these games: drop them rather than retry forever
+      buxPendBack(q); return null;
+    }
+  })();
+  return buxFlushing.finally(() => { buxFlushing = null; });
+}
+function buxFlushLeaving() {   // the player is leaving: send what's waiting with keepalive, so it survives the page closing
+  const q = buxPend(), tok = packsToken();
+  if (!q || !tok || buxFlushing) return;
+  safeSet('fb_bux_pend', '');
+  try {
+    fetch(PACKS_API + 'me/bux', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok },
+      body: JSON.stringify(buxPendBody(q)) })
+      .then(r => r.ok ? r.json().then(j => buxKeep(j.bux)) : (r.status === 422 ? null : buxPendBack(q)))
+      .catch(() => buxPendBack(q));
+  } catch (e) { buxPendBack(q); }
+}
 async function buxSubmit(st, run) {
   buxResult = null;
   if (SKINS_ALL) return;
-  const ch = dailyToday(), v = st[ch.stat] || 0, met = v >= ch.n;
+  const ch = dailyToday(), v = st[ch.stat] || 0, met = v >= ch.n && !dailyDoneToday();
   if (v > dailyBestToday()) safeSet('fb_daily_best', JSON.stringify({ day: ch.day, v: v }));
-  if (!(st.boxes > 0) && !(met && !dailyDoneToday())) return;   // nothing to earn: no trip to the server
-  if (!packsToken()) {
-    if (safeGet('fb_no_auto_profile')) return;   // they deleted their profile on purpose: don't quietly make another one
-    try { packsKeepMe(await packsCall('POST', 'player', { silent: true })); } catch (e) { buxResult = 'off'; return; }
+  if (!(st.boxes > 0) && !met) return;   // nothing to earn
+  if (!packsToken() && safeGet('fb_no_auto_profile')) return;
+  const add = buxPendAdd(st, run);
+  const q = buxPend();
+  if (!met && q && q.bux < BUX_FLUSH && q.day === fbDay()) {   // keep it on this device for now
+    const b = buxState();
+    buxResult = { earned: add, bux: { bux: buxShown(), skins: b.skins, dailyLast: b.dailyLast, streak: b.streak }, pending: true };
+    return;
   }
   buxResult = 'wait';
-  try {
-    const body = Object.assign({ score: run.score, frames: run.frames }, st);
-    if (BUX_TESTDAY) body.testDay = BUX_TESTDAY;
-    const j = await packsCall('POST', 'me/bux', body);
-    buxKeep(j.bux); if (packsMe && packsMe.player) packsMe.player.bux = j.bux;
-    if (j.dailyDone) sndBox();
-    buxResult = j;
-  } catch (e) { buxResult = 'off'; }
+  const j = await buxFlush(met ? { streak: st.streak, chili: st.chili, franks: st.franks, boxes: st.boxes } : null);
+  if (!j) {
+    const b = buxState();
+    buxResult = buxPend() ? { earned: add, bux: { bux: buxShown(), skins: b.skins, dailyLast: b.dailyLast, streak: b.streak }, pending: true } : 'off';
+    return;
+  }
+  if (j.dailyDone) sndBox();
+  // this game's share: its boxes plus anything the challenge and streak added (earlier waiting games were already shown)
+  buxResult = Object.assign({}, j, { earned: Math.min(j.earned, add + (j.dailyDone ? BUX_DAILY + (j.bonus || 0) : 0)) });
 }
 // The BunBux coin (bunbux.png): in canvas text, each 🪙 is drawn as the coin picture, so it looks the same on every device
 const BUX_IMG = new Image(); BUX_IMG.src = 'bunbux.png';
@@ -733,7 +799,7 @@ function fbCenterText(t, y, color, size, bold) {
   ctx.fillStyle = color; ctx.textAlign = 'left'; fbIconText(t, (W - fbIconW(t, size)) / 2, y, size); ctx.textAlign = 'center';
 }
 // Start screen: today's challenge and the day streak (the balance is on the SKINS button; in place of the how-to lines after 3 games)
-function dailyCardShown() { return (parseInt(safeGet('fb_games') || '0', 10) || 0) >= 3 || buxState().bux > 0 || dailyStreakNow() > 0; }
+function dailyCardShown() { return (parseInt(safeGet('fb_games') || '0', 10) || 0) >= 3 || buxShown() > 0 || dailyStreakNow() > 0; }
 function drawDailyCard(y) {
   const ch = dailyToday(), done = dailyDoneToday(), sk = dailyStreakNow();
   const w = Math.min(320, W - 32), h = 64, x = W / 2 - w / 2;
@@ -751,7 +817,7 @@ function drawBuxGameOver() {
       : r.capped ? '🪙 Daily BunBux limit reached  ·  You have ' + r.bux.bux.toLocaleString() : '🪙 You have ' + r.bux.bux.toLocaleString() + ' BunBux';
     fbCenterText(t, H * 0.22 + 30, '#FFD700', 15, true);
   } else if (r === 'wait') fbCenterText('🪙 …', H * 0.22 + 30, '#FFD700', 15, true);
-  else if (!SKINS_ALL) fbCenterText('🪙 You have ' + buxState().bux.toLocaleString() + ' BunBux', H * 0.22 + 30, '#FFD700', 15, true);
+  else if (!SKINS_ALL) fbCenterText('🪙 You have ' + buxShown().toLocaleString() + ' BunBux', H * 0.22 + 30, '#FFD700', 15, true);
 }
 function dailyGameOverLine() {   // in the costume-hint slot: a challenge just done wins, then the next costume, then today's progress
   if (buxResult && buxResult.dailyDone) return { t: '✅ DAILY CHALLENGE DONE!  🔥 ' + buxResult.bux.streak + '-day streak' + (buxResult.bonus ? ' (+' + buxResult.bonus + ' bonus)' : ''), c: '#7CFC00' };
@@ -766,6 +832,7 @@ async function skinsBux() {   // unlock the costume on the confirm screen for Bu
   const p = shopProducts()[skinsBuy]; if (!p || p.kind !== 'skin' || skinLimited(p.skins[0])) return;
   skinsBusy = true; skinsMsg = ''; skinsRender();
   try {
+    await buxFlush();   // games still waiting on this device count toward the price
     const j = await packsCall('POST', 'me/bux/spend', { skin: p.skins[0] });
     buxKeep(j.bux); if (packsMe && packsMe.player) packsMe.player.bux = j.bux;
     skinsBuy = null; skinsMsgErr = false; safeSet('fb_skin', p.skins[0]); skinPreload(skinById(p.skins[0]));
@@ -1083,6 +1150,9 @@ function ensureAudio() {
 }
 // Pause audio cleanly when the game is hidden; the next tap resumes it.
 let __audioPaused = false;
+document.addEventListener('visibilitychange', () => { if (document.hidden) buxFlushLeaving(); });
+window.addEventListener('pagehide', () => buxFlushLeaving());
+setTimeout(() => { const q = buxPend(); if (q && q.day !== fbDay()) buxFlush(); }, 3000);   // games waiting from an earlier day
 document.addEventListener('visibilitychange', () => {
   if (!audioCtx) return;
   if (document.hidden) { __audioPaused = true; try { audioCtx.suspend(); } catch (e) {} }
@@ -1555,7 +1625,7 @@ function packsRender() {
       '<div class="fbp-code">' + packsEsc(packsToken()) + '</div><button type="button" data-a="copy-code">Copy code</button>' + packsMsgHtml() +
       '<button type="button" class="fbp-ghost" data-a="' + (packsAfterBuy ? 'close' : 'home') + '">' + (packsAfterBuy ? 'Done' : 'Back') + '</button>' +
       (packsAfterBuy ? '' : '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="new-code">' + (packsConfirm === 'newcode-me' ? 'Tap again for a new code. This one stops working on every phone and browser, so you\'ll need the new one there. Your Dog Houses and costumes stay.' : 'Someone else has my code? Get a new one') + '</button></div>' +
-      '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="delete-me">' + (packsConfirm === 'delete' ? 'Tap again to delete your name, scores, Dog House memberships and saved costumes for good' + (SHOP_WEB && shopOwned().length ? '. Costumes bought on this website belong to this profile and will be lost' : '') : 'Delete my Dog House profile') + '</button></div>');
+      '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="delete-me">' + (packsConfirm === 'delete' ? 'Tap again to delete your name, scores, Dog House memberships, saved costumes, BunBux and the costumes you unlocked with BunBux for good' + (SHOP_WEB && shopOwned().length ? '. Costumes bought on this website belong to this profile and will be lost' : '') : 'Delete my Dog House profile') + '</button></div>');
   } else if (packsView === 'help') {
     h += '<h2>HOW DOG HOUSES WORK</h2><div class="fbp-help">' +
       '<p>A Dog House is a private Wienerboard for you and your friends. Make one, invite people, and find out who\'s top dog.</p>' +
@@ -1717,7 +1787,7 @@ function packsClick(e) {
     packsConfirm = '';
     packsDo(async () => {
       await packsCall('POST', 'me/delete');
-      safeSet('fb_pack_token', ''); safeSet('fb_pack_pending', ''); safeSet('fb_bux', ''); packsMe = null; packsCur = null; packsCloudClear();
+      safeSet('fb_pack_token', ''); safeSet('fb_pack_pending', ''); safeSet('fb_bux', ''); safeSet('fb_bux_pend', ''); packsMe = null; packsCur = null; packsCloudClear();
       safeSet('fb_no_auto_profile', '1');   // they deleted it on purpose: don't quietly make another one
       if (SHOP_STORE) shopLink().catch(() => {});   // app purchases stay on their Apple / Google account (Restore Purchases); website purchases go with the profile
       packsView = 'home'; packsMsg = '✓ Your Dog House profile was deleted.';
@@ -3156,7 +3226,7 @@ function drawMenuSkin() {
   ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.5; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.stroke();
   ctx.fillStyle = '#FFD700'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center';
   if (SKINS_ALL) ctx.fillText('🎭 SKINS', r.x + r.w / 2, r.y + r.h / 2 + 4);
-  else { const t = '🎭 SKINS  ·  🪙 ' + buxState().bux.toLocaleString(); ctx.textAlign = 'left'; fbIconText(t, r.x + (r.w - fbIconW(t, 12)) / 2, r.y + r.h / 2 + 4, 12); ctx.textAlign = 'center'; }
+  else { const t = '🎭 SKINS  ·  🪙 ' + buxShown().toLocaleString(); ctx.textAlign = 'left'; fbIconText(t, r.x + (r.w - fbIconW(t, 12)) / 2, r.y + r.h / 2 + 4, 12); ctx.textAlign = 'center'; }
 }
 // Game Over: SKINS button in the top-right corner, so you can change costume between games
 function skinsGoRect() { const w = 96, h = 30; return { x: W - w - 10, y: 12, w: w, h: h }; }
@@ -3389,7 +3459,7 @@ function skinsRender() {
     '<h2>' + packsEsc(title) + '</h2>' +
     '<button type="button" class="fbs-x" data-a="close" aria-label="Close">✕</button></div><div class="fbs-body">';
   if (SHOP_TEST) h += '<div class="fbs-test">TEST SHOP · pretend purchases, nothing is charged</div>';
-  if (!SKINS_ALL) h += '<div class="fbs-bal">' + BUX_ICON_HTML + ' You have <b>' + buxState().bux.toLocaleString() + '</b> BunBux</div>';
+  if (!SKINS_ALL) h += '<div class="fbs-bal">' + BUX_ICON_HTML + ' You have <b>' + buxShown().toLocaleString() + '</b> BunBux</div>';
   const msg = skinsMsg ? '<p class="fbs-msg' + (skinsMsgErr ? ' err' : '') + '">' + packsEsc(skinsMsg) + '</p>' : '';
   if (buyP) {
     // confirm screen: exactly what you get, what you already own, the price
@@ -3407,7 +3477,7 @@ function skinsRender() {
       '<button type="button" class="fbs-go" data-a="pay"' + (skinsBusy || !buyP.price ? ' disabled' : '') + '>' + (skinsBusy ? 'One moment…' : buyP.price ? 'Buy for ' + buyP.price : shopStore.loaded ? 'Not available yet' : 'Loading price…') + '</button>';
     if (buyP.kind === 'skin' && skinLimited(buyP.skins[0])) h += '<p class="fbs-buxnote">★ Limited Edition: only for purchase, not for BunBux.</p>';
     else if (buyP.kind === 'skin') {   // or unlock it with BunBux
-      const have = buxState().bux, can = have >= BUX_COST && !!packsToken();
+      const have = buxShown(), can = have >= BUX_COST && !!packsToken();
       h += '<button type="button" class="fbs-go fbs-bux" data-a="bux"' + (skinsBusy || !can ? ' disabled' : '') + '>' + BUX_ICON_HTML + ' Unlock for ' + BUX_COST + ' BunBux</button>' +
         '<p class="fbs-buxnote">You have ' + have.toLocaleString() + ' BunBux.' + (can ? '' : ' Earn them by packing boxes and doing the daily challenge.') + '</p>';
     }
