@@ -35,6 +35,13 @@ const MAX_WAITING_PER_PACK = 50, MAX_REQUESTS_PER_PLAYER = 5;
 let schemaReady = false;
 async function ensureSchema(db) {
   if (schemaReady) return;
+  // Every new server copy starts here, and with many players there are many copies: one quick look first,
+  // and the full setup below only when a table, column or index is missing.
+  try {
+    const r = await db.prepare(`SELECT (SELECT rc_id FROM players LIMIT 0) AS c,
+        (SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name IN ('weekly_week', 'limits_day', 'requests_player', 'members_player')) AS ix`).first();
+    if (r && r.ix === 4) { schemaReady = true; return; }
+  } catch (e) {}
   await db.batch(SCHEMA.map(s => db.prepare(s)));
   // Packs made before "approve to join" existed get the column (it already exists everywhere after the first run)
   try { await db.prepare('ALTER TABLE packs ADD COLUMN approval INTEGER NOT NULL DEFAULT 1').run(); } catch (e) {}
@@ -184,10 +191,11 @@ async function meResponse(db, p, extra) {
 
 // ---------- packs ----------
 async function packForMember(db, packId, playerId) {
-  const pack = await db.prepare('SELECT * FROM packs WHERE id = ?').bind(packId).first();
+  const pack = await db.prepare('SELECT p.*, EXISTS (SELECT 1 FROM members m WHERE m.pack_id = p.id AND m.player_id = ?) AS is_member FROM packs p WHERE p.id = ?')
+    .bind(playerId, packId).first();
   if (!pack) fail(404, 'That Dog House no longer exists.');
-  const mem = await db.prepare('SELECT 1 FROM members WHERE pack_id = ? AND player_id = ?').bind(packId, playerId).first();
-  if (!mem) fail(403, 'You are not in that Dog House.');
+  if (!pack.is_member) fail(403, 'You are not in that Dog House.');
+  delete pack.is_member;
   return pack;
 }
 // Adds a member only if the Dog House has room and the player is in fewer than the most Dog Houses, in one statement
@@ -222,24 +230,20 @@ async function board(db, pack, playerId, which, now) {
     : `SELECT pl.id, pl.nickname, COALESCE(w.best, 0) AS score FROM members m JOIN players pl ON pl.id = m.player_id
          LEFT JOIN weekly w ON w.player_id = m.player_id AND w.week = ?
         WHERE m.pack_id = ? ORDER BY score DESC, m.joined_at LIMIT ${MAX_MEMBERS}`;
-  const stmt = which === 'all' ? db.prepare(sql).bind(pack.id) : db.prepare(sql).bind(week, pack.id);
-  const { results } = await stmt.all();
+  const isOwner = pack.owner_id === playerId;
+  const stmts = [which === 'all' ? db.prepare(sql).bind(pack.id) : db.prepare(sql).bind(week, pack.id)];
+  if (isOwner) stmts.push(db.prepare(`SELECT pl.id, pl.nickname FROM requests r JOIN players pl ON pl.id = r.player_id
+        WHERE r.pack_id = ? ORDER BY r.requested_at LIMIT ${MAX_WAITING_PER_PACK}`).bind(pack.id));
+  if (which !== 'all') stmts.push(db.prepare(`SELECT pl.nickname, w.best FROM weekly w JOIN members m ON m.player_id = w.player_id AND m.pack_id = ?
+         JOIN players pl ON pl.id = w.player_id WHERE w.week = ? ORDER BY w.best DESC, w.best_at LIMIT 1`).bind(pack.id, prevWeekKey(now)));
+  const res = await db.batch(stmts), results = res[0].results;   // one trip to the database
   const rows = results.map(r => ({ id: r.id, name: r.nickname, score: r.score, you: r.id === playerId, owner: r.id === pack.owner_id }));
   const out = { pack: { id: pack.id, code: pack.code, name: pack.name, defaultBoard: pack.default_board,
     isOwner: pack.owner_id === playerId, members: rows.length, approval: !!pack.approval }, board: which, rows };
-  if (pack.owner_id === playerId) {
-    const { results: reqs } = await db.prepare(
-      `SELECT pl.id, pl.nickname FROM requests r JOIN players pl ON pl.id = r.player_id
-        WHERE r.pack_id = ? ORDER BY r.requested_at LIMIT ${MAX_WAITING_PER_PACK}`).bind(pack.id).all();
-    out.requests = reqs.map(r => ({ id: r.id, name: r.nickname }));
-  }
+  if (isOwner) out.requests = res[1].results.map(r => ({ id: r.id, name: r.nickname }));
   if (which !== 'all') {
-    const next = new Date(week + 'T00:00:00Z').getTime() + 7 * 86400000;
-    out.resetsAt = next;
-    const last = await db.prepare(
-      `SELECT pl.nickname, w.best FROM weekly w JOIN members m ON m.player_id = w.player_id AND m.pack_id = ?
-         JOIN players pl ON pl.id = w.player_id WHERE w.week = ? ORDER BY w.best DESC, w.best_at LIMIT 1`)
-      .bind(pack.id, prevWeekKey(now)).first();
+    out.resetsAt = new Date(week + 'T00:00:00Z').getTime() + 7 * 86400000;
+    const last = res[res.length - 1].results[0];
     if (last && last.best > 0) out.lastWeekTop = { name: last.nickname, score: last.best };
   }
   return out;
@@ -320,6 +324,7 @@ async function route(request, env, path) {
   if (method === 'POST' && path === 'me/name') {
     const p = await needPlayer(db, request);
     const nickname = cleanName(body.nickname, 2, 16, 'name', true);
+    if (!p.nickname && !(await underLimit(db, 'np:' + (await sha256(netOf(ip) + today())), NEW_PLAYERS_PER_IP_PER_DAY))) fail(429, 'Too many new players from here today. Try again tomorrow.');
     await db.prepare('UPDATE players SET nickname = ? WHERE id = ?').bind(nickname, p.id).run();
     p.nickname = nickname;
     return meResponse(db, p);
