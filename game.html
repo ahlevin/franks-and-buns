@@ -3023,7 +3023,7 @@ function drawMenu() {
   ctx.fillStyle='#FFD700'; ctx.font='bold 38px Arial'; ctx.textAlign='center';
   ctx.fillText('FRANKS',W/2,H*0.25); ctx.fillText('& BUNS',W/2,H*0.25+42);
   drawMenuSkin();
-  if (dailyCardShown()) drawDailyCard(H*0.58-20);
+  if (dailyCardShown()) { drawDailyCard(H*0.58-20); if (frameCount % 30 === 0) buxIntroMaybe(); }
   else {
     ctx.fillStyle='#ddd'; ctx.font='16px Arial';
     ctx.fillText('TAP to boost your frank up',W/2,H*0.58);
@@ -3098,6 +3098,32 @@ function howtoOpen() {
   b.style.display = 'flex';
   try { if (typeof audioCtx !== 'undefined' && audioCtx) audioCtx.suspend(); } catch (e) {}   // game music off while the video plays
   const v = b.querySelector('video'); try { v.currentTime = 0; const pr = v.play(); if (pr && pr.catch) pr.catch(() => {}); } catch (e) {}
+}
+// "New: BunBux!" pop-up: shown once, the first time the start screen shows the daily challenge card
+// (so current players see it on their first visit after the update, and new players after their third game)
+function buxIntroIsOpen() { const b = document.getElementById('fb-buxintro'); return !!(b && b.style.display !== 'none'); }
+function buxIntroMaybe() {
+  if (SKINS_ALL || safeGet('fb_bux_intro') || buxIntroIsOpen() || howtoIsOpen() || skinsIsOpen() || packsIsOpen() || scoresOpen) return;
+  safeSet('fb_bux_intro', '1');
+  try { if (typeof gtag === 'function') gtag('event', 'bux_intro'); } catch (e) {}
+  const b = document.createElement('div'); b.id = 'fb-buxintro'; b.setAttribute('role', 'dialog'); b.setAttribute('aria-label', 'New: BunBux');
+  b.style.cssText = 'position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(10,5,0,.86);padding:16px;box-sizing:border-box';
+  const li = 'margin:0 0 9px;padding-left:30px;text-indent:-30px';
+  b.innerHTML = '<div style="max-width:360px;width:100%;background:#2a1a0a;border:2px solid #FFD700;border-radius:18px;padding:20px 18px 16px;box-sizing:border-box;color:#f3e3c8;font:15px/1.4 Arial;max-height:100%;overflow-y:auto">' +
+    '<div style="text-align:center;font-size:40px;line-height:1">🪙</div>' +
+    '<h2 style="margin:6px 0 4px;text-align:center;color:#FFD700;font:bold 24px Arial">New: BunBux!</h2>' +
+    '<p style="margin:0 0 14px;text-align:center;color:#c8a878">Earn them by playing, then spend them on costumes.</p>' +
+    '<ul style="list-style:none;margin:0;padding:0">' +
+    '<li style="' + li + '">📦&nbsp;&nbsp;<b>1 BunBux</b> for every box you pack (up to 10 a game)</li>' +
+    '<li style="' + li + '">📅&nbsp;&nbsp;<b>Daily challenge:</b> a new goal every day, worth <b>' + BUX_DAILY + ' BunBux</b></li>' +
+    '<li style="' + li + '">🔥&nbsp;&nbsp;<b>Streak bonuses:</b> +25 at 3 days in a row, +75 at 7, +200 at 30</li>' +
+    '<li style="' + li + '">🎭&nbsp;&nbsp;Unlock any shop costume for <b>' + BUX_COST + ' BunBux</b></li>' +
+    '</ul>' +
+    '<p style="margin:10px 0 0;text-align:center;font-size:12px;color:#c8a878">Today: <b style="color:#fff">' + packsEsc(dailyToday().text) + '</b></p>' +
+    '<button type="button" data-a="ok" style="display:block;width:100%;margin:14px 0 0;font:bold 17px Arial;border-radius:999px;padding:12px;border:none;background:#ff6600;color:#fff;cursor:pointer">Let\'s go!</button></div>';
+  b.addEventListener('click', e => { if (e.target.closest('[data-a]') || e.target === b) { b.style.display = 'none'; try { sndStreak(); } catch (x) {} } });
+  ['touchstart', 'touchend', 'mousedown', 'pointerdown', 'keydown'].forEach(t => b.addEventListener(t, e => e.stopPropagation(), { passive: true }));
+  (document.body || document.documentElement).appendChild(b);
 }
 function skinsBtnRect() { const w = 112, h = 24; return { x: W / 2 - w / 2, y: H * 0.44 + 24, w: w, h: h }; }
 function drawMenuSkin() {
