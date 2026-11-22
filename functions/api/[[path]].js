@@ -483,13 +483,19 @@ export async function onRequest(context) {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
   const path = [].concat(params.path || []).join('/');
   const headers = Object.assign({ 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }, cors);
+  // Server-Timing: how long this request spent waiting on the database and in total (durations only; for load checks)
+  const t0 = Date.now(); let dbMs = 0, trips = 0;
+  const timed = f => async (...a) => { const s = Date.now(); trips++; try { return await f(...a); } finally { dbMs += Date.now() - s; } };
+  const wrapStmt = st => ({ bind: (...a) => wrapStmt(st.bind(...a)), first: timed((...a) => st.first(...a)), all: timed(() => st.all()), run: timed(() => st.run()), raw: st });
+  const db = env.DB && { prepare: sql => wrapStmt(env.DB.prepare(sql)), batch: timed(list => env.DB.batch(list.map(x => x.raw || x))) };
+  const timing = () => ({ 'Server-Timing': `db;dur=${dbMs};desc="${trips} trips", total;dur=${Date.now() - t0}` });
   try {
-    const data = await route(request, env, path);
-    return new Response(JSON.stringify(data), { status: 200, headers });
+    const data = await route(request, Object.assign({}, env, { DB: db }), path);
+    return new Response(JSON.stringify(data), { status: 200, headers: Object.assign(timing(), headers) });
   } catch (e) {
     const status = e instanceof ApiError ? e.status : 500;
     const message = e instanceof ApiError ? e.message : 'Something went wrong. Please try again.';
     if (!(e instanceof ApiError)) console.error('packs api', e && e.stack || e);
-    return new Response(JSON.stringify({ error: message }), { status, headers });
+    return new Response(JSON.stringify({ error: message }), { status, headers: Object.assign(timing(), headers) });
   }
 }
