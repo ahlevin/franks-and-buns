@@ -14,6 +14,10 @@ const WRONG_JOIN_CODES_PER_DAY = 30;   // per player and per network: Dog House 
 const NEW_CODES_PER_PLAYER_PER_DAY = 5;   // "Get a new recovery code"
 // BunBux: earned by playing (never sold). Amounts agreed with Alan, Nov 22, 2026.
 const BUX = { perBox: 1, maxBoxes: 10, daily: 25, cap: 100, cost: 300 };   // cap: most BunBux a day from games and the challenge
+// Limited Edition costumes are purchase only (same list as SKINS_LIMITED in game.html)
+const BUX_LIMITED = new Set(['santa', 'corgi', 'tabby', 'slamdunk', 'anglerfish', 'unidentifiedfryingobject', 'babykaiju', 'phoenix', 'shadowwizard',
+  'glazedandconfused', 'blanketburrito', 'royaltreatment', 'raccoon', 'forkimpostor', 'professorfrank', 'glowgetter', 'specialdelivery',
+  'discodog', 'maneevent']);
 const BUX_MILESTONES = { 3: 25, 7: 75, 30: 200 };   // day-streak bonuses, on top of the daily cap
 // Daily challenge: everyone gets the same one each day (midnight Pacific). Same list and order as DAILY in game.html.
 const DAILY = [['streak', 10], ['boxes', 2], ['franks', 20], ['chili', 1], ['streak', 12], ['boxes', 3], ['franks', 25], ['streak', 15],
@@ -355,6 +359,7 @@ async function route(request, env, path) {
     const p = await needPlayer(db, request);
     const id = String(body.skin || '');
     if (!/^[a-z]{2,24}$/.test(id)) fail(400, 'That costume was not found.');
+    if (BUX_LIMITED.has(id)) fail(400, 'Limited Edition costumes can only be bought, not unlocked with BunBux.');
     const r = await db.prepare(`UPDATE players SET bux = bux - ${BUX.cost}, bux_skins = CASE WHEN bux_skins = '' THEN ? ELSE bux_skins || ',' || ? END
         WHERE id = ? AND bux >= ${BUX.cost} AND instr(',' || bux_skins || ',', ?) = 0 AND length(bux_skins) < 8000
         RETURNING bux, bux_skins, daily_last, daily_streak`).bind(id, id, p.id, ',' + id + ',').first();

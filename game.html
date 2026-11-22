@@ -658,6 +658,11 @@ const SKINS_ALL = !SHOP_TEST && !SHOP_WEB && SHOP_TESTHOST && (new URLSearchPara
 // recovery code brings them back, and caps what a day of games can earn at 100 (streak bonuses on top).
 // Any shop costume can be unlocked for 300 BunBux; Collections and bundles stay real-money only.
 const BUX_COST = 300, BUX_DAILY = 25;
+// Limited Edition: one costume per Collection that can only be bought, never unlocked with BunBux (same list as BUX_LIMITED in the API)
+const SKINS_LIMITED = ['santa', 'corgi', 'tabby', 'slamdunk', 'anglerfish', 'unidentifiedfryingobject', 'babykaiju', 'phoenix', 'shadowwizard',
+  'glazedandconfused', 'blanketburrito', 'royaltreatment', 'raccoon', 'forkimpostor', 'professorfrank', 'glowgetter', 'specialdelivery',
+  'discodog', 'maneevent'];
+function skinLimited(id) { return SKINS_LIMITED.indexOf(id) >= 0; }
 // Everyone gets the same challenge each day (midnight Pacific). Same list and order as DAILY in functions/api/[[path]].js
 const DAILY = [['streak', 10], ['boxes', 2], ['franks', 20], ['chili', 1], ['streak', 12], ['boxes', 3], ['franks', 25], ['streak', 15],
   ['boxes', 4], ['chili', 2], ['franks', 30], ['streak', 8], ['boxes', 3], ['franks', 35], ['streak', 18], ['chili', 1], ['boxes', 5],
@@ -746,7 +751,7 @@ function dailyGameOverLine() {   // in the costume-hint slot: a challenge just d
 }
 async function skinsBux() {   // unlock the costume on the confirm screen for BunBux
   if (skinsBusy || !skinsBuy) return;
-  const p = shopProducts()[skinsBuy]; if (!p || p.kind !== 'skin') return;
+  const p = shopProducts()[skinsBuy]; if (!p || p.kind !== 'skin' || skinLimited(p.skins[0])) return;
   skinsBusy = true; skinsMsg = ''; skinsRender();
   try {
     const j = await packsCall('POST', 'me/bux/spend', { skin: p.skins[0] });
@@ -3117,7 +3122,7 @@ function buxIntroMaybe() {
     '<li style="' + li + '">📦&nbsp;&nbsp;<b>1 BunBux</b> for every box you pack (up to 10 a game)</li>' +
     '<li style="' + li + '">📅&nbsp;&nbsp;<b>Daily challenge:</b> a new goal every day, worth <b>' + BUX_DAILY + ' BunBux</b></li>' +
     '<li style="' + li + '">🔥&nbsp;&nbsp;<b>Streak bonuses:</b> +25 at 3 days in a row, +75 at 7, +200 at 30</li>' +
-    '<li style="' + li + '">🎭&nbsp;&nbsp;Unlock any shop costume for <b>' + BUX_COST + ' BunBux</b></li>' +
+    '<li style="' + li + '">🎭&nbsp;&nbsp;Unlock shop costumes for <b>' + BUX_COST + ' BunBux</b> (★ Limited Edition ones are purchase only)</li>' +
     '</ul>' +
     '<p style="margin:10px 0 0;text-align:center;font-size:12px;color:#c8a878">Today: <b style="color:#fff">' + packsEsc(dailyToday().text) + '</b></p>' +
     '<button type="button" data-a="ok" style="display:block;width:100%;margin:14px 0 0;font:bold 17px Arial;border-radius:999px;padding:12px;border:none;background:#ff6600;color:#fff;cursor:pointer">Let\'s go!</button></div>';
@@ -3283,6 +3288,8 @@ function skinsOpen() {
       '#fb-skins .fbs-go[disabled]{opacity:.6}#fb-skins .fbs-msg{text-align:center;color:#9be29b;font-size:13px;margin:8px 0 0;min-height:1em}#fb-skins .fbs-msg.err{color:#ff9b7a}' +
       '#fb-skins .fbs-link{display:block;margin:6px auto 0;background:none;border:none;color:#ffb347;text-decoration:underline;font:13px Arial;cursor:pointer;padding:6px}' +
       '#fb-skins .fbs-test{text-align:center;font:bold 11px Arial;color:#1a0f05;background:#9be29b;border-radius:6px;padding:3px;margin:0 0 8px}' +
+      '#fb-skins .fbs-ltd{display:inline-block;background:linear-gradient(135deg,#FFD700,#ffb347);color:#1a0f05;font:bold 10px Arial;letter-spacing:.5px;border-radius:999px;padding:2px 8px}' +
+      '#fb-skins .fbs-ltd-c{position:absolute;top:6px;left:6px;z-index:1}' +
       '#fb-skins .fbs-go.fbs-bux{background:transparent;color:#FFD700;border:2px solid #FFD700;padding:11px}#fb-skins .fbs-buxnote{text-align:center;font-size:12px;color:#c8a878;margin:6px 0 0}' +
       '#fb-skins .fbs-close{flex:none;font:600 15px Arial;border-radius:999px;padding:11px 16px;border:1px solid rgba(255,179,71,.5);background:transparent;color:#ffb347;cursor:pointer;width:100%;margin:12px 0 0}';
     document.head.appendChild(css);
@@ -3373,7 +3380,7 @@ function skinsRender() {
     // confirm screen: exactly what you get, what you already own, the price
     const own = shopOwnedOf(buyP.skins), n = buyP.skins.length, left = n - own.length;
     h += '<div class="fbs-buy">';
-    if (buyP.kind === 'skin') h += '<img src="' + skinsPic(skinById(buyP.skins[0])) + '" alt=""><h3>' + packsEsc(buyP.name) + '</h3><p>One costume, yours to keep.</p>';
+    if (buyP.kind === 'skin') h += (skinLimited(buyP.skins[0]) ? '<span class="fbs-ltd">★ LIMITED EDITION</span><br>' : '') + '<img src="' + skinsPic(skinById(buyP.skins[0])) + '" alt=""><h3>' + packsEsc(buyP.name) + '</h3><p>One costume, yours to keep.</p>';
     else {
       h += '<h3>' + packsEsc(buyP.name) + '</h3>' + (buyP.launch ? '<span class="fbs-tag">Launch offer · through Jan 15</span>' : '') +
         '<p>These ' + n + ' costumes' + (buyP.kind === 'bundle' ? ' (' + packsEsc(buyP.note) + ')' : '') + ':</p><ul>' +
@@ -3383,7 +3390,8 @@ function skinsRender() {
     }
     h += '<p>' + (buyP.was ? '<span class="fbs-was">' + buyP.was + '</span>' : '') + '<span class="fbs-now">' + (buyP.price || '…') + '</span></p>' +
       '<button type="button" class="fbs-go" data-a="pay"' + (skinsBusy || !buyP.price ? ' disabled' : '') + '>' + (skinsBusy ? 'One moment…' : buyP.price ? 'Buy for ' + buyP.price : shopStore.loaded ? 'Not available yet' : 'Loading price…') + '</button>';
-    if (buyP.kind === 'skin') {   // or unlock it with BunBux
+    if (buyP.kind === 'skin' && skinLimited(buyP.skins[0])) h += '<p class="fbs-buxnote">★ Limited Edition: only for purchase, not for BunBux.</p>';
+    else if (buyP.kind === 'skin') {   // or unlock it with BunBux
       const have = buxState().bux, can = have >= BUX_COST && !!packsToken();
       h += '<button type="button" class="fbs-go fbs-bux" data-a="bux"' + (skinsBusy || !can ? ' disabled' : '') + '>🪙 Unlock for ' + BUX_COST + ' BunBux</button>' +
         '<p class="fbs-buxnote">You have ' + have.toLocaleString() + ' BunBux.' + (can ? '' : ' Earn them by packing boxes and doing the daily challenge.') + '</p>';
@@ -3406,13 +3414,13 @@ function skinsRender() {
     const list = skinsGroupList(skinsTab), how0 = SKINS_ALL ? '' : skinHow(list[0]), soon = how0 === 'soon';
     h += '<p class="fbs-sub">' + (soon ? 'Coming soon. Check back for these costumes!' :
       skinsTab === 'earn' ? 'Win them in order, one per game: pull off the challenge in a single game.' :
-      how0 === 'shop' ? 'Get one costume for ' + (shopProducts()['skin_' + list[0].id].price || '$0.99') + ' or ' + BUX_COST + ' BunBux, or the whole Collection.' : 'Dress up your frank.') + '</p>' + msg;
+      how0 === 'shop' ? 'Get one costume for ' + (shopProducts()['skin_' + list[0].id].price || '$0.99') + ' or ' + BUX_COST + ' BunBux (★ Limited Edition: purchase only), or the whole Collection.' : 'Dress up your frank.') + '</p>' + msg;
     if (how0 === 'shop') h += skinsDeal('col_' + skinsTab);
     h += '<div class="fbs-grid">';
     list.forEach(s => {
       const open = skinUnlocked(s), on = s.id === cur.id, how = skinHow(s);
       h += '<button type="button" class="fbs-skin' + (on ? ' on' : '') + (open ? '' : ' lock') + (open || how === 'earn' || how === 'shop' ? '' : ' soon') + '" data-skin="' + s.id + '"' +
-        (open || how === 'shop' ? '' : ' aria-disabled="true"') + '><img src="' + skinsPic(s) + '" alt="" loading="lazy">' + s.name +
+        (open || how === 'shop' ? '' : ' aria-disabled="true"') + '>' + (how === 'shop' && skinLimited(s.id) ? '<span class="fbs-ltd fbs-ltd-c">★ LIMITED</span>' : '') + '<img src="' + skinsPic(s) + '" alt="" loading="lazy">' + s.name +
         '<small>' + (on ? '✓ Wearing' : open ? 'Tap to wear' : how === 'shop' ? '<span class="fbs-p">' + (shopProducts()['skin_' + s.id].price || '…') + '</span>' : how === 'earn' ? '🔒 ' + (skinNext() === s || !skinPrev(s) ? '' : 'After ' + skinPrev(s).name + ': ') + s.goal.text : '🔒 ' + (s.note || 'Coming soon')) + '</small></button>';
     });
     h += '</div>';
