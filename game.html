@@ -829,7 +829,8 @@ function shopFromCustomer(ci) {
   bought.forEach(pid => { const p = all[pid]; if (p) p.skins.forEach(id => { if (ids.indexOf(id) < 0) ids.push(id); }); });
   // A full answer from the store account replaces the list on this device, so refunded or switched-away purchases go.
   // Anything else (offline, an error, no answer) changes nothing.
-  if (!SHOP_TEST && ci && Array.isArray(ci.allPurchasedProductIdentifiers)) {
+  // (the apps' SDK lists allPurchasedProductIdentifiers; the website's SDK only nonSubscriptionTransactions)
+  if (!SHOP_TEST && ci && (Array.isArray(ci.allPurchasedProductIdentifiers) || Array.isArray(ci.nonSubscriptionTransactions))) {
     const was = shopOwned(); safeSet('fb_skins_bought', JSON.stringify(ids));
     const cur = safeGet('fb_skin'); if (cur && was.indexOf(cur) >= 0 && ids.indexOf(cur) < 0) safeSet('fb_skin', '');   // was wearing it
   } else if (ids.length) shopGive(ids);
