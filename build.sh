@@ -13,6 +13,11 @@ cp *.html *.png *.jpg *.mp4 *.ico ads.txt robots.txt sitemap.xml _headers _redir
 # App links: lets Pack invite links (franksandbuns.com/join/CODE) open the iPhone and Android apps
 cp -R .well-known dist/
 
+# Videos page clips (videos.html)
+if [ -d videos ]; then
+  cp -R videos dist/
+fi
+
 # Game sound files (WAV effects, intro, music) and their attribution
 if [ -d audio ]; then
   cp -R audio dist/
