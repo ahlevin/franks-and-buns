@@ -1247,7 +1247,8 @@ const PACKS_API = (location.protocol === 'capacitor:' || location.protocol === '
 // franksandbuns.com/join/CODE opens the app when it's installed (iPhone Universal Links, Android App Links),
 // otherwise a join page with app-store and play-in-browser buttons (join.html)
 const PACKS_SHARE_URL = (PACKS_API.indexOf('https://') === 0 ? 'https://franksandbuns.com' : location.origin) + '/join/';
-let packsResult = null;   // Game Over: null, 'wait', 'off' (couldn't reach Dog Houses) or the server's answer for this game
+let packsResult = null;
+let packsAfterBuy = '';   // name of what was just bought on the website: the Recovery code screen opens to save it   // Game Over: null, 'wait', 'off' (couldn't reach Dog Houses) or the server's answer for this game
 let packsApproval = true;   // new Packs: the leader lets each player in, unless they pick "Anyone with the code"
 let packsMe = null, packsView = 'home', packsCur = null, packsBoard = 'week', packsBusy = false, packsMsg = '', packsConfirm = '', packsEdit = false, packsPrefill = '';
 function packsToken() { return safeGet('fb_pack_token') || ''; }
@@ -1276,7 +1277,7 @@ function packsPlay() {
   if (state === STATE.MENU) startIntro();
   else if (state === STATE.GAMEOVER) resetGame();
 }
-function packsClose() { const b = document.getElementById('fb-packs'); if (b) b.style.display = 'none'; }
+function packsClose() { packsAfterBuy = ''; const b = document.getElementById('fb-packs'); if (b) b.style.display = 'none'; }
 function packsBox() {
   let box = document.getElementById('fb-packs');
   if (box) return box;
@@ -1419,11 +1420,13 @@ function packsRender() {
       '<button type="submit" data-a="rename"' + busy + '>Save</button></form>' + packsMsgHtml() + '<button type="button" class="fbp-ghost" data-a="home">Back</button>';
   } else if (packsView === 'code') {
     safeSet('fb_pack_code_seen', '1');
-    h += '<h2>RECOVERY CODE</h2><p class="fbp-sub">This code is your Dog House sign-in. Write it down or take a screenshot. It\'s the only way to get your name, Dog Houses and costumes back on a new phone or browser. Don\'t share it.</p>' +
+    h += (packsAfterBuy
+      ? '<h2>🎉 ' + packsEsc(packsAfterBuy.toUpperCase()) + ' IS YOURS!</h2><p class="fbp-sub"><b>Save this code now.</b> Your costumes belong to it. Enter it on another phone or browser, or here if this browser ever clears its data, to get them back. Write it down or take a screenshot. Don\'t share it.</p>'
+      : '<h2>RECOVERY CODE</h2><p class="fbp-sub">This code is your Dog House sign-in. Write it down or take a screenshot. It\'s the only way to get your name, Dog Houses and costumes back on a new phone or browser. Don\'t share it.</p>') +
       '<div class="fbp-code">' + packsEsc(packsToken()) + '</div><button type="button" data-a="copy-code">Copy code</button>' + packsMsgHtml() +
-      '<button type="button" class="fbp-ghost" data-a="home">Back</button>' +
-      '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="new-code">' + (packsConfirm === 'newcode-me' ? 'Tap again for a new code. This one stops working on every phone and browser, so you\'ll need the new one there. Your Dog Houses and costumes stay.' : 'Someone else has my code? Get a new one') + '</button></div>' +
-      '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="delete-me">' + (packsConfirm === 'delete' ? 'Tap again to delete your name, scores, Dog House memberships and saved costumes for good' + (SHOP_WEB && shopOwned().length ? '. Costumes bought on this website belong to this profile and will be lost' : '') : 'Delete my Dog House profile') + '</button></div>';
+      '<button type="button" class="fbp-ghost" data-a="' + (packsAfterBuy ? 'close' : 'home') + '">' + (packsAfterBuy ? 'Done' : 'Back') + '</button>' +
+      (packsAfterBuy ? '' : '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="new-code">' + (packsConfirm === 'newcode-me' ? 'Tap again for a new code. This one stops working on every phone and browser, so you\'ll need the new one there. Your Dog Houses and costumes stay.' : 'Someone else has my code? Get a new one') + '</button></div>' +
+      '<div class="fbp-foot"><button type="button" class="fbp-link" data-a="delete-me">' + (packsConfirm === 'delete' ? 'Tap again to delete your name, scores, Dog House memberships and saved costumes for good' + (SHOP_WEB && shopOwned().length ? '. Costumes bought on this website belong to this profile and will be lost' : '') : 'Delete my Dog House profile') + '</button></div>');
   } else if (packsView === 'help') {
     h += '<h2>HOW DOG HOUSES WORK</h2><div class="fbp-help">' +
       '<p>A Dog House is a private Wienerboard for you and your friends. Make one, invite people, and find out who\'s top dog.</p>' +
@@ -1512,6 +1515,7 @@ function packsClick(e) {
   const b = e.target.closest('button[data-a]'); if (!b || b.disabled) return;
   const a = b.getAttribute('data-a'), id = b.getAttribute('data-id'), v = b.getAttribute('data-v');
   if (a !== 'leave' && a !== 'remove' && a !== 'delete-me' && a !== 'newcode' && a !== 'new-code') packsConfirm = '';
+  if (a !== 'copy-code') packsAfterBuy = '';
   if (a === 'close') { packsClose(); return; }
   if (a === 'play') { packsClose(); packsPlay(); return; }
   if (a === 'home') { packsMsg = ''; packsEdit = false; packsGo('home'); if (packsToken()) packsRefreshMe(); return; }
@@ -3195,7 +3199,9 @@ async function skinsPay() {
     const p = await shopBuy(skinsBuy);
     skinsBuy = null; skinsMsgErr = false; skinsMsg = '🎉 ' + p.name + ' is yours!';
     if (p.skins.length === 1) { safeSet('fb_skin', p.skins[0]); skinPreload(skinById(p.skins[0])); skinsMsg += ' You’re wearing it now.'; }
-    if (SHOP_WEB) skinsMsg += ' Save your recovery code (My Dog Houses → Recovery code): it brings your costumes back on another device or browser.';
+    // Website purchases belong to the Dog House profile, and its recovery code lives only in this browser:
+    // show the code right away so the buyer can save it (Safari can clear a site's data after 7 days away).
+    if (SHOP_WEB && packsToken()) { packsAfterBuy = p.name; skinsBusy = false; skinsClose(); packsOpen('code'); return; }
   } catch (e) { skinsMsgErr = !(e && e.cancelled); skinsMsg = e && e.cancelled ? '' : (e && e.message) || 'That didn’t go through. Nothing was charged.'; }
   skinsBusy = false; skinsRender();
 }
