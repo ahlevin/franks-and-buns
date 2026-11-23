@@ -2,4 +2,3 @@ User-agent: *
 Allow: /
 
 Sitemap: https://franksandbuns.com/sitemap.xml
-Disallow: /social/
