@@ -494,7 +494,7 @@ function kitchensAward(st) {
 }
 // The passer-by: every 20 to 40 seconds a train or cable car rolls across the back wall
 function drawKitchenPasser(wallH) {
-  const im = kitchenPasser; if (!im || !im.complete || !im.naturalWidth) return;
+  const im = kitchenPasser; if (!im || !im.complete || !im.naturalWidth || (ride && ride.phase !== 'hook')) return;
   if (kitchenPasserX === null) { if (state === STATE.PLAYING && --kitchenPasserWait <= 0) kitchenPasserX = W + 10; else return; }   // starts just off the right edge
   const k = kitchenById(kitchenCur), h = (k.art && k.passerH || (k.id === 'sf' ? 150 : 120) / 1024) * wallH, w = im.naturalWidth * h / im.naturalHeight;
   const y = (k.art && k.passerY || (k.id === 'sf' ? 1012 : 556) / 1024) * wallH - h;
@@ -2678,7 +2678,6 @@ function onTap() {
   if (state === STATE.BONUS) { if (frank.alive) { frank.vy=FLAP_POWER; frank.squash=1.3; frank.stretch=0.7; sndFlap(); } return; } // tap to skip intro
   if (state === STATE.GAMEOVER) { if (gameOverDelay > 40) resetGame(); return; }
   tapping = true;
-  if (rideCarrying()) return;   // hold on: the ride drops the frank off with a boost
   if (frank.alive) { frank.vy = FLAP_POWER; frank.squash = 1.3; frank.stretch = 0.7; sndFlap(); }
 }
 function onRelease() { tapping = false; }
@@ -2957,14 +2956,14 @@ function update() {
   if (state === STATE.BONUS) { updateBonusRound(); return; }
   if (state !== STATE.PLAYING) { if (state === STATE.GAMEOVER) gameOverDelay++; return; }
 
-  if (!rideCarrying()) { frank.vy += GRAVITY; frank.y += frank.vy; }
+  frank.vy += GRAVITY; frank.y += frank.vy;
   frank.squash += (1-frank.squash)*0.15;
   frank.stretch += (1-frank.stretch)*0.15;
   if (frank.y < 10) { frank.y=10; frank.vy=0.5; }
   if (frank.y > H-30) { frank.y=H-30; frank.vy=0; loseLifeNoGrace(); }
 
   scrollX += scrollSpeed;
-  if (!rideHolds()) nextBunDist -= scrollSpeed;
+  nextBunDist -= scrollSpeed;
   if (nextBunDist <= 0) {
     spawnBun();
     nextBunDist = Math.max(160+Math.random()*100-Math.min(boxesCompleted*5,40), 100, scrollSpeed*30);   // at least half a second between buns
@@ -3077,94 +3076,85 @@ function drawChiliRushOverlay() {
   ctx.fillText('🌶 CHILI RUSH · x2 · SHIELD', W / 2, by + 20);
 }
 
-// --- Hitch a Ride: every 30-45 s a ride rolls in carrying a row of buns (the kitchen's own passer-by: subway train,
-// cable car, gondola...; a hot dog cart in the Classic Kitchen). Land in one of its buns and the frank hitches on:
-// the ride carries it along and every bun it rolls past scores, at double points. Missing a ride costs nothing.
-// No new buns, forks or dogs start while a ride is coming or carrying, so the ride never collides with them.
-// On/off switch: set RIDE_ON to false to turn Hitch a Ride off everywhere without touching anything else.
-// Test sites (preview, localhost) also take ?ride=off, and ?ride=soon brings the first ride 3 s into the game.
+// --- Tow: every 30-45 s (after the first box) a glowing tow hook floats in. Grab it and the kitchen's own vehicle
+// (subway train, cable car, golf cart...) swoops in on a rope and tows the frank for 6 s. You still tap to steer,
+// buns come twice as often, every landing scores double, and nothing costs a life. Missing the hook costs nothing.
+// No forks or dogs start during a tow. The Classic Kitchen borrows the New York subway train.
+// On/off switch: set RIDE_ON to false to turn Tow off everywhere without touching anything else.
+// Test sites (preview, localhost) also take ?ride=off, and ?ride=soon brings the first hook 3 s into the game.
 const RIDE_ON = true;
 const RIDE_TEST = (location.hostname.endsWith('.pages.dev') || location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? new URLSearchParams(location.search).get('ride') : null;
 const RIDE_ACTIVE = RIDE_ON && RIDE_TEST !== 'off';
-const RIDE_BUNS = 4, RIDE_GAP = 84;
-let ride = null, rideCooldown = 0, ridesTaken = 0;
+const TOW_FRAMES = 360, TOW_H = 46;
+let ride = null, rideCooldown = 0, ridesTaken = 0, towFallback = null;
 function nextRideWait() { return RIDE_TEST === 'soon' ? 180 : 1800 + Math.floor(Math.random() * 900); }   // 30 to 45 s
-function rideCarrying() { return !!(ride && ride.phase === 'carry'); }
-function rideHolds() { return !!(ride && ride.phase !== 'leave'); }   // keeps new buns, forks and dogs away
-function rideW() { return (RIDE_BUNS - 1) * RIDE_GAP + BUN_W + 36; }
-function rideBunX(i) { return ride.x + 18 + BUN_W / 2 + i * RIDE_GAP; }
-function rideScore(i) {
-  const b = ride.buns[i]; b.scored = true; b.x = rideBunX(i);
-  landFrank(b);
-  if (state !== STATE.PLAYING) { ride = null; return false; }   // a full box can start the Dog Parade
-  return true;
+function rideCarrying() { return !!(ride && ride.phase === 'tow'); }   // towing: double points, no lives lost
+function rideHolds() { return rideCarrying(); }   // no new forks or dogs while towing
+function towImage() {
+  const ok = im => im && im.complete && im.naturalWidth;
+  if (kitchenById(kitchenCur).art && ok(kitchenPasser)) return kitchenPasser;
+  if (!towFallback) { towFallback = new Image(); towFallback.src = 'kitchen-nyc-passer.png'; }
+  return ok(towFallback) ? towFallback : null;
 }
+function towEnd() { ride = null; rideCooldown = nextRideWait(); }
 function updateRide() {
   if (!ride) {
     if (!RIDE_ACTIVE || state !== STATE.PLAYING || (boxesCompleted < 1 && RIDE_TEST !== 'soon')) return;   // first one comes after the first box
     if (--rideCooldown > 0) return;
-    const y = H * (0.42 + Math.random() * 0.18);
-    ride = { x: W + 40, y: y, phase: 'come', buns: [], hit: -1, t: 0, im: null };   // always the hot dog cart, so the kitchen's own train or car stays up on its track
-    for (let i = 0; i < RIDE_BUNS; i++) ride.buns.push({ x: 0, y: y, type: bunTypes[0], condiment: null, scored: false, missed: false, bobPhase: 0, grillTimer: 0, grilled: false });
-    addFloatingText(W / 2, H * 0.22, 'HITCH A RIDE!', '#33E0FF', 28);
+    towImage();   // start loading the Classic Kitchen's stand-in early
+    ride = { phase: 'hook', x: W + 30, y: H * (0.3 + Math.random() * 0.3), t: 0, vx: 0, vy: 0 };
+    addFloatingText(W / 2, H * 0.22, 'GRAB THE TOW HOOK!', '#33E0FF', 26);
     return;
   }
   ride.t++;
-  if (ride.phase === 'come') {
-    ride.x -= scrollSpeed;
-    for (let i = 0; i < RIDE_BUNS; i++) {
-      const bx = rideBunX(i);
-      if (frank.alive && frank.x > bx - BUN_W / 2 - 5 && frank.x < bx + BUN_W / 2 + 5 && frank.y > ride.y - 10 - frankGrowY() && frank.y < ride.y + BUN_H + 5 && frank.vy > 0) {
-        ride.phase = 'carry'; ride.hit = i; ridesTaken++;
-        for (let j = 0; j < i; j++) ride.buns[j].missed = true;
-        sndCheer(false); shakeAmount = 6;
-        addFloatingText(W / 2, H * 0.22, 'ALL ABOARD! x2', '#33E0FF', 30);
-        if (!rideScore(i)) return;
-        break;
-      }
-    }
-    if (ride.phase === 'come' && ride.x + rideW() < frank.x - 30) ride.phase = 'leave';   // missed it: no harm done
-  } else if (ride.phase === 'carry') {
-    ride.x -= 1.6;
-    frank.vy = 0; frank.y = ride.y - 4 + Math.sin(ride.t * 0.25) * 1.5;
-    if (frameCount % 4 === 0) particles.push({ x: ride.x + rideW() - 4, y: ride.y + BUN_H + 18, vx: 1.2, vy: -0.3, life: 18, maxLife: 18, color: '#9EE8FF', size: 3 });
-    for (let i = ride.hit + 1; i < RIDE_BUNS; i++) {
-      if (!ride.buns[i].scored && rideBunX(i) <= frank.x) { if (!rideScore(i)) return; }
-    }
-    if (rideBunX(RIDE_BUNS - 1) < frank.x - 26) {   // past the last bun: hop off with a boost
-      ride.phase = 'leave'; frank.vy = FLAP_POWER * 1.15; frank.squash = 1.3; frank.stretch = 0.7; sndFlap();
-      addFloatingText(Math.max(frank.x + 50, 110), frank.y - 30, 'HOP OFF!', '#33E0FF', 22);
+  if (ride.phase === 'hook') {
+    ride.x -= scrollSpeed; ride.y += Math.sin(ride.t * 0.08) * 0.6;
+    if (frank.alive && Math.abs(frank.x - ride.x) < 34 && Math.abs(frank.y - ride.y) < 30) {
+      ride.phase = 'tow'; ride.t = 0; ride.vx = W + 20; ride.vy = frank.y; ridesTaken++;
+      sndCheer(false); shakeAmount = 5;
+      addFloatingText(W / 2, H * 0.22, 'TOW TIME! x2', '#33E0FF', 30);
+    } else if (ride.x < -30) towEnd();
+  } else if (ride.phase === 'tow') {
+    ride.vx += (frank.x + 95 - ride.vx) * 0.12;   // swoops in, then keeps just ahead of the frank
+    ride.vy += (frank.y - ride.vy) * 0.2;
+    nextBunDist -= scrollSpeed;   // buns come twice as often
+    if (frameCount % 3 === 0) particles.push({ x: frank.x - 30, y: frank.y + (Math.random() - 0.5) * 16, vx: -4, vy: 0, life: 14, maxLife: 14, color: '#9EE8FF', size: 2 });
+    if (ride.t >= TOW_FRAMES) {
+      ride.phase = 'leave';
+      if (frank.alive) { frank.vy = FLAP_POWER; frank.squash = 1.3; frank.stretch = 0.7; sndFlap(); }
+      addFloatingText(Math.max(frank.x + 50, 110), frank.y - 30, 'LET GO!', '#33E0FF', 22);
     }
   } else {
-    ride.x -= scrollSpeed * 1.6;
-    if (ride.x + rideW() < -30) { ride = null; rideCooldown = nextRideWait(); nextBunDist = Math.min(nextBunDist, 40); }
+    ride.vx += 9; ride.vy -= 1.5;
+    if (ride.vx > W + 220) towEnd();
   }
 }
 function drawRide() {
   if (!ride) return;
-  const w = rideW(), deck = ride.y + BUN_H + 2;
   ctx.save();
-  // the flatbed the buns sit on
-  ctx.fillStyle = '#2E5E73'; rrect(ride.x, deck, w, 10, 5); ctx.fill();
-  ctx.lineWidth = 2; ctx.strokeStyle = '#132A33'; rrect(ride.x, deck, w, 10, 5); ctx.stroke();
-  ctx.fillStyle = 'rgba(180,240,255,0.5)'; ctx.fillRect(ride.x + 6, deck + 2, w - 12, 2);
-  const im = ride.im, vy = deck + 10;
-  if (im) {
-    let dw = w, dh = im.naturalHeight * w / im.naturalWidth;
-    if (dh > 96) { dh = 96; dw = im.naturalWidth * dh / im.naturalHeight; }
-    ctx.drawImage(im, ride.x + (w - dw) / 2, vy - 2, dw, dh);
-  } else {   // a hot dog cart
-    const cw = w * 0.8, cx = ride.x + (w - cw) / 2;
-    ctx.fillStyle = '#D9DEE3'; rrect(cx, vy, cw, 38, 6); ctx.fill(); ctx.strokeStyle = '#3a2414'; ctx.lineWidth = 2; rrect(cx, vy, cw, 38, 6); ctx.stroke();
-    ctx.fillStyle = '#2F80C0'; ctx.fillRect(cx + 4, vy + 16, cw - 8, 7);
-    for (const wx of [cx + 26, cx + cw - 26]) { ctx.fillStyle = '#333'; ctx.beginPath(); ctx.arc(wx, vy + 44, 11, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#BBB'; ctx.beginPath(); ctx.arc(wx, vy + 44, 4, 0, Math.PI * 2); ctx.fill(); }
+  if (ride.phase === 'hook') {   // a glowing ring with a hook in it
+    const r = 22 + Math.sin(ride.t * 0.2) * 3;
+    ctx.shadowColor = '#33E0FF'; ctx.shadowBlur = 24;
+    ctx.fillStyle = 'rgba(20,60,90,0.75)'; ctx.beginPath(); ctx.arc(ride.x, ride.y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 4; ctx.strokeStyle = '#33E0FF'; ctx.stroke();
+    ctx.shadowBlur = 0; ctx.lineWidth = 3.5; ctx.lineCap = 'round'; ctx.strokeStyle = '#E8F2F8';
+    ctx.lineWidth = 4.5; ctx.beginPath(); ctx.moveTo(ride.x + 2, ride.y - 13); ctx.lineTo(ride.x + 2, ride.y + 4); ctx.arc(ride.x - 5, ride.y + 4, 7, 0, Math.PI * 0.95); ctx.stroke();
+    ctx.restore(); return;
   }
+  const im = towImage(), h = TOW_H;
+  let w = im ? im.naturalWidth * h / im.naturalHeight : 110; if (w > 150) w = 150;
+  const hh = im ? im.naturalHeight * w / im.naturalWidth : h, top = ride.vy - hh * 0.55;
+  if (ride.phase === 'tow') {   // the rope, sagging a little
+    const x1 = frank.x + 26, y1 = frank.y, x2 = ride.vx + 4, y2 = ride.vy;
+    ctx.lineCap = 'round'; ctx.strokeStyle = '#132A33'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.quadraticCurveTo((x1 + x2) / 2, Math.max(y1, y2) + 10, x2, y2); ctx.stroke();
+    ctx.strokeStyle = '#EADBC0'; ctx.lineWidth = 2.5; ctx.stroke();
+    const left = 1 - ride.t / TOW_FRAMES;   // time left
+    ctx.fillStyle = 'rgba(19,42,51,0.7)'; ctx.fillRect(ride.vx, top - 10, w, 5);
+    ctx.fillStyle = '#33E0FF'; ctx.fillRect(ride.vx, top - 10, w * left, 5);
+  }
+  if (im) { ctx.translate(ride.vx + w, top); ctx.scale(-1, 1); ctx.drawImage(im, 0, 0, w, hh); }   // passers face left; a tow faces right
   ctx.restore();
-  for (let i = 0; i < RIDE_BUNS; i++) { const b = ride.buns[i]; b.x = rideBunX(i); b.y = ride.y; drawBun(b); }
-  if (ride.phase === 'come' && ride.x < W - 20) {   // a little arrow over the ride so players spot it
-    const ax = Math.min(Math.max(rideBunX(0), 30), W - 30), ay = ride.y - 34 + Math.sin(frameCount * 0.2) * 4;
-    ctx.fillStyle = '#33E0FF'; ctx.beginPath(); ctx.moveTo(ax - 9, ay - 8); ctx.lineTo(ax + 9, ay - 8); ctx.lineTo(ax, ay + 4); ctx.closePath(); ctx.fill();
-  }
 }
 
 function landFrank(bun) {
@@ -3208,7 +3198,7 @@ function loseLifeNoGrace() {
 }
 let shieldMsgAt = -999;
 function loseLife() {
-  if (rideCarrying()) return;   // riding is safe
+  if (rideCarrying()) return;   // being towed is safe
   if (chiliRush > 0) {   // Chili Rush is a full shield: missed buns and the floor cost no life either
     if (frank.y >= H - 40) { frank.vy = FLAP_POWER; frank.squash = 1.3; frank.stretch = 0.7; }   // bounce off the floor
     if (frameCount - shieldMsgAt > 40) {
@@ -4178,8 +4168,8 @@ function draw() {
   if (shakeAmount>0) ctx.translate((Math.random()-0.5)*shakeAmount,(Math.random()-0.5)*shakeAmount);
   drawKitchenBG();
   drawSplats();
-  for (const b of buns) drawBun(b);
   drawRide();
+  for (const b of buns) drawBun(b);
   drawForks();
   drawGameDogs();
   drawChili();
