@@ -2066,6 +2066,9 @@ function packsClick(e) {
     if (!name) throw { message: 'Give your Dog House a name.' };
     if (name === packsCur.pack.name) { packsMsg = '✓ That\'s already the name.'; return; }
     packsCur = await packsCall('POST', 'packs/' + packsCur.pack.id + '/settings', { name: name, board: packsCur.board });
+    // the Game Over ranks and the My Dog Houses list were fetched before the rename: show the new name there too
+    const pid = packsCur.pack.id;
+    [packsResult && packsResult.packs, packsMe && packsMe.packs].forEach(l => (l || []).forEach(x => { if (x.id === pid) x.name = packsCur.pack.name; }));
     packsMsg = '✓ Dog House renamed.'; packsRefreshMe();
   });
   if (a === 'setappr') packsDo(async () => { packsCur = await packsCall('POST', 'packs/' + packsCur.pack.id + '/settings', { approval: v === '1', board: packsCur.board }); packsMsg = '✓ Saved.'; });
