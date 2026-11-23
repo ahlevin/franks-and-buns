@@ -829,27 +829,37 @@ const SKINS = [
 // 'hidden' = not shown, 'free' = everyone has them. A skin's own how (e.g. free Bunny) beats its group's.
 // The holiday set waits here until buying skins is built.
 // 'shop' = for sale (each costume or the whole Collection); shows as 'soon' wherever the shop isn't switched on yet.
+// Drop dates. dropAt(2026, 12, 1) = midnight at the start of Dec 1 in California (8 AM UTC).
+// Test sites (preview, localhost) take ?dropdate=2026-12-08 to see the game as it will be on that day.
+function dropAt(y, m, d) { return Date.UTC(y, m - 1, d, 8); }
+const DROP_TEST = /\.pages\.dev$|^localhost$|^127\.0\.0\.1$/.test(location.hostname) && (new URLSearchParams(location.search).get('dropdate') || '').match(/^(\d{4})-(\d\d)-(\d\d)$/);
+function dropNow() { return DROP_TEST ? dropAt(+DROP_TEST[1], +DROP_TEST[2], +DROP_TEST[3]) + 3600000 : Date.now(); }
+function groupOpen(g) { const G = SKIN_GROUPS[g]; return !!G && (!G.from || dropNow() >= G.from); }
+function groupNew(g) { const G = SKIN_GROUPS[g]; return !!(G && G.from && groupOpen(g) && dropNow() < G.from + 7 * 864e5); }   // the first week after its drop
+function anyGroupNew() { return Object.keys(SKIN_GROUPS).some(groupNew); }
 const SKIN_GROUPS = { earn: { name: 'Free & Earned', how: 'earn' }, holiday: { name: 'Holiday', how: 'shop' },
   dogs: { name: 'Dogs', how: 'shop' },
   cats: { name: 'Cats', how: 'shop' },
   sports: { name: 'Sports', how: 'shop' },             // on sale from 1.9 (Nov 22, 2026)
   deepseadogs: { name: 'Deep Sea Dogs', how: 'shop' },
-  // hidden until Alan says to show them (switch how to 'soon' to show them locked as coming soon)
-  spacecases: { name: 'Space Cases', how: 'hidden' },
-  tinyterrors: { name: 'Tiny Terrors', how: 'hidden' },
-  mythicalmisfits: { name: 'Mythical Misfits', how: 'hidden' },
-  finalbossfranks: { name: 'Final Boss Franks', how: 'hidden' },
-  snackpack: { name: 'Snack Pack', how: 'hidden' },
-  cozycrew: { name: 'Cozy Crew', how: 'hidden' },
-  maincharacterenergy: { name: 'Main Character Energy', how: 'hidden' },
-  trashpack: { name: 'Trash Pack', how: 'hidden' },
-  questionabledecisions: { name: 'Questionable Decisions', how: 'hidden' },
-  academic: { name: 'Academic', how: 'hidden' },
-  buggedout: { name: 'Bugged Out', how: 'hidden' },
-  sidehustles: { name: 'Side Hustles', how: 'hidden' },
-  throwbackfranks: { name: 'Throwback Franks', how: 'hidden' },
-  wildthings: { name: 'Wild Things', how: 'hidden' } };
-function skinHow(s) { const h = s.how || (SKIN_GROUPS[s.group || 'earn'] || SKIN_GROUPS.earn).how; return h === 'shop' && !SHOP_ON ? 'soon' : h; }
+  // Weekly drops: each Collection stays hidden until its date (midnight Pacific), then goes on sale like Sports.
+  // Its store items (skin_<id> for each costume, col_<group>) must exist in Stripe, App Store Connect and Google Play by then.
+  spacecases: { name: 'Space Cases', how: 'shop', from: dropAt(2026, 12, 1) },
+  tinyterrors: { name: 'Tiny Terrors', how: 'shop', from: dropAt(2026, 12, 1) },
+  mythicalmisfits: { name: 'Mythical Misfits', how: 'shop', from: dropAt(2026, 12, 8) },
+  wildthings: { name: 'Wild Things', how: 'shop', from: dropAt(2026, 12, 8) },
+  cozycrew: { name: 'Cozy Crew', how: 'shop', from: dropAt(2026, 12, 15) },
+  snackpack: { name: 'Snack Pack', how: 'shop', from: dropAt(2026, 12, 15) },
+  maincharacterenergy: { name: 'Main Character Energy', how: 'shop', from: dropAt(2026, 12, 22) },
+  buggedout: { name: 'Bugged Out', how: 'shop', from: dropAt(2026, 12, 22) },
+  throwbackfranks: { name: 'Throwback Franks', how: 'shop', from: dropAt(2026, 12, 29) },
+  questionabledecisions: { name: 'Questionable Decisions', how: 'shop', from: dropAt(2026, 12, 29) },
+  academic: { name: 'Academic', how: 'shop', from: dropAt(2027, 1, 5) },
+  sidehustles: { name: 'Side Hustles', how: 'shop', from: dropAt(2027, 1, 5) },
+  trashpack: { name: 'Trash Pack', how: 'shop', from: dropAt(2027, 1, 12) },
+  finalbossfranks: { name: 'Final Boss Franks', how: 'shop', from: dropAt(2027, 1, 12) } };
+function skinHow(s) { const g = s.group || 'earn'; if (!groupOpen(g)) return 'hidden';   // a Collection before its drop date
+  const h = s.how || (SKIN_GROUPS[g] || SKIN_GROUPS.earn).how; return h === 'shop' && !SHOP_ON ? 'soon' : h; }
 // costumes won so far (ids), kept on this device
 function skinsWon() { try { const a = JSON.parse(safeGet('fb_skins_earned') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
 function skinGoalMet(s, st) { return !!(s.goal && st && (st[s.goal.stat] || 0) >= s.goal.n); }
@@ -1144,7 +1154,7 @@ function skinUnlocked(s) {
 // Each Collection is sold as exactly the costumes listed here (never "every future Dog costume").
 // Prices: $0.99 per costume; $3.99 per Collection, $2.99 launch offer through Jan 15, 2027 (Pacific); all three $7.99.
 const SHOP_LAUNCH_END = Date.UTC(2027, 0, 16, 8);   // midnight at the end of Jan 15 in California
-const SHOP_COLS = ['holiday', 'dogs', 'cats', 'sports', 'deepseadogs'];   // Collections on sale
+const SHOP_COLS = Object.keys(SKIN_GROUPS).filter(g => SKIN_GROUPS[g].how === 'shop' && groupOpen(g));   // Collections on sale (dropped ones join on their date)
 const SHOP_LAUNCH3 = ['holiday', 'dogs', 'cats'];   // the fixed "All 3 Collections" bundle ($7.99): always exactly these three
 function shopNow() { const d = new URLSearchParams(location.search).get('shopdate'); return SHOP_TEST && d === 'after' ? SHOP_LAUNCH_END + 1 : Date.now(); }
 function shopLaunch() { return shopNow() < SHOP_LAUNCH_END; }
@@ -3518,6 +3528,12 @@ function buxIntroMaybe() {
   ['touchstart', 'touchend', 'mousedown', 'pointerdown', 'keydown'].forEach(t => b.addEventListener(t, e => e.stopPropagation(), { passive: true }));
   (document.body || document.documentElement).appendChild(b);
 }
+function drawNewTag(r) {   // a red NEW tag on a SKINS button's corner for a week after each Collection drop
+  if (SKINS_ALL || !anyGroupNew()) return;
+  const tw = 30, tx = r.x + r.w - tw + 6, ty = r.y - 7;
+  ctx.fillStyle = '#E0282E'; rrect(tx, ty, tw, 14, 7); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 9px Arial'; ctx.textAlign = 'center'; ctx.fillText('NEW', tx + tw / 2, ty + 10.5);
+}
 function skinsBtnRect() { const w = SKINS_ALL ? 112 : 176, h = 24; return { x: W / 2 - w / 2, y: H * 0.44 + 24, w: w, h: h }; }
 function drawMenuSkin() {
   const s = curSkin(), cy = H * 0.44, flap = Math.floor(frameCount / 18) % 2 === 1;
@@ -3533,6 +3549,7 @@ function drawMenuSkin() {
   ctx.fillStyle = '#FFD700'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center';
   if (SKINS_ALL) ctx.fillText('🎭 SKINS', r.x + r.w / 2, r.y + r.h / 2 + 4);
   else { const t = '🎭 SKINS  ·  🪙 ' + buxShown().toLocaleString(); ctx.textAlign = 'left'; fbIconText(t, r.x + (r.w - fbIconW(t, 12)) / 2, r.y + r.h / 2 + 4, 12); ctx.textAlign = 'center'; }
+  drawNewTag(r);
 }
 // Game Over: SKINS button in the top-right corner, so you can change costume between games
 function skinsGoRect() { const w = 96, h = 30; return { x: W - w - 10, y: 12, w: w, h: h }; }
@@ -3544,6 +3561,7 @@ function drawSkinsGoButton() {
   ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.5; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.stroke();
   const t = '🎭 SKINS'; ctx.fillStyle = '#FFD700'; ctx.font = 'bold 13px Arial'; ctx.textAlign = 'left';
   ctx.fillText(t, r.x + (r.w - ctx.measureText(t).width) / 2, r.y + r.h / 2 + 5); ctx.textAlign = 'center';
+  drawNewTag(r);
 }
 function isSkinsGoTap(clientX, clientY) {
   if (!skinsGoVisible()) return false;
@@ -3672,6 +3690,7 @@ function skinsOpen() {
       '#fb-skins .fbs-deal{background:linear-gradient(135deg,rgba(255,102,0,.22),rgba(255,215,0,.12));border:2px solid #FFD700;border-radius:12px;padding:12px;margin:0 0 12px;text-align:left;cursor:pointer;width:100%;color:#f3e3c3;box-sizing:border-box;display:block;font:14px Arial}' +
       '#fb-skins .fbs-deal b{color:#FFD700;font-size:16px}#fb-skins .fbs-deal .fbs-price{float:right;text-align:right}' +
       '#fb-skins .fbs-was{text-decoration:line-through;color:#c8a878;font-size:13px;margin-right:6px}#fb-skins .fbs-now{color:#fff;font:bold 18px Arial}' +
+      '#fb-skins .fbs-new{display:inline-block;background:#E0282E;color:#fff;border-radius:999px;padding:1px 6px;font:bold 10px Arial;vertical-align:2px;margin-left:4px}' +
       '#fb-skins .fbs-tag{display:inline-block;background:#ff6600;color:#fff;border-radius:999px;padding:2px 8px;font:bold 11px Arial;margin:6px 0 4px}' +
       '#fb-skins .fbs-inc{display:block;font-size:12px;color:#c8a878;margin-top:4px;clear:both}#fb-skins .fbs-own{display:block;font-size:12px;color:#9be29b;margin-top:4px}' +
       '#fb-skins .fbs-skin .fbs-p{color:#fff;font:bold 13px Arial;background:#ff6600;border-radius:999px;padding:1px 8px}' +
@@ -3813,6 +3832,7 @@ async function kitchensBux() {
 function skinsRender() {
   const box = document.getElementById('fb-skins'); if (!box) return;
   const cur = curSkin(), groups = Object.keys(SKIN_GROUPS).filter(g => skinsGroupList(g).length);
+  if (!SKINS_ALL) groups.sort((a, b) => (groupNew(b) ? SKIN_GROUPS[b].from : 0) - (groupNew(a) ? SKIN_GROUPS[a].from : 0));   // this week's drop first
   if (skinsTab && skinsTab !== 'kitchens' && groups.indexOf(skinsTab) < 0) skinsTab = null;
   const buyP = skinsBuy && shopProducts()[skinsBuy];
   if (!buyP) skinsBuy = null;
@@ -3855,7 +3875,7 @@ function skinsRender() {
     groups.forEach(g => {
       const list = skinsGroupList(g), open = list.filter(s => skinUnlocked(s)).length, how = SKINS_ALL ? '' : skinHow(list[0]), soon = how === 'soon';
       const here = list.indexOf(cur) >= 0;
-      h += '<button type="button" class="fbs-col' + (here ? ' on' : '') + '" data-tab="' + g + '"><span class="fbs-col-t"><b>' + packsEsc(SKIN_GROUPS[g].name) + '</b>' +
+      h += '<button type="button" class="fbs-col' + (here ? ' on' : '') + '" data-tab="' + g + '"><span class="fbs-col-t"><b>' + packsEsc(SKIN_GROUPS[g].name) + (!SKINS_ALL && groupNew(g) ? ' <span class="fbs-new">NEW</span>' : '') + '</b>' +
         '<small>' + (soon ? '🔒 Coming soon · ' + list.length + ' costumes' : how === 'shop' ? (open === list.length ? '✓ All ' + list.length + ' owned' : (open ? open + ' of ' + list.length + ' owned · ' : list.length + ' costumes · ') + 'from ' + (shopProducts()['skin_' + list[0].id].price || '…')) : open + ' of ' + list.length + ' unlocked') + '</small></span><span class="fbs-col-p">';
       (here ? [cur].concat(list.filter(s => s !== cur)) : list).slice(0, 3).forEach(s => { h += '<img src="' + skinsPic(s) + '" alt="" loading="lazy">'; });
       h += '</span><span class="fbs-col-a">›</span></button>';
