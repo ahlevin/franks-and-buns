@@ -27,6 +27,21 @@ const BUX_SKINS = new Set([
   'touchdown', 'kickflip', 'partee',   // Sports
   'jellyfish', 'octopus', 'pufferfish',   // Deep Sea Dogs
 ].filter(id => !BUX_LIMITED.has(id)));
+// Weekly Collection drops (the same dates as SKIN_GROUPS in game.html): from its date, a dropped Collection's
+// costumes can be unlocked with BunBux too (Limited Edition ones stay purchase only).
+const BUX_DROPS = [
+  [Date.UTC(2026, 11, 1, 8), ['astronaut', 'alien', 'unidentifiedfryingobject', 'comet', 'moonrover', 'jurassicpork', 'triceratops', 'stegosaurus', 'pterodactyl', 'babykaiju']],   // spacecases + tinyterrors
+  [Date.UTC(2026, 11, 8, 8), ['fairy', 'griffin', 'phoenix', 'seaserpent', 'yetiornot', 'maneevent', 'stripehype', 'pandamonium', 'trunkshow']],   // mythicalmisfits + wildthings
+  [Date.UTC(2026, 11, 15, 8), ['snoozebutton', 'blanketburrito', 'slippermode', 'raincheck', 'popstar', 'sliceoflife', 'glazedandconfused', 'tacoboutit']],   // cozycrew + snackpack
+  [Date.UTC(2026, 11, 22, 8), ['micdrop', 'paparazzi', 'playerone', 'royaltreatment', 'buzzbun', 'luckybug', 'socialbutterfly', 'glowgetter']],   // maincharacterenergy + buggedout
+  [Date.UTC(2026, 11, 29, 8), ['discodog', 'radicalrelish', 'mixtape', 'ytwokbyte', 'incognidog', 'definitelyacarrot', 'emotionalbaggage', 'forkimpostor', 'bunindisguise', 'overcooked', 'businesscasualty', 'buffering']],   // throwbackfranks + questionabledecisions
+  [Date.UTC(2027, 0, 5, 8), ['straightafrank', 'graddog', 'professorfrank', 'bookworm', 'sciencewhiz', 'chefspecial', 'brewcrew', 'hardhat', 'specialdelivery']],   // academic + sidehustles
+  [Date.UTC(2027, 0, 12, 8), ['rat', 'pigeon', 'possummode', 'raccoon', 'skunk', 'armoredknight', 'frankexe', 'lightningfighter', 'ninja', 'shadowwizard']],   // trashpack + finalbossfranks
+];
+function buxSkinOk(id, now) {
+  if (BUX_SKINS.has(id)) return true;
+  return BUX_DROPS.some(([from, ids]) => now >= from && ids.indexOf(id) >= 0);
+}
 // Kitchens that unlock with BunBux, and their price (same as KITCHENS in game.html). Saved in bux_skins like costumes.
 const BUX_KITCHENS = { kitchensf: 500, kitchenchicago: 500, kitchenconey: 500, kitchenboston: 500, kitchenseattle: 500, kitchenla: 500, kitchenportland: 500, kitchenparis: 500, kitchenmunich: 500, kitchenrome: 500, kitchenamsterdam: 500, kitchenmexicocity: 500, kitchenrio: 500, kitchenhavana: 500, kitchengolf: 500, kitchenpittsburgh: 500, kitchenhongkong: 500, kitchenseoul: 500, kitchenprague: 500, kitchendc: 500 };
 const BUX_MILESTONES = { 3: 25, 7: 75, 30: 200 };   // day-streak bonuses, on top of the daily cap
@@ -388,7 +403,7 @@ async function route(request, env, path) {
     if (!/^[a-z]{2,24}$/.test(id)) fail(400, 'That costume was not found.');
     const kitchen = Object.prototype.hasOwnProperty.call(BUX_KITCHENS, id), cost = kitchen ? BUX_KITCHENS[id] : BUX.cost, what = kitchen ? 'kitchen' : 'costume';
     if (BUX_LIMITED.has(id)) fail(400, 'Limited Edition costumes can only be bought, not unlocked with BunBux.');
-    if (!kitchen && !BUX_SKINS.has(id)) fail(400, 'That costume can’t be unlocked with BunBux.');
+    if (!kitchen && !buxSkinOk(id, Date.now())) fail(400, 'That costume can’t be unlocked with BunBux.');
     const r = await db.prepare(`UPDATE players SET bux = bux - ${cost}, bux_skins = CASE WHEN bux_skins = '' THEN ? ELSE bux_skins || ',' || ? END
         WHERE id = ? AND bux >= ${cost} AND instr(',' || bux_skins || ',', ?) = 0 AND length(bux_skins) < 8000
         RETURNING bux, bux_skins, daily_last, daily_streak`).bind(id, id, p.id, ',' + id + ',').first();
