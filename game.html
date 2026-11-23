@@ -928,11 +928,12 @@ function skinById(id) { return SKINS.find(s => s.id === id) || SKINS[0]; }
 // can try the real web checkout with ?shop=web (real charges: refund them in Stripe).
 const SHOP_LIVE = true;
 function shopPlugin() { const P = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Purchases; return P && P.configure ? P : null; }
-const SHOP_APP = !!shopPlugin() && location.hostname !== 'franksandbuns.com';
+const LIVE_HOST = location.hostname === 'franksandbuns.com' || location.hostname === 'www.franksandbuns.com';   // the live site, with or without www
+const SHOP_APP = !!shopPlugin() && !LIVE_HOST;
 const SHOP_TESTHOST = location.hostname === 'preview.franks-and-buns.pages.dev' || ((location.hostname === 'localhost' || location.hostname === '127.0.0.1') && !!location.port);
 const SHOP_TEST = new URLSearchParams(location.search).get('shop') === 'test' && SHOP_TESTHOST;
 const SHOP_WEB = !SHOP_APP && location.protocol !== 'capacitor:' && !SHOP_TEST &&
-  (location.hostname === 'franksandbuns.com' ? SHOP_LIVE : new URLSearchParams(location.search).get('shop') === 'web');
+  (LIVE_HOST ? SHOP_LIVE : new URLSearchParams(location.search).get('shop') === 'web');
 const SHOP_ON = SHOP_TEST || SHOP_APP || SHOP_WEB;
 const SHOP_STORE = SHOP_APP || SHOP_WEB;   // real purchases (store prices, buyer account)
 const SKINS_ALL = !SHOP_TEST && !SHOP_WEB && SHOP_TESTHOST && (new URLSearchParams(location.search).get('skins') === 'all' || location.hostname === 'preview.franks-and-buns.pages.dev');
