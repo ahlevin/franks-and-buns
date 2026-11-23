@@ -406,11 +406,12 @@ const ctx = canvas.getContext('2d');
 // --- Kitchens: the scene behind the game (back wall, counter strip, start screen). Picked in SKINS > Kitchens and kept on this
 // device. Classic is the original art (set a). City Kitchens: until their real art is added, the game draws a stand-in.
 // Real art for a city: bg-wall-<id>.jpg (3:2), bg-counter-<id>.jpg (3:1), bg-start-<id>.jpg (9:16) and kitchen-<id>-passer.png
-// (the train or cable car that rolls by), then set art: true below. Prompts: new-art/city-kitchens-prompts.md.
+// (the train or cable car that rolls by), then set art: true below. mirror: true flips every other copy so art whose left and right
+// edges don't match still scrolls without a seam; passerY / passerH: where the passer-by's wheels sit and its height (share of the wall). Prompts: new-art/city-kitchens-prompts.md.
 // ?bg=a | b | off still forces the old art sets; ?bg=nyc or ?bg=sf shows that kitchen (for testing).
 const KITCHENS = [
   { id: 'classic', name: 'Classic Kitchen', how: 'free', set: 'a' },
-  { id: 'nyc', name: 'New York', how: 'earn', unlock: 'kitchennyc', goal: { stat: 'boxes', n: 4, text: 'Reach the Dog Parade' }, art: false },
+  { id: 'nyc', name: 'New York', how: 'earn', unlock: 'kitchennyc', goal: { stat: 'boxes', n: 4, text: 'Reach the Dog Parade' }, art: true, mirror: true, passerY: 0.582, passerH: 0.11 },
   { id: 'sf', name: 'San Francisco', how: 'bux', unlock: 'kitchensf', cost: 500, art: false },
 ];
 const KITCHEN_IDS = KITCHENS.filter(k => k.unlock).map(k => k.unlock);   // saved with the profile, like costumes
@@ -461,8 +462,8 @@ function kitchensAward(st) {
 function drawKitchenPasser(wallH) {
   const im = kitchenPasser; if (!im || !im.complete || !im.naturalWidth) return;
   if (kitchenPasserX < 0) { if (state === STATE.PLAYING && --kitchenPasserWait <= 0) kitchenPasserX = W + 10; else return; }
-  const k = kitchenById(kitchenCur), sc = wallH / 1024, h = (k.id === 'sf' ? 150 : 120) * sc, w = im.naturalWidth * h / im.naturalHeight;
-  const y = (k.id === 'sf' ? 1012 : 556) * sc - h;
+  const k = kitchenById(kitchenCur), h = (k.art && k.passerH || (k.id === 'sf' ? 150 : 120) / 1024) * wallH, w = im.naturalWidth * h / im.naturalHeight;
+  const y = (k.art && k.passerY || (k.id === 'sf' ? 1012 : 556) / 1024) * wallH - h;
   kitchenPasserX -= scrollSpeed * 0.35 + 1.6;
   if (kitchenPasserX < -w - 10) { kitchenPasserX = -1; kitchenPasserWait = 1200 + Math.floor(Math.random() * 1200); return; }
   ctx.save(); ctx.globalAlpha = 0.92; ctx.drawImage(im, kitchenPasserX, y, w, h); ctx.restore();
@@ -3273,17 +3274,25 @@ function drawBun(b) {
   ctx.restore();
 }
 
+// Repeat a kitchen picture across the screen; with mirror, every other copy is flipped so the edges always meet
+function drawKitchenTiles(im, scroll, tw, y, th, mirror) {
+  for (let i = Math.floor(scroll / tw), x = i * tw - scroll; x < W; i++, x += tw) {
+    if (mirror && (i & 1)) { ctx.save(); ctx.translate(x + tw, y); ctx.scale(-1, 1); ctx.drawImage(im, -0.5, 0, tw + 0.5, th); ctx.restore(); }
+    else ctx.drawImage(im, x, y, tw + 0.5, th);
+  }
+}
 function drawKitchenBG() {
   if (artReady('wall') && artReady('counter')) {
     // Back wall scrolls slower than the game (parallax); the counter strip scrolls with it.
     const wallH = H * 0.78, wi = bgArt.wall, ww = wi.naturalWidth * wallH / wi.naturalHeight;
-    for (let x = -((scrollX * 0.35) % ww); x < W; x += ww) ctx.drawImage(wi, x, 0, ww + 0.5, wallH);
+    const mirror = !!kitchenById(kitchenCur).mirror;
+    drawKitchenTiles(wi, scrollX * 0.35, ww, 0, wallH, mirror);
     // darker band at the top so the score and progress bar stay readable
     const g = ctx.createLinearGradient(0, 0, 0, 110); g.addColorStop(0, 'rgba(20,10,4,0.8)'); g.addColorStop(0.6, 'rgba(20,10,4,0.45)'); g.addColorStop(1, 'rgba(20,10,4,0)');
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, 110);
     drawKitchenPasser(wallH);
     const ci = bgArt.counter, ch = H - wallH, cw = ci.naturalWidth * ch / ci.naturalHeight;
-    for (let x = -(scrollX % cw); x < W; x += cw) ctx.drawImage(ci, x, wallH, cw + 0.5, ch);
+    drawKitchenTiles(ci, scrollX, cw, wallH, ch, mirror);
     return;
   }
   ctx.fillStyle='#4a3728'; ctx.fillRect(0,H-40,W,40);
