@@ -20,5 +20,5 @@
 /get.html
   X-Robots-Tag: noindex
 
-/social-tmp/*
+/social-tmp-*
   Access-Control-Allow-Origin: *
