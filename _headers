@@ -19,5 +19,5 @@
 
 /get.html
   X-Robots-Tag: noindex
-/review-shots/*
+/review-*
   Access-Control-Allow-Origin: *
