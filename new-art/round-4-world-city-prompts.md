@@ -1,9 +1,9 @@
-# City Kitchens, round 4: Havana, Mexico City, Rio, London, Paris, Munich, Rome, Amsterdam
+# City Kitchens, round 4: Havana, Mexico City, Rio, London, Paris, Munich, Rome, Amsterdam, Long Beach Island, Dubai
 
 These use the same recipe and color rules as the other cities. Attach **chef.png**, **dog.png** and the finished **nyc-back-wall** as references for every picture. Each city needs 4 pictures: back wall, counter, start screen and passer-by.
 
 Notes:
-- **Landmarks**: these are drawn as original cartoon shapes, not exact copies. Some landmarks have image rights (the Eiffel Tower's night lights, the Christ the Redeemer statue), so the prompts keep the tower unlit and leave the statue out. Everything is drawn as original look-alike shapes with no names or lettering.
+- **Landmarks**: these are drawn as original cartoon shapes, not exact copies. Some landmarks have image rights (the Eiffel Tower's night lights, the Christ the Redeemer statue), so the prompts keep the tower unlit and leave the statue out. Dubai's tallest tower and sail hotel are trademarked, so they are described as look-alike shapes. Everything is drawn as original look-alike shapes with no names or lettering.
 - **Passer-by**: each one asks for a plain white background, which I cut out.
 - **Colors**: cool and vivid in the middle of the picture, warm only in the top sunset band and small lights, and full drama on the start screen.
 
@@ -104,8 +104,8 @@ Use case: stylized-concept. One finished mobile arcade game title screen BACKDRO
 The hero shot, full color and dramatic: London at blue hour, the hero shot. A sky from deep sapphire at the top to glowing violet and pink at the horizon. The Gothic clock tower glows, the twin-towered bridge spans the shimmering river, the big observation wheel lights up, and fog drifts low over the water. A navy street-market counter runs across the bottom quarter on cobblestones. Depth and atmosphere: soft fog, lamp glow, reflections. Keep the CENTER (roughly the middle 50% of the height) calm: open glowing sky with no detail, for the title and menu. Straight-on, no vignette. No people, animals, food, hot dogs, text, letters, numbers, logos, signs, UI or watermark.
 
 ### london-passer-by
-Use case: stylized-concept. One game sprite: a cute chunky cartoon double-decker bus, side view, moving right to left. Painted deep teal and silver (not red), rounded windows on both decks glowing pale cyan, bold dark outlines, soft cel shading, no people. Wide 2.2:1. No route numbers. On a plain solid pure white background. No yellow, orange or red. No numbers, logos, words, shadow or checkerboard.
-(In the game it drives along the bottom of the wall.)
+Use case: stylized-concept. One game sprite: a cute chunky cartoon double-decker bus, side view, moving right to left. Classic London red with a thin cream stripe and silver trim, rounded windows on both decks glowing pale cyan, bold dark outlines, soft cel shading, no people. Wide 2.2:1. No route numbers. On a plain solid pure white background. No yellow or orange. No numbers, logos, words, shadow or checkerboard.
+(In the game it drives along the bottom of the wall. It stays red because a London bus has to be red; it's small and moving, so it won't fight the franks.)
 
 ---
 
@@ -206,3 +206,53 @@ The hero shot, full color and dramatic: Amsterdam at sunset, the hero shot. A sk
 ### amsterdam-passer-by
 Use case: stylized-concept. One game sprite: a cute chunky cartoon canal boat with a long low glass roof, side view, moving right to left. Navy hull, glass cabin glowing pale cyan, silver trim, bold dark outlines, soft cel shading, no people. Wide 4:1. On a plain solid pure white background. No yellow, orange or red. No numbers, logos, words, shadow or checkerboard.
 (In the game it cruises along the canal line.)
+
+---
+
+## Long Beach Island, NJ (Jersey Shore summer evening)
+
+### lbi-back-wall
+Use case: stylized-concept. Generate one finished game background asset, not a sheet or mockup.
+Input images are STYLE REFERENCES ONLY: chef and dog. Match their bold dark outlines, appealing rounded cartoon shapes and crisp cel shading. Do not include these characters. Match the line style and palette approach of the New York back wall reference.
+Asset: BACK WALL for the Long Beach Island, NJ level of Franks and Buns, a 2D side-scrolling arcade game. Landscape 3:2, request 3072 x 2048 or the largest available.
+Long Beach Island on the Jersey Shore at summer twilight, seen straight on from the beach looking toward the bay. Upper part: a sky from deep indigo at the top to violet and soft pink at the horizon, with a few pink clouds and a couple of gulls drawn as tiny dark checkmarks. On one side, a tall tapering 1850s-style brick lighthouse (lower half white, upper half deep red, with a black lantern room and gallery) on a low point of land, drawn in cool shades so the red reads as deep crimson-violet. In the distance across calm violet-blue bay water, a long low arched causeway bridge with tiny cyan lights, and a small amusement-pier Ferris wheel softly glowing cyan and lavender. In the middle: a row of classic shore houses on stilts and old cedar-shingle beach cottages in cool blue-grey, slate and sea-glass teal, white trim, wraparound decks and tiny pale-cyan windows, with rooftop widow's walks and a weathervane. Lower part: soft cool lavender-grey sand dunes with tufts of blue-green dune grass, a weathered slatted snow fence and a wooden dune crossover path, low contrast.
+Palette rules: the middle band (15% to 85% of the height) stays mid-value, cool and calm: blues, violets, teals, lavender. No large red, orange, tan, gold, yellow, sand, bright green, white or silver areas there. Warm color only as tiny lights or in a thin sunset band at the very top.
+Perfectly flat orthographic straight-on elevation, no vanishing point. Seamless horizontal tiling: the left and right edges must match exactly so copies can sit side by side; keep landmarks away from both side edges. No vignette.
+No people, animals, food, hot dogs, buns, cars, boats, flags, signs, shelves, countertops, platforms, floor, text, letters, numbers, logos, signs, UI or watermark. Opaque full-bleed background.
+
+### lbi-counter
+Use case: stylized-concept. Generate one finished COUNTER AND GROUND STRIP for a 2D side-scrolling mobile arcade game, not a scene mockup. Chef and dog are STYLE references only. The Long Beach Island, NJ back wall is the palette reference. Very wide 3:1, target 3264x1088. Full bleed, opaque.
+A long glossy sea-glass-teal beach snack-shack counter EDGE flush against the very TOP of the image (top 8%) with a pale cyan reflection line, then a stand front of weathered cedar-shingle siding drawn in cool blue-grey with a simple white rope trim and a row of small cool-white string lights (roughly the next 60%), then pale lavender-grey boardwalk-style planks in neat horizontal rows along the bottom 30%. No sky above the counter. Flat straight-on elevation, no vanishing point, all ground lines perfectly horizontal or vertical. Bold clean cartoon outlines and soft cel shading. Seamless horizontal tiling: left and right edges match exactly with a whole number of repeating panels. No tan, gold, yellow, orange or red. No people, animals, food, objects on the counter, text, logos, numbers, UI or watermark.
+
+### lbi-start
+Use case: stylized-concept. One finished mobile arcade game title screen BACKDROP, portrait 9:16, request 1440x2560. Chef and dog are STYLE references only. The Long Beach Island, NJ back wall is the palette reference.
+The hero shot, full color and dramatic: Long Beach Island at sunset, the hero shot. A sky from deep violet at the top to blazing magenta, coral and gold over Barnegat Bay at the horizon. The red-and-white brick lighthouse stands tall at one side with its beam glowing, the long arched causeway bridge stretches across shimmering bay water, beach houses on stilts and shingled cottages line the dunes, a white wooden lifeguard stand sits on the sand, dune grass sways and a small Ferris wheel twinkles in the distance. A teal snack-shack counter runs across the bottom quarter. Depth and atmosphere: warm salty haze, sparkles on the water. Keep the CENTER (roughly the middle 50% of the height) calm: open glowing sky with no detail, for the title and menu. Straight-on, no vignette. No people, animals, food, hot dogs, text, letters, numbers, logos, signs, UI or watermark.
+
+### lbi-passer-by
+Use case: stylized-concept. One game sprite: a cute chunky cartoon beach jeep with big balloon tires and a surfboard and a striped beach umbrella sticking up from the back, side view, moving right to left. Sea-glass teal body, open top, silver bumper, empty seats, bold dark outlines, soft cel shading, no people. Wide 2.2:1. On a plain solid pure white background. No yellow, orange or red. No numbers, logos, words, shadow or checkerboard.
+(In the game it drives along the dune path at the bottom of the wall.)
+
+---
+
+## Dubai (desert night lights)
+
+### dubai-back-wall
+Use case: stylized-concept. Generate one finished game background asset, not a sheet or mockup.
+Input images are STYLE REFERENCES ONLY: chef and dog. Match their bold dark outlines, appealing rounded cartoon shapes and crisp cel shading. Do not include these characters. Match the line style and palette approach of the New York back wall reference.
+Asset: BACK WALL for the Dubai level of Franks and Buns, a 2D side-scrolling arcade game. Landscape 3:2, request 3072 x 2048 or the largest available.
+Dubai at twilight, seen straight on across the creek. Upper part: a sky from deep indigo at the top to violet and soft rose at the horizon, with a thin crescent moon. A stylized futuristic skyline: one super-tall slender stepped needle tower with tapering setbacks rising far above everything (an original shape), a tall sail-shaped tower on its own little island, a giant rectangular picture-frame building, a silver torus-shaped museum covered in abstract swirl patterns (NO real calligraphy or letters), and many glass towers, all in cool blues, teals and slate with tiny pale-cyan window lights. A calm dark-teal creek crosses at about 65% height with soft reflections. Lower part: an old-town waterfront of cool lavender-grey coral-stone houses with square wind towers (traditional barjeel with slatted tops), carved wooden doors and a few softly glowing cyan lanterns, low contrast.
+Palette rules: the middle band (15% to 85% of the height) stays mid-value, cool and calm: blues, violets, teals, lavender. No large red, orange, tan, gold, yellow, sand, bright green, white or silver areas there. Warm color only as tiny lights or in a thin sunset band at the very top.
+Perfectly flat orthographic straight-on elevation, no vanishing point. Seamless horizontal tiling: the left and right edges must match exactly so copies can sit side by side; keep landmarks away from both side edges. No vignette.
+No people, animals, food, hot dogs, buns, cars, boats, flags, signs, shelves, countertops, platforms, floor, text, letters, numbers, logos, signs, UI or watermark. Opaque full-bleed background.
+
+### dubai-counter
+Use case: stylized-concept. Generate one finished COUNTER AND GROUND STRIP for a 2D side-scrolling mobile arcade game, not a scene mockup. Chef and dog are STYLE references only. The Dubai back wall is the palette reference. Very wide 3:1, target 3264x1088. Full bleed, opaque.
+A long glossy deep-teal souk-stall counter EDGE flush against the very TOP of the image (top 8%) with a pale cyan reflection line, then a navy stall front with simple geometric star-and-lattice (mashrabiya) cut-out panels in periwinkle and silver trim (roughly the next 60%), then cool grey-blue stone paving in neat horizontal rows along the bottom 30%. No sky above the counter. Flat straight-on elevation, no vanishing point, all ground lines perfectly horizontal or vertical. Bold clean cartoon outlines and soft cel shading. Seamless horizontal tiling: left and right edges match exactly with a whole number of repeating panels. No tan, gold, yellow, orange or red. No people, animals, food, objects on the counter, text, logos, numbers, UI or watermark.
+
+### dubai-start
+Use case: stylized-concept. One finished mobile arcade game title screen BACKDROP, portrait 9:16, request 1440x2560. Chef and dog are STYLE references only. The Dubai back wall is the palette reference.
+The hero shot, full color and dramatic: Dubai at sunset, the hero shot. A sky from deep violet at the top to blazing magenta, coral and gold over the desert at the horizon. The super-tall stepped needle tower soars and glitters, the sail-shaped tower glows on the water, the torus-shaped museum shines silver, wooden water taxis cross the creek and soft golden dunes roll in the far distance. A navy-and-teal souk-stall counter runs across the bottom quarter. Depth and atmosphere: warm desert haze, sparkles on the water, glowing windows. Keep the CENTER (roughly the middle 50% of the height) calm: open glowing sky with no detail, for the title and menu. Straight-on, no vignette. No people, animals, food, hot dogs, text, letters, numbers, logos, signs, UI or watermark.
+
+### dubai-passer-by
+Use case: stylized-concept. One game sprite: a cute chunky cartoon traditional wooden abra water taxi, side view, moving right to left. Long low hull in deep teal and navy with silver trim, a flat canopy roof on thin posts, a center bench, bold dark outlines, soft cel shading, no people. Wide 3.5:1. On a plain solid pure white background. No yellow, orange or red. No numbers, logos, words, shadow or checkerboard.
+(In the game it crosses along the creek line.)
