@@ -422,6 +422,15 @@ const KITCHENS = [
   { id: 'vegas', name: 'Las Vegas', how: 'earn', unlock: 'kitchenvegas', goal: { stat: 'franks', n: 40, text: 'Land 40 franks in one game' }, art: true, mirror: true, passerY: 0.6, passerH: 0.07 },
   { id: 'portland', name: 'Portland', how: 'bux', unlock: 'kitchenportland', cost: 500, art: true, mirror: true, passerY: 0.995, passerH: 0.12 },
   { id: 'miami', name: 'Miami', how: 'earn', unlock: 'kitchenmiami', goal: { stat: 'boxes', n: 6, text: 'Pack 6 boxes in one game' }, art: true, mirror: true, passerY: 0.69, passerH: 0.08 },
+  { id: 'london', name: 'London', how: 'earn', unlock: 'kitchenlondon', goal: { stat: 'streak', n: 20, text: 'Land 20 in a row' }, art: true, mirror: true, passerY: 0.995, passerH: 0.13 },
+  { id: 'paris', name: 'Paris', how: 'bux', unlock: 'kitchenparis', cost: 500, art: true, mirror: true, passerY: 0.74, passerH: 0.06 },
+  { id: 'munich', name: 'Munich', how: 'bux', unlock: 'kitchenmunich', cost: 500, art: true, mirror: true, passerY: 0.995, passerH: 0.11 },
+  { id: 'rome', name: 'Rome', how: 'bux', unlock: 'kitchenrome', cost: 500, art: true, mirror: true, passerY: 0.995, passerH: 0.1 },
+  { id: 'amsterdam', name: 'Amsterdam', how: 'bux', unlock: 'kitchenamsterdam', cost: 500, art: true, mirror: true, passerY: 0.74, passerH: 0.06 },
+  { id: 'mexicocity', name: 'Mexico City', how: 'bux', unlock: 'kitchenmexicocity', cost: 500, art: true, mirror: true, passerY: 0.995, passerH: 0.1 },
+  { id: 'rio', name: 'Rio de Janeiro', how: 'bux', unlock: 'kitchenrio', cost: 500, art: true, mirror: true, passerY: 0.42, passerH: 0.12 },
+  { id: 'dubai', name: 'Dubai', how: 'earn', unlock: 'kitchendubai', goal: { stat: 'franks', n: 60, text: 'Land 60 franks in one game' }, art: true, mirror: true, passerY: 0.7, passerH: 0.07 },
+  { id: 'lbi', name: 'Long Beach Island', how: 'earn', unlock: 'kitchenlbi', goal: { stat: 'boxes', n: 5, text: 'Pack 5 boxes in one game' }, art: true, mirror: true, passerY: 0.93, passerH: 0.1 },
 ];
 // Launch special: every city kitchen is free for everyone through Dec 6, 2026 (Pacific). After that each one needs to be
 // won (its goal) or unlocked with BunBux; players who haven't, go back to the Classic Kitchen.
@@ -3623,6 +3632,7 @@ function shareScore() {
 function skinsClose() { const b = document.getElementById('fb-skins'); if (b) b.style.display = 'none'; }
 function skinsIsOpen() { const b = document.getElementById('fb-skins'); return !!(b && b.style.display !== 'none'); }
 function skinsOpen() {
+  skinsView = '';   // opening the screen always starts at the top
   let box = document.getElementById('fb-skins');
   if (!box) {
     box = document.createElement('div'); box.id = 'fb-skins'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'Skins');
@@ -3858,9 +3868,13 @@ function skinsRender() {
     h += '</div>';
   }
   h += '</div><button type="button" class="fbs-close" data-a="close">Close</button></div>';
+  // Same screen as before (e.g. picking a kitchen or costume further down): keep the scroll spot. A new screen starts at the top.
+  const view = (skinsTab || '') + '|' + (skinsBuy || '') + '|' + (kitchenBuy || ''), old = box.querySelector('.fbs-body');
+  const keep = view === skinsView && old ? old.scrollTop : 0; skinsView = view;
   box.innerHTML = h;
-  const body = box.querySelector('.fbs-body'); if (body) body.scrollTop = 0;
+  const body = box.querySelector('.fbs-body'); if (body) body.scrollTop = keep;
 }
+let skinsView = '';
 function scoresPanelRect() { const pw = Math.min(W - 32, 340), ph = gcPlugin() ? 350 : 300; return { x: W / 2 - pw / 2, y: H * 0.5 - ph / 2, w: pw, h: ph }; }
 function drawScoresPanel() {
   ctx.fillStyle = 'rgba(10,5,0,0.9)'; ctx.fillRect(0, 0, W, H);
