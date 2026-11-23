@@ -2,6 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>
+// www.franksandbuns.com and franksandbuns.com keep separate saves in the browser. New visitors on www go to
+// franksandbuns.com so everyone plays at one address; anyone who already has a save on www stays there and keeps it.
+try { if (location.hostname === 'www.franksandbuns.com' && !localStorage.length)
+  location.replace('https://franksandbuns.com' + location.pathname + location.search + location.hash); } catch (e) {}
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Franks & Buns</title>
 <style>
