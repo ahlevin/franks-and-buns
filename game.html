@@ -3457,9 +3457,14 @@ function drawMenu() {
   if (artReady('start')) {
     const si = bgArt.start, sh = si.naturalHeight * W / si.naturalWidth;
     ctx.drawImage(si, 0, H - sh, W, sh);
-    ctx.fillStyle = 'rgba(30,15,5,0.62)';
+    // Let the kitchen's start art show: only a light veil, a bit darker behind the title and the text lines
+    const veil = ctx.createLinearGradient(0, 0, 0, H);
+    veil.addColorStop(0, 'rgba(20,10,30,0.25)'); veil.addColorStop(0.18, 'rgba(20,10,30,0.42)');
+    veil.addColorStop(0.62, 'rgba(20,10,30,0.42)'); veil.addColorStop(0.75, 'rgba(20,10,30,0.3)'); veil.addColorStop(1, 'rgba(20,10,30,0.38)');
+    ctx.fillStyle = veil;
   } else ctx.fillStyle = 'rgba(30,15,5,0.85)';
   ctx.fillRect(0,0,W,H);
+  ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.85)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 2;
   ctx.fillStyle='#FFD700'; ctx.font='bold 38px Arial'; ctx.textAlign='center';
   ctx.fillText('FRANKS',W/2,H*0.25); ctx.fillText('& BUNS',W/2,H*0.25+42);
   drawMenuSkin();
@@ -3472,6 +3477,7 @@ function drawMenu() {
   }
   ctx.fillStyle='#FF6600'; ctx.font='bold 22px Arial';
   ctx.globalAlpha=0.8+Math.sin(frameCount*0.06)*0.2; ctx.fillText('TAP TO START',W/2,Math.min(H*0.80,sideBtnY()-14)); ctx.globalAlpha=1;
+  ctx.restore();
   const r = scoresBtnRect();
   ctx.fillStyle = 'rgba(0,0,0,0.45)'; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.fill();
   ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.stroke();
