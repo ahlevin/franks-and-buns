@@ -27,6 +27,8 @@ const BUX_SKINS = new Set([
   'touchdown', 'kickflip', 'partee',   // Sports
   'jellyfish', 'octopus', 'pufferfish',   // Deep Sea Dogs
 ].filter(id => !BUX_LIMITED.has(id)));
+// Kitchens that unlock with BunBux, and their price (same as KITCHENS in game.html). Saved in bux_skins like costumes.
+const BUX_KITCHENS = { kitchensf: 500 };
 const BUX_MILESTONES = { 3: 25, 7: 75, 30: 200 };   // day-streak bonuses, on top of the daily cap
 // Daily challenge: everyone gets the same one each day (midnight Pacific). Same list and order as DAILY in game.html.
 const DAILY = [['streak', 10], ['boxes', 2], ['franks', 20], ['chili', 1], ['streak', 12], ['boxes', 3], ['franks', 25], ['streak', 15],
@@ -380,19 +382,20 @@ async function route(request, env, path) {
     const earned = Math.max(0, r.bux - (p.bux || 0));
     return { bux: buxOf(r), day, earned, bonus, dailyDone: done, capped: r.bux_today >= BUX.cap };
   }
-  if (method === 'POST' && path === 'me/bux/spend') {   // unlock one shop costume for BunBux
+  if (method === 'POST' && path === 'me/bux/spend') {   // unlock one shop costume (or a kitchen) for BunBux
     const p = await needPlayer(db, request);
     const id = String(body.skin || '');
     if (!/^[a-z]{2,24}$/.test(id)) fail(400, 'That costume was not found.');
+    const kitchen = Object.prototype.hasOwnProperty.call(BUX_KITCHENS, id), cost = kitchen ? BUX_KITCHENS[id] : BUX.cost, what = kitchen ? 'kitchen' : 'costume';
     if (BUX_LIMITED.has(id)) fail(400, 'Limited Edition costumes can only be bought, not unlocked with BunBux.');
-    if (!BUX_SKINS.has(id)) fail(400, 'That costume can’t be unlocked with BunBux.');
-    const r = await db.prepare(`UPDATE players SET bux = bux - ${BUX.cost}, bux_skins = CASE WHEN bux_skins = '' THEN ? ELSE bux_skins || ',' || ? END
-        WHERE id = ? AND bux >= ${BUX.cost} AND instr(',' || bux_skins || ',', ?) = 0 AND length(bux_skins) < 8000
+    if (!kitchen && !BUX_SKINS.has(id)) fail(400, 'That costume can’t be unlocked with BunBux.');
+    const r = await db.prepare(`UPDATE players SET bux = bux - ${cost}, bux_skins = CASE WHEN bux_skins = '' THEN ? ELSE bux_skins || ',' || ? END
+        WHERE id = ? AND bux >= ${cost} AND instr(',' || bux_skins || ',', ?) = 0 AND length(bux_skins) < 8000
         RETURNING bux, bux_skins, daily_last, daily_streak`).bind(id, id, p.id, ',' + id + ',').first();
     if (r) return { bux: buxOf(r), unlocked: id };
     const now2 = await db.prepare('SELECT * FROM players WHERE id = ?').bind(p.id).first();
     if (buxOf(now2).skins.indexOf(id) >= 0) return { bux: buxOf(now2), unlocked: id };
-    fail(409, `This costume needs ${BUX.cost} BunBux. You have ${now2.bux || 0}.`);
+    fail(409, `This ${what} needs ${cost} BunBux. You have ${now2.bux || 0}.`);
   }
   if (method === 'POST' && path === 'me/newcode') {   // "Get a new recovery code": the old one stops working everywhere
     const p = await needPlayer(db, request);

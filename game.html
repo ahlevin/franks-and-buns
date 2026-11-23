@@ -22,7 +22,7 @@
   }
   canvas { display: block; margin: 0 auto; background: #2d1b0e; flex-shrink: 0; }
   /* app on iPad / iPhone Duo: kitchen wall beside the game instead of black bars */
-  body.fb-wide { background: linear-gradient(rgba(17,8,0,0.55), rgba(17,8,0,0.55)), url('bg-wall-a.jpg') center top / auto 100% repeat-x, #110800; }
+  body.fb-wide { background: linear-gradient(rgba(17,8,0,0.55), rgba(17,8,0,0.55)), var(--fb-wall, url('bg-wall-a.jpg')) center top / auto 100% repeat-x, #110800; }
 
   #game-header {
     width: 100%; max-width: 420px;
@@ -403,14 +403,269 @@ function isGcTap(clientX, clientY) {
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
-// --- Kitchen art: back wall, counter strip, start screen (?bg=a | b | off) ---
-const ART_SET = (new URLSearchParams(location.search).get('bg') || 'a').toLowerCase();
+// --- Kitchens: the scene behind the game (back wall, counter strip, start screen). Picked in SKINS > Kitchens and kept on this
+// device. Classic is the original art (set a). City Kitchens: until their real art is added, the game draws a stand-in.
+// Real art for a city: bg-wall-<id>.jpg (3:2), bg-counter-<id>.jpg (3:1), bg-start-<id>.jpg (9:16) and kitchen-<id>-passer.png
+// (the train or cable car that rolls by), then set art: true below. mirror: true flips every other copy so art whose left and right
+// edges don't match still scrolls without a seam; passerY / passerH: where the passer-by's wheels sit and its height (share of the wall). Prompts: new-art/city-kitchens-prompts.md.
+// ?bg=a | b | off still forces the old art sets; ?bg=nyc or ?bg=sf shows that kitchen (for testing).
+const KITCHENS = [
+  { id: 'classic', name: 'Classic Kitchen', how: 'free', set: 'a' },
+  { id: 'nyc', name: 'New York', how: 'earn', unlock: 'kitchennyc', goal: { stat: 'boxes', n: 4, text: 'Reach the Dog Parade' }, art: true, mirror: true, passerY: 0.582, passerH: 0.11 },
+  { id: 'sf', name: 'San Francisco', how: 'bux', unlock: 'kitchensf', cost: 500, art: true, mirror: true, passerY: 0.995, passerH: 0.16 },
+];
+const KITCHEN_IDS = KITCHENS.filter(k => k.unlock).map(k => k.unlock);   // saved with the profile, like costumes
+const BG_PARAM = (new URLSearchParams(location.search).get('bg') || '').toLowerCase();
+const ART_SET = KITCHENS.some(k => k.id === BG_PARAM) ? 'a' : (BG_PARAM || 'a');   // sprite art: on unless ?bg=off
 // The older images already have see-through backgrounds; 'screen' washes them out on the light kitchen walls
 const OLD_ART_BLEND = (ART_SET === 'a' || ART_SET === 'b') ? 'source-over' : 'screen';
 const bgArt = {};
-if (ART_SET === 'a' || ART_SET === 'b') {
-  ['wall','counter','start'].forEach(k => { const im = new Image(); im.src = 'bg-' + k + '-' + ART_SET + '.jpg'; bgArt[k] = im; });
+let kitchenCur = '';   // id of the kitchen on screen
+let kitchenPasser = null, kitchenPasserX = -1, kitchenPasserWait = 600;   // the train / cable car rolling by
+function kitchenById(id) { return KITCHENS.find(k => k.id === id) || KITCHENS[0]; }
+function kitchenPicked() { return kitchenById(KITCHENS.some(k => k.id === BG_PARAM) ? BG_PARAM : safeGet('fb_kitchen') || 'classic'); }
+function kitchenPreview(k) { return k.set ? 'bg-wall-' + k.set + '.jpg' : k.art ? 'bg-wall-' + k.id + '.jpg' : kitchenStandin(k.id, 'wall'); }
+function kitchenLoad(id) {
+  let k = kitchenById(id);
+  if (!kitchenUnlocked(k) && BG_PARAM !== k.id) k = KITCHENS[0];
+  if (BG_PARAM === 'a' || BG_PARAM === 'b' || BG_PARAM === 'off' || (BG_PARAM && !KITCHENS.some(x => x.id === BG_PARAM))) {
+    if (kitchenCur) return;
+    kitchenCur = 'classic';
+    if (BG_PARAM === 'a' || BG_PARAM === 'b') ['wall','counter','start'].forEach(p => { const im = new Image(); im.src = 'bg-' + p + '-' + BG_PARAM + '.jpg'; bgArt[p] = im; });
+    return;
+  }
+  if (kitchenCur === k.id) return;
+  kitchenCur = k.id;
+  ['wall','counter','start'].forEach(p => {
+    const im = new Image();
+    im.src = k.set ? 'bg-' + p + '-' + k.set + '.jpg' : k.art ? 'bg-' + p + '-' + k.id + '.jpg' : kitchenStandin(k.id, p);
+    bgArt[p] = im;
+  });
+  kitchenPasser = null; kitchenPasserX = -1; kitchenPasserWait = 300;
+  if (!k.set) { const im = new Image(); im.src = k.art ? 'kitchen-' + k.id + '-passer.png' : kitchenStandin(k.id, 'passer'); kitchenPasser = im; }
+  try { document.documentElement.style.setProperty('--fb-wall', 'url("' + bgArt.wall.src + '")'); } catch (e) {}
 }
+function kitchenUnlocked(k) {
+  if (k.how === 'free' || SKINS_ALL) return true;
+  if (k.how === 'earn') return skinsWon().indexOf(k.unlock) >= 0 || buxOwned().indexOf(k.unlock) >= 0;
+  if (k.how === 'bux') return buxOwned().indexOf(k.unlock) >= 0;
+  return false;
+}
+// Game Over: kitchens this game won (at most the earned ones whose goal was met)
+function kitchensAward(st) {
+  if (SKINS_ALL) return [];
+  const won = skinsWon(), fresh = KITCHENS.filter(k => k.how === 'earn' && won.indexOf(k.unlock) < 0 && (st[k.goal.stat] || 0) >= k.goal.n);
+  if (fresh.length) { safeSet('fb_skins_earned', JSON.stringify(won.concat(fresh.map(k => k.unlock)))); skinsPush(); }
+  return fresh;
+}
+// The passer-by: every 20 to 40 seconds a train or cable car rolls across the back wall
+function drawKitchenPasser(wallH) {
+  const im = kitchenPasser; if (!im || !im.complete || !im.naturalWidth) return;
+  if (kitchenPasserX < 0) { if (state === STATE.PLAYING && --kitchenPasserWait <= 0) kitchenPasserX = W + 10; else return; }
+  const k = kitchenById(kitchenCur), h = (k.art && k.passerH || (k.id === 'sf' ? 150 : 120) / 1024) * wallH, w = im.naturalWidth * h / im.naturalHeight;
+  const y = (k.art && k.passerY || (k.id === 'sf' ? 1012 : 556) / 1024) * wallH - h;
+  kitchenPasserX -= scrollSpeed * 0.35 + 1.6;
+  if (kitchenPasserX < -w - 10) { kitchenPasserX = -1; kitchenPasserWait = 1200 + Math.floor(Math.random() * 1200); return; }
+  ctx.save(); ctx.globalAlpha = 0.92; ctx.drawImage(im, kitchenPasserX, y, w, h); ctx.restore();
+}
+
+// --- Stand-in art for City Kitchens, drawn once into pictures the same sizes as the real art ---
+const kitchenStandinCache = {};
+function kitchenStandin(id, part) {
+  const key = id + '-' + part; if (kitchenStandinCache[key]) return kitchenStandinCache[key];
+  const size = { wall: [1536, 1024], counter: [2172, 724], start: [941, 1672], passer: [id === 'sf' ? 420 : 760, id === 'sf' ? 168 : 120] }[part];
+  const c = document.createElement('canvas'); c.width = size[0]; c.height = size[1];
+  const g = c.getContext('2d'); g.lineJoin = 'round'; g.lineCap = 'round';
+  try { (KITCHEN_DRAW[id] || {})[part](g, size[0], size[1]); } catch (e) {}
+  if (part === 'wall' || part === 'counter') { g.fillStyle = 'rgba(20,26,38,' + (part === 'wall' ? 0.18 : 0.1) + ')'; g.fillRect(0, 0, size[0], size[1]); }   // muted and cool, so the warm franks, buns and condiments stand out
+  return (kitchenStandinCache[key] = c.toDataURL(part === 'passer' ? 'image/png' : 'image/jpeg', 0.88));
+}
+const KOUT = '#3a2414';   // the dark outline colour of the game art
+function kBox(g, x, y, w, h, fill, lw) { g.fillStyle = fill; g.fillRect(x, y, w, h); if (lw) { g.lineWidth = lw; g.strokeStyle = KOUT; g.strokeRect(x, y, w, h); } }
+function kRound(g, x, y, w, h, r, fill, lw) {
+  g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+  g.fillStyle = fill; g.fill(); if (lw) { g.lineWidth = lw; g.strokeStyle = KOUT; g.stroke(); }
+}
+function kSky(g, w, h, top, bot) { const s = g.createLinearGradient(0, 0, 0, h); s.addColorStop(0, top); s.addColorStop(1, bot); g.fillStyle = s; g.fillRect(0, 0, w, h); }
+function kCloud(g, x, y, s, col) { g.fillStyle = col; [[0, 0, 40], [38, -14, 46], [80, 0, 38], [40, 10, 40]].forEach(a => { g.beginPath(); g.arc(x + a[0] * s, y + a[1] * s, a[2] * s, 0, Math.PI * 2); g.fill(); }); }
+function kBricks(g, x0, y0, w, h, base, mortar) {
+  g.fillStyle = mortar; g.fillRect(x0, y0, w, h);
+  for (let r = 0, y = y0; y < y0 + h; r++, y += 32) for (let x = x0 - (r % 2 ? 32 : 0); x < x0 + w; x += 64) {
+    g.fillStyle = (Math.floor(x / 64) * 7 + r * 3) % 5 === 0 ? shiftColor(base, -10) : base; g.fillRect(x + 3, y + 3, 58, 26);
+  }
+}
+// NYC: Art Deco spire tower, a stepped skyscraper and a Gothic-arch suspension bridge over brick with graffiti blobs
+function kNycSkyline(g, ox, base, s) {
+  const bld = (x, w, h, col) => { kBox(g, ox + x * s, base - h * s, w * s, h * s, col, 3);
+    g.fillStyle = 'rgba(225,236,248,.6)'; for (let yy = base - h * s + 14 * s; yy < base - 14 * s; yy += 26 * s) for (let xx = ox + x * s + 10 * s; xx < ox + (x + w) * s - 14 * s; xx += 22 * s) g.fillRect(xx, yy, 9 * s, 12 * s); };
+  bld(0, 90, 190, '#8fa3b8'); bld(100, 70, 250, '#9db0c2'); bld(330, 80, 210, '#8fa3b8'); bld(420, 110, 160, '#a7b8c8');
+  // stepped skyscraper with a mast
+  [[190, 120, 300], [205, 90, 360], [220, 60, 410]].forEach(a => bld(a[0], a[1], a[2], '#b3c0cc'));
+  kBox(g, ox + 246 * s, base - 470 * s, 8 * s, 60 * s, '#b3c0cc', 3);
+  // Art Deco spire tower
+  const tx = ox + 560 * s; bld(540, 100, 330, '#c4ccd4');
+  g.fillStyle = '#d9dee3'; g.strokeStyle = KOUT; g.lineWidth = 3;
+  for (let i = 0; i < 4; i++) { const r = (50 - i * 11) * s, cy = base - (330 + i * 34) * s;
+    g.beginPath(); g.moveTo(tx + 50 * s - r, cy); g.arc(tx + 50 * s, cy, r, Math.PI, 0); g.closePath(); g.fill(); g.stroke(); }
+  g.beginPath(); g.moveTo(tx + 44 * s, base - 460 * s); g.lineTo(tx + 50 * s, base - 540 * s); g.lineTo(tx + 56 * s, base - 460 * s); g.closePath(); g.fill(); g.stroke();
+  bld(660, 80, 180, '#8fa3b8');
+}
+function kNycBridge(g, x0, x1, deck, top, s) {
+  g.strokeStyle = '#6d7680'; g.lineWidth = 2;
+  const t1 = x0 + (x1 - x0) * 0.28, t2 = x0 + (x1 - x0) * 0.72;
+  for (let i = 0; i <= 24; i++) { const x = x0 + (x1 - x0) * i / 24, near = Math.min(Math.abs(x - t1), Math.abs(x - t2));
+    g.beginPath(); g.moveTo(x, deck); g.lineTo(x < t1 ? t1 : x > t2 ? t2 : (x < (t1 + t2) / 2 ? t1 : t2), top + 30 * s); g.globalAlpha = near < 6 ? 0 : 0.5; g.stroke(); }
+  g.globalAlpha = 1;
+  g.lineWidth = 5; g.strokeStyle = '#5b636c';
+  g.beginPath(); g.moveTo(x0, deck - 10 * s); g.quadraticCurveTo((x0 + t1) / 2, deck - 40 * s, t1, top + 30 * s); g.quadraticCurveTo((t1 + t2) / 2, deck - 20 * s, t2, top + 30 * s); g.quadraticCurveTo((t2 + x1) / 2, deck - 40 * s, x1, deck - 10 * s); g.stroke();
+  kBox(g, x0, deck, x1 - x0, 14 * s, '#8a8f95', 3);
+  [t1, t2].forEach(tx => { const tw = 54 * s, th = deck - top + 20 * s;
+    kBox(g, tx - tw / 2, top, tw, th, '#9aa6b2', 3);
+    g.fillStyle = '#7d93a8'; [-1, 1].forEach(d => { const ax = tx + d * 12 * s - 7 * s, ay = top + 30 * s;
+      g.beginPath(); g.moveTo(ax, ay + 70 * s); g.lineTo(ax, ay + 14 * s); g.quadraticCurveTo(ax + 7 * s, ay, ax + 14 * s, ay + 14 * s); g.lineTo(ax + 14 * s, ay + 70 * s); g.closePath(); g.fill(); g.strokeStyle = KOUT; g.lineWidth = 2; g.stroke(); });
+  });
+}
+function kGraffiti(g, x, y, s, a, b) {
+  g.save(); g.globalAlpha = 0.75; g.lineWidth = 5; g.strokeStyle = KOUT;
+  g.fillStyle = a; g.beginPath(); g.ellipse(x, y, 70 * s, 34 * s, -0.12, 0, Math.PI * 2); g.fill(); g.stroke();
+  g.fillStyle = b; g.beginPath(); g.ellipse(x - 30 * s, y - 4 * s, 22 * s, 18 * s, 0, 0, Math.PI * 2); g.fill(); g.stroke();
+  g.beginPath(); g.ellipse(x + 22 * s, y + 2 * s, 26 * s, 16 * s, 0.3, 0, Math.PI * 2); g.fill(); g.stroke();
+  g.fillStyle = a; for (let i = 0; i < 3; i++) g.fillRect(x - 40 * s + i * 34 * s, y + 28 * s, 7 * s, (18 + i * 9) * s);
+  g.fillStyle = '#d8e4f0'; g.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 9 * s : 22 * s, an = i * Math.PI / 5 - Math.PI / 2; g.lineTo(x + 76 * s + Math.cos(an) * r, y - 36 * s + Math.sin(an) * r); } g.closePath(); g.fill(); g.stroke();
+  g.restore();
+}
+function kElTrack(g, w, y, s) {   // elevated train track: a green steel girder band
+  kBox(g, 0, y, w, 26 * s, '#56657a', 0); g.fillStyle = '#434f60'; g.fillRect(0, y + 22 * s, w, 4 * s);
+  g.strokeStyle = '#434f60'; g.lineWidth = 3 * s; for (let x = 0; x < w; x += 64 * s) { g.beginPath(); g.moveTo(x, y + 4 * s); g.lineTo(x + 32 * s, y + 22 * s); g.lineTo(x + 64 * s, y + 4 * s); g.stroke(); }
+  g.fillStyle = '#7b7f84'; g.fillRect(0, y - 4 * s, w, 5 * s);
+}
+// SF: suspension bridge in the fog over the bay, a little skyline with a pyramid tower, pastel Victorian houses
+function kSfBridge(g, x0, x1, deck, top, s) {
+  const red = '#d2553b', t1 = x0 + (x1 - x0) * 0.25, t2 = x0 + (x1 - x0) * 0.75;
+  g.strokeStyle = red; g.lineWidth = 2; g.globalAlpha = 0.7;
+  for (let x = x0 + 10; x < x1; x += 18 * s) { const yy = x < t1 ? deck - (deck - top - 20 * s) * ((x - x0) / (t1 - x0)) ** 2 : x > t2 ? deck - (deck - top - 20 * s) * ((x1 - x) / (x1 - t2)) ** 2 : top + 20 * s + (deck - top - 30 * s) * (1 - ((x - (t1 + t2) / 2) / ((t2 - t1) / 2)) ** 2);
+    g.beginPath(); g.moveTo(x, deck); g.lineTo(x, yy); g.stroke(); }
+  g.globalAlpha = 1; g.lineWidth = 6 * s; g.strokeStyle = red;
+  g.beginPath(); g.moveTo(x0, deck); g.quadraticCurveTo((x0 + t1) / 2, deck - 10 * s, t1, top + 20 * s); g.quadraticCurveTo((t1 + t2) / 2, deck + (deck - top) * 0.55, t2, top + 20 * s); g.quadraticCurveTo((t2 + x1) / 2, deck - 10 * s, x1, deck); g.stroke();
+  kBox(g, x0, deck, x1 - x0, 16 * s, red, 3);
+  [t1, t2].forEach(tx => { const tw = 34 * s; [-1, 1].forEach(d => kBox(g, tx + d * 14 * s - tw / 4, top, tw / 2, deck - top + 70 * s, red, 3));
+    [0, 0.3, 0.6].forEach(f => kBox(g, tx - 22 * s, top + 10 * s + (deck - top) * f, 44 * s, 10 * s, red, 3)); });
+}
+function kFog(g, x, y, w, s) { g.save(); g.globalAlpha = 0.5; for (let i = 0; i < w / (60 * s); i++) kCloud(g, x + i * 60 * s, y + Math.sin(i * 1.7) * 8 * s, 0.9 * s, '#fde6f0'); g.restore(); }
+function kVictorians(g, x0, y0, w, h, s) {
+  const cols = ['#b59be0', '#7fc8c0', '#8fb2ea', '#e39ac8', '#6fb3d6', '#9ad1c0'], hw = 192 * s;
+  for (let i = 0, x = x0; x < x0 + w - 1; i++, x += hw) {
+    const c = cols[i % cols.length], roof = y0 + 70 * s;
+    g.fillStyle = c; g.strokeStyle = KOUT; g.lineWidth = 3;
+    g.beginPath(); g.moveTo(x + 6 * s, roof); g.lineTo(x + hw / 2, y0); g.lineTo(x + hw - 6 * s, roof); g.closePath(); g.fill(); g.stroke();
+    kBox(g, x + 6 * s, roof, hw - 12 * s, y0 + h - roof, c, 3);
+    kBox(g, x + 2 * s, roof - 4 * s, hw - 4 * s, 10 * s, '#fffaf0', 3);
+    g.fillStyle = '#fffaf0'; g.beginPath(); g.arc(x + hw / 2, roof - 26 * s, 13 * s, 0, Math.PI * 2); g.fill(); g.stroke();
+    // bay window and a door
+    kBox(g, x + 22 * s, roof + 40 * s, 86 * s, 110 * s, '#fffaf0', 3);
+    [0, 1, 2].forEach(j => kBox(g, x + 30 * s + j * 26 * s, roof + 50 * s, 18 * s, 90 * s, '#8fb6cc', 2));
+    kRound(g, x + 124 * s, roof + 60 * s, 46 * s, 130 * s, 18 * s, shiftColor(c, -40), 3);
+    kBox(g, x + 22 * s, roof + 190 * s, 86 * s, 70 * s, '#fffaf0', 3);
+    [0, 1].forEach(j => kBox(g, x + 32 * s + j * 38 * s, roof + 200 * s, 28 * s, 50 * s, '#8fb6cc', 2));
+  }
+}
+function kSidewalk(g, w, y, h, col, line) { kBox(g, 0, y, w, h, col, 0); g.strokeStyle = line; g.lineWidth = 4; for (let x = 0; x <= w; x += w / 12) { g.beginPath(); g.moveTo(x, y); g.lineTo(x, y + h); g.stroke(); } g.beginPath(); g.moveTo(0, y + 3); g.lineTo(w, y + 3); g.stroke(); }
+function kCartNyc(g, w, y0, h) {   // stainless street-cart counter: slab, riveted panels, yellow and blue stripe
+  const slab = h * 0.08, pan = h * 0.6, mod = w / 6;
+  const sg = g.createLinearGradient(0, y0, 0, y0 + slab); sg.addColorStop(0, '#eef2f5'); sg.addColorStop(1, '#a9b3bb'); g.fillStyle = sg; g.fillRect(0, y0, w, slab);
+  g.fillStyle = KOUT; g.fillRect(0, y0 + slab - 4, w, 4);
+  const pg = g.createLinearGradient(0, y0 + slab, 0, y0 + slab + pan); pg.addColorStop(0, '#cfd6dc'); pg.addColorStop(1, '#9aa5ae'); g.fillStyle = pg; g.fillRect(0, y0 + slab, w, pan);
+  kBox(g, 0, y0 + slab + pan * 0.12, w, pan * 0.16, '#8fb1d8', 0); kBox(g, 0, y0 + slab + pan * 0.28, w, pan * 0.08, '#3c6fb4', 0);
+  for (let x = 0; x < w; x += mod) {
+    g.lineWidth = 4; g.strokeStyle = 'rgba(58,36,20,.7)'; g.strokeRect(x + 14, y0 + slab + pan * 0.44, mod - 28, pan * 0.46);
+    g.fillStyle = '#7d8790'; [[22, 0.5], [mod - 22, 0.5], [22, 0.84], [mod - 22, 0.84]].forEach(p => { g.beginPath(); g.arc(x + p[0], y0 + slab + pan * p[1], 6, 0, Math.PI * 2); g.fill(); });
+    g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 3; g.beginPath(); g.moveTo(x + 40, y0 + slab + pan * 0.5); g.lineTo(x + 90, y0 + slab + pan * 0.8); g.stroke();
+  }
+  g.fillStyle = KOUT; g.fillRect(0, y0 + slab + pan, w, 6);
+  kSidewalk(g, w, y0 + slab + pan + 6, h - slab - pan - 6, '#b9b6ae', '#8f8b82');
+  kBox(g, 0, y0 + h - h * 0.07, w, h * 0.07, '#8d887f', 0);
+}
+function kCartSf(g, w, y0, h) {   // teal and cream wooden food stand on a sidewalk with a brick strip
+  const slab = h * 0.08, pan = h * 0.6, mod = w / 6;
+  kBox(g, 0, y0, w, slab, '#2f9a8f', 0); g.fillStyle = 'rgba(255,255,255,.25)'; g.fillRect(0, y0 + 4, w, slab * 0.3); g.fillStyle = KOUT; g.fillRect(0, y0 + slab - 4, w, 4);
+  kBox(g, 0, y0 + slab, w, pan, '#f2e6cc', 0);
+  for (let x = 0; x < w; x += mod) {
+    kBox(g, x + 6, y0 + slab, 16, pan, '#2f9a8f', 0); kBox(g, x + mod - 22, y0 + slab, 16, pan, '#2f9a8f', 0);
+    g.strokeStyle = 'rgba(58,36,20,.55)'; g.lineWidth = 4; g.strokeRect(x + 40, y0 + slab + pan * 0.14, mod - 80, pan * 0.72);
+    g.strokeStyle = 'rgba(160,120,80,.35)'; g.lineWidth = 2; for (let yy = y0 + slab + pan * 0.24; yy < y0 + slab + pan * 0.84; yy += 22) { g.beginPath(); g.moveTo(x + 46, yy); g.lineTo(x + mod - 46, yy); g.stroke(); }
+  }
+  g.fillStyle = KOUT; g.fillRect(0, y0 + slab + pan, w, 6);
+  const sy = y0 + slab + pan + 6, sh = h - slab - pan - 6;
+  kSidewalk(g, w, sy, sh * 0.55, '#cfccc4', '#a6a298');
+  kBricks(g, 0, sy + sh * 0.55, w, sh * 0.45, '#8a93a0', '#6e7682');
+}
+const KITCHEN_DRAW = {
+  nyc: {
+    wall(g, w, h) {
+      kSky(g, w, 560, '#5468c9', '#f2a6c6'); kCloud(g, 260, 120, 1, '#f7c9dc'); kCloud(g, 1120, 80, 0.8, '#f7c9dc');
+      kNycSkyline(g, 160, 540, 1);
+      kNycBridge(g, 960, 1400, 430, 230, 1);
+      kElTrack(g, w, 556, 1);
+      kBricks(g, 0, 586, w, h - 586, '#8088bb', '#666d9c');
+      kGraffiti(g, 330, 760, 1.1, '#36c6e0', '#d65fc0'); kGraffiti(g, 1010, 860, 1, '#7b6cf0', '#4fd1c5');
+      // fire escape
+      g.strokeStyle = '#2b2b2b'; g.lineWidth = 5; for (let y = 640; y < 1000; y += 120) { g.strokeRect(620, y, 180, 8); for (let x = 620; x <= 800; x += 20) { g.beginPath(); g.moveTo(x, y); g.lineTo(x, y - 40); g.stroke(); } g.beginPath(); g.moveTo(620, y - 40); g.lineTo(800, y - 40); g.stroke(); }
+    },
+    counter(g, w, h) { kCartNyc(g, w, 0, h); },
+    start(g, w, h) {
+      kSky(g, w, h * 0.72, '#3d4fb8', '#ffb27a'); kCloud(g, 90, 150, 1, '#ffc9a8');
+      g.save(); g.translate(-40, 0); kNycSkyline(g, 0, h * 0.44, 1.15); g.restore();
+      g.save(); g.globalAlpha = 0.35; g.fillStyle = '#ffd9c2'; g.fillRect(0, h * 0.2, w, h * 0.5); g.restore();
+      kElTrack(g, w, h * 0.70, 1);
+      kBricks(g, 0, h * 0.70 + 30, w, h * 0.06, '#8088bb', '#666d9c');
+      kCartNyc(g, w, h * 0.76, h * 0.24);
+    },
+    passer(g, w, h) {   // a three-car silver train, facing left
+      const cw = (w - 24) / 3;
+      for (let i = 0; i < 3; i++) { const x = 6 + i * (cw + 6);
+        kRound(g, x, 8, cw, h - 26, i === 0 ? 26 : 10, '#a9b6c4', 5);
+        kBox(g, x + 4, h * 0.56, cw - 8, 8, '#5a7fb8', 0);
+        for (let j = 0; j < 5; j++) kRound(g, x + 16 + j * (cw - 28) / 5, 22, (cw - 28) / 5 - 10, h * 0.3, 6, '#d6e6f3', 3);
+        g.fillStyle = '#4a4f55'; [0.2, 0.8].forEach(f => { g.beginPath(); g.arc(x + cw * f, h - 14, 11, 0, Math.PI * 2); g.fill(); });
+      }
+      g.fillStyle = '#eef4fa'; g.beginPath(); g.arc(18, h * 0.62, 7, 0, Math.PI * 2); g.fill();
+    },
+  },
+  sf: {
+    wall(g, w, h) {
+      kSky(g, w, 460, '#6f9ee6', '#f6c6dc');
+      kFog(g, 120, 150, 1300, 1);
+      g.fillStyle = '#93abab'; g.beginPath(); g.moveTo(0, 460); g.quadraticCurveTo(240, 300, 520, 440); g.quadraticCurveTo(900, 340, 1536, 450); g.lineTo(1536, 470); g.lineTo(0, 470); g.fill();
+      // little skyline with a pyramid tower
+      [[160, 40, 120], [205, 34, 90], [300, 44, 140], [350, 36, 100]].forEach(a => kBox(g, a[0], 440 - a[2], a[1], a[2], '#b8c3cc', 3));
+      g.fillStyle = '#e6e2da'; g.strokeStyle = KOUT; g.lineWidth = 3; g.beginPath(); g.moveTo(240, 440); g.lineTo(268, 210); g.lineTo(296, 440); g.closePath(); g.fill(); g.stroke();
+      kBox(g, 0, 440, w, 120, '#6fa5c7', 0); g.fillStyle = 'rgba(255,255,255,.35)'; for (let x = 30; x < w; x += 120) g.fillRect(x, 470 + (x % 3) * 18, 50, 4);
+      kSfBridge(g, 480, 1360, 430, 170, 1);
+      kFog(g, 440, 400, 1000, 0.8);
+      kVictorians(g, 0, 560, w, 440, 1);
+      kBox(g, 0, 1000, w, 24, '#8d887f', 0);
+    },
+    counter(g, w, h) { kCartSf(g, w, 0, h); },
+    start(g, w, h) {
+      kSky(g, w, h * 0.5, '#5b86e0', '#ffc7b0');
+      kBox(g, 0, h * 0.44, w, h * 0.1, '#6fa5c7', 0);
+      kSfBridge(g, -260, w + 40, h * 0.44, h * 0.08, 1.4);
+      kFog(g, 0, h * 0.38, w, 1.2);
+      g.save(); g.globalAlpha = 0.3; g.fillStyle = '#ffe1d2'; g.fillRect(0, h * 0.2, w, h * 0.3); g.restore();
+      kBox(g, 0, h * 0.54, w, h * 0.22, '#f3d2dc', 0);
+      kVictorians(g, -40, h * 0.63, w + 200, h * 0.13, 0.4);
+      kCartSf(g, w, h * 0.76, h * 0.24);
+    },
+    passer(g, w, h) {   // a red and cream cable car, facing left
+      kRound(g, 10, 30, w - 20, h - 58, 14, '#f3e6c8', 5);
+      kRound(g, 4, 14, w - 8, 26, 12, '#3f7f86', 5);
+      kBox(g, 12, h * 0.62, w - 24, h * 0.18, '#3f7f86', 4);
+      kBox(g, 12, h * 0.58, w - 24, 8, '#d8dde2', 0);
+      for (let j = 0; j < 6; j++) kRound(g, 24 + j * (w - 48) / 6, 48, (w - 48) / 6 - 10, h * 0.26, 6, '#9cc0d6', 3);
+      g.fillStyle = '#4a4f55'; [0.2, 0.8].forEach(f => { g.beginPath(); g.arc(w * f, h - 18, 14, 0, Math.PI * 2); g.fill(); });
+    },
+  },
+};
 const sp = {};
 if (ART_SET === 'a' || ART_SET === 'b') {
   ['frank','bun','grilled','bun-frank','grilled-frank','dog-a','dog-b','mustard','ketchup','relish','cheese','jalapeno','chili-a','chili-b']
@@ -586,7 +841,7 @@ let skinsPushing = false;
 function skinsMerge(serverList) {   // called with the profile's saved costumes whenever the server answers
   if (!Array.isArray(serverList)) return;
   const won = skinsWon(), all = won.slice();
-  serverList.forEach(id => { if (all.indexOf(id) < 0 && SKINS.some(s => s.id === id)) all.push(id); });
+  serverList.forEach(id => { if (all.indexOf(id) < 0 && (SKINS.some(s => s.id === id) || KITCHEN_IDS.indexOf(id) >= 0)) all.push(id); });
   if (all.length !== won.length) safeSet('fb_skins_earned', JSON.stringify(all));
   if (won.some(id => serverList.indexOf(id) < 0)) skinsPush();
 }
@@ -652,6 +907,7 @@ const SHOP_WEB = !SHOP_APP && location.protocol !== 'capacitor:' && !SHOP_TEST &
 const SHOP_ON = SHOP_TEST || SHOP_APP || SHOP_WEB;
 const SHOP_STORE = SHOP_APP || SHOP_WEB;   // real purchases (store prices, buyer account)
 const SKINS_ALL = !SHOP_TEST && !SHOP_WEB && SHOP_TESTHOST && (new URLSearchParams(location.search).get('skins') === 'all' || location.hostname === 'preview.franks-and-buns.pages.dev');
+kitchenLoad(kitchenPicked().id);   // the kitchen this device picked (Classic until another is unlocked)
 // --- BunBux and the daily challenge ---
 // BunBux are earned by playing, never sold: 1 per box packed (up to 10 a game), 25 for the daily challenge (once a day)
 // and day-streak bonuses (+25 at 3 days, +75 at 7, +200 at 30). The server keeps them with the Dog House profile, so the
@@ -2842,6 +3098,8 @@ function loseLife() {
     const fresh = SKINS_ALL ? [] : skinsAward({ chili: chiliCaught, streak: bestStreak, boxes: boxesCompleted });
     skinNew = fresh.length ? fresh : null;
     fresh.forEach(skinPreload);
+    const freshK = kitchensAward({ boxes: boxesCompleted, streak: bestStreak });
+    if (freshK.length) skinNew = (skinNew || []).concat(freshK.map(k => ({ name: k.name + ' kitchen', kitchen: true })));
     recordRun();
     buxSubmit({ streak: bestStreak, boxes: boxesCompleted, franks: franksLanded, chili: chiliCaught }, { score: score, frames: runFrames });
   } else { frank.y=H*0.35; frank.vy=0; }
@@ -3016,16 +3274,25 @@ function drawBun(b) {
   ctx.restore();
 }
 
+// Repeat a kitchen picture across the screen; with mirror, every other copy is flipped so the edges always meet
+function drawKitchenTiles(im, scroll, tw, y, th, mirror) {
+  for (let i = Math.floor(scroll / tw), x = i * tw - scroll; x < W; i++, x += tw) {
+    if (mirror && (i & 1)) { ctx.save(); ctx.translate(x + tw, y); ctx.scale(-1, 1); ctx.drawImage(im, -0.5, 0, tw + 0.5, th); ctx.restore(); }
+    else ctx.drawImage(im, x, y, tw + 0.5, th);
+  }
+}
 function drawKitchenBG() {
   if (artReady('wall') && artReady('counter')) {
     // Back wall scrolls slower than the game (parallax); the counter strip scrolls with it.
     const wallH = H * 0.78, wi = bgArt.wall, ww = wi.naturalWidth * wallH / wi.naturalHeight;
-    for (let x = -((scrollX * 0.35) % ww); x < W; x += ww) ctx.drawImage(wi, x, 0, ww + 0.5, wallH);
+    const mirror = !!kitchenById(kitchenCur).mirror;
+    drawKitchenTiles(wi, scrollX * 0.35, ww, 0, wallH, mirror);
     // darker band at the top so the score and progress bar stay readable
     const g = ctx.createLinearGradient(0, 0, 0, 110); g.addColorStop(0, 'rgba(20,10,4,0.8)'); g.addColorStop(0.6, 'rgba(20,10,4,0.45)'); g.addColorStop(1, 'rgba(20,10,4,0)');
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, 110);
+    drawKitchenPasser(wallH);
     const ci = bgArt.counter, ch = H - wallH, cw = ci.naturalWidth * ch / ci.naturalHeight;
-    for (let x = -(scrollX % cw); x < W; x += cw) ctx.drawImage(ci, x, wallH, cw + 0.5, ch);
+    drawKitchenTiles(ci, scrollX, cw, wallH, ch, mirror);
     return;
   }
   ctx.fillStyle='#4a3728'; ctx.fillRect(0,H-40,W,40);
@@ -3356,6 +3623,8 @@ function skinsOpen() {
       '#fb-skins .fbs-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}' +
       '#fb-skins .fbs-skin{background:rgba(0,0,0,.25);border:2px solid rgba(255,215,0,.25);border-radius:12px;padding:8px 6px;color:#f3e3c3;font:600 14px Arial;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px}' +
       '#fb-skins .fbs-skin img{width:100%;max-width:150px;height:64px;object-fit:contain}' +
+      '#fb-skins .fbs-skin img.fbs-kimg,#fb-skins .fbs-col-p img.fbs-kimg{object-fit:cover;border-radius:8px;border:2px solid rgba(58,36,20,.8)}#fb-skins .fbs-col-p img.fbs-kimg{width:64px;height:40px;margin:0}' +
+      '#fb-skins .fbs-buy img.fbs-kbig{width:100%;max-width:300px;height:150px;object-fit:cover;border-radius:12px;border:2px solid rgba(255,215,0,.5)}' +
       '#fb-skins .fbs-skin small{font:12px Arial;color:#c8a878}' +
       '#fb-skins .fbs-skin.on{border-color:#FFD700;background:rgba(255,215,0,.12)}#fb-skins .fbs-skin.on small{color:#FFD700}' +
       '#fb-skins .fbs-skin.lock{cursor:default}#fb-skins .fbs-skin{position:relative}#fb-skins .fbs-skin.lock img{filter:saturate(.85) opacity(.6)}#fb-skins .fbs-skin.lock::after{content:"🔒";position:absolute;top:6px;right:8px;font-size:16px}' +
@@ -3378,9 +3647,11 @@ function skinsOpen() {
       '#fb-skins .fbs-close{flex:none;font:600 15px Arial;border-radius:999px;padding:11px 16px;border:1px solid rgba(255,179,71,.5);background:transparent;color:#ffb347;cursor:pointer;width:100%;margin:12px 0 0}';
     document.head.appendChild(css);
     box.addEventListener('click', e => {
-      const t = e.target.closest('[data-skin],[data-a],[data-tab],[data-buy]');
-      if (t && t.hasAttribute('data-tab')) { skinsTab = t.getAttribute('data-tab'); skinsBuy = null; skinsMsg = ''; sndStreak(); skinsRender(); return; }
-      if (t && t.getAttribute('data-a') === 'home') { if (skinsBuy) skinsBuy = null; else skinsTab = null; skinsMsg = ''; sndStreak(); skinsRender(); return; }
+      const t = e.target.closest('[data-skin],[data-a],[data-tab],[data-buy],[data-kitchen]');
+      if (t && t.hasAttribute('data-kitchen')) { kitchensTap(t.getAttribute('data-kitchen')); return; }
+      if (t && t.getAttribute('data-a') === 'kbux') { kitchensBux(); return; }
+      if (t && t.hasAttribute('data-tab')) { skinsTab = t.getAttribute('data-tab'); skinsBuy = null; kitchenBuy = null; skinsMsg = ''; sndStreak(); skinsRender(); return; }
+      if (t && t.getAttribute('data-a') === 'home') { if (kitchenBuy) kitchenBuy = null; else if (skinsBuy) skinsBuy = null; else skinsTab = null; skinsMsg = ''; sndStreak(); skinsRender(); return; }
       if (t && t.hasAttribute('data-buy')) { if (!skinsBusy) { skinsBuy = t.getAttribute('data-buy'); skinsMsg = ''; sndStreak(); skinsRender(); } return; }
       if (t && t.getAttribute('data-a') === 'pay') { skinsPay(); return; }
       if (t && t.getAttribute('data-a') === 'bux') { skinsBux(); return; }
@@ -3395,7 +3666,7 @@ function skinsOpen() {
     ['touchstart', 'touchend', 'mousedown', 'pointerdown', 'keydown'].forEach(t => box.addEventListener(t, e => e.stopPropagation(), { passive: true }));
     document.body.appendChild(box);
   }
-  box.style.display = 'flex'; skinsTab = null; skinsBuy = null; skinsMsg = ''; skinsRender();
+  box.style.display = 'flex'; skinsTab = null; skinsBuy = null; kitchenBuy = null; skinsMsg = ''; skinsRender();
   if (SHOP_STORE) shopStart().then(shopRetryMissing).catch(() => {});
 }
 // Apps: products the store didn't return yet (new in-app purchases can take hours to reach every phone)
@@ -3447,21 +3718,67 @@ async function skinsRestore() {
   catch (e) { skinsMsgErr = true; skinsMsg = (e && e.message) || 'Couldn’t check purchases right now.'; }
   skinsBusy = false; skinsRender();
 }
+// --- SKINS > Kitchens: pick the scene behind the game; Earned ones come from playing, others unlock with BunBux ---
+let kitchenBuy = null;   // id of the kitchen on the BunBux confirm screen
+function kitchenLockText(k) { return k.how === 'earn' ? '🔒 ' + k.goal.text : k.how === 'bux' ? k.cost + ' BunBux' : ''; }
+function kitchensRowHtml() {
+  const open = KITCHENS.filter(kitchenUnlocked).length, cur = kitchenById(kitchenCur || 'classic');
+  return '<button type="button" class="fbs-col' + (skinsTab === 'kitchens' ? ' on' : '') + '" data-tab="kitchens"><span class="fbs-col-t"><b>🏙️ Kitchens</b>' +
+    '<small>Using: ' + packsEsc(cur.name) + ' · ' + open + ' of ' + KITCHENS.length + ' unlocked</small></span>' +
+    '<span class="fbs-col-p"><img class="fbs-kimg" src="' + kitchenPreview(cur) + '" alt=""></span><span class="fbs-col-a">›</span></button>';
+}
+function kitchensListHtml(msg) {
+  let h = '<p class="fbs-sub">Pick where you play. Win kitchens by playing, or unlock them with BunBux.</p>' + msg + '<div class="fbs-grid">';
+  KITCHENS.forEach(k => {
+    const open = kitchenUnlocked(k), on = k.id === kitchenCur;
+    h += '<button type="button" class="fbs-skin' + (on ? ' on' : '') + (open ? '' : ' lock') + '" data-kitchen="' + k.id + '">' +
+      '<img class="fbs-kimg" src="' + kitchenPreview(k) + '" alt="">' + packsEsc(k.name) +
+      '<small>' + (on ? '✓ Playing here' : open ? 'Tap to use' : k.how === 'bux' ? '<span class="fbs-p">' + BUX_ICON_HTML + ' ' + k.cost + '</span>' : kitchenLockText(k)) + '</small></button>';
+  });
+  return h + '</div><p class="fbs-buxnote">More cities coming soon.</p>';
+}
+function kitchensBuyHtml(k, msg) {
+  const have = buxShown(), can = have >= k.cost && !!packsToken();
+  return '<div class="fbs-buy"><img class="fbs-kbig" src="' + kitchenPreview(k) + '" alt=""><h3>' + packsEsc(k.name) + '</h3><p>A new place to play, yours to keep.</p>' +
+    '<button type="button" class="fbs-go fbs-bux" data-a="kbux"' + (skinsBusy || !can ? ' disabled' : '') + '>' + (skinsBusy ? 'One moment…' : BUX_ICON_HTML + ' Unlock for ' + k.cost + ' BunBux') + '</button>' +
+    '<p class="fbs-buxnote">You have ' + have.toLocaleString() + ' BunBux.' + (can ? '' : ' Earn them by packing boxes and doing the daily challenge.') + '</p>' + msg + '</div>';
+}
+function kitchensTap(id) {
+  const k = kitchenById(id);
+  if (!kitchenUnlocked(k)) { if (k.how === 'bux' && !skinsBusy) { kitchenBuy = k.id; skinsMsg = ''; sndStreak(); skinsRender(); } return; }
+  safeSet('fb_kitchen', k.id); kitchenLoad(k.id); sndStreak(); skinsMsgErr = false; skinsMsg = ''; skinsRender();
+}
+async function kitchensBux() {
+  const k = kitchenBuy && kitchenById(kitchenBuy);
+  if (skinsBusy || !k || k.how !== 'bux') return;
+  skinsBusy = true; skinsMsg = ''; skinsRender();
+  try {
+    await buxFlush();   // games still waiting on this device count toward the price
+    const j = await packsCall('POST', 'me/bux/spend', { skin: k.unlock });
+    buxKeep(j.bux); if (packsMe && packsMe.player) packsMe.player.bux = j.bux;
+    kitchenBuy = null; skinsMsgErr = false; safeSet('fb_kitchen', k.id); kitchenLoad(k.id);
+    skinsMsg = '🎉 ' + k.name + ' is yours! You’re playing there now.';
+  } catch (e) { skinsMsgErr = true; skinsMsg = (e && e.message) || 'That didn’t go through. Your BunBux are safe.'; }
+  skinsBusy = false; skinsRender();
+}
 function skinsRender() {
   const box = document.getElementById('fb-skins'); if (!box) return;
   const cur = curSkin(), groups = Object.keys(SKIN_GROUPS).filter(g => skinsGroupList(g).length);
-  if (skinsTab && groups.indexOf(skinsTab) < 0) skinsTab = null;
+  if (skinsTab && skinsTab !== 'kitchens' && groups.indexOf(skinsTab) < 0) skinsTab = null;
   const buyP = skinsBuy && shopProducts()[skinsBuy];
   if (!buyP) skinsBuy = null;
-  const title = buyP ? (buyP.kind === 'skin' ? 'Get Costume' : 'Get Collection') : skinsTab ? SKIN_GROUPS[skinsTab].name : '🎭 SKINS';
+  const kBuy = kitchenBuy && kitchenById(kitchenBuy);
+  const title = kBuy ? 'Get Kitchen' : buyP ? (buyP.kind === 'skin' ? 'Get Costume' : 'Get Collection') : skinsTab === 'kitchens' ? '🏙️ Kitchens' : skinsTab ? SKIN_GROUPS[skinsTab].name : '🎭 SKINS';
   let h = '<div class="fbs-card"><div class="fbs-top">' +
-    (skinsTab || buyP ? '<button type="button" class="fbs-back" data-a="home" aria-label="Back">‹</button>' : '<span class="fbs-x" style="visibility:hidden" aria-hidden="true"></span>') +
+    (skinsTab || buyP || kBuy ? '<button type="button" class="fbs-back" data-a="home" aria-label="Back">‹</button>' : '<span class="fbs-x" style="visibility:hidden" aria-hidden="true"></span>') +
     '<h2>' + packsEsc(title) + '</h2>' +
     '<button type="button" class="fbs-x" data-a="close" aria-label="Close">✕</button></div><div class="fbs-body">';
   if (SHOP_TEST) h += '<div class="fbs-test">TEST SHOP · pretend purchases, nothing is charged</div>';
   if (!SKINS_ALL) h += '<div class="fbs-bal">' + BUX_ICON_HTML + ' You have <b>' + buxShown().toLocaleString() + '</b> BunBux</div>';
   const msg = skinsMsg ? '<p class="fbs-msg' + (skinsMsgErr ? ' err' : '') + '">' + packsEsc(skinsMsg) + '</p>' : '';
-  if (buyP) {
+  if (kBuy) h += kitchensBuyHtml(kBuy, msg);
+  else if (skinsTab === 'kitchens') h += kitchensListHtml(msg);
+  else if (buyP) {
     // confirm screen: exactly what you get, what you already own, the price
     const own = shopOwnedOf(buyP.skins), n = buyP.skins.length, left = n - own.length;
     h += '<div class="fbs-buy">';
@@ -3485,6 +3802,7 @@ function skinsRender() {
   } else if (!skinsTab) {
     // Collections: one row per group, newest groups just get added to SKIN_GROUPS
     h += '<p class="fbs-sub">Wearing: <b>' + packsEsc(cur.name) + '</b>' + '</p>' + msg;
+    h += kitchensRowHtml();
     groups.forEach(g => {
       const list = skinsGroupList(g), open = list.filter(s => skinUnlocked(s)).length, how = SKINS_ALL ? '' : skinHow(list[0]), soon = how === 'soon';
       const here = list.indexOf(cur) >= 0;
@@ -3540,7 +3858,7 @@ function drawGameOver() {
   const nudge = skinNew ? null : dailyGameOverLine();
   if (nudge) fbCenterText(nudge.t, H*0.34+64, nudge.c, 14, true);
   if (skinNew) {   // left-aligned and measured: iOS misplaces centred canvas text that has an emoji
-    const t='🎭 NEW SKIN'+(skinNew.length>1?'S':'')+': '+skinNew.map(k=>k.name.toUpperCase()).join(' + ')+'!'; ctx.fillStyle='#7CFC00'; ctx.font='bold 16px Arial'; ctx.textAlign='left';
+    const t=(skinNew.every(k=>k.kitchen)?'🏙️ NEW KITCHEN':skinNew.some(k=>k.kitchen)?'🎉 UNLOCKED':'🎭 NEW SKIN'+(skinNew.length>1?'S':''))+': '+skinNew.map(k=>k.name.toUpperCase()).join(' + ')+'!'; ctx.fillStyle='#7CFC00'; ctx.font='bold 16px Arial'; ctx.textAlign='left';
     if (ctx.measureText(t).width>W-20) ctx.font='bold '+Math.max(10,Math.floor(16*(W-20)/ctx.measureText(t).width))+'px Arial';
     ctx.fillText(t,(W-ctx.measureText(t).width)/2,H*0.34+64); ctx.textAlign='center';
   }
