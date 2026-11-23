@@ -28,7 +28,7 @@ const BUX_SKINS = new Set([
   'jellyfish', 'octopus', 'pufferfish',   // Deep Sea Dogs
 ].filter(id => !BUX_LIMITED.has(id)));
 // Kitchens that unlock with BunBux, and their price (same as KITCHENS in game.html). Saved in bux_skins like costumes.
-const BUX_KITCHENS = { kitchensf: 500 };
+const BUX_KITCHENS = { kitchensf: 500, kitchenchicago: 500, kitchenconey: 500 };
 const BUX_MILESTONES = { 3: 25, 7: 75, 30: 200 };   // day-streak bonuses, on top of the daily cap
 // Daily challenge: everyone gets the same one each day (midnight Pacific). Same list and order as DAILY in game.html.
 const DAILY = [['streak', 10], ['boxes', 2], ['franks', 20], ['chili', 1], ['streak', 12], ['boxes', 3], ['franks', 25], ['streak', 15],
