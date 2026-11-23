@@ -3920,9 +3920,24 @@ function drawGameOver() {
   const nudge = skinNew ? null : dailyGameOverLine();
   if (nudge) fbCenterText(nudge.t, H*0.34+64, nudge.c, 14, true);
   if (skinNew) {   // left-aligned and measured: iOS misplaces centred canvas text that has an emoji
-    const t=(skinNew.every(k=>k.kitchen)?'🏙️ NEW KITCHEN':skinNew.some(k=>k.kitchen)?'🎉 UNLOCKED':'🎭 NEW SKIN'+(skinNew.length>1?'S':''))+': '+skinNew.map(k=>k.name.toUpperCase()).join(' + ')+'!'; ctx.fillStyle='#7CFC00'; ctx.font='bold 16px Arial'; ctx.textAlign='left';
-    if (ctx.measureText(t).width>W-20) ctx.font='bold '+Math.max(10,Math.floor(16*(W-20)/ctx.measureText(t).width))+'px Arial';
-    ctx.fillText(t,(W-ctx.measureText(t).width)/2,H*0.34+64); ctx.textAlign='center';
+    // a long list wraps onto a second line, and anything past that becomes "+ N MORE", so nothing runs off the screen
+    const head=(skinNew.every(k=>k.kitchen)?'🏙️ NEW KITCHEN'+(skinNew.length>1?'S':''):skinNew.some(k=>k.kitchen)?'🎉 UNLOCKED':'🎭 NEW SKIN'+(skinNew.length>1?'S':''))+': ';
+    const names=skinNew.map(k=>k.name.toUpperCase()), maxW=W-24, lines=[];
+    ctx.fillStyle='#7CFC00'; ctx.font='bold 15px Arial'; ctx.textAlign='left';
+    let cur=head, i=0;
+    for (; i<names.length; i++) {
+      const add=(cur===head?'':' + ')+names[i];
+      if (ctx.measureText(cur+add).width<=maxW || cur===head) { cur+=add; continue; }
+      if (lines.length===1) break;   // already on the second line
+      lines.push(cur); cur='+ '+names[i];
+    }
+    if (i<names.length) { const more=' + '+(names.length-i)+' MORE';
+      while (cur.lastIndexOf(' + ')>0 && ctx.measureText(cur+more).width>maxW) { cur=cur.slice(0,cur.lastIndexOf(' + ')); i--; }
+      cur+=' + '+(names.length-i)+' MORE'; }
+    lines.push(cur+'!');
+    lines.forEach((l,n)=>{ if (ctx.measureText(l).width>maxW) ctx.font='bold '+Math.max(10,Math.floor(15*maxW/ctx.measureText(l).width))+'px Arial';
+      ctx.fillText(l,(W-ctx.measureText(l).width)/2,H*0.34+62+n*19); ctx.font='bold 15px Arial'; });
+    ctx.textAlign='center';
   }
   const sy=H*0.50; ctx.fillStyle='#ddd'; ctx.font='14px Arial';
   ctx.fillText('Franks Landed: '+franksLanded+'  ·  Boxes Packed: '+boxesCompleted,W/2,sy);
