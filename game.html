@@ -494,7 +494,7 @@ function kitchensAward(st) {
 }
 // The passer-by: every 20 to 40 seconds a train or cable car rolls across the back wall
 function drawKitchenPasser(wallH) {
-  const im = kitchenPasser; if (!im || !im.complete || !im.naturalWidth || ride) return;
+  const im = kitchenPasser; if (!im || !im.complete || !im.naturalWidth) return;
   if (kitchenPasserX === null) { if (state === STATE.PLAYING && --kitchenPasserWait <= 0) kitchenPasserX = W + 10; else return; }   // starts just off the right edge
   const k = kitchenById(kitchenCur), h = (k.art && k.passerH || (k.id === 'sf' ? 150 : 120) / 1024) * wallH, w = im.naturalWidth * h / im.naturalHeight;
   const y = (k.art && k.passerY || (k.id === 'sf' ? 1012 : 556) / 1024) * wallH - h;
@@ -3104,7 +3104,7 @@ function updateRide() {
     if (!RIDE_ACTIVE || state !== STATE.PLAYING || (boxesCompleted < 1 && RIDE_TEST !== 'soon')) return;   // first one comes after the first box
     if (--rideCooldown > 0) return;
     const y = H * (0.42 + Math.random() * 0.18);
-    ride = { x: W + 40, y: y, phase: 'come', buns: [], hit: -1, t: 0, im: kitchenPasser && kitchenPasser.complete && kitchenPasser.naturalWidth ? kitchenPasser : null };
+    ride = { x: W + 40, y: y, phase: 'come', buns: [], hit: -1, t: 0, im: null };   // always the hot dog cart, so the kitchen's own train or car stays up on its track
     for (let i = 0; i < RIDE_BUNS; i++) ride.buns.push({ x: 0, y: y, type: bunTypes[0], condiment: null, scored: false, missed: false, bobPhase: 0, grillTimer: 0, grilled: false });
     addFloatingText(W / 2, H * 0.22, 'HITCH A RIDE!', '#33E0FF', 28);
     return;
@@ -3153,7 +3153,7 @@ function drawRide() {
     let dw = w, dh = im.naturalHeight * w / im.naturalWidth;
     if (dh > 96) { dh = 96; dw = im.naturalWidth * dh / im.naturalHeight; }
     ctx.drawImage(im, ride.x + (w - dw) / 2, vy - 2, dw, dh);
-  } else {   // Classic Kitchen: a hot dog cart
+  } else {   // a hot dog cart
     const cw = w * 0.8, cx = ride.x + (w - cw) / 2;
     ctx.fillStyle = '#D9DEE3'; rrect(cx, vy, cw, 38, 6); ctx.fill(); ctx.strokeStyle = '#3a2414'; ctx.lineWidth = 2; rrect(cx, vy, cw, 38, 6); ctx.stroke();
     ctx.fillStyle = '#2F80C0'; ctx.fillRect(cx + 4, vy + 16, cw - 8, 7);
