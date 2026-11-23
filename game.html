@@ -414,6 +414,16 @@ const KITCHENS = [
   { id: 'nyc', name: 'New York', how: 'earn', unlock: 'kitchennyc', goal: { stat: 'boxes', n: 4, text: 'Reach the Dog Parade' }, art: true, mirror: true, passerY: 0.582, passerH: 0.11 },
   { id: 'sf', name: 'San Francisco', how: 'bux', unlock: 'kitchensf', cost: 500, art: true, mirror: true, passerY: 0.995, passerH: 0.16 },
 ];
+// Launch special: New York and San Francisco are free for everyone through Dec 6, 2026 (Pacific). After that they need to be
+// won (New York) or unlocked with BunBux (San Francisco); players who haven't, go back to the Classic Kitchen.
+// Test sites: ?kitchenpromo=after shows what happens once it ends.
+const KITCHEN_PROMO_END = Date.UTC(2026, 11, 7, 8), KITCHEN_PROMO_TEXT = 'Dec 6';
+function kitchenPromo() {
+  const test = /(^|\.)franks-and-buns\.pages\.dev$/.test(location.hostname) || location.hostname === 'localhost';
+  if (test && new URLSearchParams(location.search).get('kitchenpromo') === 'after') return false;
+  return Date.now() < KITCHEN_PROMO_END;
+}
+function kitchenOwned(k) { return k.how === 'free' || skinsWon().indexOf(k.unlock) >= 0 || buxOwned().indexOf(k.unlock) >= 0; }
 const KITCHEN_IDS = KITCHENS.filter(k => k.unlock).map(k => k.unlock);   // saved with the profile, like costumes
 const BG_PARAM = (new URLSearchParams(location.search).get('bg') || '').toLowerCase();
 const ART_SET = KITCHENS.some(k => k.id === BG_PARAM) ? 'a' : (BG_PARAM || 'a');   // sprite art: on unless ?bg=off
@@ -421,7 +431,7 @@ const ART_SET = KITCHENS.some(k => k.id === BG_PARAM) ? 'a' : (BG_PARAM || 'a');
 const OLD_ART_BLEND = (ART_SET === 'a' || ART_SET === 'b') ? 'source-over' : 'screen';
 const bgArt = {};
 let kitchenCur = '';   // id of the kitchen on screen
-let kitchenPasser = null, kitchenPasserX = -1, kitchenPasserWait = 600;   // the train / cable car rolling by
+let kitchenPasser = null, kitchenPasserX = null, kitchenPasserWait = 600;   // the train / cable car rolling by (x: null while it's away)
 function kitchenById(id) { return KITCHENS.find(k => k.id === id) || KITCHENS[0]; }
 function kitchenPicked() { return kitchenById(KITCHENS.some(k => k.id === BG_PARAM) ? BG_PARAM : safeGet('fb_kitchen') || 'classic'); }
 function kitchenPreview(k) { return k.set ? 'bg-wall-' + k.set + '.jpg' : k.art ? 'bg-wall-' + k.id + '.jpg' : kitchenStandin(k.id, 'wall'); }
@@ -441,12 +451,12 @@ function kitchenLoad(id) {
     im.src = k.set ? 'bg-' + p + '-' + k.set + '.jpg' : k.art ? 'bg-' + p + '-' + k.id + '.jpg' : kitchenStandin(k.id, p);
     bgArt[p] = im;
   });
-  kitchenPasser = null; kitchenPasserX = -1; kitchenPasserWait = 300;
+  kitchenPasser = null; kitchenPasserX = null; kitchenPasserWait = 300;
   if (!k.set) { const im = new Image(); im.src = k.art ? 'kitchen-' + k.id + '-passer.png' : kitchenStandin(k.id, 'passer'); kitchenPasser = im; }
   try { document.documentElement.style.setProperty('--fb-wall', 'url("' + bgArt.wall.src + '")'); } catch (e) {}
 }
 function kitchenUnlocked(k) {
-  if (k.how === 'free' || SKINS_ALL) return true;
+  if (k.how === 'free' || SKINS_ALL || kitchenPromo()) return true;
   if (k.how === 'earn') return skinsWon().indexOf(k.unlock) >= 0 || buxOwned().indexOf(k.unlock) >= 0;
   if (k.how === 'bux') return buxOwned().indexOf(k.unlock) >= 0;
   return false;
@@ -461,11 +471,12 @@ function kitchensAward(st) {
 // The passer-by: every 20 to 40 seconds a train or cable car rolls across the back wall
 function drawKitchenPasser(wallH) {
   const im = kitchenPasser; if (!im || !im.complete || !im.naturalWidth) return;
-  if (kitchenPasserX < 0) { if (state === STATE.PLAYING && --kitchenPasserWait <= 0) kitchenPasserX = W + 10; else return; }
+  if (kitchenPasserX === null) { if (state === STATE.PLAYING && --kitchenPasserWait <= 0) kitchenPasserX = W + 10; else return; }   // starts just off the right edge
   const k = kitchenById(kitchenCur), h = (k.art && k.passerH || (k.id === 'sf' ? 150 : 120) / 1024) * wallH, w = im.naturalWidth * h / im.naturalHeight;
   const y = (k.art && k.passerY || (k.id === 'sf' ? 1012 : 556) / 1024) * wallH - h;
   kitchenPasserX -= scrollSpeed * 0.35 + 1.6;
-  if (kitchenPasserX < -w - 10) { kitchenPasserX = -1; kitchenPasserWait = 1200 + Math.floor(Math.random() * 1200); return; }
+  if (kitchenPasserX < -w - 10) { kitchenPasserX = null;   // gone only once it has rolled fully off the left edge
+    kitchenPasserWait = 1200 + Math.floor(Math.random() * 1200); return; }
   ctx.save(); ctx.globalAlpha = 0.92; ctx.drawImage(im, kitchenPasserX, y, w, h); ctx.restore();
 }
 
@@ -3647,7 +3658,8 @@ function skinsOpen() {
       '#fb-skins .fbs-close{flex:none;font:600 15px Arial;border-radius:999px;padding:11px 16px;border:1px solid rgba(255,179,71,.5);background:transparent;color:#ffb347;cursor:pointer;width:100%;margin:12px 0 0}';
     document.head.appendChild(css);
     box.addEventListener('click', e => {
-      const t = e.target.closest('[data-skin],[data-a],[data-tab],[data-buy],[data-kitchen]');
+      const t = e.target.closest('[data-skin],[data-a],[data-tab],[data-buy],[data-kitchen],[data-kbuy]');
+      if (t && t.hasAttribute('data-kbuy')) { if (!skinsBusy) { kitchenBuy = t.getAttribute('data-kbuy'); skinsMsg = ''; sndStreak(); skinsRender(); } return; }
       if (t && t.hasAttribute('data-kitchen')) { kitchensTap(t.getAttribute('data-kitchen')); return; }
       if (t && t.getAttribute('data-a') === 'kbux') { kitchensBux(); return; }
       if (t && t.hasAttribute('data-tab')) { skinsTab = t.getAttribute('data-tab'); skinsBuy = null; kitchenBuy = null; skinsMsg = ''; sndStreak(); skinsRender(); return; }
@@ -3728,18 +3740,23 @@ function kitchensRowHtml() {
     '<span class="fbs-col-p"><img class="fbs-kimg" src="' + kitchenPreview(cur) + '" alt=""></span><span class="fbs-col-a">›</span></button>';
 }
 function kitchensListHtml(msg) {
-  let h = '<p class="fbs-sub">Pick where you play. Win kitchens by playing, or unlock them with BunBux.</p>' + msg + '<div class="fbs-grid">';
+  const promo = kitchenPromo() && !SKINS_ALL;
+  let h = '<p class="fbs-sub">' + (promo ? '🎉 <b>Launch special:</b> every city is free to play through ' + KITCHEN_PROMO_TEXT + '. After that, win New York or unlock San Francisco to keep playing there.' :
+    'Pick where you play. Win kitchens by playing, or unlock them with BunBux.') + '</p>' + msg + '<div class="fbs-grid">';
   KITCHENS.forEach(k => {
     const open = kitchenUnlocked(k), on = k.id === kitchenCur;
     h += '<button type="button" class="fbs-skin' + (on ? ' on' : '') + (open ? '' : ' lock') + '" data-kitchen="' + k.id + '">' +
       '<img class="fbs-kimg" src="' + kitchenPreview(k) + '" alt="">' + packsEsc(k.name) +
-      '<small>' + (on ? '✓ Playing here' : open ? 'Tap to use' : k.how === 'bux' ? '<span class="fbs-p">' + BUX_ICON_HTML + ' ' + k.cost + '</span>' : kitchenLockText(k)) + '</small></button>';
+      '<small>' + (promo && !kitchenOwned(k) ? '🎉 Free through ' + KITCHEN_PROMO_TEXT + (on ? ' · ✓ Here' : '') : on ? '✓ Playing here' : open ? 'Tap to use' : k.how === 'bux' ? '<span class="fbs-p">' + BUX_ICON_HTML + ' ' + k.cost + '</span>' : kitchenLockText(k)) + '</small></button>';
   });
-  return h + '</div><p class="fbs-buxnote">More cities coming soon.</p>';
+  h += '</div>';
+  if (promo) KITCHENS.filter(k => k.how === 'bux' && !kitchenOwned(k)).forEach(k => { h += '<button type="button" class="fbs-go fbs-bux" data-kbuy="' + k.id + '">' + BUX_ICON_HTML + ' Keep ' + packsEsc(k.name) + ' for ' + k.cost + ' BunBux</button>'; });
+  if (promo) KITCHENS.filter(k => k.how === 'earn' && !kitchenOwned(k)).forEach(k => { h += '<p class="fbs-buxnote">To keep ' + packsEsc(k.name) + ': ' + packsEsc(k.goal.text.charAt(0).toLowerCase() + k.goal.text.slice(1)) + ' once.</p>'; });
+  return h + '<p class="fbs-buxnote">More cities coming soon.</p>';
 }
 function kitchensBuyHtml(k, msg) {
   const have = buxShown(), can = have >= k.cost && !!packsToken();
-  return '<div class="fbs-buy"><img class="fbs-kbig" src="' + kitchenPreview(k) + '" alt=""><h3>' + packsEsc(k.name) + '</h3><p>A new place to play, yours to keep.</p>' +
+  return '<div class="fbs-buy"><img class="fbs-kbig" src="' + kitchenPreview(k) + '" alt=""><h3>' + packsEsc(k.name) + '</h3><p>' + (kitchenPromo() ? 'Free through ' + KITCHEN_PROMO_TEXT + '. Unlock it now and it’s yours to keep after that.' : 'A new place to play, yours to keep.') + '</p>' +
     '<button type="button" class="fbs-go fbs-bux" data-a="kbux"' + (skinsBusy || !can ? ' disabled' : '') + '>' + (skinsBusy ? 'One moment…' : BUX_ICON_HTML + ' Unlock for ' + k.cost + ' BunBux') + '</button>' +
     '<p class="fbs-buxnote">You have ' + have.toLocaleString() + ' BunBux.' + (can ? '' : ' Earn them by packing boxes and doing the daily challenge.') + '</p>' + msg + '</div>';
 }
