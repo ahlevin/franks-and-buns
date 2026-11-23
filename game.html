@@ -412,7 +412,7 @@ const ctx = canvas.getContext('2d');
 const KITCHENS = [
   { id: 'classic', name: 'Classic Kitchen', how: 'free', set: 'a' },
   { id: 'nyc', name: 'New York', how: 'earn', unlock: 'kitchennyc', goal: { stat: 'boxes', n: 4, text: 'Reach the Dog Parade' }, art: true, mirror: true, passerY: 0.582, passerH: 0.11 },
-  { id: 'sf', name: 'San Francisco', how: 'bux', unlock: 'kitchensf', cost: 500, art: false },
+  { id: 'sf', name: 'San Francisco', how: 'bux', unlock: 'kitchensf', cost: 500, art: true, mirror: true, passerY: 0.995, passerH: 0.16 },
 ];
 const KITCHEN_IDS = KITCHENS.filter(k => k.unlock).map(k => k.unlock);   // saved with the profile, like costumes
 const BG_PARAM = (new URLSearchParams(location.search).get('bg') || '').toLowerCase();
