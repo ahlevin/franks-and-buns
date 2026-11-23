@@ -18,6 +18,11 @@ if [ -d videos ]; then
   cp -R videos dist/
 fi
 
+# Social media videos (franksandbuns.com/social/, not linked from any page; Facebook/Instagram fetch them by URL)
+if [ -d social ]; then
+  cp -R social dist/
+fi
+
 # Game sound files (WAV effects, intro, music) and their attribution
 if [ -d audio ]; then
   cp -R audio dist/
