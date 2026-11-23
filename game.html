@@ -476,7 +476,7 @@ function kitchenStandin(id, part) {
   const c = document.createElement('canvas'); c.width = size[0]; c.height = size[1];
   const g = c.getContext('2d'); g.lineJoin = 'round'; g.lineCap = 'round';
   try { (KITCHEN_DRAW[id] || {})[part](g, size[0], size[1]); } catch (e) {}
-  if (part === 'wall' || part === 'counter') { g.fillStyle = 'rgba(40,20,8,' + (part === 'wall' ? 0.2 : 0.1) + ')'; g.fillRect(0, 0, size[0], size[1]); }   // muted like the Classic art, so buns stand out
+  if (part === 'wall' || part === 'counter') { g.fillStyle = 'rgba(20,26,38,' + (part === 'wall' ? 0.18 : 0.1) + ')'; g.fillRect(0, 0, size[0], size[1]); }   // muted and cool, so the warm franks, buns and condiments stand out
   return (kitchenStandinCache[key] = c.toDataURL(part === 'passer' ? 'image/png' : 'image/jpeg', 0.88));
 }
 const KOUT = '#3a2414';   // the dark outline colour of the game art
@@ -496,7 +496,7 @@ function kBricks(g, x0, y0, w, h, base, mortar) {
 // NYC: Art Deco spire tower, a stepped skyscraper and a Gothic-arch suspension bridge over brick with graffiti blobs
 function kNycSkyline(g, ox, base, s) {
   const bld = (x, w, h, col) => { kBox(g, ox + x * s, base - h * s, w * s, h * s, col, 3);
-    g.fillStyle = 'rgba(255,240,190,.55)'; for (let yy = base - h * s + 14 * s; yy < base - 14 * s; yy += 26 * s) for (let xx = ox + x * s + 10 * s; xx < ox + (x + w) * s - 14 * s; xx += 22 * s) g.fillRect(xx, yy, 9 * s, 12 * s); };
+    g.fillStyle = 'rgba(225,236,248,.6)'; for (let yy = base - h * s + 14 * s; yy < base - 14 * s; yy += 26 * s) for (let xx = ox + x * s + 10 * s; xx < ox + (x + w) * s - 14 * s; xx += 22 * s) g.fillRect(xx, yy, 9 * s, 12 * s); };
   bld(0, 90, 190, '#8fa3b8'); bld(100, 70, 250, '#9db0c2'); bld(330, 80, 210, '#8fa3b8'); bld(420, 110, 160, '#a7b8c8');
   // stepped skyscraper with a mast
   [[190, 120, 300], [205, 90, 360], [220, 60, 410]].forEach(a => bld(a[0], a[1], a[2], '#b3c0cc'));
@@ -519,7 +519,7 @@ function kNycBridge(g, x0, x1, deck, top, s) {
   g.beginPath(); g.moveTo(x0, deck - 10 * s); g.quadraticCurveTo((x0 + t1) / 2, deck - 40 * s, t1, top + 30 * s); g.quadraticCurveTo((t1 + t2) / 2, deck - 20 * s, t2, top + 30 * s); g.quadraticCurveTo((t2 + x1) / 2, deck - 40 * s, x1, deck - 10 * s); g.stroke();
   kBox(g, x0, deck, x1 - x0, 14 * s, '#8a8f95', 3);
   [t1, t2].forEach(tx => { const tw = 54 * s, th = deck - top + 20 * s;
-    kBox(g, tx - tw / 2, top, tw, th, '#b89f84', 3);
+    kBox(g, tx - tw / 2, top, tw, th, '#9aa6b2', 3);
     g.fillStyle = '#7d93a8'; [-1, 1].forEach(d => { const ax = tx + d * 12 * s - 7 * s, ay = top + 30 * s;
       g.beginPath(); g.moveTo(ax, ay + 70 * s); g.lineTo(ax, ay + 14 * s); g.quadraticCurveTo(ax + 7 * s, ay, ax + 14 * s, ay + 14 * s); g.lineTo(ax + 14 * s, ay + 70 * s); g.closePath(); g.fill(); g.strokeStyle = KOUT; g.lineWidth = 2; g.stroke(); });
   });
@@ -530,17 +530,17 @@ function kGraffiti(g, x, y, s, a, b) {
   g.fillStyle = b; g.beginPath(); g.ellipse(x - 30 * s, y - 4 * s, 22 * s, 18 * s, 0, 0, Math.PI * 2); g.fill(); g.stroke();
   g.beginPath(); g.ellipse(x + 22 * s, y + 2 * s, 26 * s, 16 * s, 0.3, 0, Math.PI * 2); g.fill(); g.stroke();
   g.fillStyle = a; for (let i = 0; i < 3; i++) g.fillRect(x - 40 * s + i * 34 * s, y + 28 * s, 7 * s, (18 + i * 9) * s);
-  g.fillStyle = '#fff2a8'; g.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 9 * s : 22 * s, an = i * Math.PI / 5 - Math.PI / 2; g.lineTo(x + 76 * s + Math.cos(an) * r, y - 36 * s + Math.sin(an) * r); } g.closePath(); g.fill(); g.stroke();
+  g.fillStyle = '#d8e4f0'; g.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 9 * s : 22 * s, an = i * Math.PI / 5 - Math.PI / 2; g.lineTo(x + 76 * s + Math.cos(an) * r, y - 36 * s + Math.sin(an) * r); } g.closePath(); g.fill(); g.stroke();
   g.restore();
 }
 function kElTrack(g, w, y, s) {   // elevated train track: a green steel girder band
-  kBox(g, 0, y, w, 26 * s, '#55704f', 0); g.fillStyle = '#3f5a3b'; g.fillRect(0, y + 22 * s, w, 4 * s);
-  g.strokeStyle = '#3f5a3b'; g.lineWidth = 3 * s; for (let x = 0; x < w; x += 64 * s) { g.beginPath(); g.moveTo(x, y + 4 * s); g.lineTo(x + 32 * s, y + 22 * s); g.lineTo(x + 64 * s, y + 4 * s); g.stroke(); }
+  kBox(g, 0, y, w, 26 * s, '#56657a', 0); g.fillStyle = '#434f60'; g.fillRect(0, y + 22 * s, w, 4 * s);
+  g.strokeStyle = '#434f60'; g.lineWidth = 3 * s; for (let x = 0; x < w; x += 64 * s) { g.beginPath(); g.moveTo(x, y + 4 * s); g.lineTo(x + 32 * s, y + 22 * s); g.lineTo(x + 64 * s, y + 4 * s); g.stroke(); }
   g.fillStyle = '#7b7f84'; g.fillRect(0, y - 4 * s, w, 5 * s);
 }
 // SF: suspension bridge in the fog over the bay, a little skyline with a pyramid tower, pastel Victorian houses
 function kSfBridge(g, x0, x1, deck, top, s) {
-  const red = '#c4553b', t1 = x0 + (x1 - x0) * 0.25, t2 = x0 + (x1 - x0) * 0.75;
+  const red = '#d2553b', t1 = x0 + (x1 - x0) * 0.25, t2 = x0 + (x1 - x0) * 0.75;
   g.strokeStyle = red; g.lineWidth = 2; g.globalAlpha = 0.7;
   for (let x = x0 + 10; x < x1; x += 18 * s) { const yy = x < t1 ? deck - (deck - top - 20 * s) * ((x - x0) / (t1 - x0)) ** 2 : x > t2 ? deck - (deck - top - 20 * s) * ((x1 - x) / (x1 - t2)) ** 2 : top + 20 * s + (deck - top - 30 * s) * (1 - ((x - (t1 + t2) / 2) / ((t2 - t1) / 2)) ** 2);
     g.beginPath(); g.moveTo(x, deck); g.lineTo(x, yy); g.stroke(); }
@@ -550,9 +550,9 @@ function kSfBridge(g, x0, x1, deck, top, s) {
   [t1, t2].forEach(tx => { const tw = 34 * s; [-1, 1].forEach(d => kBox(g, tx + d * 14 * s - tw / 4, top, tw / 2, deck - top + 70 * s, red, 3));
     [0, 0.3, 0.6].forEach(f => kBox(g, tx - 22 * s, top + 10 * s + (deck - top) * f, 44 * s, 10 * s, red, 3)); });
 }
-function kFog(g, x, y, w, s) { g.save(); g.globalAlpha = 0.55; for (let i = 0; i < w / (60 * s); i++) kCloud(g, x + i * 60 * s, y + Math.sin(i * 1.7) * 8 * s, 0.9 * s, '#f3f1ea'); g.restore(); }
+function kFog(g, x, y, w, s) { g.save(); g.globalAlpha = 0.5; for (let i = 0; i < w / (60 * s); i++) kCloud(g, x + i * 60 * s, y + Math.sin(i * 1.7) * 8 * s, 0.9 * s, '#fde6f0'); g.restore(); }
 function kVictorians(g, x0, y0, w, h, s) {
-  const cols = ['#e9b3b8', '#b9dcc5', '#f1dc9a', '#c8b8e0', '#a9cde3', '#f3c39b'], hw = 192 * s;
+  const cols = ['#b59be0', '#7fc8c0', '#8fb2ea', '#e39ac8', '#6fb3d6', '#9ad1c0'], hw = 192 * s;
   for (let i = 0, x = x0; x < x0 + w - 1; i++, x += hw) {
     const c = cols[i % cols.length], roof = y0 + 70 * s;
     g.fillStyle = c; g.strokeStyle = KOUT; g.lineWidth = 3;
@@ -574,7 +574,7 @@ function kCartNyc(g, w, y0, h) {   // stainless street-cart counter: slab, rivet
   const sg = g.createLinearGradient(0, y0, 0, y0 + slab); sg.addColorStop(0, '#eef2f5'); sg.addColorStop(1, '#a9b3bb'); g.fillStyle = sg; g.fillRect(0, y0, w, slab);
   g.fillStyle = KOUT; g.fillRect(0, y0 + slab - 4, w, 4);
   const pg = g.createLinearGradient(0, y0 + slab, 0, y0 + slab + pan); pg.addColorStop(0, '#cfd6dc'); pg.addColorStop(1, '#9aa5ae'); g.fillStyle = pg; g.fillRect(0, y0 + slab, w, pan);
-  kBox(g, 0, y0 + slab + pan * 0.12, w, pan * 0.16, '#f2c230', 0); kBox(g, 0, y0 + slab + pan * 0.28, w, pan * 0.08, '#3c6fb4', 0);
+  kBox(g, 0, y0 + slab + pan * 0.12, w, pan * 0.16, '#8fb1d8', 0); kBox(g, 0, y0 + slab + pan * 0.28, w, pan * 0.08, '#3c6fb4', 0);
   for (let x = 0; x < w; x += mod) {
     g.lineWidth = 4; g.strokeStyle = 'rgba(58,36,20,.7)'; g.strokeRect(x + 14, y0 + slab + pan * 0.44, mod - 28, pan * 0.46);
     g.fillStyle = '#7d8790'; [[22, 0.5], [mod - 22, 0.5], [22, 0.84], [mod - 22, 0.84]].forEach(p => { g.beginPath(); g.arc(x + p[0], y0 + slab + pan * p[1], 6, 0, Math.PI * 2); g.fill(); });
@@ -596,45 +596,45 @@ function kCartSf(g, w, y0, h) {   // teal and cream wooden food stand on a sidew
   g.fillStyle = KOUT; g.fillRect(0, y0 + slab + pan, w, 6);
   const sy = y0 + slab + pan + 6, sh = h - slab - pan - 6;
   kSidewalk(g, w, sy, sh * 0.55, '#cfccc4', '#a6a298');
-  kBricks(g, 0, sy + sh * 0.55, w, sh * 0.45, '#b4624a', '#8a4a38');
+  kBricks(g, 0, sy + sh * 0.55, w, sh * 0.45, '#8a93a0', '#6e7682');
 }
 const KITCHEN_DRAW = {
   nyc: {
     wall(g, w, h) {
-      kSky(g, w, 560, '#86bde0', '#d7ebf5'); kCloud(g, 260, 120, 1, '#f4f8fb'); kCloud(g, 1120, 80, 0.8, '#f4f8fb');
+      kSky(g, w, 560, '#5468c9', '#f2a6c6'); kCloud(g, 260, 120, 1, '#f7c9dc'); kCloud(g, 1120, 80, 0.8, '#f7c9dc');
       kNycSkyline(g, 160, 540, 1);
       kNycBridge(g, 960, 1400, 430, 230, 1);
       kElTrack(g, w, 556, 1);
-      kBricks(g, 0, 586, w, h - 586, '#b0624c', '#8c4c3b');
-      kGraffiti(g, 330, 760, 1.1, '#e85d9c', '#4fc3e8'); kGraffiti(g, 1010, 860, 1, '#7ed957', '#ffb347');
+      kBricks(g, 0, 586, w, h - 586, '#8088bb', '#666d9c');
+      kGraffiti(g, 330, 760, 1.1, '#36c6e0', '#d65fc0'); kGraffiti(g, 1010, 860, 1, '#7b6cf0', '#4fd1c5');
       // fire escape
       g.strokeStyle = '#2b2b2b'; g.lineWidth = 5; for (let y = 640; y < 1000; y += 120) { g.strokeRect(620, y, 180, 8); for (let x = 620; x <= 800; x += 20) { g.beginPath(); g.moveTo(x, y); g.lineTo(x, y - 40); g.stroke(); } g.beginPath(); g.moveTo(620, y - 40); g.lineTo(800, y - 40); g.stroke(); }
     },
     counter(g, w, h) { kCartNyc(g, w, 0, h); },
     start(g, w, h) {
-      kSky(g, w, h * 0.72, '#86bde0', '#d7ebf5'); kCloud(g, 90, 150, 1, '#f4f8fb');
+      kSky(g, w, h * 0.72, '#3d4fb8', '#ffb27a'); kCloud(g, 90, 150, 1, '#ffc9a8');
       g.save(); g.translate(-40, 0); kNycSkyline(g, 0, h * 0.44, 1.15); g.restore();
-      g.save(); g.globalAlpha = 0.55; g.fillStyle = '#d7ebf5'; g.fillRect(0, h * 0.2, w, h * 0.5); g.restore();
+      g.save(); g.globalAlpha = 0.35; g.fillStyle = '#ffd9c2'; g.fillRect(0, h * 0.2, w, h * 0.5); g.restore();
       kElTrack(g, w, h * 0.70, 1);
-      kBricks(g, 0, h * 0.70 + 30, w, h * 0.06, '#b0624c', '#8c4c3b');
+      kBricks(g, 0, h * 0.70 + 30, w, h * 0.06, '#8088bb', '#666d9c');
       kCartNyc(g, w, h * 0.76, h * 0.24);
     },
     passer(g, w, h) {   // a three-car silver train, facing left
       const cw = (w - 24) / 3;
       for (let i = 0; i < 3; i++) { const x = 6 + i * (cw + 6);
-        kRound(g, x, 8, cw, h - 26, i === 0 ? 26 : 10, '#cfd6dc', 5);
+        kRound(g, x, 8, cw, h - 26, i === 0 ? 26 : 10, '#a9b6c4', 5);
         kBox(g, x + 4, h * 0.56, cw - 8, 8, '#5a7fb8', 0);
-        for (let j = 0; j < 5; j++) kRound(g, x + 16 + j * (cw - 28) / 5, 22, (cw - 28) / 5 - 10, h * 0.3, 6, '#ffe39a', 3);
+        for (let j = 0; j < 5; j++) kRound(g, x + 16 + j * (cw - 28) / 5, 22, (cw - 28) / 5 - 10, h * 0.3, 6, '#d6e6f3', 3);
         g.fillStyle = '#4a4f55'; [0.2, 0.8].forEach(f => { g.beginPath(); g.arc(x + cw * f, h - 14, 11, 0, Math.PI * 2); g.fill(); });
       }
-      g.fillStyle = '#fff6c0'; g.beginPath(); g.arc(18, h * 0.62, 7, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#eef4fa'; g.beginPath(); g.arc(18, h * 0.62, 7, 0, Math.PI * 2); g.fill();
     },
   },
   sf: {
     wall(g, w, h) {
-      kSky(g, w, 460, '#9cc8e6', '#e4eef2');
+      kSky(g, w, 460, '#6f9ee6', '#f6c6dc');
       kFog(g, 120, 150, 1300, 1);
-      g.fillStyle = '#8fb38a'; g.beginPath(); g.moveTo(0, 460); g.quadraticCurveTo(240, 300, 520, 440); g.quadraticCurveTo(900, 340, 1536, 450); g.lineTo(1536, 470); g.lineTo(0, 470); g.fill();
+      g.fillStyle = '#93abab'; g.beginPath(); g.moveTo(0, 460); g.quadraticCurveTo(240, 300, 520, 440); g.quadraticCurveTo(900, 340, 1536, 450); g.lineTo(1536, 470); g.lineTo(0, 470); g.fill();
       // little skyline with a pyramid tower
       [[160, 40, 120], [205, 34, 90], [300, 44, 140], [350, 36, 100]].forEach(a => kBox(g, a[0], 440 - a[2], a[1], a[2], '#b8c3cc', 3));
       g.fillStyle = '#e6e2da'; g.strokeStyle = KOUT; g.lineWidth = 3; g.beginPath(); g.moveTo(240, 440); g.lineTo(268, 210); g.lineTo(296, 440); g.closePath(); g.fill(); g.stroke();
@@ -646,20 +646,20 @@ const KITCHEN_DRAW = {
     },
     counter(g, w, h) { kCartSf(g, w, 0, h); },
     start(g, w, h) {
-      kSky(g, w, h * 0.5, '#9cc8e6', '#e4eef2');
+      kSky(g, w, h * 0.5, '#5b86e0', '#ffc7b0');
       kBox(g, 0, h * 0.44, w, h * 0.1, '#6fa5c7', 0);
       kSfBridge(g, -260, w + 40, h * 0.44, h * 0.08, 1.4);
       kFog(g, 0, h * 0.38, w, 1.2);
-      g.save(); g.globalAlpha = 0.6; g.fillStyle = '#e4eef2'; g.fillRect(0, h * 0.2, w, h * 0.3); g.restore();
-      kBox(g, 0, h * 0.54, w, h * 0.22, '#e4eef2', 0);
+      g.save(); g.globalAlpha = 0.3; g.fillStyle = '#ffe1d2'; g.fillRect(0, h * 0.2, w, h * 0.3); g.restore();
+      kBox(g, 0, h * 0.54, w, h * 0.22, '#f3d2dc', 0);
       kVictorians(g, -40, h * 0.63, w + 200, h * 0.13, 0.4);
       kCartSf(g, w, h * 0.76, h * 0.24);
     },
     passer(g, w, h) {   // a red and cream cable car, facing left
       kRound(g, 10, 30, w - 20, h - 58, 14, '#f3e6c8', 5);
-      kRound(g, 4, 14, w - 8, 26, 12, '#b8392f', 5);
-      kBox(g, 12, h * 0.62, w - 24, h * 0.18, '#b8392f', 4);
-      kBox(g, 12, h * 0.58, w - 24, 8, '#d9a441', 0);
+      kRound(g, 4, 14, w - 8, 26, 12, '#3f7f86', 5);
+      kBox(g, 12, h * 0.62, w - 24, h * 0.18, '#3f7f86', 4);
+      kBox(g, 12, h * 0.58, w - 24, 8, '#d8dde2', 0);
       for (let j = 0; j < 6; j++) kRound(g, 24 + j * (w - 48) / 6, 48, (w - 48) / 6 - 10, h * 0.26, 6, '#9cc0d6', 3);
       g.fillStyle = '#4a4f55'; [0.2, 0.8].forEach(f => { g.beginPath(); g.arc(w * f, h - 18, 14, 0, Math.PI * 2); g.fill(); });
     },
