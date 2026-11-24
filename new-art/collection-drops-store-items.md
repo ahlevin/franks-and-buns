@@ -14,7 +14,7 @@ If a drop's items aren't ready on time, the Collection still appears and BunBux 
 
 ★ marks a Limited Edition costume: purchase only, never BunBux.
 
-Total: 25 Collections, 127 costumes plus 3 added to Sports, so 155 items in each store.
+Total: 26 Collections, 136 costumes plus 3 added to Sports, so 165 items in each store.
 
 ## Tue Dec 1, 2026  (create by Nov 24)
 
@@ -220,6 +220,21 @@ Also update the Sports Collection's store description from 5 to 8 costumes. Ever
 | skin_swordsman | Wandering Swordsman | $0.99 |
 | skin_powerup | Power-Up Hero ★ | $0.99 |
 | col_bunime | Bun-ime Collection (4 costumes) | $3.99 |
+
+## Tue Apr 20, 2027  (create by Apr 13; national parks, National Park Week)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_acadia | Acadia | $0.99 |
+| skin_arches | Arches | $0.99 |
+| skin_grandcanyon | Grand Canyon | $0.99 |
+| skin_grandteton | Grand Teton | $0.99 |
+| skin_smokymountains | Smoky Mountains | $0.99 |
+| skin_hawaiivolcanoes | Hawaii Volcanoes ★ | $0.99 |
+| skin_yellowstone | Yellowstone | $0.99 |
+| skin_yosemite | Yosemite | $0.99 |
+| skin_zion | Zion | $0.99 |
+| col_greatoutdogs | Great Outdogs Collection (9 costumes) | $3.99 |
 
 ## Tue Jun 15, 2027  (create by Jun 8; flags pack, part 1)
 
