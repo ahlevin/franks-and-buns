@@ -890,7 +890,11 @@ const SKINS = [
   { id: 'jersey', name: 'Jersey', group: 'holycow', frames: 1, fly: [-42.9, -31.8, 81.8, 46.3], bun: [-42.0, -56.5, 84.0, 58.4], grill: [-41.9, -77.0, 83.7, 78.9] },
   { id: 'angus', name: 'Angus', group: 'holycow', frames: 1, fly: [-43.4, -28.0, 82.8, 42.5], bun: [-41.9, -49.6, 84.1, 51.5], grill: [-42.2, -65.6, 84.7, 67.5] },
   { id: 'hereford', name: 'Hereford', group: 'holycow', frames: 1, fly: [-44.7, -31.6, 85.3, 46.1], bun: [-41.8, -54.5, 85.6, 56.4], grill: [-42.1, -76.1, 85.6, 78.0] },
-  { id: 'highland', name: 'Highland Cow', group: 'holycow', frames: 1, fly: [-45.5, -31.9, 87.0, 46.4], bun: [-44.3, -51.9, 87.5, 53.8], grill: [-44.3, -72.1, 89.4, 74.0] }
+  { id: 'highland', name: 'Highland Cow', group: 'holycow', frames: 1, fly: [-45.5, -31.9, 87.0, 46.4], bun: [-44.3, -51.9, 87.5, 53.8], grill: [-44.3, -72.1, 89.4, 74.0] },
+  { id: 'longhorn', name: 'Longhorn', group: 'homeontherange', frames: 1, fly: [-47.6, -26.5, 91.2, 41.0], bun: [-44.6, -49.3, 91.3, 51.2], grill: [-44.9, -60.9, 91.6, 62.8] },
+  { id: 'brahman', name: 'Brahman', group: 'homeontherange', frames: 1, fly: [-47.2, -31.7, 90.4, 46.2], bun: [-42.6, -51.9, 89.2, 53.8], grill: [-44.7, -68.1, 89.7, 70.0] },
+  { id: 'elk', name: 'Elk', group: 'homeontherange', frames: 1, fly: [-42.7, -37.9, 81.4, 52.4], bun: [-43.5, -59.8, 85.5, 61.7], grill: [-42.3, -70.8, 86.0, 72.7] },
+  { id: 'bison', name: 'Bison', group: 'homeontherange', frames: 1, fly: [-46.9, -33.6, 89.9, 48.1], bun: [-45.0, -53.8, 90.0, 55.7], grill: [-47.4, -74.9, 90.4, 76.8] }
 ];
 // Skin groups. how: 'earn' = unlocked by doing its goal in one game, 'soon' = shown locked (Coming soon),
 // 'hidden' = not shown, 'free' = everyone has them. A skin's own how (e.g. free Bunny) beats its group's.
@@ -929,6 +933,7 @@ const SKIN_GROUPS = { earn: { name: 'Free & Earned', how: 'earn' }, holiday: { n
   salutesquad: { name: 'Salute Squad', how: 'shop', from: dropAt(2027, 1, 26) },   // service-inspired pack (generic names, no official insignia)
   fastfood: { name: 'Fast Food', how: 'shop', from: dropAt(2027, 2, 2) },   // vehicles pack
   holycow: { name: 'Holy Cow', how: 'shop', from: dropAt(2027, 2, 9) },   // cow breeds pack
+  homeontherange: { name: 'Home on the Range', how: 'shop', from: dropAt(2027, 2, 16) },   // ranch and wild West animals
   frightbites: { name: 'Fright Bites', how: 'shop', from: dropAt(2027, 10, 5) } };   // spooky pack, held for Halloween
 function skinHow(s) { const g = s.group || 'earn'; if (!groupOpen(g)) return 'hidden';   // a Collection before its drop date
   const h = s.how || (SKIN_GROUPS[g] || SKIN_GROUPS.earn).how; return h === 'shop' && !SHOP_ON ? 'soon' : h; }
@@ -1035,7 +1040,7 @@ const BUX_COST = 300, BUX_DAILY = 25;
 // Limited Edition: costumes (one or two per Collection) that can only be bought, never unlocked with BunBux (same list as BUX_LIMITED in the API)
 const SKINS_LIMITED = ['santa', 'bernedoodle', 'labradoodle', 'persian', 'mainecoon', 'slamdunk', 'goalgetter', 'axolotl', 'anglerfish', 'unidentifiedfryingobject', 'babykaiju', 'phoenix', 'shadowwizard',
   'glazedandconfused', 'blanketburrito', 'royaltreatment', 'raccoon', 'forkimpostor', 'professorfrank', 'glowgetter', 'specialdelivery',
-  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland'];
+  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland', 'bison'];
 function skinLimited(id) { return SKINS_LIMITED.indexOf(id) >= 0; }
 // Everyone gets the same challenge each day (midnight Pacific). Same list and order as DAILY in functions/api/[[path]].js
 const DAILY = [['streak', 10], ['boxes', 2], ['franks', 20], ['chili', 1], ['streak', 12], ['boxes', 3], ['franks', 25], ['streak', 15],

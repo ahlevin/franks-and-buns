@@ -14,7 +14,7 @@ If a drop's items aren't ready on time, the Collection still appears and BunBux 
 
 ★ marks a Limited Edition costume: purchase only, never BunBux.
 
-Total: 19 Collections, 92 costumes, so 111 items in each store.
+Total: 20 Collections, 96 costumes, so 116 items in each store.
 
 ## Tue Dec 1, 2026  (create by Nov 24)
 
@@ -176,6 +176,16 @@ Total: 19 Collections, 92 costumes, so 111 items in each store.
 | skin_hereford | Hereford | $0.99 |
 | skin_highland | Highland Cow ★ | $0.99 |
 | col_holycow | Holy Cow Collection (5 costumes) | $3.99 |
+
+## Tue Feb 16  (create by Feb 9)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_longhorn | Longhorn | $0.99 |
+| skin_brahman | Brahman | $0.99 |
+| skin_elk | Elk | $0.99 |
+| skin_bison | Bison ★ | $0.99 |
+| col_homeontherange | Home on the Range Collection (4 costumes) | $3.99 |
 
 ## Tue Oct 5, 2027  (create by Sep 28, 2027; held for Halloween)
 
