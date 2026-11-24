@@ -14,7 +14,7 @@ If a drop's items aren't ready on time, the Collection still appears and BunBux 
 
 ★ marks a Limited Edition costume: purchase only, never BunBux.
 
-Total: 26 Collections, 136 costumes plus 3 added to Sports, so 165 items in each store.
+Total: 27 Collections, 146 costumes plus 3 added to Sports, so 176 items in each store.
 
 ## Tue Dec 1, 2026  (create by Nov 24)
 
@@ -220,6 +220,22 @@ Also update the Sports Collection's store description from 5 to 8 costumes. Ever
 | skin_swordsman | Wandering Swordsman | $0.99 |
 | skin_powerup | Power-Up Hero ★ | $0.99 |
 | col_bunime | Bun-ime Collection (4 costumes) | $3.99 |
+
+## Tue Mar 16, 2027  (create by Mar 9; US states)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_california | California ★ | $0.99 |
+| skin_colorado | Colorado | $0.99 |
+| skin_kentucky | Kentucky | $0.99 |
+| skin_michigan | Michigan | $0.99 |
+| skin_nevada | Nevada | $0.99 |
+| skin_newjersey | New Jersey | $0.99 |
+| skin_newyork | New York | $0.99 |
+| skin_oregon | Oregon | $0.99 |
+| skin_texas | Texas | $0.99 |
+| skin_vermont | Vermont | $0.99 |
+| col_statefair | State Fair Collection (10 costumes) | $3.99 |
 
 ## Tue Apr 20, 2027  (create by Apr 13; national parks, National Park Week)
 

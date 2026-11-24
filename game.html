@@ -934,6 +934,16 @@ const SKINS = [
   { id: 'yellowstone', name: 'Yellowstone', group: 'greatoutdogs', frames: 1, fly: [-42.8, -30.3, 81.7, 44.8], bun: [-41.8, -55.9, 84.6, 57.8], grill: [-42.2, -69.7, 84.5, 71.6] },
   { id: 'yosemite', name: 'Yosemite', group: 'greatoutdogs', frames: 1, fly: [-46.4, -37.3, 88.9, 51.8], bun: [-42.3, -60.4, 88.6, 62.3], grill: [-42.5, -76.3, 88.8, 78.2] },
   { id: 'zion', name: 'Zion', group: 'greatoutdogs', frames: 1, fly: [-47.3, -37.0, 90.7, 51.5], bun: [-44.5, -59.2, 90.8, 61.1], grill: [-44.3, -73.5, 90.8, 75.4] },
+  { id: 'california', name: 'California', group: 'statefair', frames: 1, fly: [-43.2, -26.5, 82.4, 41.0], bun: [-41.9, -51.3, 84.1, 53.2], grill: [-41.6, -71.2, 83.7, 73.1] },
+  { id: 'colorado', name: 'Colorado', group: 'statefair', frames: 1, fly: [-44.1, -39.1, 84.1, 53.6], bun: [-41.8, -62.2, 84.1, 64.1], grill: [-42.3, -77.4, 84.9, 79.3] },
+  { id: 'kentucky', name: 'Kentucky', group: 'statefair', frames: 1, fly: [-43.1, -32.0, 82.2, 46.5], bun: [-41.8, -54.0, 83.9, 55.9], grill: [-42.7, -69.8, 85.5, 71.7] },
+  { id: 'michigan', name: 'Michigan', group: 'statefair', frames: 1, fly: [-44.7, -33.3, 85.5, 47.8], bun: [-42.2, -53.9, 85.1, 55.8], grill: [-42.9, -65.8, 85.6, 67.7] },
+  { id: 'nevada', name: 'Nevada', group: 'statefair', frames: 1, fly: [-43.4, -31.0, 82.8, 45.5], bun: [-41.8, -56.8, 83.6, 58.7], grill: [-41.9, -73.9, 84.0, 75.8] },
+  { id: 'newjersey', name: 'New Jersey', group: 'statefair', frames: 1, fly: [-43.6, -23.1, 83.1, 37.6], bun: [-42.0, -47.4, 85.0, 49.3], grill: [-42.1, -62.8, 84.6, 64.7] },
+  { id: 'newyork', name: 'New York', group: 'statefair', frames: 1, fly: [-46.0, -35.9, 88.1, 50.4], bun: [-43.3, -56.8, 88.1, 58.7], grill: [-43.0, -65.7, 88.1, 67.6] },
+  { id: 'oregon', name: 'Oregon', group: 'statefair', frames: 1, fly: [-46.3, -29.0, 88.6, 43.5], bun: [-41.9, -50.5, 88.2, 52.4], grill: [-42.8, -69.1, 88.3, 71.0] },
+  { id: 'texas', name: 'Texas', group: 'statefair', frames: 1, fly: [-42.5, -31.8, 80.9, 46.3], bun: [-42.5, -54.2, 84.4, 56.1], grill: [-42.7, -72.4, 84.7, 74.3] },
+  { id: 'vermont', name: 'Vermont', group: 'statefair', frames: 1, fly: [-45.6, -32.9, 87.2, 47.4], bun: [-42.8, -54.3, 87.6, 56.2], grill: [-43.3, -68.3, 87.6, 70.2] },
   { id: 'mechapilot', name: 'Mecha Pilot', group: 'bunime', frames: 1, fly: [-42.0, -25.4, 80.0, 39.9], bun: [-41.9, -49.5, 84.5, 51.4], grill: [-42.4, -66.9, 84.9, 68.8] },
   { id: 'starguardian', name: 'Magical Star', group: 'bunime', frames: 1, fly: [-46.3, -28.8, 88.6, 43.3], bun: [-42.6, -50.9, 88.2, 52.8], grill: [-42.4, -66.1, 88.0, 68.0] },
   { id: 'swordsman', name: 'Wandering Swordsman', group: 'bunime', frames: 1, fly: [-43.3, -34.0, 82.5, 48.5], bun: [-41.8, -54.8, 83.7, 56.7], grill: [-41.4, -71.6, 83.7, 73.5] },
@@ -980,6 +990,7 @@ const SKIN_GROUPS = { earn: { name: 'Free & Earned', how: 'earn' }, holiday: { n
   homeontherange: { name: 'Home on the Range', how: 'shop', from: dropAt(2027, 2, 16) },   // ranch and wild West animals
   birdbrains: { name: 'Bird Brains', how: 'shop', from: dropAt(2027, 2, 23) },
   bunime: { name: 'Bun-ime', how: 'shop', from: dropAt(2027, 3, 9) },   // anime-style pack (generic names, no franchise characters)
+  statefair: { name: 'State Fair', how: 'shop', from: dropAt(2027, 3, 16) },   // US states pack (playful, no official seals or school marks)
   greatoutdogs: { name: 'Great Outdogs', how: 'shop', from: dropAt(2027, 4, 20) },   // national parks pack, National Park Week (generic badges, no NPS arrowhead)
   eurofranks: { name: 'Euro Franks', how: 'shop', from: dropAt(2027, 6, 15) },   // flags pack, part 1 (stylized flags, no coats of arms beyond simplified Croatia)
   globalgrill: { name: 'Global Grill', how: 'shop', from: dropAt(2027, 6, 22) },   // flags pack, part 2, week of the Women's World Cup kickoff
@@ -1090,7 +1101,7 @@ const BUX_COST = 300, BUX_DAILY = 25;
 // Limited Edition: costumes (one or two per Collection) that can only be bought, never unlocked with BunBux (same list as BUX_LIMITED in the API)
 const SKINS_LIMITED = ['santa', 'bernedoodle', 'labradoodle', 'persian', 'mainecoon', 'slamdunk', 'goalgetter', 'axolotl', 'anglerfish', 'unidentifiedfryingobject', 'babykaiju', 'phoenix', 'shadowwizard',
   'glazedandconfused', 'blanketburrito', 'royaltreatment', 'raccoon', 'forkimpostor', 'professorfrank', 'glowgetter', 'specialdelivery',
-  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland', 'bison', 'flamingo', 'ladyliberty', 'powerup', 'unitedkingdom', 'unitedstates', 'hawaiivolcanoes'];
+  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland', 'bison', 'flamingo', 'ladyliberty', 'powerup', 'unitedkingdom', 'unitedstates', 'hawaiivolcanoes', 'california'];
 function skinLimited(id) { return SKINS_LIMITED.indexOf(id) >= 0; }
 // Everyone gets the same challenge each day (midnight Pacific). Same list and order as DAILY in functions/api/[[path]].js
 const DAILY = [['streak', 10], ['boxes', 2], ['franks', 20], ['chili', 1], ['streak', 12], ['boxes', 3], ['franks', 25], ['streak', 15],
