@@ -14,7 +14,7 @@ If a drop's items aren't ready on time, the Collection still appears and BunBux 
 
 ★ marks a Limited Edition costume: purchase only, never BunBux.
 
-Total: 18 Collections, 87 costumes, so 105 items in each store.
+Total: 19 Collections, 92 costumes, so 111 items in each store.
 
 ## Tue Dec 1, 2026  (create by Nov 24)
 
@@ -165,6 +165,17 @@ Total: 18 Collections, 87 costumes, so 105 items in each store.
 | skin_roadhog | Road Hog | $0.99 |
 | skin_gravyboat | Gravy Boat | $0.99 |
 | col_fastfood | Fast Food Collection (5 costumes) | $3.99 |
+
+## Tue Feb 9  (create by Feb 2)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_holstein | Holstein | $0.99 |
+| skin_jersey | Jersey | $0.99 |
+| skin_angus | Angus | $0.99 |
+| skin_hereford | Hereford | $0.99 |
+| skin_highland | Highland Cow ★ | $0.99 |
+| col_holycow | Holy Cow Collection (5 costumes) | $3.99 |
 
 ## Tue Oct 5, 2027  (create by Sep 28, 2027; held for Halloween)
 
