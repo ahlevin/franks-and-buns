@@ -14,7 +14,7 @@ If a drop's items aren't ready on time, the Collection still appears and BunBux 
 
 ★ marks a Limited Edition costume: purchase only, never BunBux.
 
-Total: 14 Collections, 66 costumes, so 80 items in each store.
+Total: 16 Collections, 78 costumes, so 94 items in each store.
 
 ## Tue Dec 1, 2026  (create by Nov 24)
 
@@ -130,3 +130,29 @@ Total: 14 Collections, 66 costumes, so 80 items in each store.
 | skin_ninja | Ninja | $0.99 |
 | skin_shadowwizard | Shadow Wizard ★ | $0.99 |
 | col_finalbossfranks | Final Boss Franks Collection (5 costumes) | $3.99 ($2.99 launch) |
+
+## Tue Jan 19  (create by Jan 12)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_archer | Archer | $0.99 |
+| skin_fairmaiden | Fair Maiden | $0.99 |
+| skin_jester | Jester | $0.99 |
+| skin_joustingknight | Jousting Knight | $0.99 |
+| skin_king | King Frank ★ | $0.99 |
+| skin_wizard | Court Wizard | $0.99 |
+| col_yeoldefranks | Ye Olde Franks Collection (6 costumes) | $3.99 |
+
+## Tue Jan 26  (create by Jan 19)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_camocommando | Camo Commando | $0.99 |
+| skin_sailorfrank | Sailor Frank | $0.99 |
+| skin_dressblues | Dress Blues | $0.99 |
+| skin_acepilot | Ace Pilot | $0.99 |
+| skin_spacecadet | Space Cadet | $0.99 |
+| skin_rescueswimmer | Rescue Swimmer | $0.99 |
+| col_salutesquad | Salute Squad Collection (6 costumes) | $3.99 |
+
+The launch price ends Jan 15, so these two Collections start at $3.99.
