@@ -17,7 +17,7 @@ const BUX = { perBox: 1, maxBoxes: 10, daily: 25, cap: 100, cost: 300 };   // ca
 // Limited Edition costumes are purchase only (same list as SKINS_LIMITED in game.html)
 const BUX_LIMITED = new Set(['santa', 'bernedoodle', 'labradoodle', 'persian', 'mainecoon', 'slamdunk', 'goalgetter', 'axolotl', 'anglerfish', 'unidentifiedfryingobject', 'babykaiju', 'phoenix', 'shadowwizard',
   'glazedandconfused', 'blanketburrito', 'royaltreatment', 'raccoon', 'forkimpostor', 'professorfrank', 'glowgetter', 'specialdelivery',
-  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland', 'bison', 'flamingo', 'ladyliberty', 'powerup', 'unitedkingdom', 'unitedstates', 'hawaiivolcanoes', 'california']);
+  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland', 'bison', 'flamingo', 'ladyliberty', 'powerup', 'unitedkingdom', 'unitedstates', 'hawaiivolcanoes', 'california', 'giraffe', 'polarbear']);
 // The only costumes BunBux can unlock: the ones in Collections that are on sale (SHOP_COLS in game.html), minus Limited Edition.
 // Anything else (Free & Earned, Collections not on sale yet) is refused. When a Collection goes on sale, add its costumes here.
 const BUX_SKINS = new Set([
@@ -39,6 +39,7 @@ const BUX_DROPS = [
   [Date.UTC(2027, 0, 12, 8), ['rat', 'pigeon', 'possummode', 'raccoon', 'skunk', 'armoredknight', 'frankexe', 'lightningfighter', 'ninja', 'shadowwizard']],   // trashpack + finalbossfranks
   [Date.UTC(2027, 0, 19, 8), ['archer', 'fairmaiden', 'jester', 'joustingknight', 'king', 'wizard']],   // yeoldefranks
   [Date.UTC(2027, 0, 26, 8), ['camocommando', 'sailorfrank', 'dressblues', 'acepilot', 'spacecadet', 'rescueswimmer']],   // salutesquad
+  [Date.UTC(2027, 0, 26, 8), ['arcticfox', 'arctichare', 'mountaingoat', 'polarbear', 'snowleopard', 'walrus']],   // chilldogs
   [Date.UTC(2027, 1, 2, 8), ['hotrod', 'jetsetter', 'chopper', 'roadhog', 'gravyboat']],   // fastfood
   [Date.UTC(2027, 1, 9, 8), ['holstein', 'jersey', 'angus', 'hereford', 'highland']],   // holycow
   [Date.UTC(2027, 1, 16, 8), ['longhorn', 'brahman', 'elk', 'bison', 'moose']],   // homeontherange
@@ -46,6 +47,7 @@ const BUX_DROPS = [
   [Date.UTC(2027, 2, 2, 8), ['homerun', 'doggypaddle', 'cleanandjerk']],   // added to sports
   [Date.UTC(2027, 2, 9, 8), ['mechapilot', 'starguardian', 'swordsman', 'powerup']],   // bunime
   [Date.UTC(2027, 2, 16, 8), ['california', 'colorado', 'kentucky', 'michigan', 'nevada', 'newjersey', 'newyork', 'oregon', 'texas', 'vermont']],   // statefair
+  [Date.UTC(2027, 2, 23, 8), ['brownbear', 'giraffe', 'gorilla', 'hippo', 'koala', 'monkey', 'redpanda', 'zebra']],   // zoofranks
   [Date.UTC(2027, 3, 20, 8), ['acadia', 'arches', 'grandcanyon', 'grandteton', 'smokymountains', 'hawaiivolcanoes', 'yellowstone', 'yosemite', 'zion']],   // greatoutdogs
   [Date.UTC(2027, 5, 15, 8), ['unitedkingdom', 'france', 'germany', 'poland', 'croatia', 'switzerland', 'ukraine']],   // eurofranks
   [Date.UTC(2027, 5, 22, 8), ['unitedstates', 'canada', 'mexico', 'australia', 'japan', 'southkorea', 'china', 'india']],   // globalgrill
