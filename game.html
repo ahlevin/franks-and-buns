@@ -434,7 +434,7 @@ const KITCHEN_CATS = [
   ['Latin America', ['mexicocity', 'havana', 'rio']],
   ['Asia & Middle East', ['hongkong', 'seoul', 'dubai']],
   ['Amusement', ['coney', 'amusement', 'ballpark', 'golf', 'farm']],
-  ['Campus', ['harvard', 'stanford', 'princeton', 'cmu', 'ucla', 'berkeley', 'osu', 'tamu', 'pitt', 'ucsb']]
+  ['Campus', ['harvard', 'stanford', 'princeton', 'cmu', 'ucla', 'berkeley', 'osu', 'tamu', 'pitt', 'ucsb', 'pennstate', 'uchicago', 'uci', 'eugene', 'uw', 'uf', 'mit', 'asu', 'alberta']]
 ];
 const KITCHENS = [
   { id: 'classic', name: 'Classic Kitchen', how: 'free', set: 'a' },
@@ -478,6 +478,15 @@ const KITCHENS = [
   { id: 'tamu', name: 'College Station', how: 'bux', unlock: 'kitchentamu', cost: 500, art: true, mirror: true, passerY: 0.88, passerH: 0.1 },
   { id: 'pitt', name: 'Cathedral Hill', how: 'bux', unlock: 'kitchenpitt', cost: 500, art: true, mirror: true, passerY: 0.86, passerH: 0.11 },
   { id: 'ucsb', name: 'Goleta Bluffs', how: 'bux', unlock: 'kitchenucsb', cost: 500, art: true, mirror: true, passerY: 0.84, passerH: 0.1 },
+  { id: 'pennstate', name: 'Happy Valley', how: 'bux', unlock: 'kitchenpennstate', cost: 500, art: true, mirror: true, passerY: 0.565, passerH: 0.09 },
+  { id: 'uchicago', name: 'Hyde Park', how: 'bux', unlock: 'kitchenuchicago', cost: 500, art: true, mirror: true, passerY: 0.76, passerH: 0.09 },
+  { id: 'uci', name: 'Aldrich Park', how: 'bux', unlock: 'kitchenuci', cost: 500, art: true, mirror: true, passerY: 0.62, passerH: 0.09 },
+  { id: 'eugene', name: 'Willamette Valley', how: 'bux', unlock: 'kitcheneugene', cost: 500, art: true, mirror: true, passerY: 0.49, passerH: 0.08 },
+  { id: 'uw', name: 'Rainier Vista', how: 'bux', unlock: 'kitchenuw', cost: 500, art: true, mirror: true, passerY: 0.66, passerH: 0.1 },
+  { id: 'uf', name: 'Gainesville', how: 'bux', unlock: 'kitchenuf', cost: 500, art: true, mirror: true, passerY: 0.78, passerH: 0.1 },
+  { id: 'mit', name: 'Kendall Square', how: 'bux', unlock: 'kitchenmit', cost: 500, art: true, mirror: true, passerY: 0.86, passerH: 0.1 },
+  { id: 'asu', name: 'Tempe', how: 'bux', unlock: 'kitchenasu', cost: 500, art: true, mirror: true, passerY: 0.75, passerH: 0.08 },
+  { id: 'alberta', name: 'River Valley', how: 'bux', unlock: 'kitchenalberta', cost: 500, art: true, mirror: true, passerY: 0.51, passerH: 0.08 },
 ];
 // Launch special: every city kitchen is free for everyone through Dec 6, 2026 (Pacific). After that each one needs to be
 // won (its goal) or unlocked with BunBux; players who haven't, go back to the Classic Kitchen.
@@ -819,6 +828,9 @@ const SKINS = [
   { id: 'touchdown', name: 'Touchdown', group: 'sports', frames: 1, fly: [-48.6, -27.9, 88.5, 43.7], bun: [-43.5, -51.1, 88.1, 53.0], grill: [-43.6, -72.1, 88.1, 73.9] },
   { id: 'kickflip', name: 'Kickflip', group: 'sports', frames: 1, fly: [-48.4, -28.6, 88.1, 43.9], bun: [-41.8, -51.3, 85.8, 53.2], grill: [-41.9, -64.7, 85.6, 66.5] },
   { id: 'partee', name: 'Par-Tee', group: 'sports', frames: 1, fly: [-47.5, -21.5, 89.4, 34.5], bun: [-44.3, -47.1, 94.1, 49.0], grill: [-44.8, -70.0, 94.6, 71.9] },
+  { id: 'homerun', name: 'Home Run', group: 'sports', frames: 1, from: dropAt(2027, 3, 2), fly: [-44.5, -31.4, 85.1, 45.9], bun: [-41.9, -58.6, 88.1, 60.5], grill: [-42.5, -80.6, 88.5, 82.5] },
+  { id: 'doggypaddle', name: 'Doggy Paddle', group: 'sports', frames: 1, from: dropAt(2027, 3, 2), fly: [-42.5, -24.6, 81.0, 39.1], bun: [-41.8, -53.4, 84.0, 55.3], grill: [-41.3, -68.7, 83.6, 70.6] },
+  { id: 'cleanandjerk', name: 'Clean & Jerk', group: 'sports', frames: 1, from: dropAt(2027, 3, 2), fly: [-46.5, -23.4, 89.1, 37.9], bun: [-44.9, -53.8, 90.3, 55.7], grill: [-45.7, -73.0, 90.5, 74.9] },
   { id: 'popstar', name: 'Pop Star', group: 'snackpack', frames: 1, fly: [-49.2, -25.5, 90.8, 42.7], bun: [-43.8, -47.1, 89.4, 49.0], grill: [-43.9, -65.7, 89.5, 67.7] },
   { id: 'sliceoflife', name: 'Slice of Life', group: 'snackpack', frames: 1, fly: [-48.9, -21.5, 88.6, 36.3], bun: [-42.0, -43.3, 85.4, 45.2], grill: [-41.9, -60.4, 85.4, 62.3] },
   { id: 'glazedandconfused', name: 'Glazed and Confused', group: 'snackpack', frames: 1, fly: [-49.1, -29.9, 90.4, 46.1], bun: [-45.0, -55.3, 93.1, 57.2], grill: [-45.0, -66.2, 93.1, 68.1] },
@@ -844,6 +856,7 @@ const SKINS = [
   { id: 'overcooked', name: 'Overcooked', group: 'questionabledecisions', frames: 1, fly: [-48.4, -26.8, 88.1, 41.1], bun: [-44.6, -49.9, 87.2, 51.8], grill: [-44.6, -68.0, 87.2, 69.9] },
   { id: 'businesscasualty', name: 'Business Casualty', group: 'questionabledecisions', frames: 1, fly: [-47.9, -18.1, 87.3, 36.3], bun: [-42.6, -47.6, 87.3, 49.5], grill: [-42.8, -68.2, 87.5, 70.1] },
   { id: 'buffering', name: 'Buffering', group: 'questionabledecisions', frames: 1, fly: [-47.1, -36.9, 88.5, 52.6], bun: [-44.0, -68.7, 95.8, 70.7], grill: [-44.0, -75.2, 95.8, 77.3] },
+  { id: 'porcelainthrone', name: 'Porcelain Throne', group: 'questionabledecisions', frames: 1, fly: [-43.6, -35.7, 83.1, 50.2], bun: [-42.0, -56.6, 84.0, 58.5], grill: [-42.1, -74.1, 84.1, 76.0] },
   { id: 'straightafrank', name: 'Straight-A Frank', group: 'academic', frames: 1, fly: [-48.5, -25.0, 88.0, 39.4], bun: [-46.5, -53.6, 93.7, 55.6], grill: [-46.6, -74.4, 93.9, 76.3] },
   { id: 'graddog', name: 'Grad Dog', group: 'academic', frames: 1, fly: [-48.6, -29.5, 88.5, 45.2], bun: [-44.9, -53.6, 90.5, 55.6], grill: [-44.9, -69.1, 90.4, 71.0] },
   { id: 'professorfrank', name: 'Professor Frank', group: 'academic', frames: 1, fly: [-47.1, -25.6, 86.8, 41.6], bun: [-41.9, -51.8, 88.7, 53.7], grill: [-41.8, -72.1, 88.6, 74.0] },
@@ -864,7 +877,120 @@ const SKINS = [
   { id: 'maneevent', name: 'Mane Event', group: 'wildthings', frames: 1, fly: [-54.5, -26.8, 94.6, 41.4], bun: [-46.6, -52.5, 91.9, 54.4], grill: [-46.6, -74.9, 91.9, 76.9] },
   { id: 'stripehype', name: 'Stripe Hype', group: 'wildthings', frames: 1, fly: [-48.5, -22.7, 88.7, 40.8], bun: [-42.5, -46.1, 84.3, 48.0], grill: [-42.6, -65.0, 84.4, 66.9] },
   { id: 'pandamonium', name: 'Panda-monium', group: 'wildthings', frames: 1, fly: [-47.7, -30.2, 87.0, 49.3], bun: [-41.5, -53.9, 83.8, 55.8], grill: [-41.6, -71.3, 84.0, 73.1] },
-  { id: 'trunkshow', name: 'Trunk Show', group: 'wildthings', frames: 1, fly: [-49.3, -27.6, 89.8, 44.2], bun: [-43.0, -52.1, 86.6, 54.0], grill: [-43.0, -75.8, 86.6, 77.7] }
+  { id: 'trunkshow', name: 'Trunk Show', group: 'wildthings', frames: 1, fly: [-49.3, -27.6, 89.8, 44.2], bun: [-43.0, -52.1, 86.6, 54.0], grill: [-43.0, -75.8, 86.6, 77.7] },
+  { id: 'archer', name: 'Archer', group: 'yeoldefranks', frames: 1, fly: [-44.5, -28.3, 85.0, 42.8], bun: [-42.0, -53.9, 87.0, 55.8], grill: [-43.9, -75.9, 86.8, 77.8] },
+  { id: 'fairmaiden', name: 'Fair Maiden', group: 'yeoldefranks', frames: 1, fly: [-43.9, -30.8, 83.7, 45.3], bun: [-41.9, -52.4, 85.2, 54.3], grill: [-41.9, -64.1, 85.5, 66.0] },
+  { id: 'jester', name: 'Jester', group: 'yeoldefranks', frames: 1, fly: [-43.8, -38.6, 83.6, 53.1], bun: [-41.8, -54.8, 85.8, 56.7], grill: [-41.6, -68.6, 85.7, 70.5] },
+  { id: 'joustingknight', name: 'Jousting Knight', group: 'yeoldefranks', frames: 1, fly: [-44.1, -33.9, 84.2, 48.4], bun: [-43.0, -60.2, 84.8, 62.1], grill: [-44.0, -70.8, 87.1, 72.7] },
+  { id: 'king', name: 'King Frank', group: 'yeoldefranks', frames: 1, fly: [-43.5, -29.7, 83.0, 44.2], bun: [-41.8, -52.0, 84.1, 53.9], grill: [-42.1, -64.4, 84.4, 66.3] },
+  { id: 'wizard', name: 'Court Wizard', group: 'yeoldefranks', frames: 1, fly: [-44.1, -34.3, 84.2, 48.8], bun: [-42.8, -55.5, 84.8, 57.4], grill: [-42.8, -67.8, 84.8, 69.7] },
+  { id: 'camocommando', name: 'Camo Commando', group: 'salutesquad', frames: 1, fly: [-44.6, -28.4, 85.1, 42.9], bun: [-41.8, -51.1, 85.6, 53.0], grill: [-41.8, -66.4, 85.5, 68.2] },
+  { id: 'sailorfrank', name: 'Sailor Frank', group: 'salutesquad', frames: 1, fly: [-43.3, -25.8, 82.5, 40.3], bun: [-41.9, -52.5, 83.7, 54.4], grill: [-41.8, -68.4, 83.6, 70.3] },
+  { id: 'dressblues', name: 'Dress Blues', group: 'salutesquad', frames: 1, fly: [-43.3, -35.4, 82.5, 49.9], bun: [-41.9, -57.5, 84.0, 59.4], grill: [-42.1, -71.2, 84.2, 73.1] },
+  { id: 'acepilot', name: 'Ace Pilot', group: 'salutesquad', frames: 1, fly: [-43.1, -29.4, 82.2, 43.9], bun: [-41.8, -51.6, 83.6, 53.5], grill: [-42.2, -67.2, 84.1, 69.1] },
+  { id: 'spacecadet', name: 'Space Cadet', group: 'salutesquad', frames: 1, fly: [-45.0, -26.3, 85.9, 40.8], bun: [-42.5, -49.5, 85.8, 51.4], grill: [-43.2, -69.8, 86.6, 71.7] },
+  { id: 'rescueswimmer', name: 'Rescue Swimmer', group: 'salutesquad', frames: 1, fly: [-45.4, -26.7, 86.9, 41.2], bun: [-42.3, -52.3, 87.5, 54.2], grill: [-44.0, -73.5, 87.5, 75.4] },
+  { id: 'hotrod', name: 'Hot Rod', group: 'fastfood', frames: 1, fly: [-44.3, -23.0, 84.5, 37.5], bun: [-43.1, -46.0, 85.1, 47.9], grill: [-43.8, -66.5, 86.3, 68.4] },
+  { id: 'jetsetter', name: 'Jet Setter', group: 'fastfood', frames: 1, fly: [-42.7, -26.0, 81.3, 40.5], bun: [-41.8, -49.6, 83.7, 51.5], grill: [-42.1, -65.8, 84.3, 67.7] },
+  { id: 'chopper', name: 'Chopper', group: 'fastfood', frames: 1, fly: [-47.4, -40.2, 90.8, 54.7], bun: [-50.3, -61.1, 92.3, 63.0], grill: [-48.0, -75.5, 92.9, 77.4] },
+  { id: 'roadhog', name: 'Road Hog', group: 'fastfood', frames: 1, fly: [-40.9, -36.7, 77.8, 51.2], bun: [-41.9, -49.5, 83.9, 51.4], grill: [-41.7, -60.6, 83.6, 62.5] },
+  { id: 'gravyboat', name: 'Gravy Boat', group: 'fastfood', frames: 1, fly: [-48.6, -20.9, 93.1, 35.4], bun: [-45.4, -42.7, 92.7, 44.6], grill: [-44.3, -63.2, 93.3, 65.1] },
+  { id: 'ghost', name: 'Boo Frank', group: 'frightbites', frames: 1, fly: [-44.8, -26.2, 85.7, 40.7], bun: [-41.9, -46.0, 86.2, 47.9], grill: [-44.1, -68.5, 87.0, 70.4] },
+  { id: 'witch', name: 'Witchy Wiener', group: 'frightbites', frames: 1, fly: [-44.6, -32.2, 85.1, 46.7], bun: [-42.0, -54.0, 84.1, 55.9], grill: [-43.1, -59.0, 87.1, 60.9] },
+  { id: 'skeleton', name: 'Skele-Frank', group: 'frightbites', frames: 1, fly: [-45.2, -29.8, 86.3, 44.3], bun: [-44.6, -54.0, 87.6, 55.9], grill: [-43.2, -76.7, 87.0, 78.6] },
+  { id: 'mummy', name: 'Mummy Dog', group: 'frightbites', frames: 1, fly: [-47.0, -18.6, 90.0, 33.1], bun: [-47.8, -48.8, 90.2, 50.7], grill: [-44.4, -68.0, 89.9, 69.9] },
+  { id: 'holstein', name: 'Holstein', group: 'holycow', frames: 1, fly: [-43.4, -29.9, 82.9, 44.4], bun: [-42.9, -53.8, 84.8, 55.7], grill: [-42.9, -70.1, 84.6, 72.0] },
+  { id: 'jersey', name: 'Jersey', group: 'holycow', frames: 1, fly: [-42.9, -31.8, 81.8, 46.3], bun: [-42.0, -56.5, 84.0, 58.4], grill: [-41.9, -77.0, 83.7, 78.9] },
+  { id: 'angus', name: 'Angus', group: 'holycow', frames: 1, fly: [-43.4, -28.0, 82.8, 42.5], bun: [-41.9, -49.6, 84.1, 51.5], grill: [-42.2, -65.6, 84.7, 67.5] },
+  { id: 'hereford', name: 'Hereford', group: 'holycow', frames: 1, fly: [-44.7, -31.6, 85.3, 46.1], bun: [-41.8, -54.5, 85.6, 56.4], grill: [-42.1, -76.1, 85.6, 78.0] },
+  { id: 'highland', name: 'Highland Cow', group: 'holycow', frames: 1, fly: [-45.5, -31.9, 87.0, 46.4], bun: [-44.3, -51.9, 87.5, 53.8], grill: [-44.3, -72.1, 89.4, 74.0] },
+  { id: 'longhorn', name: 'Longhorn', group: 'homeontherange', frames: 1, fly: [-47.6, -26.5, 91.2, 41.0], bun: [-44.6, -49.3, 91.3, 51.2], grill: [-44.9, -60.9, 91.6, 62.8] },
+  { id: 'brahman', name: 'Brahman', group: 'homeontherange', frames: 1, fly: [-47.2, -31.7, 90.4, 46.2], bun: [-42.6, -51.9, 89.2, 53.8], grill: [-44.7, -68.1, 89.7, 70.0] },
+  { id: 'elk', name: 'Elk', group: 'homeontherange', frames: 1, fly: [-42.7, -37.9, 81.4, 52.4], bun: [-43.5, -59.8, 85.5, 61.7], grill: [-42.3, -70.8, 86.0, 72.7] },
+  { id: 'bison', name: 'Bison', group: 'homeontherange', frames: 1, fly: [-46.9, -33.6, 89.9, 48.1], bun: [-45.0, -53.8, 90.0, 55.7], grill: [-47.4, -74.9, 90.4, 76.8] },
+  { id: 'moose', name: 'Moose', group: 'homeontherange', frames: 1, fly: [-41.4, -37.6, 78.8, 52.1], bun: [-41.8, -59.2, 83.7, 61.1], grill: [-41.8, -73.4, 83.7, 75.3] },
+  { id: 'flamingo', name: 'Flamingo', group: 'birdbrains', frames: 1, fly: [-46.2, -33.0, 88.4, 47.5], bun: [-42.3, -54.6, 88.4, 56.5], grill: [-42.1, -71.3, 88.1, 73.2] },
+  { id: 'toucan', name: 'Toucan', group: 'birdbrains', frames: 1, fly: [-47.0, -28.8, 90.0, 43.3], bun: [-45.1, -53.1, 88.7, 55.0], grill: [-43.1, -72.5, 88.7, 74.4] },
+  { id: 'snowyowl', name: 'Snowy Owl', group: 'birdbrains', frames: 1, fly: [-46.8, -31.3, 89.6, 45.8], bun: [-44.1, -55.0, 90.3, 56.9], grill: [-44.7, -79.0, 90.7, 80.9] },
+  { id: 'barnowl', name: 'Barn Owl', group: 'birdbrains', frames: 1, fly: [-44.4, -31.5, 84.9, 46.0], bun: [-44.0, -55.0, 86.0, 56.9], grill: [-46.5, -71.3, 89.4, 73.2] },
+  { id: 'emperorpenguin', name: 'Emperor Penguin', group: 'birdbrains', frames: 1, fly: [-43.8, -25.7, 83.6, 40.2], bun: [-42.3, -50.0, 84.3, 51.9], grill: [-42.6, -72.0, 84.9, 73.9] },
+  { id: 'rockhopper', name: 'Rockhopper', group: 'birdbrains', frames: 1, fly: [-44.8, -35.3, 85.6, 49.8], bun: [-41.8, -56.3, 86.1, 58.2], grill: [-42.6, -78.4, 86.6, 80.3] },
+  { id: 'ladyliberty', name: 'Lady Liberty', group: 'redwhiteandbun', frames: 1, fly: [-43.9, -29.8, 83.9, 44.3], bun: [-41.8, -53.6, 83.6, 55.5], grill: [-42.0, -66.8, 84.0, 68.7] },
+  { id: 'libertybell', name: 'Liberty Bell', group: 'redwhiteandbun', frames: 1, fly: [-44.5, -39.5, 84.9, 54.0], bun: [-43.3, -63.7, 85.8, 65.6], grill: [-42.6, -75.5, 85.9, 77.4] },
+  { id: 'baldeagle', name: 'Bald Eagle', group: 'redwhiteandbun', frames: 1, fly: [-44.9, -30.8, 85.7, 45.3], bun: [-41.8, -52.7, 87.7, 54.6], grill: [-41.9, -74.3, 86.8, 76.2] },
+  { id: 'fogcitybridge', name: 'Fog City Bridge', group: 'redwhiteandbun', frames: 1, fly: [-45.7, -28.2, 87.5, 42.7], bun: [-43.3, -49.9, 87.2, 51.8], grill: [-44.0, -68.0, 87.8, 69.9] },
+  { id: 'unitedkingdom', name: 'United Kingdom', group: 'eurofranks', frames: 1, fly: [-43.6, -23.2, 83.3, 37.7], bun: [-42.5, -50.4, 84.6, 52.3], grill: [-43.1, -71.7, 85.1, 73.6] },
+  { id: 'france', name: 'France', group: 'eurofranks', frames: 1, fly: [-43.9, -25.3, 83.9, 39.8], bun: [-43.7, -49.1, 85.5, 51.0], grill: [-44.7, -74.8, 87.3, 76.7] },
+  { id: 'germany', name: 'Germany', group: 'eurofranks', frames: 1, fly: [-44.2, -28.8, 84.5, 43.2], bun: [-41.8, -52.4, 84.8, 54.2], grill: [-42.6, -66.6, 85.8, 68.5] },
+  { id: 'poland', name: 'Poland', group: 'eurofranks', frames: 1, fly: [-43.4, -24.0, 82.7, 38.5], bun: [-41.9, -47.5, 83.9, 49.4], grill: [-41.9, -67.5, 83.9, 69.4] },
+  { id: 'croatia', name: 'Croatia', group: 'eurofranks', frames: 1, fly: [-43.8, -21.9, 83.6, 36.4], bun: [-42.7, -48.0, 84.7, 49.9], grill: [-42.9, -64.4, 85.0, 66.3] },
+  { id: 'switzerland', name: 'Switzerland', group: 'eurofranks', frames: 1, fly: [-45.6, -32.0, 87.2, 46.5], bun: [-44.0, -54.6, 86.8, 56.5], grill: [-43.5, -73.5, 88.3, 75.4] },
+  { id: 'ukraine', name: 'Ukraine', group: 'eurofranks', frames: 1, fly: [-45.1, -28.5, 86.3, 43.0], bun: [-42.0, -53.4, 86.3, 55.3], grill: [-43.6, -67.3, 86.4, 69.2] },
+  { id: 'unitedstates', name: 'United States', group: 'globalgrill', frames: 1, fly: [-44.9, -24.3, 85.8, 38.8], bun: [-43.3, -49.5, 85.6, 51.4], grill: [-43.6, -67.0, 86.3, 68.9] },
+  { id: 'canada', name: 'Canada', group: 'globalgrill', frames: 1, fly: [-43.4, -30.7, 82.9, 45.2], bun: [-41.8, -55.7, 83.9, 57.6], grill: [-42.0, -70.3, 84.0, 72.2] },
+  { id: 'mexico', name: 'Mexico', group: 'globalgrill', frames: 1, fly: [-41.7, -22.6, 79.3, 37.1], bun: [-41.8, -47.9, 84.1, 49.8], grill: [-42.2, -62.6, 84.2, 64.5] },
+  { id: 'australia', name: 'Australia', group: 'globalgrill', frames: 1, fly: [-44.6, -30.4, 85.2, 44.9], bun: [-41.8, -55.9, 86.3, 57.8], grill: [-41.7, -69.2, 86.0, 71.1] },
+  { id: 'japan', name: 'Japan', group: 'globalgrill', frames: 1, fly: [-44.0, -24.8, 84.0, 39.3], bun: [-41.8, -50.3, 84.0, 52.2], grill: [-42.4, -65.7, 84.8, 67.6] },
+  { id: 'southkorea', name: 'South Korea', group: 'globalgrill', frames: 1, fly: [-42.9, -26.6, 81.8, 41.1], bun: [-41.9, -51.8, 83.7, 53.7], grill: [-41.7, -65.4, 83.6, 67.3] },
+  { id: 'china', name: 'China', group: 'globalgrill', frames: 1, fly: [-46.2, -29.6, 88.4, 44.1], bun: [-44.6, -51.7, 88.5, 53.6], grill: [-43.9, -72.4, 88.0, 74.3] },
+  { id: 'india', name: 'India', group: 'globalgrill', frames: 1, fly: [-46.5, -25.1, 89.0, 39.6], bun: [-44.2, -49.8, 87.2, 51.7], grill: [-45.0, -75.0, 89.3, 76.9] },
+  { id: 'acadia', name: 'Acadia', group: 'greatoutdogs', frames: 1, fly: [-44.4, -30.9, 84.8, 45.4], bun: [-43.0, -55.0, 85.1, 56.9], grill: [-43.0, -68.7, 86.4, 70.6] },
+  { id: 'arches', name: 'Arches', group: 'greatoutdogs', frames: 1, fly: [-46.2, -41.6, 88.4, 56.1], bun: [-42.3, -63.8, 86.3, 65.7], grill: [-42.4, -75.2, 86.6, 77.1] },
+  { id: 'grandcanyon', name: 'Grand Canyon', group: 'greatoutdogs', frames: 1, fly: [-44.5, -24.3, 85.0, 38.8], bun: [-41.9, -48.1, 85.4, 50.0], grill: [-41.5, -65.3, 84.6, 67.2] },
+  { id: 'grandteton', name: 'Grand Teton', group: 'greatoutdogs', frames: 1, fly: [-44.6, -33.6, 85.1, 48.1], bun: [-42.4, -56.7, 85.1, 58.6], grill: [-42.6, -69.8, 85.0, 71.7] },
+  { id: 'smokymountains', name: 'Smoky Mountains', group: 'greatoutdogs', frames: 1, fly: [-42.3, -29.1, 80.5, 43.6], bun: [-41.8, -54.4, 83.9, 56.3], grill: [-42.0, -70.0, 84.2, 71.9] },
+  { id: 'hawaiivolcanoes', name: 'Hawaii Volcanoes', group: 'greatoutdogs', frames: 1, fly: [-45.5, -35.0, 87.0, 49.5], bun: [-41.9, -54.2, 87.1, 56.1], grill: [-42.3, -73.1, 87.3, 75.0] },
+  { id: 'yellowstone', name: 'Yellowstone', group: 'greatoutdogs', frames: 1, fly: [-42.8, -30.3, 81.7, 44.8], bun: [-41.8, -55.9, 84.6, 57.8], grill: [-42.2, -69.7, 84.5, 71.6] },
+  { id: 'yosemite', name: 'Yosemite', group: 'greatoutdogs', frames: 1, fly: [-46.4, -37.3, 88.9, 51.8], bun: [-42.3, -60.4, 88.6, 62.3], grill: [-42.5, -76.3, 88.8, 78.2] },
+  { id: 'zion', name: 'Zion', group: 'greatoutdogs', frames: 1, fly: [-47.3, -37.0, 90.7, 51.5], bun: [-44.5, -59.2, 90.8, 61.1], grill: [-44.3, -73.5, 90.8, 75.4] },
+  { id: 'california', name: 'California', group: 'statefair', frames: 1, fly: [-43.2, -26.5, 82.4, 41.0], bun: [-41.9, -51.3, 84.1, 53.2], grill: [-41.6, -71.2, 83.7, 73.1] },
+  { id: 'colorado', name: 'Colorado', group: 'statefair', frames: 1, fly: [-44.1, -39.1, 84.1, 53.6], bun: [-41.8, -62.2, 84.1, 64.1], grill: [-42.3, -77.4, 84.9, 79.3] },
+  { id: 'kentucky', name: 'Kentucky', group: 'statefair', frames: 1, fly: [-43.1, -32.0, 82.2, 46.5], bun: [-41.8, -54.0, 83.9, 55.9], grill: [-42.7, -69.8, 85.5, 71.7] },
+  { id: 'michigan', name: 'Michigan', group: 'statefair', frames: 1, fly: [-44.7, -33.3, 85.5, 47.8], bun: [-42.2, -53.9, 85.1, 55.8], grill: [-42.9, -65.8, 85.6, 67.7] },
+  { id: 'nevada', name: 'Nevada', group: 'statefair', frames: 1, fly: [-43.4, -31.0, 82.8, 45.5], bun: [-41.8, -56.8, 83.6, 58.7], grill: [-41.9, -73.9, 84.0, 75.8] },
+  { id: 'newjersey', name: 'New Jersey', group: 'statefair', frames: 1, fly: [-43.6, -23.1, 83.1, 37.6], bun: [-42.0, -47.4, 85.0, 49.3], grill: [-42.1, -62.8, 84.6, 64.7] },
+  { id: 'newyork', name: 'New York', group: 'statefair', frames: 1, fly: [-46.0, -35.9, 88.1, 50.4], bun: [-43.3, -56.8, 88.1, 58.7], grill: [-43.0, -65.7, 88.1, 67.6] },
+  { id: 'oregon', name: 'Oregon', group: 'statefair', frames: 1, fly: [-46.3, -29.0, 88.6, 43.5], bun: [-41.9, -50.5, 88.2, 52.4], grill: [-42.8, -69.1, 88.3, 71.0] },
+  { id: 'texas', name: 'Texas', group: 'statefair', frames: 1, fly: [-42.5, -31.8, 80.9, 46.3], bun: [-42.5, -54.2, 84.4, 56.1], grill: [-42.7, -72.4, 84.7, 74.3] },
+  { id: 'vermont', name: 'Vermont', group: 'statefair', frames: 1, fly: [-45.6, -32.9, 87.2, 47.4], bun: [-42.8, -54.3, 87.6, 56.2], grill: [-43.3, -68.3, 87.6, 70.2] },
+  { id: 'brownbear', name: 'Brown Bear', group: 'zoofranks', frames: 1, fly: [-44.0, -33.2, 84.0, 47.7], bun: [-41.8, -54.0, 83.9, 55.9], grill: [-42.5, -74.8, 85.0, 76.7] },
+  { id: 'giraffe', name: 'Giraffe', group: 'zoofranks', frames: 1, fly: [-46.2, -31.3, 88.4, 45.8], bun: [-43.0, -52.3, 87.3, 54.2], grill: [-44.7, -60.3, 88.6, 62.2] },
+  { id: 'gorilla', name: 'Gorilla', group: 'zoofranks', frames: 1, fly: [-42.3, -37.6, 80.7, 52.1], bun: [-42.0, -57.6, 84.4, 59.5], grill: [-42.0, -71.4, 84.2, 73.3] },
+  { id: 'hippo', name: 'Hippo', group: 'zoofranks', frames: 1, fly: [-42.5, -32.2, 81.0, 46.7], bun: [-41.8, -52.7, 84.2, 54.6], grill: [-41.8, -68.6, 84.5, 70.5] },
+  { id: 'koala', name: 'Koala', group: 'zoofranks', frames: 1, fly: [-45.3, -32.2, 86.6, 46.7], bun: [-43.5, -56.1, 87.2, 58.0], grill: [-43.5, -69.1, 87.5, 71.0] },
+  { id: 'monkey', name: 'Monkey', group: 'zoofranks', frames: 1, fly: [-44.7, -38.9, 85.5, 53.4], bun: [-41.8, -54.8, 83.7, 56.7], grill: [-42.0, -70.6, 83.6, 72.5] },
+  { id: 'redpanda', name: 'Red Panda', group: 'zoofranks', frames: 1, fly: [-46.5, -34.0, 88.9, 48.5], bun: [-45.8, -52.6, 88.5, 54.5], grill: [-46.4, -69.7, 88.8, 71.6] },
+  { id: 'zebra', name: 'Zebra', group: 'zoofranks', frames: 1, fly: [-44.0, -35.7, 84.0, 50.2], bun: [-42.8, -55.9, 84.8, 57.8], grill: [-42.9, -74.2, 85.2, 76.1] },
+  { id: 'arcticfox', name: 'Arctic Fox', group: 'chilldogs', frames: 1, fly: [-46.4, -32.9, 88.8, 47.4], bun: [-45.2, -50.4, 88.9, 52.3], grill: [-46.3, -67.9, 89.3, 69.8] },
+  { id: 'arctichare', name: 'Arctic Hare', group: 'chilldogs', frames: 1, fly: [-44.9, -43.0, 85.8, 57.5], bun: [-43.0, -63.9, 85.6, 65.8], grill: [-43.1, -73.6, 85.8, 75.5] },
+  { id: 'mountaingoat', name: 'Mountain Goat', group: 'chilldogs', frames: 1, fly: [-45.9, -38.6, 87.7, 53.1], bun: [-41.8, -58.2, 88.4, 60.1], grill: [-44.3, -76.5, 88.6, 78.4] },
+  { id: 'polarbear', name: 'Polar Bear', group: 'chilldogs', frames: 1, fly: [-43.4, -33.6, 82.9, 48.1], bun: [-42.1, -53.3, 84.6, 55.2], grill: [-42.0, -68.7, 84.5, 70.6] },
+  { id: 'snowleopard', name: 'Snow Leopard', group: 'chilldogs', frames: 1, fly: [-47.4, -26.5, 90.9, 41.0], bun: [-46.2, -48.8, 88.1, 50.7], grill: [-46.2, -73.3, 91.3, 75.2] },
+  { id: 'walrus', name: 'Walrus', group: 'chilldogs', frames: 1, fly: [-47.5, -34.2, 91.1, 48.7], bun: [-45.2, -53.2, 91.2, 55.1], grill: [-45.2, -67.9, 91.4, 69.8] },
+  { id: 'mechapilot', name: 'Mecha Pilot', group: 'bunime', frames: 1, fly: [-42.0, -25.4, 80.0, 39.9], bun: [-41.9, -49.5, 84.5, 51.4], grill: [-42.4, -66.9, 84.9, 68.8] },
+  { id: 'starguardian', name: 'Magical Star', group: 'bunime', frames: 1, fly: [-46.3, -28.8, 88.6, 43.3], bun: [-42.6, -50.9, 88.2, 52.8], grill: [-42.4, -66.1, 88.0, 68.0] },
+  { id: 'swordsman', name: 'Wandering Swordsman', group: 'bunime', frames: 1, fly: [-43.3, -34.0, 82.5, 48.5], bun: [-41.8, -54.8, 83.7, 56.7], grill: [-41.4, -71.6, 83.7, 73.5] },
+  { id: 'powerup', name: 'Power-Up Hero', group: 'bunime', frames: 1, fly: [-43.4, -38.8, 82.9, 53.3], bun: [-41.9, -58.5, 84.5, 60.4], grill: [-41.9, -72.0, 84.5, 73.9] },
+  // Precious Metals & Gems (premium): each has its own price, a tagline, a description and a shine effect (fx). Looks only: nothing about the game changes.
+  { id: 'sterlingsilver', name: 'Sterling Silver', group: 'preciousgems', frames: 1, fly: [-45.7, -32.0, 87.4, 46.5], bun: [-43.5, -54.8, 87.4, 56.7], grill: [-44.2, -74.4, 88.2, 76.3],
+    price: '$2.99', fx: 'silver', tag: 'Every cloud has a silver frank.',
+    desc: 'Polished, shiny and ready to roll, Sterling Silver proves you don’t have to be gold to steal the show. This frank brings a little extra shine to every trip toward the bun.' },
+  { id: 'goldstandard', name: 'Gold Standard', group: 'preciousgems', frames: 1, fly: [-45.2, -35.0, 86.3, 49.5], bun: [-41.9, -58.1, 86.3, 60.0], grill: [-42.8, -68.4, 86.3, 70.3],
+    price: '$3.99', fx: 'gold', tag: 'Going for the gold. Landing in the bun.',
+    desc: 'Some chase gold medals. This frank wears the whole medal. Gold Standard is dressed to impress, built to bounce and ready for a first-place finish in the bun.' },
+  { id: 'platinumprestige', name: 'Platinum Prestige', group: 'preciousgems', frames: 1, fly: [-43.7, -31.1, 83.4, 45.6], bun: [-41.8, -52.7, 84.8, 54.6], grill: [-41.9, -71.5, 84.8, 73.4],
+    price: '$4.99', fx: 'platinum', tag: 'Because ordinary fancy just wasn’t fancy enough.',
+    desc: 'Sleek, shiny and just a little overqualified for a hot dog game, Platinum Prestige brings a whole new level of polish to the cookout. The bun has never seen anything quite like it.' },
+  { id: 'diamonddog', name: 'Diamond Dog', group: 'preciousgems', frames: 1, fly: [-44.6, -42.1, 85.3, 56.6], bun: [-42.3, -64.6, 85.8, 66.5], grill: [-42.3, -73.0, 85.9, 74.9],
+    price: '$9.99', fx: 'diamond', tag: 'Diamonds are a frank’s best friend.',
+    desc: 'Some franks wear diamonds. This one practically is a diamond. Brilliant, bold and probably overdressed for a bun, Diamond Dog was made for players who believe every launch deserves a little sparkle.' },
+  // Ultra Exclusives: sold one at a time only (no bundle), the grandest effects in the game. Taglines and descriptions are drafts for Alan.
+  { id: 'crownjewel', name: 'The Crown Jewel', group: 'ultraexclusives', frames: 1, fly: [-44.1, -37.5, 84.1, 52.0], bun: [-42.1, -60.4, 84.2, 62.3], grill: [-42.3, -64.7, 84.5, 66.6],
+    price: '$24.99', fx: 'sapphire', tag: 'Heavy is the bun that wears the crown.',
+    desc: 'Sapphires, a royal cape and enough sparkle to light up the whole kitchen. The Crown Jewel doesn’t land in the bun. It holds court there.' },
+  { id: 'frankfather', name: 'The Frankfather', group: 'ultraexclusives', frames: 1, fly: [-44.2, -43.8, 84.5, 58.3], bun: [-41.9, -65.5, 85.6, 67.4], grill: [-42.5, -73.1, 85.6, 75.0],
+    price: '$49.99', fx: 'royal', tag: 'He’ll make you a bun you can’t refuse.',
+    desc: 'A tuxedo, a velvet cape, a golden crown and a scepter, just in case. The Frankfather runs this cookout, and every bun in town knows his name.' }
 ];
 // Skin groups. how: 'earn' = unlocked by doing its goal in one game, 'soon' = shown locked (Coming soon),
 // 'hidden' = not shown, 'free' = everyone has them. A skin's own how (e.g. free Bunny) beats its group's.
@@ -873,17 +999,21 @@ const SKINS = [
 // Drop dates. dropAt(2026, 12, 1) = midnight at the start of Dec 1 in California (8 AM UTC).
 // Test sites (preview, localhost) take ?dropdate=2026-12-08 to see the game as it will be on that day.
 function dropAt(y, m, d) { return Date.UTC(y, m - 1, d, 8); }
+const PREMIUM_HOLD = dropAt(2099, 1, 1);   // "not scheduled yet": a Collection waiting for its launch date
 const DROP_TEST = /\.pages\.dev$|^localhost$|^127\.0\.0\.1$/.test(location.hostname) && (new URLSearchParams(location.search).get('dropdate') || '').match(/^(\d{4})-(\d\d)-(\d\d)$/);
 function dropNow() { return DROP_TEST ? dropAt(+DROP_TEST[1], +DROP_TEST[2], +DROP_TEST[3]) + 3600000 : Date.now(); }
-function groupOpen(g) { const G = SKIN_GROUPS[g]; return !!G && (!G.from || dropNow() >= G.from); }
-function groupNew(g) { const G = SKIN_GROUPS[g]; return !!(G && G.from && groupOpen(g) && dropNow() < G.from + 7 * 864e5); }   // the first week after its drop
+// Costume Vault (?vault=bunvault): a private preview of the costume screen with every Collection open, hidden ones included; buying is off
+const VAULT = new URLSearchParams(location.search).get('vault') === 'bunvault';
+function skinOpen(s) { return VAULT || !s.from || dropNow() >= s.from; }   // a costume added to a Collection later can have its own drop date
+function groupOpen(g) { const G = SKIN_GROUPS[g]; return !!G && (VAULT || !G.from || dropNow() >= G.from); }
+function groupNew(g) { const G = SKIN_GROUPS[g]; return !!(G && G.from && groupOpen(g) && dropNow() >= G.from && dropNow() < G.from + 7 * 864e5); }   // the first week after its drop
 function anyGroupNew() { return Object.keys(SKIN_GROUPS).some(groupNew); }
 const SKIN_GROUPS = { earn: { name: 'Free & Earned', how: 'earn' }, holiday: { name: 'Holiday', how: 'shop' },
   dogs: { name: 'Dogs', how: 'shop' },
   cats: { name: 'Cats', how: 'shop' },
   sports: { name: 'Sports', how: 'shop' },             // on sale from 1.9 (Nov 22, 2026)
   deepseadogs: { name: 'Deep Sea Dogs', how: 'shop' },
-  // Weekly drops: each Collection stays hidden until its date (midnight Pacific), then goes on sale like Sports.
+  // Weekly drops: 2 Collections a week through Jan 12, then 1 a week. Each Collection stays hidden until its date (midnight Pacific), then goes on sale like Sports.
   // Its store items (skin_<id> for each costume, col_<group>) must exist in Stripe, App Store Connect and Google Play by then.
   spacecases: { name: 'Space Cases', how: 'shop', from: dropAt(2026, 12, 1) },
   tinyterrors: { name: 'Tiny Terrors', how: 'shop', from: dropAt(2026, 12, 1) },
@@ -898,9 +1028,31 @@ const SKIN_GROUPS = { earn: { name: 'Free & Earned', how: 'earn' }, holiday: { n
   academic: { name: 'Academic', how: 'shop', from: dropAt(2027, 1, 5) },
   sidehustles: { name: 'Side Hustles', how: 'shop', from: dropAt(2027, 1, 5) },
   trashpack: { name: 'Trash Pack', how: 'shop', from: dropAt(2027, 1, 12) },
-  finalbossfranks: { name: 'Final Boss Franks', how: 'shop', from: dropAt(2027, 1, 12) } };
-function skinHow(s) { const g = s.group || 'earn'; if (!groupOpen(g)) return 'hidden';   // a Collection before its drop date
-  const h = s.how || (SKIN_GROUPS[g] || SKIN_GROUPS.earn).how; return h === 'shop' && !SHOP_ON ? 'soon' : h; }
+  finalbossfranks: { name: 'Final Boss Franks', how: 'shop', from: dropAt(2027, 1, 12) },
+  yeoldefranks: { name: 'Ye Olde Franks', how: 'shop', from: dropAt(2027, 1, 19) },   // Medieval pack
+  salutesquad: { name: 'Salute Squad', how: 'shop', from: dropAt(2027, 1, 26) },
+  chilldogs: { name: 'Chill Dogs', how: 'shop', from: dropAt(2027, 1, 26) },   // Arctic and alpine animals pack   // service-inspired pack (generic names, no official insignia)
+  fastfood: { name: 'Fast Food', how: 'shop', from: dropAt(2027, 2, 2) },   // vehicles pack
+  holycow: { name: 'Holy Cow', how: 'shop', from: dropAt(2027, 2, 9) },   // cow breeds pack
+  homeontherange: { name: 'Home on the Range', how: 'shop', from: dropAt(2027, 2, 16) },   // ranch and wild West animals
+  birdbrains: { name: 'Bird Brains', how: 'shop', from: dropAt(2027, 2, 23) },
+  bunime: { name: 'Bun-ime', how: 'shop', from: dropAt(2027, 3, 9) },   // anime-style pack (generic names, no franchise characters)
+  zoofranks: { name: 'Zoo Franks', how: 'shop', from: dropAt(2027, 3, 23) },   // zoo animals pack
+  statefair: { name: 'State Fair', how: 'shop', from: dropAt(2027, 3, 16) },   // US states pack (playful, no official seals or school marks)
+  greatoutdogs: { name: 'Great Outdogs', how: 'shop', from: dropAt(2027, 4, 20) },   // national parks pack, National Park Week (generic badges, no NPS arrowhead)
+  eurofranks: { name: 'Euro Franks', how: 'shop', from: dropAt(2027, 6, 15) },   // flags pack, part 1 (stylized flags, no coats of arms beyond simplified Croatia)
+  globalgrill: { name: 'Global Grill', how: 'shop', from: dropAt(2027, 6, 22) },   // flags pack, part 2, week of the Women's World Cup kickoff
+  redwhiteandbun: { name: 'Red, White & Bun', how: 'shop', from: dropAt(2027, 6, 29) },   // held for July 4
+  frightbites: { name: 'Fright Bites', how: 'shop', from: dropAt(2027, 10, 5) },   // spooky pack, held for Halloween
+  // Premium Collection: own prices per costume (SKINS price), $16.99 for all four, purchase only (never BunBux), shine effects.
+  // Held until Alan approves it: PREMIUM_HOLD keeps it hidden (vault and ?dropdate=2099-01-02 on test sites show it). Set a real dropAt() to launch.
+  preciousgems: { name: 'Precious Metals & Gems', how: 'shop', premium: true, colPrice: '$16.99', from: PREMIUM_HOLD,
+    intro: 'Some franks were born to grill. These were born to shine. Meet four exceptionally well-dressed dogs ready to bring a little extra sparkle to the bun.' },
+  // Ultra Exclusives: two one-of-a-kind costumes, sold separately (no Collection price), held the same way
+  ultraexclusives: { name: 'Ultra Exclusives', how: 'shop', premium: true, noCol: true, from: PREMIUM_HOLD,
+    intro: 'The fanciest franks in the kitchen, each with its own grand entrance.' } };   // spooky pack, held for Halloween
+function skinHow(s) { const g = s.group || 'earn'; if (!groupOpen(g) || !skinOpen(s)) return 'hidden';   // a Collection (or a costume added later) before its drop date
+  const h = s.how || (SKIN_GROUPS[g] || SKIN_GROUPS.earn).how; return h === 'shop' && !SHOP_ON && !VAULT ? 'soon' : h; }
 // costumes won so far (ids), kept on this device
 function skinsWon() { try { const a = JSON.parse(safeGet('fb_skins_earned') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
 function skinGoalMet(s, st) { return !!(s.goal && st && (st[s.goal.stat] || 0) >= s.goal.n); }
@@ -995,6 +1147,7 @@ const SHOP_ON = SHOP_TEST || SHOP_APP || SHOP_WEB;
 const SHOP_STORE = SHOP_APP || SHOP_WEB;   // real purchases (store prices, buyer account)
 const SKINS_ALL = !SHOP_TEST && !SHOP_WEB && SHOP_TESTHOST && (new URLSearchParams(location.search).get('skins') === 'all' || location.hostname === 'preview.franks-and-buns.pages.dev');
 kitchenLoad(kitchenPicked().id);   // the kitchen this device picked (Classic until another is unlocked)
+if (VAULT) window.addEventListener('load', () => setTimeout(skinsOpen, 400));   // the vault opens straight to the costume screen
 // --- BunBux and the daily challenge ---
 // BunBux are earned by playing, never sold: 1 per box packed (up to 10 a game), 25 for the daily challenge (once a day)
 // and day-streak bonuses (+25 at 3 days, +75 at 7, +200 at 30). The server keeps them with the Dog House profile, so the
@@ -1004,8 +1157,11 @@ const BUX_COST = 300, BUX_DAILY = 25;
 // Limited Edition: costumes (one or two per Collection) that can only be bought, never unlocked with BunBux (same list as BUX_LIMITED in the API)
 const SKINS_LIMITED = ['santa', 'bernedoodle', 'labradoodle', 'persian', 'mainecoon', 'slamdunk', 'goalgetter', 'axolotl', 'anglerfish', 'unidentifiedfryingobject', 'babykaiju', 'phoenix', 'shadowwizard',
   'glazedandconfused', 'blanketburrito', 'royaltreatment', 'raccoon', 'forkimpostor', 'professorfrank', 'glowgetter', 'specialdelivery',
-  'discodog', 'maneevent'];
+  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland', 'bison', 'flamingo', 'ladyliberty', 'powerup', 'unitedkingdom', 'unitedstates', 'hawaiivolcanoes', 'california', 'giraffe', 'polarbear'];
 function skinLimited(id) { return SKINS_LIMITED.indexOf(id) >= 0; }
+function skinPremium(s) { const G = s && SKIN_GROUPS[s.group]; return !!(G && G.premium); }
+function skinBadge(s) { return SKIN_GROUPS[s.group].noCol ? '👑 ULTRA EXCLUSIVE' : '💎 PREMIUM'; }
+function skinNoBux(id) { return skinLimited(id) || skinPremium(skinById(id)); }   // purchase only: Limited Edition and premium costumes
 // Everyone gets the same challenge each day (midnight Pacific). Same list and order as DAILY in functions/api/[[path]].js
 const DAILY = [['streak', 10], ['boxes', 2], ['franks', 20], ['chili', 1], ['streak', 12], ['boxes', 3], ['franks', 25], ['streak', 15],
   ['boxes', 4], ['chili', 2], ['franks', 30], ['streak', 8], ['boxes', 3], ['franks', 35], ['streak', 18], ['chili', 1], ['boxes', 5],
@@ -1172,7 +1328,7 @@ function dailyGameOverLine() {   // in the costume-hint slot: a challenge just d
 }
 async function skinsBux() {   // unlock the costume on the confirm screen for BunBux
   if (skinsBusy || !skinsBuy) return;
-  const p = shopProducts()[skinsBuy]; if (!p || p.kind !== 'skin' || skinLimited(p.skins[0])) return;
+  const p = shopProducts()[skinsBuy]; if (!p || p.kind !== 'skin' || skinNoBux(p.skins[0])) return;
   skinsBusy = true; skinsMsg = ''; skinsRender();
   try {
     await buxFlush();   // games still waiting on this device count toward the price
@@ -1196,23 +1352,25 @@ function skinUnlocked(s) {
 // Prices: $0.99 per costume; $3.99 per Collection, $2.99 launch offer through Jan 15, 2027 (Pacific); all three $7.99.
 const SHOP_LAUNCH_END = Date.UTC(2027, 0, 16, 8);   // midnight at the end of Jan 15 in California
 const SHOP_COLS = Object.keys(SKIN_GROUPS).filter(g => SKIN_GROUPS[g].how === 'shop' && groupOpen(g));   // Collections on sale (dropped ones join on their date)
-const SHOP_LAUNCH3 = ['holiday', 'dogs', 'cats'];   // the fixed "All 3 Collections" bundle ($7.99): always exactly these three
+const SHOP_LAUNCH3 = ['holiday', 'dogs', 'cats'];   // the fixed "3 Launch Collections" bundle ($7.99): always exactly these three
 function shopNow() { const d = new URLSearchParams(location.search).get('shopdate'); return SHOP_TEST && d === 'after' ? SHOP_LAUNCH_END + 1 : Date.now(); }
 function shopLaunch() { return shopNow() < SHOP_LAUNCH_END; }
-function shopColSkins(g) { return SKINS.filter(k => k.group === g).map(k => k.id); }
+function shopColSkins(g) { return SKINS.filter(k => k.group === g && skinOpen(k)).map(k => k.id); }   // costumes added later join on their date (and go to everyone who owns the Collection)
 // product id -> what it is; the same ids get created in App Store Connect and Google Play
 function shopProducts() {
   const out = {}, st = shopStore.products;
   // in the apps the price comes from the store (the player's own currency); the crossed-out price only in dollars
-  const real = (pid, usd) => SHOP_STORE ? (st[pid] ? packsEsc(st[pid].priceString || '') : '') : usd;   // store text: escaped before it goes into the page
+  const real = (pid, usd) => SHOP_STORE && !VAULT ? (st[pid] ? packsEsc(st[pid].priceString || '') : '') : usd;   // store text: escaped before it goes into the page
   const usdStore = pid => !SHOP_STORE || (st[pid] && st[pid].currencyCode === 'USD');
   SHOP_COLS.forEach(g => {
-    shopColSkins(g).forEach(id => { out['skin_' + id] = { kind: 'skin', name: skinById(id).name, skins: [id], price: real('skin_' + id, '$0.99') }; });
-    const cid = 'col_' + g;
+    shopColSkins(g).forEach(id => { out['skin_' + id] = { kind: 'skin', name: skinById(id).name, skins: [id], price: real('skin_' + id, skinById(id).price || '$0.99') }; });
+    const cid = 'col_' + g, G = SKIN_GROUPS[g];
+    if (G.noCol) return;   // sold one at a time only
+    if (G.premium) { out[cid] = { kind: 'col', id: cid, group: g, premium: true, name: G.name + ' Collection', skins: shopColSkins(g), price: real(cid, G.colPrice) }; return; }   // one fixed price, no launch offer
     out[cid] = { kind: 'col', group: g, name: SKIN_GROUPS[g].name + ' Collection', skins: shopColSkins(g),
       price: real(cid, shopLaunch() ? '$2.99' : '$3.99'), was: shopLaunch() && usdStore(cid) ? '$3.99' : '', launch: shopLaunch() };
   });
-  out.col_launch3 = { kind: 'bundle', name: 'All 3 Collections', skins: [].concat.apply([], SHOP_LAUNCH3.map(shopColSkins)), price: real('col_launch3', '$7.99'),
+  out.col_launch3 = { kind: 'bundle', name: '3 Launch Collections', skins: [].concat.apply([], SHOP_LAUNCH3.map(shopColSkins)), price: real('col_launch3', '$7.99'),
     note: SHOP_LAUNCH3.map(g => SKIN_GROUPS[g].name).join(', ') };
   return out;
 }
@@ -1249,7 +1407,13 @@ const SHOP_STRIPE = {
   skin_moonrover: ['price_1UeqGg6LJdPzXq2b1oAWsBik', 'prod_VgCgyYNHzkwJKM'], skin_jurassicpork: ['price_1UeqGl6LJdPzXq2bAaVnxGCV', 'prod_VgCgyqIBJiJzf5'],
   skin_triceratops: ['price_1UeqGq6LJdPzXq2bdE64SOmf', 'prod_VgCgXbTAyKJ5MT'], skin_stegosaurus: ['price_1UeqH96LJdPzXq2bUjH0TWAJ', 'prod_VgCg6H9JkoQZgK'],
   skin_pterodactyl: ['price_1UeqHE6LJdPzXq2bKQG9wYIn', 'prod_VgCgKr7RNMsfnw'], skin_babykaiju: ['price_1UeqHJ6LJdPzXq2bOTEosbQ9', 'prod_VgCgMNGzP59iHt'],
-  col_spacecases: ['price_1UeqL56LJdPzXq2b26msqr60', 'prod_VgCkzWsueWmiAF'], col_tinyterrors: ['price_1UeqLB6LJdPzXq2bnYqdWUDx', 'prod_VgCkiCQgWYaZV8']
+  col_spacecases: ['price_1UeqL56LJdPzXq2b26msqr60', 'prod_VgCkzWsueWmiAF'], col_tinyterrors: ['price_1UeqLB6LJdPzXq2bnYqdWUDx', 'prod_VgCkiCQgWYaZV8'],
+  skin_fairy: ['price_1UfCz06LJdPzXq2bCfYc6hxI', 'prod_Vga975lD8OBU0L'], skin_griffin: ['price_1UfCzw6LJdPzXq2bIy8H3TDa', 'prod_VgaA3uf8mWzASZ'],
+  skin_phoenix: ['price_1UfD0V6LJdPzXq2bDlwvZMxu', 'prod_VgaAHKnlN7RU0X'], skin_seaserpent: ['price_1UfD0y6LJdPzXq2bHQ6Jkk0R', 'prod_VgaByGZsJST2XQ'],
+  skin_yetiornot: ['price_1UfD1R6LJdPzXq2bD2mbVcLB', 'prod_VgaBj8Uf3E3iMb'], col_mythicalmisfits: ['price_1UfD6u6LJdPzXq2bzeGOfAQw', 'prod_VgaHghx4YwWIGF'],
+  skin_maneevent: ['price_1UfD1u6LJdPzXq2bOZGFBpqg', 'prod_VgaCLyEzeQCi7k'], skin_stripehype: ['price_1UfD376LJdPzXq2b2xpSUnFe', 'prod_VgaDQ3qqy1qAgK'],
+  skin_pandamonium: ['price_1UfD5x6LJdPzXq2b5gOyylBi', 'prod_VgaGR5oZzwEIXg'], skin_trunkshow: ['price_1UfD6Q6LJdPzXq2bjVoqekFJ', 'prod_VgaG30WP26Mql8'],
+  col_wildthings: ['price_1UfD7O6LJdPzXq2bOvHEILSF', 'prod_VgaHku9oSzFQay']
 };
 function shopIdOf(storeId) {
   if (shopProducts()[storeId]) return storeId;
@@ -1283,7 +1447,7 @@ function shopStartWeb() {
       const offs = await rc.getOfferings(), off = offs && offs.all && offs.all.web_shop;
       ((off && off.availablePackages) || []).forEach(pk => {
         const pr = pk.webBillingProduct && pk.webBillingProduct.currentPrice;
-        if (pr) shopStore.products[pk.identifier] = { pkg: pk, priceString: pr.formattedPrice, currencyCode: pr.currency };
+        if (pr) shopStore.products[pk.identifier] = { pkg: pk, priceString: pr.formattedPrice, currencyCode: pr.currency, price: pr.amountMicros / 1e6 };
       });
     } catch (e) {}
     shopStore.loaded = true;
@@ -1385,6 +1549,25 @@ window.addEventListener('load', () => { if (SHOP_STORE) setTimeout(() => shopSta
 // costumes bought (ids). Test mode keeps pretend purchases on this device only.
 function shopOwned() { try { const a = JSON.parse(safeGet(SHOP_TEST ? 'fb_shop_test' : 'fb_skins_bought') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
 function shopGive(ids) { const have = shopOwned(); ids.forEach(id => { if (have.indexOf(id) < 0) have.push(id); }); safeSet(SHOP_TEST ? 'fb_shop_test' : 'fb_skins_bought', JSON.stringify(have)); }
+// Premium Collection: what the costumes it adds would cost one at a time (store prices; dollars where the store isn't loaded).
+// Only shown when every price is known in one currency, so the comparison is never a guess.
+function shopSeparately(p) {
+  const left = p.skins.filter(id => shopOwnedOf([id]).length === 0);
+  if (!left.length) return null;
+  let sum = 0, cur = null;
+  for (const id of left) {
+    const sp = SHOP_STORE && !VAULT ? shopStore.products['skin_' + id] : null;
+    const amt = sp ? +sp.price : SHOP_STORE && !VAULT ? NaN : parseFloat(String(skinById(id).price || '$0.99').replace(/[^0-9.]/g, ''));
+    const c = sp ? sp.currencyCode : 'USD';
+    if (!isFinite(amt) || (cur && c !== cur)) return null;
+    sum += amt; cur = c;
+  }
+  const colSp = SHOP_STORE && !VAULT ? shopStore.products[p.id || ''] : null;
+  const colAmt = colSp ? +colSp.price : parseFloat(String(SKIN_GROUPS[p.group].colPrice).replace(/[^0-9.]/g, ''));
+  if (colSp && colSp.currencyCode !== cur) return null;
+  let text; try { text = new Intl.NumberFormat(undefined, { style: 'currency', currency: cur }).format(Math.round(sum * 100) / 100); } catch (e) { return null; }
+  return { n: left.length, text, cheaper: isFinite(colAmt) && sum <= colAmt };
+}
 function shopOwnedOf(ids) { const have = shopOwned().concat(buxOwned()); return ids.filter(id => have.indexOf(id) >= 0); }
 // buying: the test site pretends; the apps go to Apple / Google Play through RevenueCat
 async function shopBuy(pid) {
@@ -2713,7 +2896,7 @@ function spawnBun() {
 function resetGame() {
   stopChaseEffects(); wavDuckUntil = 0;   // skipping the intro cuts the chase foley; gameplay music starts once
   frank = { x:70, y:H*0.4, vy:0, squash:1, stretch:1, alive:true };
-  buns=[]; splats=[]; particles=[]; floatingTexts=[]; forks=[]; gameDogs=[];
+  buns=[]; splats=[]; particles=[]; glints=[]; floatingTexts=[]; forks=[]; gameDogs=[];
   score=0; runFrames=0; packsResult=null; buxResult=null; lives=3; streak=0; bestStreak=0; chiliCaught=0;
   franksLanded=0; boxFranks=0; boxesCompleted=0; boxFlash=0;
   scrollSpeed=2.2; scrollX=0; nextBunDist=0;
@@ -3075,6 +3258,7 @@ function update() {
     const p=particles[i]; p.x+=p.vx; p.y+=p.vy; p.vy+=0.1; p.life--;
     if (p.life<=0) particles.splice(i,1);
   }
+  fxFly(); fxUpdate();
   for (let i=floatingTexts.length-1; i>=0; i--) {
     const ft=floatingTexts[i]; ft.y+=ft.vy; ft.life--;
     if (ft.life<=0) floatingTexts.splice(i,1);
@@ -3163,7 +3347,7 @@ function landFrank(bun) {
   if (streak === 3 || streak === 5 || streak === 10) sndCheer(streak === 10);   // crowd cheer when a streak level is reached
   const rushMult = chiliRush > 0 ? 2 : 1;
   const pts=Math.floor(100*mult*sm*rushMult); score+=pts; sndLand();
-  addParticles(bun.x,bun.y,'#FFD700',10); shakeAmount=bun.condiment?6:3;
+  addParticles(bun.x,bun.y,'#FFD700',10); fxLand(bun.x,bun.y); shakeAmount=bun.condiment?6:3;
   addFloatingText(bun.x,bun.y-20,'+'+pts+(bun.condiment?' '+bun.condiment.label:'')+(rushMult>1?' x2':''),bun.condiment?bun.condiment.color:'#FFD700',bun.condiment?21:20);
   boxFranks++;
   if (boxFranks>=6) {
@@ -3441,6 +3625,75 @@ function drawSplats() {
     }
     ctx.restore();
   }
+}
+
+// --- Premium costume shine (looks only: never touches movement, hit checks or scoring) ---
+// A soft band of light sweeps across the frank now and then in flight, small glints twinkle near it,
+// and a short sparkle burst plays when it lands. Off when the player turns it off or asks for reduced motion.
+const FX = {
+  silver:   { every: 110, sheen: 'rgba(255,255,255,.75)', a: .55, rate: 16, cols: ['#ffffff', '#dfe6ee'], burst: 7 },
+  gold:     { every: 100, sheen: 'rgba(255,230,140,.85)', a: .55, rate: 14, cols: ['#fff3b0', '#ffd34d'], burst: 9 },
+  platinum: { every: 95,  sheen: 'rgba(225,240,255,.85)', a: .6,  rate: 13, cols: ['#ffffff', '#cfe3ff'], burst: 9 },
+  diamond:  { every: 80,  sheen: null, a: .6, rate: 9, cols: ['#ffffff', '#9fe6ff', '#ffb3e6', '#fff59e', '#b6ffcf'], burst: 13 },
+  // Ultra Exclusives: a richer sheen, more glints and a double ring on landing
+  sapphire: { every: 75,  sheen: 'rgba(150,190,255,.9)', a: .65, rate: 8, cols: ['#ffffff', '#6fa8ff', '#2f6bff', '#cfe3ff'], burst: 16, grand: true },
+  royal:    { every: 70,  sheen: 'rgba(255,215,110,.9)', a: .65, rate: 7, cols: ['#fff3b0', '#ffd34d', '#ff8fa3', '#ffffff'], burst: 18, grand: true }
+};
+function fxReduced() { try { return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) { return false; } }
+function fxOn() { const v = safeGet('fb_fx'); return v === 'on' ? true : v === 'off' ? false : !fxReduced(); }
+function fxOf(s) { return s && s.fx && fxOn() ? FX[s.fx] : null; }
+function skinsFxNote() {
+  return '<button type="button" class="fbs-fxbtn" data-a="fx">✨ Costume shine in the game: <b>' + (fxOn() ? 'On' : 'Off') + '</b> · tap to turn ' + (fxOn() ? 'off' : 'on') + '</button>';
+}
+let glints = [];
+function fxGlint(x, y, f, big) {
+  glints.push({ x, y, life: 0, max: big ? 26 : 20, size: (big ? 5 : 3) + Math.random() * (big ? 4 : 3), col: f.cols[Math.floor(Math.random() * f.cols.length)], rot: Math.random() * Math.PI,
+    vx: big ? (Math.random() - 0.5) * 3 : -0.6, vy: big ? -0.5 - Math.random() * 2 : -0.2 });
+}
+function fxFly() {   // called every frame while playing
+  const s = curSkin(), f = fxOf(s); if (!f || !frank.alive) return;
+  if (frameCount % f.rate === 0) fxGlint(frank.x + s.fly[0] + Math.random() * s.fly[2], frank.y + s.fly[1] + Math.random() * s.fly[3], f, false);
+}
+function fxLand(x, y) {
+  const f = fxOf(curSkin()); if (!f) return;
+  for (let i = 0; i < f.burst; i++) fxGlint(x + (Math.random() - 0.5) * 70, y - 10 - Math.random() * 30, f, true);
+  glints.push({ ring: true, x, y: y - 12, life: 0, max: 16, col: f.cols[f.cols.length > 2 ? 1 : 0] });   // a quick flash ring
+  if (f.grand) glints.push({ ring: true, x, y: y - 12, life: -6, max: 20, col: f.cols[2] });   // and a second, later one
+}
+function fxUpdate() {
+  for (let i = glints.length - 1; i >= 0; i--) { const g = glints[i]; g.life++; if (!g.ring) { g.x += g.vx - scrollSpeed * 0.3; g.y += g.vy; } if (g.life >= g.max) glints.splice(i, 1); }
+  if (glints.length > 60) glints.splice(0, glints.length - 60);
+}
+function fxDraw() {
+  for (const g of glints) {
+    if (g.life < 0) continue;
+    const t = g.life / g.max, a = Math.sin(Math.PI * t);
+    ctx.save(); ctx.globalAlpha = g.ring ? (1 - t) * 0.6 : a * 0.9; ctx.translate(g.x, g.y);
+    if (g.ring) { ctx.strokeStyle = g.col; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, 10 + t * 34, 0, Math.PI * 2); ctx.stroke(); }
+    else {   // four-point twinkle
+      ctx.rotate(g.rot + t); const r = g.size * (0.5 + a * 0.5), w = r * 0.22;
+      ctx.fillStyle = g.col; ctx.beginPath();
+      ctx.moveTo(0, -r); ctx.lineTo(w, -w); ctx.lineTo(r, 0); ctx.lineTo(w, w); ctx.lineTo(0, r); ctx.lineTo(-w, w); ctx.lineTo(-r, 0); ctx.lineTo(-w, -w); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+// the sweeping light band, masked to the costume's own shape (drawn on a small canvas, then added over the frank)
+const fxCan = document.createElement('canvas'), fxG = fxCan.getContext('2d');
+function fxSheen(x, y, sq, st) {
+  const s = curSkin(), f = fxOf(s); if (!f) return;
+  const ph = (frameCount % f.every) / 34; if (ph > 1) return;
+  const im = skinPic(s.id, 'fly'); if (!im) return;
+  const g = s.fly, k = 2, w = Math.ceil(g[2] * k), h = Math.ceil(g[3] * k);
+  if (fxCan.width !== w || fxCan.height !== h) { fxCan.width = w; fxCan.height = h; }
+  fxG.globalCompositeOperation = 'source-over'; fxG.clearRect(0, 0, w, h); fxG.drawImage(im, 0, 0, w, h);
+  fxG.globalCompositeOperation = 'source-in';
+  const bx = -w * 0.5 + ph * w * 1.9, gr = fxG.createLinearGradient(bx, 0, bx + w * 0.4, h * 0.6);
+  if (f.sheen) { gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(0.5, f.sheen); gr.addColorStop(1, 'rgba(255,255,255,0)'); }
+  else { gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(0.3, 'rgba(255,150,210,.55)'); gr.addColorStop(0.5, 'rgba(255,255,255,.9)'); gr.addColorStop(0.7, 'rgba(130,220,255,.6)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); }
+  fxG.fillStyle = gr; fxG.fillRect(0, 0, w, h);
+  ctx.save(); ctx.translate(x, y); ctx.scale(sq, st); ctx.globalAlpha = f.a; ctx.globalCompositeOperation = 'lighter';
+  ctx.drawImage(fxCan, g[0], g[1], g[2], g[3]); ctx.restore();
 }
 
 function drawParticles() {
@@ -3730,7 +3983,7 @@ function shareScore() {
 function skinsClose() { const b = document.getElementById('fb-skins'); if (b) b.style.display = 'none'; }
 function skinsIsOpen() { const b = document.getElementById('fb-skins'); return !!(b && b.style.display !== 'none'); }
 function skinsOpen() {
-  skinsView = '';   // opening the screen always starts at the top
+  skinsView = ''; skinsScroll = {};   // opening the screen always starts at the top
   let box = document.getElementById('fb-skins');
   if (!box) {
     box = document.createElement('div'); box.id = 'fb-skins'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'Skins');
@@ -3757,7 +4010,7 @@ function skinsOpen() {
       '#fb-skins .fbs-buy img.fbs-kbig{width:100%;max-width:300px;height:150px;object-fit:cover;border-radius:12px;border:2px solid rgba(255,215,0,.5)}' +
       '#fb-skins .fbs-skin small{font:12px Arial;color:#c8a878}' +
       '#fb-skins .fbs-skin.on{border-color:#FFD700;background:rgba(255,215,0,.12)}#fb-skins .fbs-skin.on small{color:#FFD700}' +
-      '#fb-skins .fbs-skin.lock{cursor:default}#fb-skins .fbs-skin{position:relative}#fb-skins .fbs-skin.lock img{filter:saturate(.85) opacity(.6)}#fb-skins .fbs-skin.lock::after{content:"🔒";position:absolute;top:6px;right:8px;font-size:16px}' +
+      '#fb-skins .fbs-skin.lock{cursor:default}#fb-skins .fbs-skin{position:relative}#fb-skins .fbs-skin.lock::after{content:"🔒";position:absolute;top:6px;right:8px;font-size:16px}' +
       '#fb-skins .fbs-deal{background:linear-gradient(135deg,rgba(255,102,0,.22),rgba(255,215,0,.12));border:2px solid #FFD700;border-radius:12px;padding:12px;margin:0 0 12px;text-align:left;cursor:pointer;width:100%;color:#f3e3c3;box-sizing:border-box;display:block;font:14px Arial}' +
       '#fb-skins .fbs-deal b{color:#FFD700;font-size:16px}#fb-skins .fbs-deal .fbs-price{float:right;text-align:right}' +
       '#fb-skins .fbs-was{text-decoration:line-through;color:#c8a878;font-size:13px;margin-right:6px}#fb-skins .fbs-now{color:#fff;font:bold 18px Arial}' +
@@ -3773,8 +4026,32 @@ function skinsOpen() {
       '#fb-skins .fbs-test{text-align:center;font:bold 11px Arial;color:#1a0f05;background:#9be29b;border-radius:6px;padding:3px;margin:0 0 8px}' +
       '#fb-skins .fbs-ltd{display:inline-block;background:linear-gradient(135deg,#FFD700,#ffb347);color:#1a0f05;font:bold 10px Arial;letter-spacing:.5px;border-radius:999px;padding:2px 8px}' +
       '#fb-skins .fbs-ltd-c{position:absolute;top:6px;left:6px;z-index:1}' +
+      '#fb-skins .fbs-ltd.fbs-prem{background:linear-gradient(135deg,#e8f4ff,#9fc8ff 45%,#ffffff 60%,#b9a6ff);color:#14203a}' +
+      // premium: moving shine masked to the costume's own shape (a preview of the in-game effect), plus three twinkles
+      '#fb-skins .fbs-shine{position:relative;display:inline-block;line-height:0;max-width:100%}#fb-skins .fbs-skin .fbs-shine{width:100%;max-width:150px}' +
+      '#fb-skins .fbs-shine::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.85) 50%,transparent 62%) no-repeat;background-size:260% 100%;animation:fbsSheen 2.8s ease-in-out infinite;' +
+      '-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat;mix-blend-mode:screen}' +
+      '#fb-skins .fbs-fx-gold::after{background-image:linear-gradient(105deg,transparent 38%,rgba(255,236,150,.9) 50%,transparent 62%)}' +
+      '#fb-skins .fbs-fx-diamond::after{background-image:linear-gradient(105deg,transparent 34%,rgba(255,140,200,.55) 42%,rgba(255,255,255,.95) 50%,rgba(120,220,255,.6) 58%,transparent 66%)}' +
+      '#fb-skins .fbs-shine i{position:absolute;width:11px;height:11px;pointer-events:none;background:#fff;clip-path:polygon(50% 0,58% 42%,100% 50%,58% 58%,50% 100%,42% 58%,0 50%,42% 42%);opacity:0;animation:fbsTw 2.8s ease-in-out infinite}' +
+      '#fb-skins .fbs-shine i:nth-of-type(1){left:22%;top:18%;animation-delay:.5s}#fb-skins .fbs-shine i:nth-of-type(2){left:62%;top:8%;animation-delay:1.3s}#fb-skins .fbs-shine i:nth-of-type(3){left:44%;top:62%;animation-delay:2.1s}' +
+      '#fb-skins .fbs-fx-sapphire::after{background-image:linear-gradient(105deg,transparent 38%,rgba(150,190,255,.95) 50%,transparent 62%)}#fb-skins .fbs-fx-royal::after{background-image:linear-gradient(105deg,transparent 38%,rgba(255,215,110,.95) 50%,transparent 62%)}' +
+      '#fb-skins .fbs-fx-sapphire i{background:#9cc2ff}#fb-skins .fbs-fx-royal i{background:#ffd34d}#fb-skins .fbs-fx-royal i:nth-of-type(2){background:#ff8fa3}' +
+      '#fb-skins .fbs-fx-gold i{background:#ffe680}#fb-skins .fbs-fx-platinum i{background:#e3efff}#fb-skins .fbs-fx-diamond i:nth-of-type(1){background:#9fe6ff}#fb-skins .fbs-fx-diamond i:nth-of-type(2){background:#ffb3e6}' +
+      '@keyframes fbsSheen{0%{background-position:130% 0}55%,100%{background-position:-30% 0}}@keyframes fbsTw{0%,100%{opacity:0;transform:scale(.3)}10%{opacity:1;transform:scale(1)}22%,99%{opacity:0;transform:scale(.3)}}' +
+      '@media (prefers-reduced-motion:reduce){#fb-skins .fbs-shine::after,#fb-skins .fbs-shine i{animation:none;opacity:0}}' +
+      '#fb-skins .fbs-buy .fbs-shine img.fbs-pbig{width:220px;height:126px}#fb-skins .fbs-buy .fbs-pics .fbs-shine img{width:62px;height:40px}' +
+      '#fb-skins .fbs-prows{display:flex;flex-direction:column;gap:10px}' +
+      '#fb-skins .fbs-prow{display:flex;align-items:center;gap:10px;text-align:left;width:100%;background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(0,0,0,.25));border:2px solid rgba(190,215,255,.35);border-radius:14px;padding:10px;color:#f3e3c3;font:14px Arial;cursor:pointer;position:relative}' +
+      '#fb-skins .fbs-prow.on{border-color:#FFD700;background:rgba(255,215,0,.12)}#fb-skins .fbs-prow.lock::after{content:"🔒";position:absolute;top:8px;right:10px;font-size:15px}' +
+      '#fb-skins .fbs-prow-p{flex:0 0 38%;display:flex;justify-content:center}#fb-skins .fbs-prow-p img{width:100%;max-width:150px;height:80px;object-fit:contain}' +
+      '#fb-skins .fbs-prow-t{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}#fb-skins .fbs-prow-t b{color:#FFD700;font:bold 16px Arial;padding-right:20px}' +
+      '#fb-skins .fbs-tagl{color:#cfe3ff;font:italic 13px Arial;margin:0}#fb-skins .fbs-desc{display:block;font-size:12px;line-height:1.35;color:#e6d3b3;margin:0}#fb-skins .fbs-prow small{font:12px Arial;color:#c8a878;margin-top:3px}' +
+      '#fb-skins .fbs-prow .fbs-p{color:#fff;font:bold 13px Arial;background:#ff6600;border-radius:999px;padding:1px 8px}#fb-skins .fbs-buy .fbs-desc{font-size:13px;margin:6px 0}' +
+      '#fb-skins .fbs-warn{color:#ffcf7a}#fb-skins .fbs-fxbtn{display:block;margin:10px auto 0;background:transparent;border:1px solid rgba(190,215,255,.5);color:#cfe3ff;border-radius:999px;padding:6px 14px;font:12px Arial;cursor:pointer}' +
       '#fb-skins .fbs-bal{text-align:center;font:13px Arial;color:#FFD700;background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.35);border-radius:999px;padding:5px 10px;margin:0 auto 10px;width:fit-content}' +
       '#fb-skins .fbs-go.fbs-bux{background:transparent;color:#FFD700;border:2px solid #FFD700;padding:11px}#fb-skins .fbs-buxnote{text-align:center;font-size:12px;color:#c8a878;margin:6px 0 0}' +
+      '#fb-skins .fbs-q{display:block;width:100%;box-sizing:border-box;margin:0 0 10px;padding:10px 14px;border-radius:999px;border:2px solid rgba(255,215,0,.35);background:rgba(0,0,0,.3);color:#f3e3c3;font:15px Arial;outline:none}#fb-skins .fbs-q:focus{border-color:#FFD700}#fb-skins .fbs-q::placeholder{color:#c8a878}#fb-skins .fbs-grp{color:#FFD700!important;font-size:11px!important}' +
       '#fb-skins .fbs-close{flex:none;font:600 15px Arial;border-radius:999px;padding:11px 16px;border:1px solid rgba(255,179,71,.5);background:transparent;color:#ffb347;cursor:pointer;width:100%;margin:12px 0 0}';
     document.head.appendChild(css);
     box.addEventListener('click', e => {
@@ -3785,9 +4062,11 @@ function skinsOpen() {
       if (t && t.hasAttribute('data-tab')) { skinsTab = t.getAttribute('data-tab'); skinsBuy = null; kitchenBuy = null; skinsMsg = ''; sndStreak(); skinsRender(); return; }
       if (t && t.getAttribute('data-a') === 'home') { if (kitchenBuy) kitchenBuy = null; else if (skinsBuy) skinsBuy = null; else skinsTab = null; skinsMsg = ''; sndStreak(); skinsRender(); return; }
       if (t && t.hasAttribute('data-buy')) { if (!skinsBusy) { skinsBuy = t.getAttribute('data-buy'); skinsMsg = ''; sndStreak(); skinsRender(); } return; }
+      if (VAULT && t && ['pay', 'bux', 'kbux', 'restore'].indexOf(t.getAttribute('data-a')) >= 0) { skinsMsgErr = true; skinsMsg = 'Costume Vault preview: buying is turned off here.'; skinsRender(); return; }
       if (t && t.getAttribute('data-a') === 'pay') { skinsPay(); return; }
       if (t && t.getAttribute('data-a') === 'bux') { skinsBux(); return; }
       if (t && t.getAttribute('data-a') === 'restore') { skinsRestore(); return; }
+      if (t && t.getAttribute('data-a') === 'fx') { safeSet('fb_fx', fxOn() ? 'off' : 'on'); sndStreak(); skinsRender(); return; }
       if (t && t.getAttribute('data-a') === 'shopreset') { safeSet('fb_shop_test', '[]'); skinsMsg = 'Test purchases cleared.'; skinsRender(); return; }
       if (e.target === box || (t && t.getAttribute('data-a') === 'close')) { skinsClose(); return; }
       if (!t || !t.hasAttribute('data-skin')) return;
@@ -3795,6 +4074,7 @@ function skinsOpen() {
       if (!skinUnlocked(s)) { if (skinHow(s) === 'shop' && !skinsBusy) { skinsBuy = 'skin_' + s.id; skinsMsg = ''; sndStreak(); skinsRender(); } return; }
       safeSet('fb_skin', s.id); skinPreload(s); sndStreak(); skinsRender();
     });
+    box.addEventListener('input', e => { if (e.target.classList.contains('fbs-q')) { skinsQ = e.target.value; skinsSearchDraw(); } });
     ['touchstart', 'touchend', 'mousedown', 'pointerdown', 'keydown'].forEach(t => box.addEventListener(t, e => e.stopPropagation(), { passive: true }));
     document.body.appendChild(box);
   }
@@ -3828,7 +4108,14 @@ function skinsDeal(pid) {
     (p.launch && !all ? '<span class="fbs-tag">Launch offer · through Jan 15</span>' : '') +
     '<span class="fbs-inc">' + (p.kind === 'bundle' ? 'These ' + p.skins.length + ' costumes: every costume in ' + packsEsc(p.note) :
       'These ' + p.skins.length + ' costumes: ' + p.skins.map(id => packsEsc(skinById(id).name)).join(', ')) + '</span>' +
-    (own && !all ? '<span class="fbs-own">You already own ' + own + ' of these ' + p.skins.length + '</span>' : '') + '</button>';
+    (own && !all ? '<span class="fbs-own">You already own ' + own + ' of these ' + p.skins.length + '</span>' : '') + (p.premium && !all ? skinsSepHtml(p) : '') + '</button>';
+}
+// premium Collection: the honest comparison with buying one at a time (never a promised discount for costumes you own)
+function skinsSepHtml(p) {
+  const sep = shopSeparately(p); if (!sep) return '';
+  const own = p.skins.length - sep.n;
+  if (sep.cheaper) return '<span class="fbs-inc fbs-warn">' + (own ? 'You own ' + own + ' already, so the other ' + sep.n + ' cost less one at a time: ' : 'Cheaper one at a time: ') + sep.text + '. The Collection price doesn’t change for costumes you own.</span>';
+  return '<span class="fbs-inc">' + (own ? 'The other ' + sep.n + ' one at a time: ' : 'One at a time: ') + sep.text + '</span>';
 }
 async function skinsPay() {
   if (skinsBusy || !skinsBuy) return;
@@ -3906,6 +4193,50 @@ async function kitchensBux() {
   } catch (e) { skinsMsgErr = true; skinsMsg = (e && e.message) || 'That didn’t go through. Your BunBux are safe.'; }
   skinsBusy = false; skinsRender();
 }
+// the costume picture with a moving shine over it (premium costumes; a preview of the effect in the game)
+function skinsShineImg(s, cls) {
+  const im = '<img src="' + skinsPic(s) + '" alt=""' + (cls ? ' class="' + cls + '"' : '') + ' loading="lazy">';
+  return s.fx ? '<span class="fbs-shine fbs-fx-' + s.fx + '" style="--m:url(' + skinsPic(s) + ')">' + im + '<i></i><i></i><i></i></span>' : im;
+}
+// premium Collection page: one row per costume, picture on the left and its name, tagline, description and price on the right
+function skinsPremRowHtml(s, cur) {
+  const open = skinUnlocked(s), on = s.id === cur.id, how = skinHow(s), pr = (shopProducts()['skin_' + s.id] || {}).price;
+  return '<button type="button" class="fbs-prow' + (on ? ' on' : '') + (open ? '' : ' lock') + '" data-skin="' + s.id + '">' +
+    '<span class="fbs-prow-p">' + skinsShineImg(s) + '</span><span class="fbs-prow-t"><b>' + packsEsc(s.name) + '</b>' +
+    '<i class="fbs-tagl">' + packsEsc(s.tag || '') + '</i><span class="fbs-desc">' + packsEsc(s.desc || '') + '</span>' +
+    '<small>' + (on ? '✓ Wearing' : open ? 'Tap to wear' : how === 'shop' ? '<span class="fbs-p">' + (pr || '…') + '</span> · purchase only' : '🔒 Coming soon') + '</small></span></button>';
+}
+function skinsCardHtml(s, cur, extra) {
+  const open = skinUnlocked(s), on = s.id === cur.id, how = skinHow(s);
+  return '<button type="button" class="fbs-skin' + (on ? ' on' : '') + (open ? '' : ' lock') + (open || how === 'earn' || how === 'shop' ? '' : ' soon') + '" data-skin="' + s.id + '"' +
+        (open || how === 'shop' ? '' : ' aria-disabled="true"') + '>' + (how === 'shop' && skinLimited(s.id) ? '<span class="fbs-ltd fbs-ltd-c">★ LIMITED</span>' : how === 'shop' && skinPremium(s) ? '<span class="fbs-ltd fbs-prem fbs-ltd-c">' + skinBadge(s) + '</span>' : '') + skinsShineImg(s) + s.name + (extra || '') +
+        '<small>' + (on ? '✓ Wearing' : open ? 'Tap to wear' : how === 'shop' ? '<span class="fbs-p">' + (shopProducts()['skin_' + s.id].price || '…') + '</span>' : how === 'earn' ? '🔒 ' + (skinNext() === s || !skinPrev(s) ? '' : 'After ' + skinPrev(s).name + ': ') + s.goal.text : '🔒 ' + (s.note || 'Coming soon')) + '</small></button>';
+}
+// keyword search on the costume screen: costume name, Collection name or note; every word must match
+let skinsQ = '';
+function skinsSearchHits(q) {
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  return SKINS.filter(s => {
+    if (!(SKINS_ALL || skinHow(s) !== 'hidden')) return false;
+    const g = SKIN_GROUPS[s.group || 'earn'] || {}, txt = (s.name + ' ' + (g.name || '') + ' ' + (s.note || '') + ' ' + (s.tag || '') + ' ' + s.id).toLowerCase();
+    return words.every(w => txt.indexOf(w) >= 0);
+  });
+}
+function skinsSearchDraw() {
+  const box = document.getElementById('fb-skins'); if (!box) return;
+  const res = box.querySelector('.fbs-res'), home = box.querySelector('.fbs-home'); if (!res || !home) return;
+  const q = skinsQ.trim();
+  home.style.display = q ? 'none' : ''; res.style.display = q ? '' : 'none';
+  if (!q) { res.innerHTML = ''; return; }
+  const hits = skinsSearchHits(q), cur = curSkin();
+  res.innerHTML = '<p class="fbs-sub">' + (hits.length ? hits.length + (hits.length === 1 ? ' costume' : ' costumes') : 'No costumes match “' + packsEsc(q) + '”') + '</p>' +
+    '<div class="fbs-grid">' + hits.map(s => skinsCardHtml(s, cur, '<small class="fbs-grp">' + packsEsc((SKIN_GROUPS[s.group || 'earn'] || {}).name || '') + '</small>')).join('') + '</div>';
+}
+function skinsVaultWhen(g) {   // vault only: when a Collection that isn't out yet drops
+  const G = SKIN_GROUPS[g]; if (!VAULT || !G || !G.from || Date.now() >= G.from) return '';
+  if (G.from >= PREMIUM_HOLD) return '📅 Not scheduled yet';
+  return '📅 Drops ' + new Date(G.from).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/Los_Angeles' });
+}
 function skinsRender() {
   const box = document.getElementById('fb-skins'); if (!box) return;
   const cur = curSkin(), groups = Object.keys(SKIN_GROUPS).filter(g => skinsGroupList(g).length);
@@ -3920,6 +4251,7 @@ function skinsRender() {
     '<h2>' + packsEsc(title) + '</h2>' +
     '<button type="button" class="fbs-x" data-a="close" aria-label="Close">✕</button></div><div class="fbs-body">';
   if (SHOP_TEST) h += '<div class="fbs-test">TEST SHOP · pretend purchases, nothing is charged</div>';
+  if (VAULT) h += '<div class="fbs-test">COSTUME VAULT · every costume, hidden ones too · buying is off</div>';
   if (!SKINS_ALL) h += '<div class="fbs-bal">' + BUX_ICON_HTML + ' You have <b>' + buxShown().toLocaleString() + '</b> BunBux</div>';
   const msg = skinsMsg ? '<p class="fbs-msg' + (skinsMsgErr ? ' err' : '') + '">' + packsEsc(skinsMsg) + '</p>' : '';
   if (kBuy) h += kitchensBuyHtml(kBuy, msg);
@@ -3928,17 +4260,23 @@ function skinsRender() {
     // confirm screen: exactly what you get, what you already own, the price
     const own = shopOwnedOf(buyP.skins), n = buyP.skins.length, left = n - own.length;
     h += '<div class="fbs-buy">';
-    if (buyP.kind === 'skin') h += (skinLimited(buyP.skins[0]) ? '<span class="fbs-ltd">★ LIMITED EDITION</span><br>' : '') + '<img src="' + skinsPic(skinById(buyP.skins[0])) + '" alt=""><h3>' + packsEsc(buyP.name) + '</h3><p>One costume, yours to keep.</p>';
+    const bs = buyP.kind === 'skin' && skinById(buyP.skins[0]);
+    if (bs && skinPremium(bs)) h += '<span class="fbs-ltd fbs-prem">' + skinBadge(bs) + '</span><br>' + skinsShineImg(bs, 'fbs-pbig') + '<h3>' + packsEsc(buyP.name) + '</h3>' +
+      '<p class="fbs-tagl">' + packsEsc(bs.tag) + '</p><p class="fbs-desc">' + packsEsc(bs.desc) + '</p><p>One costume, yours to keep. ✨ It shines in flight and sparkles when it lands.</p>' + skinsFxNote();
+    else if (buyP.kind === 'skin') h += (skinLimited(buyP.skins[0]) ? '<span class="fbs-ltd">★ LIMITED EDITION</span><br>' : '') + '<img src="' + skinsPic(skinById(buyP.skins[0])) + '" alt=""><h3>' + packsEsc(buyP.name) + '</h3><p>One costume, yours to keep.</p>';
     else {
       h += '<h3>' + packsEsc(buyP.name) + '</h3>' + (buyP.launch ? '<span class="fbs-tag">Launch offer · through Jan 15</span>' : '') +
+        (buyP.premium ? '<div class="fbs-pics">' + buyP.skins.map(id => skinsShineImg(skinById(id))).join('') + '</div>' : '') +
         '<p>These ' + n + ' costumes' + (buyP.kind === 'bundle' ? ' (' + packsEsc(buyP.note) + ')' : '') + ':</p><ul>' +
         buyP.skins.map(id => '<li' + (own.indexOf(id) >= 0 ? ' class="own"' : '') + '>' + packsEsc(skinById(id).name) + (own.indexOf(id) >= 0 ? ' ✓' : '') + '</li>').join('') + '</ul>';
       if (own.length) h += '<p class="fbs-own">You already own ' + own.length + ' of these ' + n + ' (marked ✓). This adds the other ' + left + '.</p>';
+      if (buyP.premium) h += '<p>' + skinsSepHtml(buyP) + '</p>';
       h += '<p style="font-size:12px;color:#c8a878">Future costumes aren’t included.</p>';
     }
     h += '<p>' + (buyP.was ? '<span class="fbs-was">' + buyP.was + '</span>' : '') + '<span class="fbs-now">' + (buyP.price || '…') + '</span></p>' +
       '<button type="button" class="fbs-go" data-a="pay"' + (skinsBusy || !buyP.price ? ' disabled' : '') + '>' + (skinsBusy ? 'One moment…' : buyP.price ? 'Buy for ' + buyP.price : shopStore.loaded ? 'Not available yet' : 'Loading price…') + '</button>';
     if (buyP.kind === 'skin' && skinLimited(buyP.skins[0])) h += '<p class="fbs-buxnote">★ Limited Edition: only for purchase, not for BunBux.</p>';
+    else if (bs && skinPremium(bs) || buyP.premium) h += '<p class="fbs-buxnote">Purchase only, not for BunBux. Looks only: it doesn’t change the game or your score.</p>';
     else if (buyP.kind === 'skin') {   // or unlock it with BunBux
       const have = buxShown(), can = have >= BUX_COST && !!packsToken();
       h += '<button type="button" class="fbs-go fbs-bux" data-a="bux"' + (skinsBusy || !can ? ' disabled' : '') + '>' + BUX_ICON_HTML + ' Unlock for ' + BUX_COST + ' BunBux</button>' +
@@ -3947,41 +4285,51 @@ function skinsRender() {
     h += msg + '</div>';
   } else if (!skinsTab) {
     // Collections: one row per group, newest groups just get added to SKIN_GROUPS
+    h += '<input type="search" class="fbs-q" placeholder="🔍 Search costumes" aria-label="Search costumes" autocomplete="off" value="' + packsEsc(skinsQ) + '">';   // keyword search: filters costumes as you type
+    h += '<div class="fbs-res"></div><div class="fbs-home">';
     h += '<p class="fbs-sub">Wearing: <b>' + packsEsc(cur.name) + '</b>' + '</p>' + msg;
     h += kitchensRowHtml();
     groups.forEach(g => {
       const list = skinsGroupList(g), open = list.filter(s => skinUnlocked(s)).length, how = SKINS_ALL ? '' : skinHow(list[0]), soon = how === 'soon';
       const here = list.indexOf(cur) >= 0;
       h += '<button type="button" class="fbs-col' + (here ? ' on' : '') + '" data-tab="' + g + '"><span class="fbs-col-t"><b>' + packsEsc(SKIN_GROUPS[g].name) + (!SKINS_ALL && groupNew(g) ? ' <span class="fbs-new">NEW</span>' : '') + '</b>' +
-        '<small>' + (soon ? '🔒 Coming soon · ' + list.length + ' costumes' : how === 'shop' ? (open === list.length ? '✓ All ' + list.length + ' owned' : (open ? open + ' of ' + list.length + ' owned · ' : list.length + ' costumes · ') + 'from ' + (shopProducts()['skin_' + list[0].id].price || '…')) : open + ' of ' + list.length + ' unlocked') + '</small></span><span class="fbs-col-p">';
+        '<small>' + (skinsVaultWhen(g) ? skinsVaultWhen(g) + ' · ' : '') + (soon ? '🔒 Coming soon · ' + list.length + ' costumes' : how === 'shop' ? (open === list.length ? '✓ All ' + list.length + ' owned' : (open ? open + ' of ' + list.length + ' owned · ' : list.length + ' costumes · ') + 'from ' + (shopProducts()['skin_' + list[0].id].price || '…')) : open + ' of ' + list.length + ' unlocked') + '</small></span><span class="fbs-col-p">';
       (here ? [cur].concat(list.filter(s => s !== cur)) : list).slice(0, 3).forEach(s => { h += '<img src="' + skinsPic(s) + '" alt="" loading="lazy">'; });
       h += '</span><span class="fbs-col-a">›</span></button>';
     });
     if (SHOP_ON && !SKINS_ALL) h += skinsDeal('col_launch3') + '<button type="button" class="fbs-link" data-a="restore">Restore Purchases</button>' +
       (SHOP_TEST ? '<button type="button" class="fbs-link" data-a="shopreset">Clear test purchases</button>' : '');
+    h += '</div>';
   } else {
     const list = skinsGroupList(skinsTab), how0 = SKINS_ALL ? '' : skinHow(list[0]), soon = how0 === 'soon';
+    if (skinsVaultWhen(skinsTab)) h += '<p class="fbs-sub" style="color:#FFD700">' + skinsVaultWhen(skinsTab) + '</p>';
     h += '<p class="fbs-sub">' + (soon ? 'Coming soon. Check back for these costumes!' :
       skinsTab === 'earn' ? 'Win them in order, one per game: pull off the challenge in a single game.' :
+      how0 === 'shop' && SKIN_GROUPS[skinsTab].premium ? packsEsc(SKIN_GROUPS[skinsTab].intro) + '</p><p class="fbs-sub">' + (SKIN_GROUPS[skinsTab].noCol ? 'Each one is sold on its own' : 'Each costume has its own price, or get all ' + list.length + ' together') + '. Purchase only, not for BunBux. Looks only: no costume changes the game.' :
       how0 === 'shop' ? 'Get one costume for ' + (shopProducts()['skin_' + list[0].id].price || '$0.99') + ' or ' + BUX_COST + ' BunBux (★ Limited Edition: purchase only), or the whole Collection.' : 'Dress up your frank.') + '</p>' + msg;
-    if (how0 === 'shop') h += skinsDeal('col_' + skinsTab);
+    if (how0 === 'shop' && !SKIN_GROUPS[skinsTab].noCol) h += skinsDeal('col_' + skinsTab);
+    if (SKIN_GROUPS[skinsTab].premium) { h += '<div class="fbs-prows">' + list.map(s => skinsPremRowHtml(s, cur)).join('') + '</div>' + skinsFxNote(); }
+    else {
     h += '<div class="fbs-grid">';
-    list.forEach(s => {
-      const open = skinUnlocked(s), on = s.id === cur.id, how = skinHow(s);
-      h += '<button type="button" class="fbs-skin' + (on ? ' on' : '') + (open ? '' : ' lock') + (open || how === 'earn' || how === 'shop' ? '' : ' soon') + '" data-skin="' + s.id + '"' +
-        (open || how === 'shop' ? '' : ' aria-disabled="true"') + '>' + (how === 'shop' && skinLimited(s.id) ? '<span class="fbs-ltd fbs-ltd-c">★ LIMITED</span>' : '') + '<img src="' + skinsPic(s) + '" alt="" loading="lazy">' + s.name +
-        '<small>' + (on ? '✓ Wearing' : open ? 'Tap to wear' : how === 'shop' ? '<span class="fbs-p">' + (shopProducts()['skin_' + s.id].price || '…') + '</span>' : how === 'earn' ? '🔒 ' + (skinNext() === s || !skinPrev(s) ? '' : 'After ' + skinPrev(s).name + ': ') + s.goal.text : '🔒 ' + (s.note || 'Coming soon')) + '</small></button>';
-    });
+    list.forEach(s => { h += skinsCardHtml(s, cur); });
     h += '</div>';
+    }
   }
   h += '</div><button type="button" class="fbs-close" data-a="close">Close</button></div>';
   // Same screen as before (e.g. picking a kitchen or costume further down): keep the scroll spot. A new screen starts at the top.
   const view = (skinsTab || '') + '|' + (skinsBuy || '') + '|' + (kitchenBuy || ''), old = box.querySelector('.fbs-body');
-  const keep = view === skinsView && old ? old.scrollTop : 0; skinsView = view;
+  // Going deeper (opening a Collection) remembers where the list was; coming back puts it there again.
+  const depth = v => v.split('|').filter(Boolean).length;
+  let keep = 0;
+  if (view === skinsView) keep = old ? old.scrollTop : 0;
+  else if (depth(view) > depth(skinsView)) { if (old) skinsScroll[skinsView] = old.scrollTop; }
+  else { keep = skinsScroll[view] || 0; for (const k in skinsScroll) if (depth(k) >= depth(view)) delete skinsScroll[k]; }
+  skinsView = view;
   box.innerHTML = h;
   const body = box.querySelector('.fbs-body'); if (body) body.scrollTop = keep;
+  if (!skinsTab && !skinsBuy && !kitchenBuy) skinsSearchDraw();
 }
-let skinsView = '';
+let skinsView = '', skinsScroll = {};
 function scoresPanelRect() { const pw = Math.min(W - 32, 340), ph = gcPlugin() ? 350 : 300; return { x: W / 2 - pw / 2, y: H * 0.5 - ph / 2, w: pw, h: ph }; }
 function drawScoresPanel() {
   ctx.fillStyle = 'rgba(10,5,0,0.9)'; ctx.fillRect(0, 0, W, H);
@@ -4203,9 +4551,10 @@ function draw() {
   if (state===STATE.PLAYING&&frank.alive) {
     if (chiliRush > 0) { ctx.save(); ctx.shadowColor = '#FF2200'; ctx.shadowBlur = 16 + Math.sin(frameCount * 0.3) * 6; drawFrank(frank.x,frank.y,frank.squash,frank.stretch); ctx.restore(); }
     drawFrank(frank.x,frank.y,frank.squash,frank.stretch);
+    fxSheen(frank.x,frank.y,frank.squash,frank.stretch);
     if (Math.abs(frank.vy)>3) { ctx.globalAlpha=0.25; drawFrank(frank.x,frank.y-frank.vy*1.5,frank.squash*0.9,frank.stretch*0.9); ctx.globalAlpha=1; }
   }
-  drawParticles(); drawFloatingTexts();
+  drawParticles(); fxDraw(); drawFloatingTexts();
   if (state===STATE.PLAYING) drawChiliRushOverlay();
   if (state===STATE.PLAYING) drawHUD();
   ctx.restore();

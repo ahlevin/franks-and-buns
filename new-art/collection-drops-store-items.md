@@ -14,7 +14,7 @@ If a drop's items aren't ready on time, the Collection still appears and BunBux 
 
 ★ marks a Limited Edition costume: purchase only, never BunBux.
 
-Total: 14 Collections, 66 costumes, so 80 items in each store.
+Total: 29 Collections, 160 costumes plus 3 added to Sports, so 192 items in each store.
 
 ## Tue Dec 1, 2026  (create by Nov 24)
 
@@ -96,7 +96,8 @@ Total: 14 Collections, 66 costumes, so 80 items in each store.
 | skin_overcooked | Overcooked | $0.99 |
 | skin_businesscasualty | Business Casualty | $0.99 |
 | skin_buffering | Buffering | $0.99 |
-| col_questionabledecisions | Questionable Decisions Collection (8 costumes) | $3.99 ($2.99 launch) |
+| skin_porcelainthrone | Porcelain Throne | $0.99 |
+| col_questionabledecisions | Questionable Decisions Collection (9 costumes) | $3.99 ($2.99 launch) |
 
 ## Tue Jan 5, 2027  (create by Dec 29)
 
@@ -130,3 +131,214 @@ Total: 14 Collections, 66 costumes, so 80 items in each store.
 | skin_ninja | Ninja | $0.99 |
 | skin_shadowwizard | Shadow Wizard ★ | $0.99 |
 | col_finalbossfranks | Final Boss Franks Collection (5 costumes) | $3.99 ($2.99 launch) |
+
+## Tue Jan 19  (create by Jan 12)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_archer | Archer | $0.99 |
+| skin_fairmaiden | Fair Maiden | $0.99 |
+| skin_jester | Jester | $0.99 |
+| skin_joustingknight | Jousting Knight | $0.99 |
+| skin_king | King Frank ★ | $0.99 |
+| skin_wizard | Court Wizard | $0.99 |
+| col_yeoldefranks | Ye Olde Franks Collection (6 costumes) | $3.99 |
+
+## Tue Jan 26  (create by Jan 19; 2 Collections)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_camocommando | Camo Commando | $0.99 |
+| skin_sailorfrank | Sailor Frank | $0.99 |
+| skin_dressblues | Dress Blues | $0.99 |
+| skin_acepilot | Ace Pilot | $0.99 |
+| skin_spacecadet | Space Cadet | $0.99 |
+| skin_rescueswimmer | Rescue Swimmer | $0.99 |
+| col_salutesquad | Salute Squad Collection (6 costumes) | $3.99 |
+
+Chill Dogs (Arctic and alpine animals), same day:
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_arcticfox | Arctic Fox | $0.99 |
+| skin_arctichare | Arctic Hare | $0.99 |
+| skin_mountaingoat | Mountain Goat | $0.99 |
+| skin_polarbear | Polar Bear ★ | $0.99 |
+| skin_snowleopard | Snow Leopard | $0.99 |
+| skin_walrus | Walrus | $0.99 |
+| col_chilldogs | Chill Dogs Collection (6 costumes) | $3.99 |
+
+## Tue Feb 2  (create by Jan 26)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_hotrod | Hot Rod ★ | $0.99 |
+| skin_jetsetter | Jet Setter | $0.99 |
+| skin_chopper | Chopper | $0.99 |
+| skin_roadhog | Road Hog | $0.99 |
+| skin_gravyboat | Gravy Boat | $0.99 |
+| col_fastfood | Fast Food Collection (5 costumes) | $3.99 |
+
+## Tue Feb 9  (create by Feb 2)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_holstein | Holstein | $0.99 |
+| skin_jersey | Jersey | $0.99 |
+| skin_angus | Angus | $0.99 |
+| skin_hereford | Hereford | $0.99 |
+| skin_highland | Highland Cow ★ | $0.99 |
+| col_holycow | Holy Cow Collection (5 costumes) | $3.99 |
+
+## Tue Feb 16  (create by Feb 9)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_longhorn | Longhorn | $0.99 |
+| skin_brahman | Brahman | $0.99 |
+| skin_elk | Elk | $0.99 |
+| skin_bison | Bison ★ | $0.99 |
+| skin_moose | Moose | $0.99 |
+| col_homeontherange | Home on the Range Collection (5 costumes) | $3.99 |
+
+## Tue Feb 23  (create by Feb 16)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_flamingo | Flamingo ★ | $0.99 |
+| skin_toucan | Toucan | $0.99 |
+| skin_snowyowl | Snowy Owl | $0.99 |
+| skin_barnowl | Barn Owl | $0.99 |
+| skin_emperorpenguin | Emperor Penguin | $0.99 |
+| skin_rockhopper | Rockhopper | $0.99 |
+| col_birdbrains | Bird Brains Collection (6 costumes) | $3.99 |
+
+## Tue Mar 2  (create by Feb 23): 3 costumes added to Sports
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_homerun | Home Run | $0.99 |
+| skin_doggypaddle | Doggy Paddle | $0.99 |
+| skin_cleanandjerk | Clean & Jerk | $0.99 |
+
+Also update the Sports Collection's store description from 5 to 8 costumes. Everyone who already owns the Sports Collection gets these three free on Mar 2.
+
+## Tue Mar 9  (create by Mar 2)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_mechapilot | Mecha Pilot | $0.99 |
+| skin_starguardian | Magical Star | $0.99 |
+| skin_swordsman | Wandering Swordsman | $0.99 |
+| skin_powerup | Power-Up Hero ★ | $0.99 |
+| col_bunime | Bun-ime Collection (4 costumes) | $3.99 |
+
+## Tue Mar 16, 2027  (create by Mar 9; US states)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_california | California ★ | $0.99 |
+| skin_colorado | Colorado | $0.99 |
+| skin_kentucky | Kentucky | $0.99 |
+| skin_michigan | Michigan | $0.99 |
+| skin_nevada | Nevada | $0.99 |
+| skin_newjersey | New Jersey | $0.99 |
+| skin_newyork | New York | $0.99 |
+| skin_oregon | Oregon | $0.99 |
+| skin_texas | Texas | $0.99 |
+| skin_vermont | Vermont | $0.99 |
+| col_statefair | State Fair Collection (10 costumes) | $3.99 |
+
+## Tue Mar 23, 2027  (create by Mar 16; zoo animals)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_brownbear | Brown Bear | $0.99 |
+| skin_giraffe | Giraffe ★ | $0.99 |
+| skin_gorilla | Gorilla | $0.99 |
+| skin_hippo | Hippo | $0.99 |
+| skin_koala | Koala | $0.99 |
+| skin_monkey | Monkey | $0.99 |
+| skin_redpanda | Red Panda | $0.99 |
+| skin_zebra | Zebra | $0.99 |
+| col_zoofranks | Zoo Franks Collection (8 costumes) | $3.99 |
+
+## Tue Apr 20, 2027  (create by Apr 13; national parks, National Park Week)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_acadia | Acadia | $0.99 |
+| skin_arches | Arches | $0.99 |
+| skin_grandcanyon | Grand Canyon | $0.99 |
+| skin_grandteton | Grand Teton | $0.99 |
+| skin_smokymountains | Smoky Mountains | $0.99 |
+| skin_hawaiivolcanoes | Hawaii Volcanoes ★ | $0.99 |
+| skin_yellowstone | Yellowstone | $0.99 |
+| skin_yosemite | Yosemite | $0.99 |
+| skin_zion | Zion | $0.99 |
+| col_greatoutdogs | Great Outdogs Collection (9 costumes) | $3.99 |
+
+## Tue Jun 15, 2027  (create by Jun 8; flags pack, part 1)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_unitedkingdom | United Kingdom ★ | $0.99 |
+| skin_france | France | $0.99 |
+| skin_germany | Germany | $0.99 |
+| skin_poland | Poland | $0.99 |
+| skin_croatia | Croatia | $0.99 |
+| skin_switzerland | Switzerland | $0.99 |
+| skin_ukraine | Ukraine | $0.99 |
+| col_eurofranks | Euro Franks Collection (7 costumes) | $3.99 |
+
+## Tue Jun 22, 2027  (create by Jun 15; flags pack, part 2, Women's World Cup week)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_unitedstates | United States ★ | $0.99 |
+| skin_canada | Canada | $0.99 |
+| skin_mexico | Mexico | $0.99 |
+| skin_australia | Australia | $0.99 |
+| skin_japan | Japan | $0.99 |
+| skin_southkorea | South Korea | $0.99 |
+| skin_china | China | $0.99 |
+| skin_india | India | $0.99 |
+| col_globalgrill | Global Grill Collection (8 costumes) | $3.99 |
+
+## Tue Jun 29, 2027  (create by Jun 22; held for July 4)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_ladyliberty | Lady Liberty ★ | $0.99 |
+| skin_libertybell | Liberty Bell | $0.99 |
+| skin_baldeagle | Bald Eagle | $0.99 |
+| skin_fogcitybridge | Fog City Bridge | $0.99 |
+| col_redwhiteandbun | Red, White & Bun Collection (4 costumes) | $3.99 |
+
+## Tue Oct 5, 2027  (create by Sep 28, 2027; held for Halloween)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_ghost | Boo Frank | $0.99 |
+| skin_witch | Witchy Wiener ★ | $0.99 |
+| skin_skeleton | Skele-Frank | $0.99 |
+| skin_mummy | Mummy Dog | $0.99 |
+| col_frightbites | Fright Bites Collection (4 costumes) | $3.99 |
+
+The launch price ends Jan 15, so Collections from Jan 19 on start at $3.99.
+
+## Premium (held: no date yet, nothing created in any store)
+
+Create these only after Alan approves the prices and picks a launch date. They are purchase only, never BunBux. Prices are proposals to test.
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_sterlingsilver | Sterling Silver | $2.99 |
+| skin_goldstandard | Gold Standard | $3.99 |
+| skin_platinumprestige | Platinum Prestige | $4.99 |
+| skin_diamonddog | Diamond Dog | $9.99 |
+| col_preciousgems | Precious Metals & Gems Collection (4 costumes) | $16.99 |
+| skin_crownjewel | The Crown Jewel (Ultra Exclusive, no bundle) | $24.99 |
+| skin_frankfather | The Frankfather (Ultra Exclusive, no bundle) | $49.99 |
+
+To launch, replace `from: PREMIUM_HOLD` with `from: dropAt(y, m, d)` on `preciousgems` and/or `ultraexclusives` in SKIN_GROUPS in game.html, and add the Stripe ids to SHOP_STRIPE.

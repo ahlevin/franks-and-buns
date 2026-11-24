@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Costume Vault</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<!-- Private view of every costume, live and hidden. Not linked from anywhere; opens only with ?k=bunvault.
+     Reads SKINS, SKIN_GROUPS and SKINS_LIMITED straight from game.html, so it never needs updating. -->
+<style>
+  :root { --bg: #fff8ee; --card: #ffffff; --ink: #3a2414; --muted: #8a6a52; --line: #f0dcc4; --live: #2e8b57; --soon: #c46b00; --star: #d4a000; --chip: #fbeedd; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #1d1510; --card: #2a1f18; --ink: #f6e9dc; --muted: #b89a82; --line: #3d2e23; --live: #5fcf8e; --soon: #ffb04a; --star: #ffd24a; --chip: #3a2b20; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+  header { position: sticky; top: 0; z-index: 2; background: var(--bg); border-bottom: 1px solid var(--line); padding: 12px 16px; }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  .sum { color: var(--muted); font-size: 14px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: center; }
+  .bar button { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 6px 12px; font: inherit; cursor: pointer; }
+  .bar button.on { background: var(--ink); color: var(--bg); }
+  .bar input { flex: 1; min-width: 140px; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 6px 12px; font: inherit; }
+  main { padding: 8px 16px 40px; max-width: 1200px; margin: 0 auto; }
+  section h2 { font-size: 18px; margin: 22px 0 8px; display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+  .tag { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--chip); }
+  .tag.live { color: var(--live); } .tag.soon { color: var(--soon); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 10px; }
+  .c { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+  .pics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; align-items: end; height: 64px; }
+  .pics img { width: 100%; height: 64px; object-fit: contain; }
+  .n { font-weight: 700; margin-top: 6px; }
+  .n .st { color: var(--star); }
+  .m { color: var(--muted); font-size: 12px; }
+  .lock { padding: 60px 16px; text-align: center; color: var(--muted); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(async function () {
+  const app = document.getElementById('app');
+  if (new URLSearchParams(location.search).get('k') !== 'bunvault') { app.innerHTML = '<div class="lock">Nothing here.</div>'; return; }
+  // default: the app view (the real costume screen with every Collection open); &view=grid keeps this overview grid
+  if (new URLSearchParams(location.search).get('view') !== 'grid') { location.replace('game.html?vault=bunvault'); return; }
+  const src = await (await fetch('game.html', { cache: 'no-store' })).text();
+  const grab = (start, endRe) => { const i = src.indexOf(start); const rest = src.slice(i); const m = rest.match(endRe); return rest.slice(0, m.index + m[0].length); };
+  const code = 'function dropAt(y, m, d) { return Date.UTC(y, m - 1, d, 8); }\n' +
+    grab('const SKINS = [', /\n\];/) + '\n' + grab('const SKIN_GROUPS = {', /\}\s*\};/) + '\n' + grab('const SKINS_LIMITED = [', /\];/) +
+    '\nreturn { SKINS, SKIN_GROUPS, SKINS_LIMITED };';
+  const { SKINS, SKIN_GROUPS, SKINS_LIMITED } = new Function(code)();
+  const now = Date.now(), lim = new Set(SKINS_LIMITED);
+  const fmt = t => new Date(t).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/Los_Angeles' });
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  // groups in game order; ungrouped free/earned costumes go first
+  const order = ['earn'].concat(Object.keys(SKIN_GROUPS).filter(g => g !== 'earn'));
+  const groups = order.map(g => {
+    const G = SKIN_GROUPS[g] || {}, items = SKINS.filter(s => (s.group || 'earn') === g);
+    return { g, name: G.name || g, from: G.from || 0, items };
+  }).filter(x => x.items.length).sort((a, b) => (a.from || 0) - (b.from || 0));
+  const when = s => Math.max(groups.find(x => x.g === (s.group || 'earn')).from || 0, s.from || 0);
+  const total = SKINS.length, live = SKINS.filter(s => when(s) <= now).length;
+  const cols = groups.filter(x => x.g !== 'earn').length;
+  let filter = 'all', q = '';
+  app.innerHTML = '<header><h1>Costume Vault</h1><div class="sum">' + total + ' costumes in ' + cols + ' Collections plus Free &amp; Earned. ' +
+    live + ' live, ' + (total - live) + ' hidden. ★ = Limited Edition (money only). Private page, not linked anywhere.</div>' +
+    '<div class="bar"><button data-f="all" class="on">All</button><button data-f="live">Live</button><button data-f="soon">Hidden</button><input id="q" placeholder="Search costumes"></div></header><main id="list"></main>';
+  const list = document.getElementById('list');
+  function pic(s, part) {
+    if (!s.frames) return part === 'fly' ? '<img src="sp-frank.png" alt="">' : '<span></span>';
+    return '<img loading="lazy" src="skin-' + s.id + '-' + part + '.png" alt="">';
+  }
+  function draw() {
+    let html = '';
+    for (const x of groups) {
+      const items = x.items.filter(s => { const isLive = when(s) <= now; return (filter === 'all' || (filter === 'live') === isLive) && (!q || s.name.toLowerCase().includes(q)); });
+      if (!items.length) continue;
+      const gl = (x.from || 0) <= now;
+      html += '<section><h2>' + esc(x.name) + ' <span class="tag ' + (gl ? 'live">Live' : 'soon">Drops ' + fmt(x.from)) + '</span><span class="m">' + x.items.length + ' costumes</span></h2><div class="grid">';
+      for (const s of items) {
+        const w = when(s), extra = w !== x.from && w > now ? ' · joins ' + fmt(w) : '';
+        const how = s.how === 'free' ? 'Free' : s.goal ? 'Earned: ' + s.goal.text : lim.has(s.id) ? 'Limited, buy only' : 'Buy or 300 BunBux';
+        html += '<div class="c"><div class="pics">' + pic(s, 'fly') + pic(s, 'bun') + pic(s, 'grill') + '</div><div class="n">' + esc(s.name) +
+          (lim.has(s.id) ? ' <span class="st">★</span>' : '') + '</div><div class="m">' + esc(how) + (s.note ? ' · ' + esc(s.note) : '') + esc(extra) + ' · ' + esc(s.id) + '</div></div>';
+      }
+      html += '</div></section>';
+    }
+    list.innerHTML = html || '<div class="lock">No costumes match.</div>';
+  }
+  app.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { filter = b.dataset.f; app.querySelectorAll('[data-f]').forEach(o => o.classList.toggle('on', o === b)); draw(); });
+  document.getElementById('q').oninput = e => { q = e.target.value.trim().toLowerCase(); draw(); };
+  draw();
+})();
+</script>
+</body>
+</html>

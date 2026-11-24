@@ -17,7 +17,8 @@ const BUX = { perBox: 1, maxBoxes: 10, daily: 25, cap: 100, cost: 300 };   // ca
 // Limited Edition costumes are purchase only (same list as SKINS_LIMITED in game.html)
 const BUX_LIMITED = new Set(['santa', 'bernedoodle', 'labradoodle', 'persian', 'mainecoon', 'slamdunk', 'goalgetter', 'axolotl', 'anglerfish', 'unidentifiedfryingobject', 'babykaiju', 'phoenix', 'shadowwizard',
   'glazedandconfused', 'blanketburrito', 'royaltreatment', 'raccoon', 'forkimpostor', 'professorfrank', 'glowgetter', 'specialdelivery',
-  'discodog', 'maneevent']);
+  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland', 'bison', 'flamingo', 'ladyliberty', 'powerup', 'unitedkingdom', 'unitedstates', 'hawaiivolcanoes', 'california', 'giraffe', 'polarbear',
+  'sterlingsilver', 'goldstandard', 'platinumprestige', 'diamonddog']);
 // The only costumes BunBux can unlock: the ones in Collections that are on sale (SHOP_COLS in game.html), minus Limited Edition.
 // Anything else (Free & Earned, Collections not on sale yet) is refused. When a Collection goes on sale, add its costumes here.
 const BUX_SKINS = new Set([
@@ -34,16 +35,32 @@ const BUX_DROPS = [
   [Date.UTC(2026, 11, 8, 8), ['fairy', 'griffin', 'phoenix', 'seaserpent', 'yetiornot', 'maneevent', 'stripehype', 'pandamonium', 'trunkshow']],   // mythicalmisfits + wildthings
   [Date.UTC(2026, 11, 15, 8), ['snoozebutton', 'blanketburrito', 'slippermode', 'raincheck', 'popstar', 'sliceoflife', 'glazedandconfused', 'tacoboutit']],   // cozycrew + snackpack
   [Date.UTC(2026, 11, 22, 8), ['micdrop', 'paparazzi', 'playerone', 'royaltreatment', 'buzzbun', 'luckybug', 'socialbutterfly', 'glowgetter']],   // maincharacterenergy + buggedout
-  [Date.UTC(2026, 11, 29, 8), ['discodog', 'radicalrelish', 'mixtape', 'ytwokbyte', 'incognidog', 'definitelyacarrot', 'emotionalbaggage', 'forkimpostor', 'bunindisguise', 'overcooked', 'businesscasualty', 'buffering']],   // throwbackfranks + questionabledecisions
+  [Date.UTC(2026, 11, 29, 8), ['discodog', 'radicalrelish', 'mixtape', 'ytwokbyte', 'incognidog', 'definitelyacarrot', 'emotionalbaggage', 'forkimpostor', 'bunindisguise', 'overcooked', 'businesscasualty', 'buffering', 'porcelainthrone']],   // throwbackfranks + questionabledecisions
   [Date.UTC(2027, 0, 5, 8), ['straightafrank', 'graddog', 'professorfrank', 'bookworm', 'sciencewhiz', 'chefspecial', 'brewcrew', 'hardhat', 'specialdelivery']],   // academic + sidehustles
   [Date.UTC(2027, 0, 12, 8), ['rat', 'pigeon', 'possummode', 'raccoon', 'skunk', 'armoredknight', 'frankexe', 'lightningfighter', 'ninja', 'shadowwizard']],   // trashpack + finalbossfranks
+  [Date.UTC(2027, 0, 19, 8), ['archer', 'fairmaiden', 'jester', 'joustingknight', 'king', 'wizard']],   // yeoldefranks
+  [Date.UTC(2027, 0, 26, 8), ['camocommando', 'sailorfrank', 'dressblues', 'acepilot', 'spacecadet', 'rescueswimmer']],   // salutesquad
+  [Date.UTC(2027, 0, 26, 8), ['arcticfox', 'arctichare', 'mountaingoat', 'polarbear', 'snowleopard', 'walrus']],   // chilldogs
+  [Date.UTC(2027, 1, 2, 8), ['hotrod', 'jetsetter', 'chopper', 'roadhog', 'gravyboat']],   // fastfood
+  [Date.UTC(2027, 1, 9, 8), ['holstein', 'jersey', 'angus', 'hereford', 'highland']],   // holycow
+  [Date.UTC(2027, 1, 16, 8), ['longhorn', 'brahman', 'elk', 'bison', 'moose']],   // homeontherange
+  [Date.UTC(2027, 1, 23, 8), ['flamingo', 'toucan', 'snowyowl', 'barnowl', 'emperorpenguin', 'rockhopper']],   // birdbrains
+  [Date.UTC(2027, 2, 2, 8), ['homerun', 'doggypaddle', 'cleanandjerk']],   // added to sports
+  [Date.UTC(2027, 2, 9, 8), ['mechapilot', 'starguardian', 'swordsman', 'powerup']],   // bunime
+  [Date.UTC(2027, 2, 16, 8), ['california', 'colorado', 'kentucky', 'michigan', 'nevada', 'newjersey', 'newyork', 'oregon', 'texas', 'vermont']],   // statefair
+  [Date.UTC(2027, 2, 23, 8), ['brownbear', 'giraffe', 'gorilla', 'hippo', 'koala', 'monkey', 'redpanda', 'zebra']],   // zoofranks
+  [Date.UTC(2027, 3, 20, 8), ['acadia', 'arches', 'grandcanyon', 'grandteton', 'smokymountains', 'hawaiivolcanoes', 'yellowstone', 'yosemite', 'zion']],   // greatoutdogs
+  [Date.UTC(2027, 5, 15, 8), ['unitedkingdom', 'france', 'germany', 'poland', 'croatia', 'switzerland', 'ukraine']],   // eurofranks
+  [Date.UTC(2027, 5, 22, 8), ['unitedstates', 'canada', 'mexico', 'australia', 'japan', 'southkorea', 'china', 'india']],   // globalgrill
+  [Date.UTC(2027, 5, 29, 8), ['ladyliberty', 'libertybell', 'baldeagle', 'fogcitybridge']],   // redwhiteandbun
+  [Date.UTC(2027, 9, 5, 8), ['ghost', 'witch', 'skeleton', 'mummy']],   // frightbites (same 8 AM UTC as dropAt in game.html)
 ];
 function buxSkinOk(id, now) {
   if (BUX_SKINS.has(id)) return true;
   return BUX_DROPS.some(([from, ids]) => now >= from && ids.indexOf(id) >= 0);
 }
 // Kitchens that unlock with BunBux, and their price (same as KITCHENS in game.html). Saved in bux_skins like costumes.
-const BUX_KITCHENS = { kitchensf: 500, kitchenchicago: 500, kitchenconey: 500, kitchenboston: 500, kitchenseattle: 500, kitchenla: 500, kitchenportland: 500, kitchenparis: 500, kitchenmunich: 500, kitchenrome: 500, kitchenamsterdam: 500, kitchenmexicocity: 500, kitchenrio: 500, kitchenhavana: 500, kitchengolf: 500, kitchenpittsburgh: 500, kitchenhongkong: 500, kitchenseoul: 500, kitchenprague: 500, kitchendc: 500, kitchenharvard: 500, kitchenstanford: 500, kitchenprinceton: 500, kitchencmu: 500, kitchenucla: 500, kitchenberkeley: 500, kitchenosu: 500, kitchentamu: 500, kitchenpitt: 500, kitchenucsb: 500 };
+const BUX_KITCHENS = { kitchensf: 500, kitchenchicago: 500, kitchenconey: 500, kitchenboston: 500, kitchenseattle: 500, kitchenla: 500, kitchenportland: 500, kitchenparis: 500, kitchenmunich: 500, kitchenrome: 500, kitchenamsterdam: 500, kitchenmexicocity: 500, kitchenrio: 500, kitchenhavana: 500, kitchengolf: 500, kitchenpittsburgh: 500, kitchenhongkong: 500, kitchenseoul: 500, kitchenprague: 500, kitchendc: 500, kitchenharvard: 500, kitchenstanford: 500, kitchenprinceton: 500, kitchencmu: 500, kitchenucla: 500, kitchenberkeley: 500, kitchenosu: 500, kitchentamu: 500, kitchenpitt: 500, kitchenucsb: 500, kitchenpennstate: 500, kitchenuchicago: 500, kitchenuci: 500, kitcheneugene: 500, kitchenuw: 500, kitchenuf: 500, kitchenmit: 500, kitchenasu: 500, kitchenalberta: 500 };
 const BUX_MILESTONES = { 3: 25, 7: 75, 30: 200 };   // day-streak bonuses, on top of the daily cap
 // Daily challenge: everyone gets the same one each day (midnight Pacific). Same list and order as DAILY in game.html.
 const DAILY = [['streak', 10], ['boxes', 2], ['franks', 20], ['chili', 1], ['streak', 12], ['boxes', 3], ['franks', 25], ['streak', 15],
