@@ -908,7 +908,12 @@ const SKINS = [
   { id: 'rockhopper', name: 'Rockhopper', group: 'birdbrains', frames: 1, fly: [-44.8, -35.3, 85.6, 49.8], bun: [-41.8, -56.3, 86.1, 58.2], grill: [-42.6, -78.4, 86.6, 80.3] },
   { id: 'ladyliberty', name: 'Lady Liberty', group: 'redwhiteandbun', frames: 1, fly: [-43.9, -29.8, 83.9, 44.3], bun: [-41.8, -53.6, 83.6, 55.5], grill: [-42.0, -66.8, 84.0, 68.7] },
   { id: 'libertybell', name: 'Liberty Bell', group: 'redwhiteandbun', frames: 1, fly: [-44.5, -39.5, 84.9, 54.0], bun: [-43.3, -63.7, 85.8, 65.6], grill: [-42.6, -75.5, 85.9, 77.4] },
-  { id: 'baldeagle', name: 'Bald Eagle', group: 'redwhiteandbun', frames: 1, fly: [-44.9, -30.8, 85.7, 45.3], bun: [-41.8, -52.7, 87.7, 54.6], grill: [-41.9, -74.3, 86.8, 76.2] }
+  { id: 'baldeagle', name: 'Bald Eagle', group: 'redwhiteandbun', frames: 1, fly: [-44.9, -30.8, 85.7, 45.3], bun: [-41.8, -52.7, 87.7, 54.6], grill: [-41.9, -74.3, 86.8, 76.2] },
+  { id: 'fogcitybridge', name: 'Fog City Bridge', group: 'redwhiteandbun', frames: 1, fly: [-45.7, -28.2, 87.5, 42.7], bun: [-43.3, -49.9, 87.2, 51.8], grill: [-44.0, -68.0, 87.8, 69.9] },
+  { id: 'mechapilot', name: 'Mecha Pilot', group: 'bunime', frames: 1, fly: [-42.0, -25.4, 80.0, 39.9], bun: [-41.9, -49.5, 84.5, 51.4], grill: [-42.4, -66.9, 84.9, 68.8] },
+  { id: 'starguardian', name: 'Magical Star', group: 'bunime', frames: 1, fly: [-46.3, -28.8, 88.6, 43.3], bun: [-42.6, -50.9, 88.2, 52.8], grill: [-42.4, -66.1, 88.0, 68.0] },
+  { id: 'swordsman', name: 'Wandering Swordsman', group: 'bunime', frames: 1, fly: [-43.3, -34.0, 82.5, 48.5], bun: [-41.8, -54.8, 83.7, 56.7], grill: [-41.4, -71.6, 83.7, 73.5] },
+  { id: 'powerup', name: 'Power-Up Hero', group: 'bunime', frames: 1, fly: [-43.4, -38.8, 82.9, 53.3], bun: [-41.9, -58.5, 84.5, 60.4], grill: [-41.9, -72.0, 84.5, 73.9] }
 ];
 // Skin groups. how: 'earn' = unlocked by doing its goal in one game, 'soon' = shown locked (Coming soon),
 // 'hidden' = not shown, 'free' = everyone has them. A skin's own how (e.g. free Bunny) beats its group's.
@@ -950,6 +955,7 @@ const SKIN_GROUPS = { earn: { name: 'Free & Earned', how: 'earn' }, holiday: { n
   holycow: { name: 'Holy Cow', how: 'shop', from: dropAt(2027, 2, 9) },   // cow breeds pack
   homeontherange: { name: 'Home on the Range', how: 'shop', from: dropAt(2027, 2, 16) },   // ranch and wild West animals
   birdbrains: { name: 'Bird Brains', how: 'shop', from: dropAt(2027, 2, 23) },
+  bunime: { name: 'Bun-ime', how: 'shop', from: dropAt(2027, 3, 9) },   // anime-style pack (generic names, no franchise characters)
   redwhiteandbun: { name: 'Red, White & Bun', how: 'shop', from: dropAt(2027, 6, 29) },   // held for July 4
   frightbites: { name: 'Fright Bites', how: 'shop', from: dropAt(2027, 10, 5) } };   // spooky pack, held for Halloween
 function skinHow(s) { const g = s.group || 'earn'; if (!groupOpen(g) || !skinOpen(s)) return 'hidden';   // a Collection (or a costume added later) before its drop date
@@ -1057,7 +1063,7 @@ const BUX_COST = 300, BUX_DAILY = 25;
 // Limited Edition: costumes (one or two per Collection) that can only be bought, never unlocked with BunBux (same list as BUX_LIMITED in the API)
 const SKINS_LIMITED = ['santa', 'bernedoodle', 'labradoodle', 'persian', 'mainecoon', 'slamdunk', 'goalgetter', 'axolotl', 'anglerfish', 'unidentifiedfryingobject', 'babykaiju', 'phoenix', 'shadowwizard',
   'glazedandconfused', 'blanketburrito', 'royaltreatment', 'raccoon', 'forkimpostor', 'professorfrank', 'glowgetter', 'specialdelivery',
-  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland', 'bison', 'flamingo', 'ladyliberty'];
+  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland', 'bison', 'flamingo', 'ladyliberty', 'powerup'];
 function skinLimited(id) { return SKINS_LIMITED.indexOf(id) >= 0; }
 // Everyone gets the same challenge each day (midnight Pacific). Same list and order as DAILY in functions/api/[[path]].js
 const DAILY = [['streak', 10], ['boxes', 2], ['franks', 20], ['chili', 1], ['streak', 12], ['boxes', 3], ['franks', 25], ['streak', 15],

@@ -14,7 +14,7 @@ If a drop's items aren't ready on time, the Collection still appears and BunBux 
 
 ★ marks a Limited Edition costume: purchase only, never BunBux.
 
-Total: 22 Collections, 110 costumes, so 132 items in each store (plus 3 costumes added to Sports).
+Total: 23 Collections, 112 costumes plus 3 added to Sports, so 138 items in each store.
 
 ## Tue Dec 1, 2026  (create by Nov 24)
 
@@ -211,6 +211,16 @@ Total: 22 Collections, 110 costumes, so 132 items in each store (plus 3 costumes
 
 Also update the Sports Collection's store description from 5 to 8 costumes. Everyone who already owns the Sports Collection gets these three free on Mar 2.
 
+## Tue Mar 9  (create by Mar 2)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_mechapilot | Mecha Pilot | $0.99 |
+| skin_starguardian | Magical Star | $0.99 |
+| skin_swordsman | Wandering Swordsman | $0.99 |
+| skin_powerup | Power-Up Hero ★ | $0.99 |
+| col_bunime | Bun-ime Collection (4 costumes) | $3.99 |
+
 ## Tue Jun 29, 2027  (create by Jun 22; held for July 4)
 
 | Product id | Name | Price |
@@ -218,7 +228,8 @@ Also update the Sports Collection's store description from 5 to 8 costumes. Ever
 | skin_ladyliberty | Lady Liberty ★ | $0.99 |
 | skin_libertybell | Liberty Bell | $0.99 |
 | skin_baldeagle | Bald Eagle | $0.99 |
-| col_redwhiteandbun | Red, White & Bun Collection (3 costumes) | $3.99 |
+| skin_fogcitybridge | Fog City Bridge | $0.99 |
+| col_redwhiteandbun | Red, White & Bun Collection (4 costumes) | $3.99 |
 
 ## Tue Oct 5, 2027  (create by Sep 28, 2027; held for Halloween)
 
