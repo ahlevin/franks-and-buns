@@ -3852,7 +3852,7 @@ function shareScore() {
 function skinsClose() { const b = document.getElementById('fb-skins'); if (b) b.style.display = 'none'; }
 function skinsIsOpen() { const b = document.getElementById('fb-skins'); return !!(b && b.style.display !== 'none'); }
 function skinsOpen() {
-  skinsView = '';   // opening the screen always starts at the top
+  skinsView = ''; skinsScroll = {};   // opening the screen always starts at the top
   let box = document.getElementById('fb-skins');
   if (!box) {
     box = document.createElement('div'); box.id = 'fb-skins'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'Skins');
@@ -4132,12 +4132,18 @@ function skinsRender() {
   h += '</div><button type="button" class="fbs-close" data-a="close">Close</button></div>';
   // Same screen as before (e.g. picking a kitchen or costume further down): keep the scroll spot. A new screen starts at the top.
   const view = (skinsTab || '') + '|' + (skinsBuy || '') + '|' + (kitchenBuy || ''), old = box.querySelector('.fbs-body');
-  const keep = view === skinsView && old ? old.scrollTop : 0; skinsView = view;
+  // Going deeper (opening a Collection) remembers where the list was; coming back puts it there again.
+  const depth = v => v.split('|').filter(Boolean).length;
+  let keep = 0;
+  if (view === skinsView) keep = old ? old.scrollTop : 0;
+  else if (depth(view) > depth(skinsView)) { if (old) skinsScroll[skinsView] = old.scrollTop; }
+  else { keep = skinsScroll[view] || 0; for (const k in skinsScroll) if (depth(k) >= depth(view)) delete skinsScroll[k]; }
+  skinsView = view;
   box.innerHTML = h;
   const body = box.querySelector('.fbs-body'); if (body) body.scrollTop = keep;
   if (!skinsTab && !skinsBuy && !kitchenBuy) skinsSearchDraw();
 }
-let skinsView = '';
+let skinsView = '', skinsScroll = {};
 function scoresPanelRect() { const pw = Math.min(W - 32, 340), ph = gcPlugin() ? 350 : 300; return { x: W / 2 - pw / 2, y: H * 0.5 - ph / 2, w: pw, h: ph }; }
 function drawScoresPanel() {
   ctx.fillStyle = 'rgba(10,5,0,0.9)'; ctx.fillRect(0, 0, W, H);
