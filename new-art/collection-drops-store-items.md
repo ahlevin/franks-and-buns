@@ -14,7 +14,7 @@ If a drop's items aren't ready on time, the Collection still appears and BunBux 
 
 ★ marks a Limited Edition costume: purchase only, never BunBux.
 
-Total: 27 Collections, 146 costumes plus 3 added to Sports, so 176 items in each store.
+Total: 29 Collections, 160 costumes plus 3 added to Sports, so 192 items in each store.
 
 ## Tue Dec 1, 2026  (create by Nov 24)
 
@@ -144,7 +144,7 @@ Total: 27 Collections, 146 costumes plus 3 added to Sports, so 176 items in each
 | skin_wizard | Court Wizard | $0.99 |
 | col_yeoldefranks | Ye Olde Franks Collection (6 costumes) | $3.99 |
 
-## Tue Jan 26  (create by Jan 19)
+## Tue Jan 26  (create by Jan 19; 2 Collections)
 
 | Product id | Name | Price |
 |---|---|---|
@@ -155,6 +155,18 @@ Total: 27 Collections, 146 costumes plus 3 added to Sports, so 176 items in each
 | skin_spacecadet | Space Cadet | $0.99 |
 | skin_rescueswimmer | Rescue Swimmer | $0.99 |
 | col_salutesquad | Salute Squad Collection (6 costumes) | $3.99 |
+
+Chill Dogs (Arctic and alpine animals), same day:
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_arcticfox | Arctic Fox | $0.99 |
+| skin_arctichare | Arctic Hare | $0.99 |
+| skin_mountaingoat | Mountain Goat | $0.99 |
+| skin_polarbear | Polar Bear ★ | $0.99 |
+| skin_snowleopard | Snow Leopard | $0.99 |
+| skin_walrus | Walrus | $0.99 |
+| col_chilldogs | Chill Dogs Collection (6 costumes) | $3.99 |
 
 ## Tue Feb 2  (create by Jan 26)
 
@@ -236,6 +248,20 @@ Also update the Sports Collection's store description from 5 to 8 costumes. Ever
 | skin_texas | Texas | $0.99 |
 | skin_vermont | Vermont | $0.99 |
 | col_statefair | State Fair Collection (10 costumes) | $3.99 |
+
+## Tue Mar 23, 2027  (create by Mar 16; zoo animals)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_brownbear | Brown Bear | $0.99 |
+| skin_giraffe | Giraffe ★ | $0.99 |
+| skin_gorilla | Gorilla | $0.99 |
+| skin_hippo | Hippo | $0.99 |
+| skin_koala | Koala | $0.99 |
+| skin_monkey | Monkey | $0.99 |
+| skin_redpanda | Red Panda | $0.99 |
+| skin_zebra | Zebra | $0.99 |
+| col_zoofranks | Zoo Franks Collection (8 costumes) | $3.99 |
 
 ## Tue Apr 20, 2027  (create by Apr 13; national parks, National Park Week)
 
