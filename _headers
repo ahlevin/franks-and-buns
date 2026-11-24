@@ -22,6 +22,3 @@
 
 /costume-vault.html
   X-Robots-Tag: noindex
-
-/iap-review-*
-  Access-Control-Allow-Origin: *
