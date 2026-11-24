@@ -14,7 +14,7 @@ If a drop's items aren't ready on time, the Collection still appears and BunBux 
 
 ★ marks a Limited Edition costume: purchase only, never BunBux.
 
-Total: 23 Collections, 112 costumes plus 3 added to Sports, so 138 items in each store.
+Total: 25 Collections, 127 costumes plus 3 added to Sports, so 155 items in each store.
 
 ## Tue Dec 1, 2026  (create by Nov 24)
 
@@ -220,6 +220,33 @@ Also update the Sports Collection's store description from 5 to 8 costumes. Ever
 | skin_swordsman | Wandering Swordsman | $0.99 |
 | skin_powerup | Power-Up Hero ★ | $0.99 |
 | col_bunime | Bun-ime Collection (4 costumes) | $3.99 |
+
+## Tue Jun 15, 2027  (create by Jun 8; flags pack, part 1)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_unitedkingdom | United Kingdom ★ | $0.99 |
+| skin_france | France | $0.99 |
+| skin_germany | Germany | $0.99 |
+| skin_poland | Poland | $0.99 |
+| skin_croatia | Croatia | $0.99 |
+| skin_switzerland | Switzerland | $0.99 |
+| skin_ukraine | Ukraine | $0.99 |
+| col_eurofranks | Euro Franks Collection (7 costumes) | $3.99 |
+
+## Tue Jun 22, 2027  (create by Jun 15; flags pack, part 2, Women's World Cup week)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_unitedstates | United States ★ | $0.99 |
+| skin_canada | Canada | $0.99 |
+| skin_mexico | Mexico | $0.99 |
+| skin_australia | Australia | $0.99 |
+| skin_japan | Japan | $0.99 |
+| skin_southkorea | South Korea | $0.99 |
+| skin_china | China | $0.99 |
+| skin_india | India | $0.99 |
+| col_globalgrill | Global Grill Collection (8 costumes) | $3.99 |
 
 ## Tue Jun 29, 2027  (create by Jun 22; held for July 4)
 
