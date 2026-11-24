@@ -14,7 +14,7 @@ If a drop's items aren't ready on time, the Collection still appears and BunBux 
 
 ★ marks a Limited Edition costume: purchase only, never BunBux.
 
-Total: 17 Collections, 83 costumes, so 100 items in each store.
+Total: 18 Collections, 87 costumes, so 105 items in each store.
 
 ## Tue Dec 1, 2026  (create by Nov 24)
 
@@ -165,5 +165,15 @@ Total: 17 Collections, 83 costumes, so 100 items in each store.
 | skin_roadhog | Road Hog | $0.99 |
 | skin_gravyboat | Gravy Boat | $0.99 |
 | col_fastfood | Fast Food Collection (5 costumes) | $3.99 |
+
+## Tue Oct 5, 2027  (create by Sep 28, 2027; held for Halloween)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_ghost | Boo Frank | $0.99 |
+| skin_witch | Witchy Wiener ★ | $0.99 |
+| skin_skeleton | Skele-Frank | $0.99 |
+| skin_mummy | Mummy Dog | $0.99 |
+| col_frightbites | Fright Bites Collection (4 costumes) | $3.99 |
 
 The launch price ends Jan 15, so Collections from Jan 19 on start at $3.99.

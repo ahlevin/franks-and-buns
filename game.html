@@ -881,7 +881,11 @@ const SKINS = [
   { id: 'jetsetter', name: 'Jet Setter', group: 'fastfood', frames: 1, fly: [-42.7, -26.0, 81.3, 40.5], bun: [-41.8, -49.6, 83.7, 51.5], grill: [-42.1, -65.8, 84.3, 67.7] },
   { id: 'chopper', name: 'Chopper', group: 'fastfood', frames: 1, fly: [-47.4, -40.2, 90.8, 54.7], bun: [-50.3, -61.1, 92.3, 63.0], grill: [-48.0, -75.5, 92.9, 77.4] },
   { id: 'roadhog', name: 'Road Hog', group: 'fastfood', frames: 1, fly: [-40.9, -36.7, 77.8, 51.2], bun: [-41.9, -49.5, 83.9, 51.4], grill: [-41.7, -60.6, 83.6, 62.5] },
-  { id: 'gravyboat', name: 'Gravy Boat', group: 'fastfood', frames: 1, fly: [-48.6, -20.9, 93.1, 35.4], bun: [-45.4, -42.7, 92.7, 44.6], grill: [-44.3, -63.2, 93.3, 65.1] }
+  { id: 'gravyboat', name: 'Gravy Boat', group: 'fastfood', frames: 1, fly: [-48.6, -20.9, 93.1, 35.4], bun: [-45.4, -42.7, 92.7, 44.6], grill: [-44.3, -63.2, 93.3, 65.1] },
+  { id: 'ghost', name: 'Boo Frank', group: 'frightbites', frames: 1, fly: [-44.8, -26.2, 85.7, 40.7], bun: [-41.9, -46.0, 86.2, 47.9], grill: [-44.1, -68.5, 87.0, 70.4] },
+  { id: 'witch', name: 'Witchy Wiener', group: 'frightbites', frames: 1, fly: [-44.6, -32.2, 85.1, 46.7], bun: [-42.0, -54.0, 84.1, 55.9], grill: [-43.1, -59.0, 87.1, 60.9] },
+  { id: 'skeleton', name: 'Skele-Frank', group: 'frightbites', frames: 1, fly: [-45.2, -29.8, 86.3, 44.3], bun: [-44.6, -54.0, 87.6, 55.9], grill: [-43.2, -76.7, 87.0, 78.6] },
+  { id: 'mummy', name: 'Mummy Dog', group: 'frightbites', frames: 1, fly: [-47.0, -18.6, 90.0, 33.1], bun: [-47.8, -48.8, 90.2, 50.7], grill: [-44.4, -68.0, 89.9, 69.9] }
 ];
 // Skin groups. how: 'earn' = unlocked by doing its goal in one game, 'soon' = shown locked (Coming soon),
 // 'hidden' = not shown, 'free' = everyone has them. A skin's own how (e.g. free Bunny) beats its group's.
@@ -918,7 +922,8 @@ const SKIN_GROUPS = { earn: { name: 'Free & Earned', how: 'earn' }, holiday: { n
   finalbossfranks: { name: 'Final Boss Franks', how: 'shop', from: dropAt(2027, 1, 12) },
   yeoldefranks: { name: 'Ye Olde Franks', how: 'shop', from: dropAt(2027, 1, 19) },   // Medieval pack
   salutesquad: { name: 'Salute Squad', how: 'shop', from: dropAt(2027, 1, 26) },   // service-inspired pack (generic names, no official insignia)
-  fastfood: { name: 'Fast Food', how: 'shop', from: dropAt(2027, 2, 2) } };   // vehicles pack
+  fastfood: { name: 'Fast Food', how: 'shop', from: dropAt(2027, 2, 2) },   // vehicles pack
+  frightbites: { name: 'Fright Bites', how: 'shop', from: dropAt(2027, 10, 5) } };   // spooky pack, held for Halloween
 function skinHow(s) { const g = s.group || 'earn'; if (!groupOpen(g)) return 'hidden';   // a Collection before its drop date
   const h = s.how || (SKIN_GROUPS[g] || SKIN_GROUPS.earn).how; return h === 'shop' && !SHOP_ON ? 'soon' : h; }
 // costumes won so far (ids), kept on this device
@@ -1024,7 +1029,7 @@ const BUX_COST = 300, BUX_DAILY = 25;
 // Limited Edition: costumes (one or two per Collection) that can only be bought, never unlocked with BunBux (same list as BUX_LIMITED in the API)
 const SKINS_LIMITED = ['santa', 'bernedoodle', 'labradoodle', 'persian', 'mainecoon', 'slamdunk', 'goalgetter', 'axolotl', 'anglerfish', 'unidentifiedfryingobject', 'babykaiju', 'phoenix', 'shadowwizard',
   'glazedandconfused', 'blanketburrito', 'royaltreatment', 'raccoon', 'forkimpostor', 'professorfrank', 'glowgetter', 'specialdelivery',
-  'discodog', 'maneevent', 'king', 'hotrod'];
+  'discodog', 'maneevent', 'king', 'hotrod', 'witch'];
 function skinLimited(id) { return SKINS_LIMITED.indexOf(id) >= 0; }
 // Everyone gets the same challenge each day (midnight Pacific). Same list and order as DAILY in functions/api/[[path]].js
 const DAILY = [['streak', 10], ['boxes', 2], ['franks', 20], ['chili', 1], ['streak', 12], ['boxes', 3], ['franks', 25], ['streak', 15],
