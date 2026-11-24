@@ -14,7 +14,7 @@ If a drop's items aren't ready on time, the Collection still appears and BunBux 
 
 ★ marks a Limited Edition costume: purchase only, never BunBux.
 
-Total: 20 Collections, 96 costumes, so 116 items in each store.
+Total: 22 Collections, 110 costumes, so 132 items in each store (plus 3 costumes added to Sports).
 
 ## Tue Dec 1, 2026  (create by Nov 24)
 
@@ -96,7 +96,8 @@ Total: 20 Collections, 96 costumes, so 116 items in each store.
 | skin_overcooked | Overcooked | $0.99 |
 | skin_businesscasualty | Business Casualty | $0.99 |
 | skin_buffering | Buffering | $0.99 |
-| col_questionabledecisions | Questionable Decisions Collection (8 costumes) | $3.99 ($2.99 launch) |
+| skin_porcelainthrone | Porcelain Throne | $0.99 |
+| col_questionabledecisions | Questionable Decisions Collection (9 costumes) | $3.99 ($2.99 launch) |
 
 ## Tue Jan 5, 2027  (create by Dec 29)
 
@@ -185,7 +186,39 @@ Total: 20 Collections, 96 costumes, so 116 items in each store.
 | skin_brahman | Brahman | $0.99 |
 | skin_elk | Elk | $0.99 |
 | skin_bison | Bison ★ | $0.99 |
-| col_homeontherange | Home on the Range Collection (4 costumes) | $3.99 |
+| skin_moose | Moose | $0.99 |
+| col_homeontherange | Home on the Range Collection (5 costumes) | $3.99 |
+
+## Tue Feb 23  (create by Feb 16)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_flamingo | Flamingo ★ | $0.99 |
+| skin_toucan | Toucan | $0.99 |
+| skin_snowyowl | Snowy Owl | $0.99 |
+| skin_barnowl | Barn Owl | $0.99 |
+| skin_emperorpenguin | Emperor Penguin | $0.99 |
+| skin_rockhopper | Rockhopper | $0.99 |
+| col_birdbrains | Bird Brains Collection (6 costumes) | $3.99 |
+
+## Tue Mar 2  (create by Feb 23): 3 costumes added to Sports
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_homerun | Home Run | $0.99 |
+| skin_doggypaddle | Doggy Paddle | $0.99 |
+| skin_cleanandjerk | Clean & Jerk | $0.99 |
+
+Also update the Sports Collection's store description from 5 to 8 costumes. Everyone who already owns the Sports Collection gets these three free on Mar 2.
+
+## Tue Jun 29, 2027  (create by Jun 22; held for July 4)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_ladyliberty | Lady Liberty ★ | $0.99 |
+| skin_libertybell | Liberty Bell | $0.99 |
+| skin_baldeagle | Bald Eagle | $0.99 |
+| col_redwhiteandbun | Red, White & Bun Collection (3 costumes) | $3.99 |
 
 ## Tue Oct 5, 2027  (create by Sep 28, 2027; held for Halloween)
 

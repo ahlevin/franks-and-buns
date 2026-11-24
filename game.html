@@ -819,6 +819,9 @@ const SKINS = [
   { id: 'touchdown', name: 'Touchdown', group: 'sports', frames: 1, fly: [-48.6, -27.9, 88.5, 43.7], bun: [-43.5, -51.1, 88.1, 53.0], grill: [-43.6, -72.1, 88.1, 73.9] },
   { id: 'kickflip', name: 'Kickflip', group: 'sports', frames: 1, fly: [-48.4, -28.6, 88.1, 43.9], bun: [-41.8, -51.3, 85.8, 53.2], grill: [-41.9, -64.7, 85.6, 66.5] },
   { id: 'partee', name: 'Par-Tee', group: 'sports', frames: 1, fly: [-47.5, -21.5, 89.4, 34.5], bun: [-44.3, -47.1, 94.1, 49.0], grill: [-44.8, -70.0, 94.6, 71.9] },
+  { id: 'homerun', name: 'Home Run', group: 'sports', frames: 1, from: dropAt(2027, 3, 2), fly: [-44.5, -31.4, 85.1, 45.9], bun: [-41.9, -58.6, 88.1, 60.5], grill: [-42.5, -80.6, 88.5, 82.5] },
+  { id: 'doggypaddle', name: 'Doggy Paddle', group: 'sports', frames: 1, from: dropAt(2027, 3, 2), fly: [-42.5, -24.6, 81.0, 39.1], bun: [-41.8, -53.4, 84.0, 55.3], grill: [-41.3, -68.7, 83.6, 70.6] },
+  { id: 'cleanandjerk', name: 'Clean & Jerk', group: 'sports', frames: 1, from: dropAt(2027, 3, 2), fly: [-46.5, -23.4, 89.1, 37.9], bun: [-44.9, -53.8, 90.3, 55.7], grill: [-45.7, -73.0, 90.5, 74.9] },
   { id: 'popstar', name: 'Pop Star', group: 'snackpack', frames: 1, fly: [-49.2, -25.5, 90.8, 42.7], bun: [-43.8, -47.1, 89.4, 49.0], grill: [-43.9, -65.7, 89.5, 67.7] },
   { id: 'sliceoflife', name: 'Slice of Life', group: 'snackpack', frames: 1, fly: [-48.9, -21.5, 88.6, 36.3], bun: [-42.0, -43.3, 85.4, 45.2], grill: [-41.9, -60.4, 85.4, 62.3] },
   { id: 'glazedandconfused', name: 'Glazed and Confused', group: 'snackpack', frames: 1, fly: [-49.1, -29.9, 90.4, 46.1], bun: [-45.0, -55.3, 93.1, 57.2], grill: [-45.0, -66.2, 93.1, 68.1] },
@@ -844,6 +847,7 @@ const SKINS = [
   { id: 'overcooked', name: 'Overcooked', group: 'questionabledecisions', frames: 1, fly: [-48.4, -26.8, 88.1, 41.1], bun: [-44.6, -49.9, 87.2, 51.8], grill: [-44.6, -68.0, 87.2, 69.9] },
   { id: 'businesscasualty', name: 'Business Casualty', group: 'questionabledecisions', frames: 1, fly: [-47.9, -18.1, 87.3, 36.3], bun: [-42.6, -47.6, 87.3, 49.5], grill: [-42.8, -68.2, 87.5, 70.1] },
   { id: 'buffering', name: 'Buffering', group: 'questionabledecisions', frames: 1, fly: [-47.1, -36.9, 88.5, 52.6], bun: [-44.0, -68.7, 95.8, 70.7], grill: [-44.0, -75.2, 95.8, 77.3] },
+  { id: 'porcelainthrone', name: 'Porcelain Throne', group: 'questionabledecisions', frames: 1, fly: [-43.6, -35.7, 83.1, 50.2], bun: [-42.0, -56.6, 84.0, 58.5], grill: [-42.1, -74.1, 84.1, 76.0] },
   { id: 'straightafrank', name: 'Straight-A Frank', group: 'academic', frames: 1, fly: [-48.5, -25.0, 88.0, 39.4], bun: [-46.5, -53.6, 93.7, 55.6], grill: [-46.6, -74.4, 93.9, 76.3] },
   { id: 'graddog', name: 'Grad Dog', group: 'academic', frames: 1, fly: [-48.6, -29.5, 88.5, 45.2], bun: [-44.9, -53.6, 90.5, 55.6], grill: [-44.9, -69.1, 90.4, 71.0] },
   { id: 'professorfrank', name: 'Professor Frank', group: 'academic', frames: 1, fly: [-47.1, -25.6, 86.8, 41.6], bun: [-41.9, -51.8, 88.7, 53.7], grill: [-41.8, -72.1, 88.6, 74.0] },
@@ -894,7 +898,17 @@ const SKINS = [
   { id: 'longhorn', name: 'Longhorn', group: 'homeontherange', frames: 1, fly: [-47.6, -26.5, 91.2, 41.0], bun: [-44.6, -49.3, 91.3, 51.2], grill: [-44.9, -60.9, 91.6, 62.8] },
   { id: 'brahman', name: 'Brahman', group: 'homeontherange', frames: 1, fly: [-47.2, -31.7, 90.4, 46.2], bun: [-42.6, -51.9, 89.2, 53.8], grill: [-44.7, -68.1, 89.7, 70.0] },
   { id: 'elk', name: 'Elk', group: 'homeontherange', frames: 1, fly: [-42.7, -37.9, 81.4, 52.4], bun: [-43.5, -59.8, 85.5, 61.7], grill: [-42.3, -70.8, 86.0, 72.7] },
-  { id: 'bison', name: 'Bison', group: 'homeontherange', frames: 1, fly: [-46.9, -33.6, 89.9, 48.1], bun: [-45.0, -53.8, 90.0, 55.7], grill: [-47.4, -74.9, 90.4, 76.8] }
+  { id: 'bison', name: 'Bison', group: 'homeontherange', frames: 1, fly: [-46.9, -33.6, 89.9, 48.1], bun: [-45.0, -53.8, 90.0, 55.7], grill: [-47.4, -74.9, 90.4, 76.8] },
+  { id: 'moose', name: 'Moose', group: 'homeontherange', frames: 1, fly: [-41.4, -37.6, 78.8, 52.1], bun: [-41.8, -59.2, 83.7, 61.1], grill: [-41.8, -73.4, 83.7, 75.3] },
+  { id: 'flamingo', name: 'Flamingo', group: 'birdbrains', frames: 1, fly: [-46.2, -33.0, 88.4, 47.5], bun: [-42.3, -54.6, 88.4, 56.5], grill: [-42.1, -71.3, 88.1, 73.2] },
+  { id: 'toucan', name: 'Toucan', group: 'birdbrains', frames: 1, fly: [-47.0, -28.8, 90.0, 43.3], bun: [-45.1, -53.1, 88.7, 55.0], grill: [-43.1, -72.5, 88.7, 74.4] },
+  { id: 'snowyowl', name: 'Snowy Owl', group: 'birdbrains', frames: 1, fly: [-46.8, -31.3, 89.6, 45.8], bun: [-44.1, -55.0, 90.3, 56.9], grill: [-44.7, -79.0, 90.7, 80.9] },
+  { id: 'barnowl', name: 'Barn Owl', group: 'birdbrains', frames: 1, fly: [-44.4, -31.5, 84.9, 46.0], bun: [-44.0, -55.0, 86.0, 56.9], grill: [-46.5, -71.3, 89.4, 73.2] },
+  { id: 'emperorpenguin', name: 'Emperor Penguin', group: 'birdbrains', frames: 1, fly: [-43.8, -25.7, 83.6, 40.2], bun: [-42.3, -50.0, 84.3, 51.9], grill: [-42.6, -72.0, 84.9, 73.9] },
+  { id: 'rockhopper', name: 'Rockhopper', group: 'birdbrains', frames: 1, fly: [-44.8, -35.3, 85.6, 49.8], bun: [-41.8, -56.3, 86.1, 58.2], grill: [-42.6, -78.4, 86.6, 80.3] },
+  { id: 'ladyliberty', name: 'Lady Liberty', group: 'redwhiteandbun', frames: 1, fly: [-43.9, -29.8, 83.9, 44.3], bun: [-41.8, -53.6, 83.6, 55.5], grill: [-42.0, -66.8, 84.0, 68.7] },
+  { id: 'libertybell', name: 'Liberty Bell', group: 'redwhiteandbun', frames: 1, fly: [-44.5, -39.5, 84.9, 54.0], bun: [-43.3, -63.7, 85.8, 65.6], grill: [-42.6, -75.5, 85.9, 77.4] },
+  { id: 'baldeagle', name: 'Bald Eagle', group: 'redwhiteandbun', frames: 1, fly: [-44.9, -30.8, 85.7, 45.3], bun: [-41.8, -52.7, 87.7, 54.6], grill: [-41.9, -74.3, 86.8, 76.2] }
 ];
 // Skin groups. how: 'earn' = unlocked by doing its goal in one game, 'soon' = shown locked (Coming soon),
 // 'hidden' = not shown, 'free' = everyone has them. A skin's own how (e.g. free Bunny) beats its group's.
@@ -905,6 +919,7 @@ const SKINS = [
 function dropAt(y, m, d) { return Date.UTC(y, m - 1, d, 8); }
 const DROP_TEST = /\.pages\.dev$|^localhost$|^127\.0\.0\.1$/.test(location.hostname) && (new URLSearchParams(location.search).get('dropdate') || '').match(/^(\d{4})-(\d\d)-(\d\d)$/);
 function dropNow() { return DROP_TEST ? dropAt(+DROP_TEST[1], +DROP_TEST[2], +DROP_TEST[3]) + 3600000 : Date.now(); }
+function skinOpen(s) { return !s.from || dropNow() >= s.from; }   // a costume added to a Collection later can have its own drop date
 function groupOpen(g) { const G = SKIN_GROUPS[g]; return !!G && (!G.from || dropNow() >= G.from); }
 function groupNew(g) { const G = SKIN_GROUPS[g]; return !!(G && G.from && groupOpen(g) && dropNow() < G.from + 7 * 864e5); }   // the first week after its drop
 function anyGroupNew() { return Object.keys(SKIN_GROUPS).some(groupNew); }
@@ -934,8 +949,10 @@ const SKIN_GROUPS = { earn: { name: 'Free & Earned', how: 'earn' }, holiday: { n
   fastfood: { name: 'Fast Food', how: 'shop', from: dropAt(2027, 2, 2) },   // vehicles pack
   holycow: { name: 'Holy Cow', how: 'shop', from: dropAt(2027, 2, 9) },   // cow breeds pack
   homeontherange: { name: 'Home on the Range', how: 'shop', from: dropAt(2027, 2, 16) },   // ranch and wild West animals
+  birdbrains: { name: 'Bird Brains', how: 'shop', from: dropAt(2027, 2, 23) },
+  redwhiteandbun: { name: 'Red, White & Bun', how: 'shop', from: dropAt(2027, 6, 29) },   // held for July 4
   frightbites: { name: 'Fright Bites', how: 'shop', from: dropAt(2027, 10, 5) } };   // spooky pack, held for Halloween
-function skinHow(s) { const g = s.group || 'earn'; if (!groupOpen(g)) return 'hidden';   // a Collection before its drop date
+function skinHow(s) { const g = s.group || 'earn'; if (!groupOpen(g) || !skinOpen(s)) return 'hidden';   // a Collection (or a costume added later) before its drop date
   const h = s.how || (SKIN_GROUPS[g] || SKIN_GROUPS.earn).how; return h === 'shop' && !SHOP_ON ? 'soon' : h; }
 // costumes won so far (ids), kept on this device
 function skinsWon() { try { const a = JSON.parse(safeGet('fb_skins_earned') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
@@ -1040,7 +1057,7 @@ const BUX_COST = 300, BUX_DAILY = 25;
 // Limited Edition: costumes (one or two per Collection) that can only be bought, never unlocked with BunBux (same list as BUX_LIMITED in the API)
 const SKINS_LIMITED = ['santa', 'bernedoodle', 'labradoodle', 'persian', 'mainecoon', 'slamdunk', 'goalgetter', 'axolotl', 'anglerfish', 'unidentifiedfryingobject', 'babykaiju', 'phoenix', 'shadowwizard',
   'glazedandconfused', 'blanketburrito', 'royaltreatment', 'raccoon', 'forkimpostor', 'professorfrank', 'glowgetter', 'specialdelivery',
-  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland', 'bison'];
+  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland', 'bison', 'flamingo', 'ladyliberty'];
 function skinLimited(id) { return SKINS_LIMITED.indexOf(id) >= 0; }
 // Everyone gets the same challenge each day (midnight Pacific). Same list and order as DAILY in functions/api/[[path]].js
 const DAILY = [['streak', 10], ['boxes', 2], ['franks', 20], ['chili', 1], ['streak', 12], ['boxes', 3], ['franks', 25], ['streak', 15],
@@ -1235,7 +1252,7 @@ const SHOP_COLS = Object.keys(SKIN_GROUPS).filter(g => SKIN_GROUPS[g].how === 's
 const SHOP_LAUNCH3 = ['holiday', 'dogs', 'cats'];   // the fixed "All 3 Collections" bundle ($7.99): always exactly these three
 function shopNow() { const d = new URLSearchParams(location.search).get('shopdate'); return SHOP_TEST && d === 'after' ? SHOP_LAUNCH_END + 1 : Date.now(); }
 function shopLaunch() { return shopNow() < SHOP_LAUNCH_END; }
-function shopColSkins(g) { return SKINS.filter(k => k.group === g).map(k => k.id); }
+function shopColSkins(g) { return SKINS.filter(k => k.group === g && skinOpen(k)).map(k => k.id); }   // costumes added later join on their date (and go to everyone who owns the Collection)
 // product id -> what it is; the same ids get created in App Store Connect and Google Play
 function shopProducts() {
   const out = {}, st = shopStore.products;
