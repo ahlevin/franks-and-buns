@@ -1312,7 +1312,7 @@ function skinUnlocked(s) {
 // Prices: $0.99 per costume; $3.99 per Collection, $2.99 launch offer through Jan 15, 2027 (Pacific); all three $7.99.
 const SHOP_LAUNCH_END = Date.UTC(2027, 0, 16, 8);   // midnight at the end of Jan 15 in California
 const SHOP_COLS = Object.keys(SKIN_GROUPS).filter(g => SKIN_GROUPS[g].how === 'shop' && groupOpen(g));   // Collections on sale (dropped ones join on their date)
-const SHOP_LAUNCH3 = ['holiday', 'dogs', 'cats'];   // the fixed "All 3 Collections" bundle ($7.99): always exactly these three
+const SHOP_LAUNCH3 = ['holiday', 'dogs', 'cats'];   // the fixed "3 Launch Collections" bundle ($7.99): always exactly these three
 function shopNow() { const d = new URLSearchParams(location.search).get('shopdate'); return SHOP_TEST && d === 'after' ? SHOP_LAUNCH_END + 1 : Date.now(); }
 function shopLaunch() { return shopNow() < SHOP_LAUNCH_END; }
 function shopColSkins(g) { return SKINS.filter(k => k.group === g && skinOpen(k)).map(k => k.id); }   // costumes added later join on their date (and go to everyone who owns the Collection)
@@ -1328,7 +1328,7 @@ function shopProducts() {
     out[cid] = { kind: 'col', group: g, name: SKIN_GROUPS[g].name + ' Collection', skins: shopColSkins(g),
       price: real(cid, shopLaunch() ? '$2.99' : '$3.99'), was: shopLaunch() && usdStore(cid) ? '$3.99' : '', launch: shopLaunch() };
   });
-  out.col_launch3 = { kind: 'bundle', name: 'All 3 Collections', skins: [].concat.apply([], SHOP_LAUNCH3.map(shopColSkins)), price: real('col_launch3', '$7.99'),
+  out.col_launch3 = { kind: 'bundle', name: '3 Launch Collections', skins: [].concat.apply([], SHOP_LAUNCH3.map(shopColSkins)), price: real('col_launch3', '$7.99'),
     note: SHOP_LAUNCH3.map(g => SKIN_GROUPS[g].name).join(', ') };
   return out;
 }
