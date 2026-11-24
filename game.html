@@ -972,9 +972,11 @@ const SKINS = [
 function dropAt(y, m, d) { return Date.UTC(y, m - 1, d, 8); }
 const DROP_TEST = /\.pages\.dev$|^localhost$|^127\.0\.0\.1$/.test(location.hostname) && (new URLSearchParams(location.search).get('dropdate') || '').match(/^(\d{4})-(\d\d)-(\d\d)$/);
 function dropNow() { return DROP_TEST ? dropAt(+DROP_TEST[1], +DROP_TEST[2], +DROP_TEST[3]) + 3600000 : Date.now(); }
-function skinOpen(s) { return !s.from || dropNow() >= s.from; }   // a costume added to a Collection later can have its own drop date
-function groupOpen(g) { const G = SKIN_GROUPS[g]; return !!G && (!G.from || dropNow() >= G.from); }
-function groupNew(g) { const G = SKIN_GROUPS[g]; return !!(G && G.from && groupOpen(g) && dropNow() < G.from + 7 * 864e5); }   // the first week after its drop
+// Costume Vault (?vault=bunvault): a private preview of the costume screen with every Collection open, hidden ones included; buying is off
+const VAULT = new URLSearchParams(location.search).get('vault') === 'bunvault';
+function skinOpen(s) { return VAULT || !s.from || dropNow() >= s.from; }   // a costume added to a Collection later can have its own drop date
+function groupOpen(g) { const G = SKIN_GROUPS[g]; return !!G && (VAULT || !G.from || dropNow() >= G.from); }
+function groupNew(g) { const G = SKIN_GROUPS[g]; return !!(G && G.from && groupOpen(g) && dropNow() >= G.from && dropNow() < G.from + 7 * 864e5); }   // the first week after its drop
 function anyGroupNew() { return Object.keys(SKIN_GROUPS).some(groupNew); }
 const SKIN_GROUPS = { earn: { name: 'Free & Earned', how: 'earn' }, holiday: { name: 'Holiday', how: 'shop' },
   dogs: { name: 'Dogs', how: 'shop' },
@@ -1013,7 +1015,7 @@ const SKIN_GROUPS = { earn: { name: 'Free & Earned', how: 'earn' }, holiday: { n
   redwhiteandbun: { name: 'Red, White & Bun', how: 'shop', from: dropAt(2027, 6, 29) },   // held for July 4
   frightbites: { name: 'Fright Bites', how: 'shop', from: dropAt(2027, 10, 5) } };   // spooky pack, held for Halloween
 function skinHow(s) { const g = s.group || 'earn'; if (!groupOpen(g) || !skinOpen(s)) return 'hidden';   // a Collection (or a costume added later) before its drop date
-  const h = s.how || (SKIN_GROUPS[g] || SKIN_GROUPS.earn).how; return h === 'shop' && !SHOP_ON ? 'soon' : h; }
+  const h = s.how || (SKIN_GROUPS[g] || SKIN_GROUPS.earn).how; return h === 'shop' && !SHOP_ON && !VAULT ? 'soon' : h; }
 // costumes won so far (ids), kept on this device
 function skinsWon() { try { const a = JSON.parse(safeGet('fb_skins_earned') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
 function skinGoalMet(s, st) { return !!(s.goal && st && (st[s.goal.stat] || 0) >= s.goal.n); }
@@ -1108,6 +1110,7 @@ const SHOP_ON = SHOP_TEST || SHOP_APP || SHOP_WEB;
 const SHOP_STORE = SHOP_APP || SHOP_WEB;   // real purchases (store prices, buyer account)
 const SKINS_ALL = !SHOP_TEST && !SHOP_WEB && SHOP_TESTHOST && (new URLSearchParams(location.search).get('skins') === 'all' || location.hostname === 'preview.franks-and-buns.pages.dev');
 kitchenLoad(kitchenPicked().id);   // the kitchen this device picked (Classic until another is unlocked)
+if (VAULT) window.addEventListener('load', () => setTimeout(skinsOpen, 400));   // the vault opens straight to the costume screen
 // --- BunBux and the daily challenge ---
 // BunBux are earned by playing, never sold: 1 per box packed (up to 10 a game), 25 for the daily challenge (once a day)
 // and day-streak bonuses (+25 at 3 days, +75 at 7, +200 at 30). The server keeps them with the Dog House profile, so the
@@ -1317,7 +1320,7 @@ function shopColSkins(g) { return SKINS.filter(k => k.group === g && skinOpen(k)
 function shopProducts() {
   const out = {}, st = shopStore.products;
   // in the apps the price comes from the store (the player's own currency); the crossed-out price only in dollars
-  const real = (pid, usd) => SHOP_STORE ? (st[pid] ? packsEsc(st[pid].priceString || '') : '') : usd;   // store text: escaped before it goes into the page
+  const real = (pid, usd) => SHOP_STORE && !VAULT ? (st[pid] ? packsEsc(st[pid].priceString || '') : '') : usd;   // store text: escaped before it goes into the page
   const usdStore = pid => !SHOP_STORE || (st[pid] && st[pid].currencyCode === 'USD');
   SHOP_COLS.forEach(g => {
     shopColSkins(g).forEach(id => { out['skin_' + id] = { kind: 'skin', name: skinById(id).name, skins: [id], price: real('skin_' + id, '$0.99') }; });
@@ -3894,6 +3897,7 @@ function skinsOpen() {
       '#fb-skins .fbs-ltd-c{position:absolute;top:6px;left:6px;z-index:1}' +
       '#fb-skins .fbs-bal{text-align:center;font:13px Arial;color:#FFD700;background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.35);border-radius:999px;padding:5px 10px;margin:0 auto 10px;width:fit-content}' +
       '#fb-skins .fbs-go.fbs-bux{background:transparent;color:#FFD700;border:2px solid #FFD700;padding:11px}#fb-skins .fbs-buxnote{text-align:center;font-size:12px;color:#c8a878;margin:6px 0 0}' +
+      '#fb-skins .fbs-q{display:block;width:100%;box-sizing:border-box;margin:0 0 10px;padding:10px 14px;border-radius:999px;border:2px solid rgba(255,215,0,.35);background:rgba(0,0,0,.3);color:#f3e3c3;font:15px Arial;outline:none}#fb-skins .fbs-q:focus{border-color:#FFD700}#fb-skins .fbs-q::placeholder{color:#c8a878}#fb-skins .fbs-grp{color:#FFD700!important;font-size:11px!important}' +
       '#fb-skins .fbs-close{flex:none;font:600 15px Arial;border-radius:999px;padding:11px 16px;border:1px solid rgba(255,179,71,.5);background:transparent;color:#ffb347;cursor:pointer;width:100%;margin:12px 0 0}';
     document.head.appendChild(css);
     box.addEventListener('click', e => {
@@ -3904,6 +3908,7 @@ function skinsOpen() {
       if (t && t.hasAttribute('data-tab')) { skinsTab = t.getAttribute('data-tab'); skinsBuy = null; kitchenBuy = null; skinsMsg = ''; sndStreak(); skinsRender(); return; }
       if (t && t.getAttribute('data-a') === 'home') { if (kitchenBuy) kitchenBuy = null; else if (skinsBuy) skinsBuy = null; else skinsTab = null; skinsMsg = ''; sndStreak(); skinsRender(); return; }
       if (t && t.hasAttribute('data-buy')) { if (!skinsBusy) { skinsBuy = t.getAttribute('data-buy'); skinsMsg = ''; sndStreak(); skinsRender(); } return; }
+      if (VAULT && t && ['pay', 'bux', 'kbux', 'restore'].indexOf(t.getAttribute('data-a')) >= 0) { skinsMsgErr = true; skinsMsg = 'Costume Vault preview: buying is turned off here.'; skinsRender(); return; }
       if (t && t.getAttribute('data-a') === 'pay') { skinsPay(); return; }
       if (t && t.getAttribute('data-a') === 'bux') { skinsBux(); return; }
       if (t && t.getAttribute('data-a') === 'restore') { skinsRestore(); return; }
@@ -3914,6 +3919,7 @@ function skinsOpen() {
       if (!skinUnlocked(s)) { if (skinHow(s) === 'shop' && !skinsBusy) { skinsBuy = 'skin_' + s.id; skinsMsg = ''; sndStreak(); skinsRender(); } return; }
       safeSet('fb_skin', s.id); skinPreload(s); sndStreak(); skinsRender();
     });
+    box.addEventListener('input', e => { if (e.target.classList.contains('fbs-q')) { skinsQ = e.target.value; skinsSearchDraw(); } });
     ['touchstart', 'touchend', 'mousedown', 'pointerdown', 'keydown'].forEach(t => box.addEventListener(t, e => e.stopPropagation(), { passive: true }));
     document.body.appendChild(box);
   }
@@ -4025,6 +4031,36 @@ async function kitchensBux() {
   } catch (e) { skinsMsgErr = true; skinsMsg = (e && e.message) || 'That didn’t go through. Your BunBux are safe.'; }
   skinsBusy = false; skinsRender();
 }
+function skinsCardHtml(s, cur, extra) {
+  const open = skinUnlocked(s), on = s.id === cur.id, how = skinHow(s);
+  return '<button type="button" class="fbs-skin' + (on ? ' on' : '') + (open ? '' : ' lock') + (open || how === 'earn' || how === 'shop' ? '' : ' soon') + '" data-skin="' + s.id + '"' +
+        (open || how === 'shop' ? '' : ' aria-disabled="true"') + '>' + (how === 'shop' && skinLimited(s.id) ? '<span class="fbs-ltd fbs-ltd-c">★ LIMITED</span>' : '') + '<img src="' + skinsPic(s) + '" alt="" loading="lazy">' + s.name + (extra || '') +
+        '<small>' + (on ? '✓ Wearing' : open ? 'Tap to wear' : how === 'shop' ? '<span class="fbs-p">' + (shopProducts()['skin_' + s.id].price || '…') + '</span>' : how === 'earn' ? '🔒 ' + (skinNext() === s || !skinPrev(s) ? '' : 'After ' + skinPrev(s).name + ': ') + s.goal.text : '🔒 ' + (s.note || 'Coming soon')) + '</small></button>';
+}
+// keyword search on the costume screen: costume name, Collection name or note; every word must match
+let skinsQ = '';
+function skinsSearchHits(q) {
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  return SKINS.filter(s => {
+    if (!(SKINS_ALL || skinHow(s) !== 'hidden')) return false;
+    const g = SKIN_GROUPS[s.group || 'earn'] || {}, txt = (s.name + ' ' + (g.name || '') + ' ' + (s.note || '') + ' ' + s.id).toLowerCase();
+    return words.every(w => txt.indexOf(w) >= 0);
+  });
+}
+function skinsSearchDraw() {
+  const box = document.getElementById('fb-skins'); if (!box) return;
+  const res = box.querySelector('.fbs-res'), home = box.querySelector('.fbs-home'); if (!res || !home) return;
+  const q = skinsQ.trim();
+  home.style.display = q ? 'none' : ''; res.style.display = q ? '' : 'none';
+  if (!q) { res.innerHTML = ''; return; }
+  const hits = skinsSearchHits(q), cur = curSkin();
+  res.innerHTML = '<p class="fbs-sub">' + (hits.length ? hits.length + (hits.length === 1 ? ' costume' : ' costumes') : 'No costumes match “' + packsEsc(q) + '”') + '</p>' +
+    '<div class="fbs-grid">' + hits.map(s => skinsCardHtml(s, cur, '<small class="fbs-grp">' + packsEsc((SKIN_GROUPS[s.group || 'earn'] || {}).name || '') + '</small>')).join('') + '</div>';
+}
+function skinsVaultWhen(g) {   // vault only: when a Collection that isn't out yet drops
+  const G = SKIN_GROUPS[g]; if (!VAULT || !G || !G.from || Date.now() >= G.from) return '';
+  return '📅 Drops ' + new Date(G.from).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/Los_Angeles' });
+}
 function skinsRender() {
   const box = document.getElementById('fb-skins'); if (!box) return;
   const cur = curSkin(), groups = Object.keys(SKIN_GROUPS).filter(g => skinsGroupList(g).length);
@@ -4039,6 +4075,7 @@ function skinsRender() {
     '<h2>' + packsEsc(title) + '</h2>' +
     '<button type="button" class="fbs-x" data-a="close" aria-label="Close">✕</button></div><div class="fbs-body">';
   if (SHOP_TEST) h += '<div class="fbs-test">TEST SHOP · pretend purchases, nothing is charged</div>';
+  if (VAULT) h += '<div class="fbs-test">COSTUME VAULT · every costume, hidden ones too · buying is off</div>';
   if (!SKINS_ALL) h += '<div class="fbs-bal">' + BUX_ICON_HTML + ' You have <b>' + buxShown().toLocaleString() + '</b> BunBux</div>';
   const msg = skinsMsg ? '<p class="fbs-msg' + (skinsMsgErr ? ' err' : '') + '">' + packsEsc(skinsMsg) + '</p>' : '';
   if (kBuy) h += kitchensBuyHtml(kBuy, msg);
@@ -4066,31 +4103,30 @@ function skinsRender() {
     h += msg + '</div>';
   } else if (!skinsTab) {
     // Collections: one row per group, newest groups just get added to SKIN_GROUPS
+    if (VAULT) h += '<input type="search" class="fbs-q" placeholder="🔍 Search costumes" aria-label="Search costumes" autocomplete="off" value="' + packsEsc(skinsQ) + '">';   // search box: vault only for now
+    h += '<div class="fbs-res"></div><div class="fbs-home">';
     h += '<p class="fbs-sub">Wearing: <b>' + packsEsc(cur.name) + '</b>' + '</p>' + msg;
     h += kitchensRowHtml();
     groups.forEach(g => {
       const list = skinsGroupList(g), open = list.filter(s => skinUnlocked(s)).length, how = SKINS_ALL ? '' : skinHow(list[0]), soon = how === 'soon';
       const here = list.indexOf(cur) >= 0;
       h += '<button type="button" class="fbs-col' + (here ? ' on' : '') + '" data-tab="' + g + '"><span class="fbs-col-t"><b>' + packsEsc(SKIN_GROUPS[g].name) + (!SKINS_ALL && groupNew(g) ? ' <span class="fbs-new">NEW</span>' : '') + '</b>' +
-        '<small>' + (soon ? '🔒 Coming soon · ' + list.length + ' costumes' : how === 'shop' ? (open === list.length ? '✓ All ' + list.length + ' owned' : (open ? open + ' of ' + list.length + ' owned · ' : list.length + ' costumes · ') + 'from ' + (shopProducts()['skin_' + list[0].id].price || '…')) : open + ' of ' + list.length + ' unlocked') + '</small></span><span class="fbs-col-p">';
+        '<small>' + (skinsVaultWhen(g) ? skinsVaultWhen(g) + ' · ' : '') + (soon ? '🔒 Coming soon · ' + list.length + ' costumes' : how === 'shop' ? (open === list.length ? '✓ All ' + list.length + ' owned' : (open ? open + ' of ' + list.length + ' owned · ' : list.length + ' costumes · ') + 'from ' + (shopProducts()['skin_' + list[0].id].price || '…')) : open + ' of ' + list.length + ' unlocked') + '</small></span><span class="fbs-col-p">';
       (here ? [cur].concat(list.filter(s => s !== cur)) : list).slice(0, 3).forEach(s => { h += '<img src="' + skinsPic(s) + '" alt="" loading="lazy">'; });
       h += '</span><span class="fbs-col-a">›</span></button>';
     });
     if (SHOP_ON && !SKINS_ALL) h += skinsDeal('col_launch3') + '<button type="button" class="fbs-link" data-a="restore">Restore Purchases</button>' +
       (SHOP_TEST ? '<button type="button" class="fbs-link" data-a="shopreset">Clear test purchases</button>' : '');
+    h += '</div>';
   } else {
     const list = skinsGroupList(skinsTab), how0 = SKINS_ALL ? '' : skinHow(list[0]), soon = how0 === 'soon';
+    if (skinsVaultWhen(skinsTab)) h += '<p class="fbs-sub" style="color:#FFD700">' + skinsVaultWhen(skinsTab) + '</p>';
     h += '<p class="fbs-sub">' + (soon ? 'Coming soon. Check back for these costumes!' :
       skinsTab === 'earn' ? 'Win them in order, one per game: pull off the challenge in a single game.' :
       how0 === 'shop' ? 'Get one costume for ' + (shopProducts()['skin_' + list[0].id].price || '$0.99') + ' or ' + BUX_COST + ' BunBux (★ Limited Edition: purchase only), or the whole Collection.' : 'Dress up your frank.') + '</p>' + msg;
     if (how0 === 'shop') h += skinsDeal('col_' + skinsTab);
     h += '<div class="fbs-grid">';
-    list.forEach(s => {
-      const open = skinUnlocked(s), on = s.id === cur.id, how = skinHow(s);
-      h += '<button type="button" class="fbs-skin' + (on ? ' on' : '') + (open ? '' : ' lock') + (open || how === 'earn' || how === 'shop' ? '' : ' soon') + '" data-skin="' + s.id + '"' +
-        (open || how === 'shop' ? '' : ' aria-disabled="true"') + '>' + (how === 'shop' && skinLimited(s.id) ? '<span class="fbs-ltd fbs-ltd-c">★ LIMITED</span>' : '') + '<img src="' + skinsPic(s) + '" alt="" loading="lazy">' + s.name +
-        '<small>' + (on ? '✓ Wearing' : open ? 'Tap to wear' : how === 'shop' ? '<span class="fbs-p">' + (shopProducts()['skin_' + s.id].price || '…') + '</span>' : how === 'earn' ? '🔒 ' + (skinNext() === s || !skinPrev(s) ? '' : 'After ' + skinPrev(s).name + ': ') + s.goal.text : '🔒 ' + (s.note || 'Coming soon')) + '</small></button>';
-    });
+    list.forEach(s => { h += skinsCardHtml(s, cur); });
     h += '</div>';
   }
   h += '</div><button type="button" class="fbs-close" data-a="close">Close</button></div>';
@@ -4099,6 +4135,7 @@ function skinsRender() {
   const keep = view === skinsView && old ? old.scrollTop : 0; skinsView = view;
   box.innerHTML = h;
   const body = box.querySelector('.fbs-body'); if (body) body.scrollTop = keep;
+  if (!skinsTab && !skinsBuy && !kitchenBuy) skinsSearchDraw();
 }
 let skinsView = '';
 function scoresPanelRect() { const pw = Math.min(W - 32, 340), ph = gcPlugin() ? 350 : 300; return { x: W / 2 - pw / 2, y: H * 0.5 - ph / 2, w: pw, h: ph }; }

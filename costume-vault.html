@@ -40,6 +40,8 @@
 (async function () {
   const app = document.getElementById('app');
   if (new URLSearchParams(location.search).get('k') !== 'bunvault') { app.innerHTML = '<div class="lock">Nothing here.</div>'; return; }
+  // default: the app view (the real costume screen with every Collection open); &view=grid keeps this overview grid
+  if (new URLSearchParams(location.search).get('view') !== 'grid') { location.replace('game.html?vault=bunvault'); return; }
   const src = await (await fetch('game.html', { cache: 'no-store' })).text();
   const grab = (start, endRe) => { const i = src.indexOf(start); const rest = src.slice(i); const m = rest.match(endRe); return rest.slice(0, m.index + m[0].length); };
   const code = 'function dropAt(y, m, d) { return Date.UTC(y, m - 1, d, 8); }\n' +
