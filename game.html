@@ -819,6 +819,9 @@ const SKINS = [
   { id: 'touchdown', name: 'Touchdown', group: 'sports', frames: 1, fly: [-48.6, -27.9, 88.5, 43.7], bun: [-43.5, -51.1, 88.1, 53.0], grill: [-43.6, -72.1, 88.1, 73.9] },
   { id: 'kickflip', name: 'Kickflip', group: 'sports', frames: 1, fly: [-48.4, -28.6, 88.1, 43.9], bun: [-41.8, -51.3, 85.8, 53.2], grill: [-41.9, -64.7, 85.6, 66.5] },
   { id: 'partee', name: 'Par-Tee', group: 'sports', frames: 1, fly: [-47.5, -21.5, 89.4, 34.5], bun: [-44.3, -47.1, 94.1, 49.0], grill: [-44.8, -70.0, 94.6, 71.9] },
+  { id: 'homerun', name: 'Home Run', group: 'sports', frames: 1, from: dropAt(2027, 3, 2), fly: [-44.5, -31.4, 85.1, 45.9], bun: [-41.9, -58.6, 88.1, 60.5], grill: [-42.5, -80.6, 88.5, 82.5] },
+  { id: 'doggypaddle', name: 'Doggy Paddle', group: 'sports', frames: 1, from: dropAt(2027, 3, 2), fly: [-42.5, -24.6, 81.0, 39.1], bun: [-41.8, -53.4, 84.0, 55.3], grill: [-41.3, -68.7, 83.6, 70.6] },
+  { id: 'cleanandjerk', name: 'Clean & Jerk', group: 'sports', frames: 1, from: dropAt(2027, 3, 2), fly: [-46.5, -23.4, 89.1, 37.9], bun: [-44.9, -53.8, 90.3, 55.7], grill: [-45.7, -73.0, 90.5, 74.9] },
   { id: 'popstar', name: 'Pop Star', group: 'snackpack', frames: 1, fly: [-49.2, -25.5, 90.8, 42.7], bun: [-43.8, -47.1, 89.4, 49.0], grill: [-43.9, -65.7, 89.5, 67.7] },
   { id: 'sliceoflife', name: 'Slice of Life', group: 'snackpack', frames: 1, fly: [-48.9, -21.5, 88.6, 36.3], bun: [-42.0, -43.3, 85.4, 45.2], grill: [-41.9, -60.4, 85.4, 62.3] },
   { id: 'glazedandconfused', name: 'Glazed and Confused', group: 'snackpack', frames: 1, fly: [-49.1, -29.9, 90.4, 46.1], bun: [-45.0, -55.3, 93.1, 57.2], grill: [-45.0, -66.2, 93.1, 68.1] },
@@ -844,6 +847,7 @@ const SKINS = [
   { id: 'overcooked', name: 'Overcooked', group: 'questionabledecisions', frames: 1, fly: [-48.4, -26.8, 88.1, 41.1], bun: [-44.6, -49.9, 87.2, 51.8], grill: [-44.6, -68.0, 87.2, 69.9] },
   { id: 'businesscasualty', name: 'Business Casualty', group: 'questionabledecisions', frames: 1, fly: [-47.9, -18.1, 87.3, 36.3], bun: [-42.6, -47.6, 87.3, 49.5], grill: [-42.8, -68.2, 87.5, 70.1] },
   { id: 'buffering', name: 'Buffering', group: 'questionabledecisions', frames: 1, fly: [-47.1, -36.9, 88.5, 52.6], bun: [-44.0, -68.7, 95.8, 70.7], grill: [-44.0, -75.2, 95.8, 77.3] },
+  { id: 'porcelainthrone', name: 'Porcelain Throne', group: 'questionabledecisions', frames: 1, fly: [-43.6, -35.7, 83.1, 50.2], bun: [-42.0, -56.6, 84.0, 58.5], grill: [-42.1, -74.1, 84.1, 76.0] },
   { id: 'straightafrank', name: 'Straight-A Frank', group: 'academic', frames: 1, fly: [-48.5, -25.0, 88.0, 39.4], bun: [-46.5, -53.6, 93.7, 55.6], grill: [-46.6, -74.4, 93.9, 76.3] },
   { id: 'graddog', name: 'Grad Dog', group: 'academic', frames: 1, fly: [-48.6, -29.5, 88.5, 45.2], bun: [-44.9, -53.6, 90.5, 55.6], grill: [-44.9, -69.1, 90.4, 71.0] },
   { id: 'professorfrank', name: 'Professor Frank', group: 'academic', frames: 1, fly: [-47.1, -25.6, 86.8, 41.6], bun: [-41.9, -51.8, 88.7, 53.7], grill: [-41.8, -72.1, 88.6, 74.0] },
@@ -864,7 +868,100 @@ const SKINS = [
   { id: 'maneevent', name: 'Mane Event', group: 'wildthings', frames: 1, fly: [-54.5, -26.8, 94.6, 41.4], bun: [-46.6, -52.5, 91.9, 54.4], grill: [-46.6, -74.9, 91.9, 76.9] },
   { id: 'stripehype', name: 'Stripe Hype', group: 'wildthings', frames: 1, fly: [-48.5, -22.7, 88.7, 40.8], bun: [-42.5, -46.1, 84.3, 48.0], grill: [-42.6, -65.0, 84.4, 66.9] },
   { id: 'pandamonium', name: 'Panda-monium', group: 'wildthings', frames: 1, fly: [-47.7, -30.2, 87.0, 49.3], bun: [-41.5, -53.9, 83.8, 55.8], grill: [-41.6, -71.3, 84.0, 73.1] },
-  { id: 'trunkshow', name: 'Trunk Show', group: 'wildthings', frames: 1, fly: [-49.3, -27.6, 89.8, 44.2], bun: [-43.0, -52.1, 86.6, 54.0], grill: [-43.0, -75.8, 86.6, 77.7] }
+  { id: 'trunkshow', name: 'Trunk Show', group: 'wildthings', frames: 1, fly: [-49.3, -27.6, 89.8, 44.2], bun: [-43.0, -52.1, 86.6, 54.0], grill: [-43.0, -75.8, 86.6, 77.7] },
+  { id: 'archer', name: 'Archer', group: 'yeoldefranks', frames: 1, fly: [-44.5, -28.3, 85.0, 42.8], bun: [-42.0, -53.9, 87.0, 55.8], grill: [-43.9, -75.9, 86.8, 77.8] },
+  { id: 'fairmaiden', name: 'Fair Maiden', group: 'yeoldefranks', frames: 1, fly: [-43.9, -30.8, 83.7, 45.3], bun: [-41.9, -52.4, 85.2, 54.3], grill: [-41.9, -64.1, 85.5, 66.0] },
+  { id: 'jester', name: 'Jester', group: 'yeoldefranks', frames: 1, fly: [-43.8, -38.6, 83.6, 53.1], bun: [-41.8, -54.8, 85.8, 56.7], grill: [-41.6, -68.6, 85.7, 70.5] },
+  { id: 'joustingknight', name: 'Jousting Knight', group: 'yeoldefranks', frames: 1, fly: [-44.1, -33.9, 84.2, 48.4], bun: [-43.0, -60.2, 84.8, 62.1], grill: [-44.0, -70.8, 87.1, 72.7] },
+  { id: 'king', name: 'King Frank', group: 'yeoldefranks', frames: 1, fly: [-43.5, -29.7, 83.0, 44.2], bun: [-41.8, -52.0, 84.1, 53.9], grill: [-42.1, -64.4, 84.4, 66.3] },
+  { id: 'wizard', name: 'Court Wizard', group: 'yeoldefranks', frames: 1, fly: [-44.1, -34.3, 84.2, 48.8], bun: [-42.8, -55.5, 84.8, 57.4], grill: [-42.8, -67.8, 84.8, 69.7] },
+  { id: 'camocommando', name: 'Camo Commando', group: 'salutesquad', frames: 1, fly: [-44.6, -28.4, 85.1, 42.9], bun: [-41.8, -51.1, 85.6, 53.0], grill: [-41.8, -66.4, 85.5, 68.2] },
+  { id: 'sailorfrank', name: 'Sailor Frank', group: 'salutesquad', frames: 1, fly: [-43.3, -25.8, 82.5, 40.3], bun: [-41.9, -52.5, 83.7, 54.4], grill: [-41.8, -68.4, 83.6, 70.3] },
+  { id: 'dressblues', name: 'Dress Blues', group: 'salutesquad', frames: 1, fly: [-43.3, -35.4, 82.5, 49.9], bun: [-41.9, -57.5, 84.0, 59.4], grill: [-42.1, -71.2, 84.2, 73.1] },
+  { id: 'acepilot', name: 'Ace Pilot', group: 'salutesquad', frames: 1, fly: [-43.1, -29.4, 82.2, 43.9], bun: [-41.8, -51.6, 83.6, 53.5], grill: [-42.2, -67.2, 84.1, 69.1] },
+  { id: 'spacecadet', name: 'Space Cadet', group: 'salutesquad', frames: 1, fly: [-45.0, -26.3, 85.9, 40.8], bun: [-42.5, -49.5, 85.8, 51.4], grill: [-43.2, -69.8, 86.6, 71.7] },
+  { id: 'rescueswimmer', name: 'Rescue Swimmer', group: 'salutesquad', frames: 1, fly: [-45.4, -26.7, 86.9, 41.2], bun: [-42.3, -52.3, 87.5, 54.2], grill: [-44.0, -73.5, 87.5, 75.4] },
+  { id: 'hotrod', name: 'Hot Rod', group: 'fastfood', frames: 1, fly: [-44.3, -23.0, 84.5, 37.5], bun: [-43.1, -46.0, 85.1, 47.9], grill: [-43.8, -66.5, 86.3, 68.4] },
+  { id: 'jetsetter', name: 'Jet Setter', group: 'fastfood', frames: 1, fly: [-42.7, -26.0, 81.3, 40.5], bun: [-41.8, -49.6, 83.7, 51.5], grill: [-42.1, -65.8, 84.3, 67.7] },
+  { id: 'chopper', name: 'Chopper', group: 'fastfood', frames: 1, fly: [-47.4, -40.2, 90.8, 54.7], bun: [-50.3, -61.1, 92.3, 63.0], grill: [-48.0, -75.5, 92.9, 77.4] },
+  { id: 'roadhog', name: 'Road Hog', group: 'fastfood', frames: 1, fly: [-40.9, -36.7, 77.8, 51.2], bun: [-41.9, -49.5, 83.9, 51.4], grill: [-41.7, -60.6, 83.6, 62.5] },
+  { id: 'gravyboat', name: 'Gravy Boat', group: 'fastfood', frames: 1, fly: [-48.6, -20.9, 93.1, 35.4], bun: [-45.4, -42.7, 92.7, 44.6], grill: [-44.3, -63.2, 93.3, 65.1] },
+  { id: 'ghost', name: 'Boo Frank', group: 'frightbites', frames: 1, fly: [-44.8, -26.2, 85.7, 40.7], bun: [-41.9, -46.0, 86.2, 47.9], grill: [-44.1, -68.5, 87.0, 70.4] },
+  { id: 'witch', name: 'Witchy Wiener', group: 'frightbites', frames: 1, fly: [-44.6, -32.2, 85.1, 46.7], bun: [-42.0, -54.0, 84.1, 55.9], grill: [-43.1, -59.0, 87.1, 60.9] },
+  { id: 'skeleton', name: 'Skele-Frank', group: 'frightbites', frames: 1, fly: [-45.2, -29.8, 86.3, 44.3], bun: [-44.6, -54.0, 87.6, 55.9], grill: [-43.2, -76.7, 87.0, 78.6] },
+  { id: 'mummy', name: 'Mummy Dog', group: 'frightbites', frames: 1, fly: [-47.0, -18.6, 90.0, 33.1], bun: [-47.8, -48.8, 90.2, 50.7], grill: [-44.4, -68.0, 89.9, 69.9] },
+  { id: 'holstein', name: 'Holstein', group: 'holycow', frames: 1, fly: [-43.4, -29.9, 82.9, 44.4], bun: [-42.9, -53.8, 84.8, 55.7], grill: [-42.9, -70.1, 84.6, 72.0] },
+  { id: 'jersey', name: 'Jersey', group: 'holycow', frames: 1, fly: [-42.9, -31.8, 81.8, 46.3], bun: [-42.0, -56.5, 84.0, 58.4], grill: [-41.9, -77.0, 83.7, 78.9] },
+  { id: 'angus', name: 'Angus', group: 'holycow', frames: 1, fly: [-43.4, -28.0, 82.8, 42.5], bun: [-41.9, -49.6, 84.1, 51.5], grill: [-42.2, -65.6, 84.7, 67.5] },
+  { id: 'hereford', name: 'Hereford', group: 'holycow', frames: 1, fly: [-44.7, -31.6, 85.3, 46.1], bun: [-41.8, -54.5, 85.6, 56.4], grill: [-42.1, -76.1, 85.6, 78.0] },
+  { id: 'highland', name: 'Highland Cow', group: 'holycow', frames: 1, fly: [-45.5, -31.9, 87.0, 46.4], bun: [-44.3, -51.9, 87.5, 53.8], grill: [-44.3, -72.1, 89.4, 74.0] },
+  { id: 'longhorn', name: 'Longhorn', group: 'homeontherange', frames: 1, fly: [-47.6, -26.5, 91.2, 41.0], bun: [-44.6, -49.3, 91.3, 51.2], grill: [-44.9, -60.9, 91.6, 62.8] },
+  { id: 'brahman', name: 'Brahman', group: 'homeontherange', frames: 1, fly: [-47.2, -31.7, 90.4, 46.2], bun: [-42.6, -51.9, 89.2, 53.8], grill: [-44.7, -68.1, 89.7, 70.0] },
+  { id: 'elk', name: 'Elk', group: 'homeontherange', frames: 1, fly: [-42.7, -37.9, 81.4, 52.4], bun: [-43.5, -59.8, 85.5, 61.7], grill: [-42.3, -70.8, 86.0, 72.7] },
+  { id: 'bison', name: 'Bison', group: 'homeontherange', frames: 1, fly: [-46.9, -33.6, 89.9, 48.1], bun: [-45.0, -53.8, 90.0, 55.7], grill: [-47.4, -74.9, 90.4, 76.8] },
+  { id: 'moose', name: 'Moose', group: 'homeontherange', frames: 1, fly: [-41.4, -37.6, 78.8, 52.1], bun: [-41.8, -59.2, 83.7, 61.1], grill: [-41.8, -73.4, 83.7, 75.3] },
+  { id: 'flamingo', name: 'Flamingo', group: 'birdbrains', frames: 1, fly: [-46.2, -33.0, 88.4, 47.5], bun: [-42.3, -54.6, 88.4, 56.5], grill: [-42.1, -71.3, 88.1, 73.2] },
+  { id: 'toucan', name: 'Toucan', group: 'birdbrains', frames: 1, fly: [-47.0, -28.8, 90.0, 43.3], bun: [-45.1, -53.1, 88.7, 55.0], grill: [-43.1, -72.5, 88.7, 74.4] },
+  { id: 'snowyowl', name: 'Snowy Owl', group: 'birdbrains', frames: 1, fly: [-46.8, -31.3, 89.6, 45.8], bun: [-44.1, -55.0, 90.3, 56.9], grill: [-44.7, -79.0, 90.7, 80.9] },
+  { id: 'barnowl', name: 'Barn Owl', group: 'birdbrains', frames: 1, fly: [-44.4, -31.5, 84.9, 46.0], bun: [-44.0, -55.0, 86.0, 56.9], grill: [-46.5, -71.3, 89.4, 73.2] },
+  { id: 'emperorpenguin', name: 'Emperor Penguin', group: 'birdbrains', frames: 1, fly: [-43.8, -25.7, 83.6, 40.2], bun: [-42.3, -50.0, 84.3, 51.9], grill: [-42.6, -72.0, 84.9, 73.9] },
+  { id: 'rockhopper', name: 'Rockhopper', group: 'birdbrains', frames: 1, fly: [-44.8, -35.3, 85.6, 49.8], bun: [-41.8, -56.3, 86.1, 58.2], grill: [-42.6, -78.4, 86.6, 80.3] },
+  { id: 'ladyliberty', name: 'Lady Liberty', group: 'redwhiteandbun', frames: 1, fly: [-43.9, -29.8, 83.9, 44.3], bun: [-41.8, -53.6, 83.6, 55.5], grill: [-42.0, -66.8, 84.0, 68.7] },
+  { id: 'libertybell', name: 'Liberty Bell', group: 'redwhiteandbun', frames: 1, fly: [-44.5, -39.5, 84.9, 54.0], bun: [-43.3, -63.7, 85.8, 65.6], grill: [-42.6, -75.5, 85.9, 77.4] },
+  { id: 'baldeagle', name: 'Bald Eagle', group: 'redwhiteandbun', frames: 1, fly: [-44.9, -30.8, 85.7, 45.3], bun: [-41.8, -52.7, 87.7, 54.6], grill: [-41.9, -74.3, 86.8, 76.2] },
+  { id: 'fogcitybridge', name: 'Fog City Bridge', group: 'redwhiteandbun', frames: 1, fly: [-45.7, -28.2, 87.5, 42.7], bun: [-43.3, -49.9, 87.2, 51.8], grill: [-44.0, -68.0, 87.8, 69.9] },
+  { id: 'unitedkingdom', name: 'United Kingdom', group: 'eurofranks', frames: 1, fly: [-43.6, -23.2, 83.3, 37.7], bun: [-42.5, -50.4, 84.6, 52.3], grill: [-43.1, -71.7, 85.1, 73.6] },
+  { id: 'france', name: 'France', group: 'eurofranks', frames: 1, fly: [-43.9, -25.3, 83.9, 39.8], bun: [-43.7, -49.1, 85.5, 51.0], grill: [-44.7, -74.8, 87.3, 76.7] },
+  { id: 'germany', name: 'Germany', group: 'eurofranks', frames: 1, fly: [-44.2, -28.8, 84.5, 43.2], bun: [-41.8, -52.4, 84.8, 54.2], grill: [-42.6, -66.6, 85.8, 68.5] },
+  { id: 'poland', name: 'Poland', group: 'eurofranks', frames: 1, fly: [-43.4, -24.0, 82.7, 38.5], bun: [-41.9, -47.5, 83.9, 49.4], grill: [-41.9, -67.5, 83.9, 69.4] },
+  { id: 'croatia', name: 'Croatia', group: 'eurofranks', frames: 1, fly: [-43.8, -21.9, 83.6, 36.4], bun: [-42.7, -48.0, 84.7, 49.9], grill: [-42.9, -64.4, 85.0, 66.3] },
+  { id: 'switzerland', name: 'Switzerland', group: 'eurofranks', frames: 1, fly: [-45.6, -32.0, 87.2, 46.5], bun: [-44.0, -54.6, 86.8, 56.5], grill: [-43.5, -73.5, 88.3, 75.4] },
+  { id: 'ukraine', name: 'Ukraine', group: 'eurofranks', frames: 1, fly: [-45.1, -28.5, 86.3, 43.0], bun: [-42.0, -53.4, 86.3, 55.3], grill: [-43.6, -67.3, 86.4, 69.2] },
+  { id: 'unitedstates', name: 'United States', group: 'globalgrill', frames: 1, fly: [-44.9, -24.3, 85.8, 38.8], bun: [-43.3, -49.5, 85.6, 51.4], grill: [-43.6, -67.0, 86.3, 68.9] },
+  { id: 'canada', name: 'Canada', group: 'globalgrill', frames: 1, fly: [-43.4, -30.7, 82.9, 45.2], bun: [-41.8, -55.7, 83.9, 57.6], grill: [-42.0, -70.3, 84.0, 72.2] },
+  { id: 'mexico', name: 'Mexico', group: 'globalgrill', frames: 1, fly: [-41.7, -22.6, 79.3, 37.1], bun: [-41.8, -47.9, 84.1, 49.8], grill: [-42.2, -62.6, 84.2, 64.5] },
+  { id: 'australia', name: 'Australia', group: 'globalgrill', frames: 1, fly: [-44.6, -30.4, 85.2, 44.9], bun: [-41.8, -55.9, 86.3, 57.8], grill: [-41.7, -69.2, 86.0, 71.1] },
+  { id: 'japan', name: 'Japan', group: 'globalgrill', frames: 1, fly: [-44.0, -24.8, 84.0, 39.3], bun: [-41.8, -50.3, 84.0, 52.2], grill: [-42.4, -65.7, 84.8, 67.6] },
+  { id: 'southkorea', name: 'South Korea', group: 'globalgrill', frames: 1, fly: [-42.9, -26.6, 81.8, 41.1], bun: [-41.9, -51.8, 83.7, 53.7], grill: [-41.7, -65.4, 83.6, 67.3] },
+  { id: 'china', name: 'China', group: 'globalgrill', frames: 1, fly: [-46.2, -29.6, 88.4, 44.1], bun: [-44.6, -51.7, 88.5, 53.6], grill: [-43.9, -72.4, 88.0, 74.3] },
+  { id: 'india', name: 'India', group: 'globalgrill', frames: 1, fly: [-46.5, -25.1, 89.0, 39.6], bun: [-44.2, -49.8, 87.2, 51.7], grill: [-45.0, -75.0, 89.3, 76.9] },
+  { id: 'acadia', name: 'Acadia', group: 'greatoutdogs', frames: 1, fly: [-44.4, -30.9, 84.8, 45.4], bun: [-43.0, -55.0, 85.1, 56.9], grill: [-43.0, -68.7, 86.4, 70.6] },
+  { id: 'arches', name: 'Arches', group: 'greatoutdogs', frames: 1, fly: [-46.2, -41.6, 88.4, 56.1], bun: [-42.3, -63.8, 86.3, 65.7], grill: [-42.4, -75.2, 86.6, 77.1] },
+  { id: 'grandcanyon', name: 'Grand Canyon', group: 'greatoutdogs', frames: 1, fly: [-44.5, -24.3, 85.0, 38.8], bun: [-41.9, -48.1, 85.4, 50.0], grill: [-41.5, -65.3, 84.6, 67.2] },
+  { id: 'grandteton', name: 'Grand Teton', group: 'greatoutdogs', frames: 1, fly: [-44.6, -33.6, 85.1, 48.1], bun: [-42.4, -56.7, 85.1, 58.6], grill: [-42.6, -69.8, 85.0, 71.7] },
+  { id: 'smokymountains', name: 'Smoky Mountains', group: 'greatoutdogs', frames: 1, fly: [-42.3, -29.1, 80.5, 43.6], bun: [-41.8, -54.4, 83.9, 56.3], grill: [-42.0, -70.0, 84.2, 71.9] },
+  { id: 'hawaiivolcanoes', name: 'Hawaii Volcanoes', group: 'greatoutdogs', frames: 1, fly: [-45.5, -35.0, 87.0, 49.5], bun: [-41.9, -54.2, 87.1, 56.1], grill: [-42.3, -73.1, 87.3, 75.0] },
+  { id: 'yellowstone', name: 'Yellowstone', group: 'greatoutdogs', frames: 1, fly: [-42.8, -30.3, 81.7, 44.8], bun: [-41.8, -55.9, 84.6, 57.8], grill: [-42.2, -69.7, 84.5, 71.6] },
+  { id: 'yosemite', name: 'Yosemite', group: 'greatoutdogs', frames: 1, fly: [-46.4, -37.3, 88.9, 51.8], bun: [-42.3, -60.4, 88.6, 62.3], grill: [-42.5, -76.3, 88.8, 78.2] },
+  { id: 'zion', name: 'Zion', group: 'greatoutdogs', frames: 1, fly: [-47.3, -37.0, 90.7, 51.5], bun: [-44.5, -59.2, 90.8, 61.1], grill: [-44.3, -73.5, 90.8, 75.4] },
+  { id: 'california', name: 'California', group: 'statefair', frames: 1, fly: [-43.2, -26.5, 82.4, 41.0], bun: [-41.9, -51.3, 84.1, 53.2], grill: [-41.6, -71.2, 83.7, 73.1] },
+  { id: 'colorado', name: 'Colorado', group: 'statefair', frames: 1, fly: [-44.1, -39.1, 84.1, 53.6], bun: [-41.8, -62.2, 84.1, 64.1], grill: [-42.3, -77.4, 84.9, 79.3] },
+  { id: 'kentucky', name: 'Kentucky', group: 'statefair', frames: 1, fly: [-43.1, -32.0, 82.2, 46.5], bun: [-41.8, -54.0, 83.9, 55.9], grill: [-42.7, -69.8, 85.5, 71.7] },
+  { id: 'michigan', name: 'Michigan', group: 'statefair', frames: 1, fly: [-44.7, -33.3, 85.5, 47.8], bun: [-42.2, -53.9, 85.1, 55.8], grill: [-42.9, -65.8, 85.6, 67.7] },
+  { id: 'nevada', name: 'Nevada', group: 'statefair', frames: 1, fly: [-43.4, -31.0, 82.8, 45.5], bun: [-41.8, -56.8, 83.6, 58.7], grill: [-41.9, -73.9, 84.0, 75.8] },
+  { id: 'newjersey', name: 'New Jersey', group: 'statefair', frames: 1, fly: [-43.6, -23.1, 83.1, 37.6], bun: [-42.0, -47.4, 85.0, 49.3], grill: [-42.1, -62.8, 84.6, 64.7] },
+  { id: 'newyork', name: 'New York', group: 'statefair', frames: 1, fly: [-46.0, -35.9, 88.1, 50.4], bun: [-43.3, -56.8, 88.1, 58.7], grill: [-43.0, -65.7, 88.1, 67.6] },
+  { id: 'oregon', name: 'Oregon', group: 'statefair', frames: 1, fly: [-46.3, -29.0, 88.6, 43.5], bun: [-41.9, -50.5, 88.2, 52.4], grill: [-42.8, -69.1, 88.3, 71.0] },
+  { id: 'texas', name: 'Texas', group: 'statefair', frames: 1, fly: [-42.5, -31.8, 80.9, 46.3], bun: [-42.5, -54.2, 84.4, 56.1], grill: [-42.7, -72.4, 84.7, 74.3] },
+  { id: 'vermont', name: 'Vermont', group: 'statefair', frames: 1, fly: [-45.6, -32.9, 87.2, 47.4], bun: [-42.8, -54.3, 87.6, 56.2], grill: [-43.3, -68.3, 87.6, 70.2] },
+  { id: 'brownbear', name: 'Brown Bear', group: 'zoofranks', frames: 1, fly: [-44.0, -33.2, 84.0, 47.7], bun: [-41.8, -54.0, 83.9, 55.9], grill: [-42.5, -74.8, 85.0, 76.7] },
+  { id: 'giraffe', name: 'Giraffe', group: 'zoofranks', frames: 1, fly: [-46.2, -31.3, 88.4, 45.8], bun: [-43.0, -52.3, 87.3, 54.2], grill: [-44.7, -60.3, 88.6, 62.2] },
+  { id: 'gorilla', name: 'Gorilla', group: 'zoofranks', frames: 1, fly: [-42.3, -37.6, 80.7, 52.1], bun: [-42.0, -57.6, 84.4, 59.5], grill: [-42.0, -71.4, 84.2, 73.3] },
+  { id: 'hippo', name: 'Hippo', group: 'zoofranks', frames: 1, fly: [-42.5, -32.2, 81.0, 46.7], bun: [-41.8, -52.7, 84.2, 54.6], grill: [-41.8, -68.6, 84.5, 70.5] },
+  { id: 'koala', name: 'Koala', group: 'zoofranks', frames: 1, fly: [-45.3, -32.2, 86.6, 46.7], bun: [-43.5, -56.1, 87.2, 58.0], grill: [-43.5, -69.1, 87.5, 71.0] },
+  { id: 'monkey', name: 'Monkey', group: 'zoofranks', frames: 1, fly: [-44.7, -38.9, 85.5, 53.4], bun: [-41.8, -54.8, 83.7, 56.7], grill: [-42.0, -70.6, 83.6, 72.5] },
+  { id: 'redpanda', name: 'Red Panda', group: 'zoofranks', frames: 1, fly: [-46.5, -34.0, 88.9, 48.5], bun: [-45.8, -52.6, 88.5, 54.5], grill: [-46.4, -69.7, 88.8, 71.6] },
+  { id: 'zebra', name: 'Zebra', group: 'zoofranks', frames: 1, fly: [-44.0, -35.7, 84.0, 50.2], bun: [-42.8, -55.9, 84.8, 57.8], grill: [-42.9, -74.2, 85.2, 76.1] },
+  { id: 'arcticfox', name: 'Arctic Fox', group: 'chilldogs', frames: 1, fly: [-46.4, -32.9, 88.8, 47.4], bun: [-45.2, -50.4, 88.9, 52.3], grill: [-46.3, -67.9, 89.3, 69.8] },
+  { id: 'arctichare', name: 'Arctic Hare', group: 'chilldogs', frames: 1, fly: [-44.9, -43.0, 85.8, 57.5], bun: [-43.0, -63.9, 85.6, 65.8], grill: [-43.1, -73.6, 85.8, 75.5] },
+  { id: 'mountaingoat', name: 'Mountain Goat', group: 'chilldogs', frames: 1, fly: [-45.9, -38.6, 87.7, 53.1], bun: [-41.8, -58.2, 88.4, 60.1], grill: [-44.3, -76.5, 88.6, 78.4] },
+  { id: 'polarbear', name: 'Polar Bear', group: 'chilldogs', frames: 1, fly: [-43.4, -33.6, 82.9, 48.1], bun: [-42.1, -53.3, 84.6, 55.2], grill: [-42.0, -68.7, 84.5, 70.6] },
+  { id: 'snowleopard', name: 'Snow Leopard', group: 'chilldogs', frames: 1, fly: [-47.4, -26.5, 90.9, 41.0], bun: [-46.2, -48.8, 88.1, 50.7], grill: [-46.2, -73.3, 91.3, 75.2] },
+  { id: 'walrus', name: 'Walrus', group: 'chilldogs', frames: 1, fly: [-47.5, -34.2, 91.1, 48.7], bun: [-45.2, -53.2, 91.2, 55.1], grill: [-45.2, -67.9, 91.4, 69.8] },
+  { id: 'mechapilot', name: 'Mecha Pilot', group: 'bunime', frames: 1, fly: [-42.0, -25.4, 80.0, 39.9], bun: [-41.9, -49.5, 84.5, 51.4], grill: [-42.4, -66.9, 84.9, 68.8] },
+  { id: 'starguardian', name: 'Magical Star', group: 'bunime', frames: 1, fly: [-46.3, -28.8, 88.6, 43.3], bun: [-42.6, -50.9, 88.2, 52.8], grill: [-42.4, -66.1, 88.0, 68.0] },
+  { id: 'swordsman', name: 'Wandering Swordsman', group: 'bunime', frames: 1, fly: [-43.3, -34.0, 82.5, 48.5], bun: [-41.8, -54.8, 83.7, 56.7], grill: [-41.4, -71.6, 83.7, 73.5] },
+  { id: 'powerup', name: 'Power-Up Hero', group: 'bunime', frames: 1, fly: [-43.4, -38.8, 82.9, 53.3], bun: [-41.9, -58.5, 84.5, 60.4], grill: [-41.9, -72.0, 84.5, 73.9] }
 ];
 // Skin groups. how: 'earn' = unlocked by doing its goal in one game, 'soon' = shown locked (Coming soon),
 // 'hidden' = not shown, 'free' = everyone has them. A skin's own how (e.g. free Bunny) beats its group's.
@@ -875,6 +972,7 @@ const SKINS = [
 function dropAt(y, m, d) { return Date.UTC(y, m - 1, d, 8); }
 const DROP_TEST = /\.pages\.dev$|^localhost$|^127\.0\.0\.1$/.test(location.hostname) && (new URLSearchParams(location.search).get('dropdate') || '').match(/^(\d{4})-(\d\d)-(\d\d)$/);
 function dropNow() { return DROP_TEST ? dropAt(+DROP_TEST[1], +DROP_TEST[2], +DROP_TEST[3]) + 3600000 : Date.now(); }
+function skinOpen(s) { return !s.from || dropNow() >= s.from; }   // a costume added to a Collection later can have its own drop date
 function groupOpen(g) { const G = SKIN_GROUPS[g]; return !!G && (!G.from || dropNow() >= G.from); }
 function groupNew(g) { const G = SKIN_GROUPS[g]; return !!(G && G.from && groupOpen(g) && dropNow() < G.from + 7 * 864e5); }   // the first week after its drop
 function anyGroupNew() { return Object.keys(SKIN_GROUPS).some(groupNew); }
@@ -883,7 +981,7 @@ const SKIN_GROUPS = { earn: { name: 'Free & Earned', how: 'earn' }, holiday: { n
   cats: { name: 'Cats', how: 'shop' },
   sports: { name: 'Sports', how: 'shop' },             // on sale from 1.9 (Nov 22, 2026)
   deepseadogs: { name: 'Deep Sea Dogs', how: 'shop' },
-  // Weekly drops: each Collection stays hidden until its date (midnight Pacific), then goes on sale like Sports.
+  // Weekly drops: 2 Collections a week through Jan 12, then 1 a week. Each Collection stays hidden until its date (midnight Pacific), then goes on sale like Sports.
   // Its store items (skin_<id> for each costume, col_<group>) must exist in Stripe, App Store Connect and Google Play by then.
   spacecases: { name: 'Space Cases', how: 'shop', from: dropAt(2026, 12, 1) },
   tinyterrors: { name: 'Tiny Terrors', how: 'shop', from: dropAt(2026, 12, 1) },
@@ -898,8 +996,23 @@ const SKIN_GROUPS = { earn: { name: 'Free & Earned', how: 'earn' }, holiday: { n
   academic: { name: 'Academic', how: 'shop', from: dropAt(2027, 1, 5) },
   sidehustles: { name: 'Side Hustles', how: 'shop', from: dropAt(2027, 1, 5) },
   trashpack: { name: 'Trash Pack', how: 'shop', from: dropAt(2027, 1, 12) },
-  finalbossfranks: { name: 'Final Boss Franks', how: 'shop', from: dropAt(2027, 1, 12) } };
-function skinHow(s) { const g = s.group || 'earn'; if (!groupOpen(g)) return 'hidden';   // a Collection before its drop date
+  finalbossfranks: { name: 'Final Boss Franks', how: 'shop', from: dropAt(2027, 1, 12) },
+  yeoldefranks: { name: 'Ye Olde Franks', how: 'shop', from: dropAt(2027, 1, 19) },   // Medieval pack
+  salutesquad: { name: 'Salute Squad', how: 'shop', from: dropAt(2027, 1, 26) },
+  chilldogs: { name: 'Chill Dogs', how: 'shop', from: dropAt(2027, 1, 26) },   // Arctic and alpine animals pack   // service-inspired pack (generic names, no official insignia)
+  fastfood: { name: 'Fast Food', how: 'shop', from: dropAt(2027, 2, 2) },   // vehicles pack
+  holycow: { name: 'Holy Cow', how: 'shop', from: dropAt(2027, 2, 9) },   // cow breeds pack
+  homeontherange: { name: 'Home on the Range', how: 'shop', from: dropAt(2027, 2, 16) },   // ranch and wild West animals
+  birdbrains: { name: 'Bird Brains', how: 'shop', from: dropAt(2027, 2, 23) },
+  bunime: { name: 'Bun-ime', how: 'shop', from: dropAt(2027, 3, 9) },   // anime-style pack (generic names, no franchise characters)
+  zoofranks: { name: 'Zoo Franks', how: 'shop', from: dropAt(2027, 3, 23) },   // zoo animals pack
+  statefair: { name: 'State Fair', how: 'shop', from: dropAt(2027, 3, 16) },   // US states pack (playful, no official seals or school marks)
+  greatoutdogs: { name: 'Great Outdogs', how: 'shop', from: dropAt(2027, 4, 20) },   // national parks pack, National Park Week (generic badges, no NPS arrowhead)
+  eurofranks: { name: 'Euro Franks', how: 'shop', from: dropAt(2027, 6, 15) },   // flags pack, part 1 (stylized flags, no coats of arms beyond simplified Croatia)
+  globalgrill: { name: 'Global Grill', how: 'shop', from: dropAt(2027, 6, 22) },   // flags pack, part 2, week of the Women's World Cup kickoff
+  redwhiteandbun: { name: 'Red, White & Bun', how: 'shop', from: dropAt(2027, 6, 29) },   // held for July 4
+  frightbites: { name: 'Fright Bites', how: 'shop', from: dropAt(2027, 10, 5) } };   // spooky pack, held for Halloween
+function skinHow(s) { const g = s.group || 'earn'; if (!groupOpen(g) || !skinOpen(s)) return 'hidden';   // a Collection (or a costume added later) before its drop date
   const h = s.how || (SKIN_GROUPS[g] || SKIN_GROUPS.earn).how; return h === 'shop' && !SHOP_ON ? 'soon' : h; }
 // costumes won so far (ids), kept on this device
 function skinsWon() { try { const a = JSON.parse(safeGet('fb_skins_earned') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
@@ -1004,7 +1117,7 @@ const BUX_COST = 300, BUX_DAILY = 25;
 // Limited Edition: costumes (one or two per Collection) that can only be bought, never unlocked with BunBux (same list as BUX_LIMITED in the API)
 const SKINS_LIMITED = ['santa', 'bernedoodle', 'labradoodle', 'persian', 'mainecoon', 'slamdunk', 'goalgetter', 'axolotl', 'anglerfish', 'unidentifiedfryingobject', 'babykaiju', 'phoenix', 'shadowwizard',
   'glazedandconfused', 'blanketburrito', 'royaltreatment', 'raccoon', 'forkimpostor', 'professorfrank', 'glowgetter', 'specialdelivery',
-  'discodog', 'maneevent'];
+  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland', 'bison', 'flamingo', 'ladyliberty', 'powerup', 'unitedkingdom', 'unitedstates', 'hawaiivolcanoes', 'california', 'giraffe', 'polarbear'];
 function skinLimited(id) { return SKINS_LIMITED.indexOf(id) >= 0; }
 // Everyone gets the same challenge each day (midnight Pacific). Same list and order as DAILY in functions/api/[[path]].js
 const DAILY = [['streak', 10], ['boxes', 2], ['franks', 20], ['chili', 1], ['streak', 12], ['boxes', 3], ['franks', 25], ['streak', 15],
@@ -1199,7 +1312,7 @@ const SHOP_COLS = Object.keys(SKIN_GROUPS).filter(g => SKIN_GROUPS[g].how === 's
 const SHOP_LAUNCH3 = ['holiday', 'dogs', 'cats'];   // the fixed "All 3 Collections" bundle ($7.99): always exactly these three
 function shopNow() { const d = new URLSearchParams(location.search).get('shopdate'); return SHOP_TEST && d === 'after' ? SHOP_LAUNCH_END + 1 : Date.now(); }
 function shopLaunch() { return shopNow() < SHOP_LAUNCH_END; }
-function shopColSkins(g) { return SKINS.filter(k => k.group === g).map(k => k.id); }
+function shopColSkins(g) { return SKINS.filter(k => k.group === g && skinOpen(k)).map(k => k.id); }   // costumes added later join on their date (and go to everyone who owns the Collection)
 // product id -> what it is; the same ids get created in App Store Connect and Google Play
 function shopProducts() {
   const out = {}, st = shopStore.products;
@@ -1249,7 +1362,13 @@ const SHOP_STRIPE = {
   skin_moonrover: ['price_1UeqGg6LJdPzXq2b1oAWsBik', 'prod_VgCgyYNHzkwJKM'], skin_jurassicpork: ['price_1UeqGl6LJdPzXq2bAaVnxGCV', 'prod_VgCgyqIBJiJzf5'],
   skin_triceratops: ['price_1UeqGq6LJdPzXq2bdE64SOmf', 'prod_VgCgXbTAyKJ5MT'], skin_stegosaurus: ['price_1UeqH96LJdPzXq2bUjH0TWAJ', 'prod_VgCg6H9JkoQZgK'],
   skin_pterodactyl: ['price_1UeqHE6LJdPzXq2bKQG9wYIn', 'prod_VgCgKr7RNMsfnw'], skin_babykaiju: ['price_1UeqHJ6LJdPzXq2bOTEosbQ9', 'prod_VgCgMNGzP59iHt'],
-  col_spacecases: ['price_1UeqL56LJdPzXq2b26msqr60', 'prod_VgCkzWsueWmiAF'], col_tinyterrors: ['price_1UeqLB6LJdPzXq2bnYqdWUDx', 'prod_VgCkiCQgWYaZV8']
+  col_spacecases: ['price_1UeqL56LJdPzXq2b26msqr60', 'prod_VgCkzWsueWmiAF'], col_tinyterrors: ['price_1UeqLB6LJdPzXq2bnYqdWUDx', 'prod_VgCkiCQgWYaZV8'],
+  skin_fairy: ['price_1UfCz06LJdPzXq2bCfYc6hxI', 'prod_Vga975lD8OBU0L'], skin_griffin: ['price_1UfCzw6LJdPzXq2bIy8H3TDa', 'prod_VgaA3uf8mWzASZ'],
+  skin_phoenix: ['price_1UfD0V6LJdPzXq2bDlwvZMxu', 'prod_VgaAHKnlN7RU0X'], skin_seaserpent: ['price_1UfD0y6LJdPzXq2bHQ6Jkk0R', 'prod_VgaByGZsJST2XQ'],
+  skin_yetiornot: ['price_1UfD1R6LJdPzXq2bD2mbVcLB', 'prod_VgaBj8Uf3E3iMb'], col_mythicalmisfits: ['price_1UfD6u6LJdPzXq2bzeGOfAQw', 'prod_VgaHghx4YwWIGF'],
+  skin_maneevent: ['price_1UfD1u6LJdPzXq2bOZGFBpqg', 'prod_VgaCLyEzeQCi7k'], skin_stripehype: ['price_1UfD376LJdPzXq2b2xpSUnFe', 'prod_VgaDQ3qqy1qAgK'],
+  skin_pandamonium: ['price_1UfD5x6LJdPzXq2b5gOyylBi', 'prod_VgaGR5oZzwEIXg'], skin_trunkshow: ['price_1UfD6Q6LJdPzXq2bjVoqekFJ', 'prod_VgaG30WP26Mql8'],
+  col_wildthings: ['price_1UfD7O6LJdPzXq2bOvHEILSF', 'prod_VgaHku9oSzFQay']
 };
 function shopIdOf(storeId) {
   if (shopProducts()[storeId]) return storeId;
