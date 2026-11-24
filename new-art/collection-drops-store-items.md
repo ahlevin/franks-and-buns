@@ -326,3 +326,19 @@ Also update the Sports Collection's store description from 5 to 8 costumes. Ever
 | col_frightbites | Fright Bites Collection (4 costumes) | $3.99 |
 
 The launch price ends Jan 15, so Collections from Jan 19 on start at $3.99.
+
+## Premium (held: no date yet, nothing created in any store)
+
+Create these only after Alan approves the prices and picks a launch date. They are purchase only, never BunBux. Prices are proposals to test.
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_sterlingsilver | Sterling Silver | $2.99 |
+| skin_goldstandard | Gold Standard | $3.99 |
+| skin_platinumprestige | Platinum Prestige | $4.99 |
+| skin_diamonddog | Diamond Dog | $9.99 |
+| col_preciousgems | Precious Metals & Gems Collection (4 costumes) | $16.99 |
+| skin_crownjewel | The Crown Jewel (Ultra Exclusive, no bundle) | $24.99 |
+| skin_frankfather | The Frankfather (Ultra Exclusive, no bundle) | $49.99 |
+
+To launch, replace `from: PREMIUM_HOLD` with `from: dropAt(y, m, d)` on `preciousgems` and/or `ultraexclusives` in SKIN_GROUPS in game.html, and add the Stripe ids to SHOP_STRIPE.
