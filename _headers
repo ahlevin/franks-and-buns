@@ -19,3 +19,6 @@
 
 /get.html
   X-Robots-Tag: noindex
+
+/costume-vault.html
+  X-Robots-Tag: noindex
