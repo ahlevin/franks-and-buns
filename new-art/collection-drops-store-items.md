@@ -14,7 +14,7 @@ If a drop's items aren't ready on time, the Collection still appears and BunBux 
 
 ★ marks a Limited Edition costume: purchase only, never BunBux.
 
-Total: 16 Collections, 78 costumes, so 94 items in each store.
+Total: 17 Collections, 83 costumes, so 100 items in each store.
 
 ## Tue Dec 1, 2026  (create by Nov 24)
 
@@ -155,4 +155,15 @@ Total: 16 Collections, 78 costumes, so 94 items in each store.
 | skin_rescueswimmer | Rescue Swimmer | $0.99 |
 | col_salutesquad | Salute Squad Collection (6 costumes) | $3.99 |
 
-The launch price ends Jan 15, so these two Collections start at $3.99.
+## Tue Feb 2  (create by Jan 26)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_hotrod | Hot Rod ★ | $0.99 |
+| skin_jetsetter | Jet Setter | $0.99 |
+| skin_chopper | Chopper | $0.99 |
+| skin_roadhog | Road Hog | $0.99 |
+| skin_gravyboat | Gravy Boat | $0.99 |
+| col_fastfood | Fast Food Collection (5 costumes) | $3.99 |
+
+The launch price ends Jan 15, so Collections from Jan 19 on start at $3.99.
