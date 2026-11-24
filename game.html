@@ -4103,7 +4103,7 @@ function skinsRender() {
     h += msg + '</div>';
   } else if (!skinsTab) {
     // Collections: one row per group, newest groups just get added to SKIN_GROUPS
-    if (VAULT) h += '<input type="search" class="fbs-q" placeholder="🔍 Search costumes" aria-label="Search costumes" autocomplete="off" value="' + packsEsc(skinsQ) + '">';   // search box: vault only for now
+    h += '<input type="search" class="fbs-q" placeholder="🔍 Search costumes" aria-label="Search costumes" autocomplete="off" value="' + packsEsc(skinsQ) + '">';   // keyword search: filters costumes as you type
     h += '<div class="fbs-res"></div><div class="fbs-home">';
     h += '<p class="fbs-sub">Wearing: <b>' + packsEsc(cur.name) + '</b>' + '</p>' + msg;
     h += kitchensRowHtml();
