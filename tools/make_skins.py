@@ -41,11 +41,11 @@ FRAMES = {'bunny': ['bunny-a', 'bunny-b'], 'dragon': ['dragon-a', 'dragon-b'], '
           'tabby': ['cats/orange-tabby'], 'persian': ['cats/persian'], 'ragdoll': ['cats/ragdoll'],
           'siamese': ['cats/siamese'], 'sphynx': ['cats/sphynx'], 'tuxedo': ['cats/tuxedo']}
 # bun widths measured by hand where the costume hides the bun's top (poodle fluff)
-BUN_PX = {'poodle': 560, 'ragdoll': 600, 'persian': 600}
+BUN_PX = {'poodle': 560, 'ragdoll': 600, 'persian': 600, 'sad': 636}   # sad: rain boots hang below the bun
 # Collections cut by automatic body measurement (folder -> skins); ids are the file names without hyphens
 AUTO_SETS = ['questionable-decisions', 'space-cases', 'tiny-terrors', 'deep-sea-dogs', 'final-boss-franks', 'mythical-misfits',
              'trash-pack', 'sports', 'snack-pack', 'cozy-crew', 'main-character-energy',
-             'academic', 'bugged-out', 'side-hustles', 'throwback-franks', 'wild-things']
+             'academic', 'bugged-out', 'side-hustles', 'throwback-franks', 'wild-things', 'emotions']
 import glob, os
 for folder in AUTO_SETS:
     for f in sorted(glob.glob(f'{SRC}/{folder}/*.png')):

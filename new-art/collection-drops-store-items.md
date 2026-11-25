@@ -14,7 +14,7 @@ If a drop's items aren't ready on time, the Collection still appears and BunBux 
 
 ★ marks a Limited Edition costume: purchase only, never BunBux.
 
-Total: 29 Collections, 160 costumes plus 3 added to Sports, so 192 items in each store.
+Total: 30 Collections, 165 costumes plus 3 added to Sports, so 198 items in each store.
 
 ## Tue Dec 1, 2026  (create by Nov 24)
 
@@ -132,7 +132,7 @@ Total: 29 Collections, 160 costumes plus 3 added to Sports, so 192 items in each
 | skin_shadowwizard | Shadow Wizard ★ | $0.99 |
 | col_finalbossfranks | Final Boss Franks Collection (5 costumes) | $3.99 ($2.99 launch) |
 
-## Tue Jan 19  (create by Jan 12)
+## Tue Jan 19  (create by Jan 12; 2 Collections)
 
 | Product id | Name | Price |
 |---|---|---|
@@ -143,6 +143,12 @@ Total: 29 Collections, 160 costumes plus 3 added to Sports, so 192 items in each
 | skin_king | King Frank ★ | $0.99 |
 | skin_wizard | Court Wizard | $0.99 |
 | col_yeoldefranks | Ye Olde Franks Collection (6 costumes) | $3.99 |
+| skin_happy | Happy ★ | $0.99 |
+| skin_sad | Sad | $0.99 |
+| skin_angry | Angry | $0.99 |
+| skin_anxious | Anxious | $0.99 |
+| skin_tired | Tired | $0.99 |
+| col_allthefeels | All the Feels Collection (5 costumes) | $3.99 |
 
 ## Tue Jan 26  (create by Jan 19; 2 Collections)
 

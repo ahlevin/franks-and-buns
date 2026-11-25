@@ -887,6 +887,11 @@ const SKINS = [
   { id: 'joustingknight', name: 'Jousting Knight', group: 'yeoldefranks', frames: 1, fly: [-44.1, -33.9, 84.2, 48.4], bun: [-43.0, -60.2, 84.8, 62.1], grill: [-44.0, -70.8, 87.1, 72.7] },
   { id: 'king', name: 'King Frank', group: 'yeoldefranks', frames: 1, fly: [-43.5, -29.7, 83.0, 44.2], bun: [-41.8, -52.0, 84.1, 53.9], grill: [-42.1, -64.4, 84.4, 66.3] },
   { id: 'wizard', name: 'Court Wizard', group: 'yeoldefranks', frames: 1, fly: [-44.1, -34.3, 84.2, 48.8], bun: [-42.8, -55.5, 84.8, 57.4], grill: [-42.8, -67.8, 84.8, 69.7] },
+  { id: 'happy', name: 'Happy', group: 'allthefeels', frames: 1, fly: [-49.4, -33.4, 89.1, 51.8], bun: [-43.5, -57.7, 86.4, 59.5], grill: [-43.6, -64.3, 86.5, 66.1] },
+  { id: 'sad', name: 'Sad', group: 'allthefeels', frames: 1, fly: [-49.5, -32.2, 89.4, 63.9], bun: [-43.6, -60.3, 87.2, 62.2], grill: [-46.1, -74.8, 89.7, 76.7] },
+  { id: 'angry', name: 'Angry', group: 'allthefeels', frames: 1, fly: [-49.3, -38.7, 89.0, 61.5], bun: [-43.8, -60.6, 85.6, 62.5], grill: [-44.2, -70.5, 86.3, 72.4] },
+  { id: 'anxious', name: 'Anxious', group: 'allthefeels', frames: 1, fly: [-51.0, -30.2, 90.4, 57.4], bun: [-43.8, -56.6, 86.8, 58.5], grill: [-45.5, -73.6, 88.4, 75.5] },
+  { id: 'tired', name: 'Tired', group: 'allthefeels', frames: 1, fly: [-47.4, -30.6, 91.0, 53.4], bun: [-41.6, -56.7, 88.2, 58.6], grill: [-41.8, -73.8, 88.7, 75.6] },
   { id: 'camocommando', name: 'Camo Commando', group: 'salutesquad', frames: 1, fly: [-44.6, -28.4, 85.1, 42.9], bun: [-41.8, -51.1, 85.6, 53.0], grill: [-41.8, -66.4, 85.5, 68.2] },
   { id: 'sailorfrank', name: 'Sailor Frank', group: 'salutesquad', frames: 1, fly: [-43.3, -25.8, 82.5, 40.3], bun: [-41.9, -52.5, 83.7, 54.4], grill: [-41.8, -68.4, 83.6, 70.3] },
   { id: 'dressblues', name: 'Dress Blues', group: 'salutesquad', frames: 1, fly: [-43.3, -35.4, 82.5, 49.9], bun: [-41.9, -57.5, 84.0, 59.4], grill: [-42.1, -71.2, 84.2, 73.1] },
@@ -1033,6 +1038,7 @@ const SKIN_GROUPS = { earn: { name: 'Free & Earned', how: 'earn' }, holiday: { n
   trashpack: { name: 'Trash Pack', how: 'shop', from: dropAt(2027, 1, 12) },
   finalbossfranks: { name: 'Final Boss Franks', how: 'shop', from: dropAt(2027, 1, 12) },
   yeoldefranks: { name: 'Ye Olde Franks', how: 'shop', from: dropAt(2027, 1, 19) },   // Medieval pack
+  allthefeels: { name: 'All the Feels', how: 'shop', from: dropAt(2027, 1, 19) },   // emotions pack
   salutesquad: { name: 'Salute Squad', how: 'shop', from: dropAt(2027, 1, 26) },
   chilldogs: { name: 'Chill Dogs', how: 'shop', from: dropAt(2027, 1, 26) },   // Arctic and alpine animals pack   // service-inspired pack (generic names, no official insignia)
   fastfood: { name: 'Fast Food', how: 'shop', from: dropAt(2027, 2, 2) },   // vehicles pack
@@ -1160,7 +1166,7 @@ const BUX_COST = 300, BUX_DAILY = 25;
 // Limited Edition: costumes (one or two per Collection) that can only be bought, never unlocked with BunBux (same list as BUX_LIMITED in the API)
 const SKINS_LIMITED = ['santa', 'bernedoodle', 'labradoodle', 'persian', 'mainecoon', 'slamdunk', 'goalgetter', 'axolotl', 'anglerfish', 'unidentifiedfryingobject', 'babykaiju', 'phoenix', 'shadowwizard',
   'glazedandconfused', 'blanketburrito', 'royaltreatment', 'raccoon', 'forkimpostor', 'professorfrank', 'glowgetter', 'specialdelivery',
-  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland', 'bison', 'flamingo', 'ladyliberty', 'powerup', 'unitedkingdom', 'unitedstates', 'hawaiivolcanoes', 'california', 'giraffe', 'polarbear'];
+  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland', 'bison', 'flamingo', 'ladyliberty', 'happy', 'powerup', 'unitedkingdom', 'unitedstates', 'hawaiivolcanoes', 'california', 'giraffe', 'polarbear'];
 function skinLimited(id) { return SKINS_LIMITED.indexOf(id) >= 0; }
 function skinPremium(s) { const G = s && SKIN_GROUPS[s.group]; return !!(G && G.premium); }
 function skinBadge(s) { return SKIN_GROUPS[s.group].noCol ? '👑 ULTRA EXCLUSIVE' : '💎 PREMIUM'; }
