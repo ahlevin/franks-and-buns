@@ -41,11 +41,12 @@ FRAMES = {'bunny': ['bunny-a', 'bunny-b'], 'dragon': ['dragon-a', 'dragon-b'], '
           'tabby': ['cats/orange-tabby'], 'persian': ['cats/persian'], 'ragdoll': ['cats/ragdoll'],
           'siamese': ['cats/siamese'], 'sphynx': ['cats/sphynx'], 'tuxedo': ['cats/tuxedo']}
 # bun widths measured by hand where the costume hides the bun's top (poodle fluff)
-BUN_PX = {'poodle': 560, 'ragdoll': 600, 'persian': 600, 'sad': 636}   # sad: rain boots hang below the bun
+BUN_PX = {'poodle': 560, 'ragdoll': 600, 'persian': 600, 'sad': 636, 'forgotthebuns': 613, 'wrongturn': 603}   # sad: rain boots hang below the bun
 # Collections cut by automatic body measurement (folder -> skins); ids are the file names without hyphens
 AUTO_SETS = ['questionable-decisions', 'space-cases', 'tiny-terrors', 'deep-sea-dogs', 'final-boss-franks', 'mythical-misfits',
              'trash-pack', 'sports', 'snack-pack', 'cozy-crew', 'main-character-energy',
-             'academic', 'bugged-out', 'side-hustles', 'throwback-franks', 'wild-things', 'emotions']
+             'academic', 'bugged-out', 'side-hustles', 'throwback-franks', 'wild-things', 'emotions',
+             'game-night', 'career-day', 'oops-all-franks', 'brain-modes', 'weather-report']
 import glob, os
 for folder in AUTO_SETS:
     for f in sorted(glob.glob(f'{SRC}/{folder}/*.png')):
@@ -109,7 +110,7 @@ for skin, frames in FRAMES.items():
     bun_cx[2] = (gx0 + gx1) / 2 if abs((gx1 - gx0) - (bx1 - bx0)) < 0.03 * (bx1 - bx0) else rr[0][2][1] - (rr[0][1][1] - bun_cx[1])
     for state, name in ((0, 'fly'), (1, 'bun'), (2, 'grill')):
         # one crop box shared by every frame of this state, so A/B frames don't jitter
-        x0 = min(r[state][0] for r in rr) - 4; x1 = max(r[state][1] for r in rr) + 4
+        x0 = max(0, min(r[state][0] for r in rr) - 4); x1 = min(ims[0].shape[1] - 1, max(r[state][1] for r in rr) + 4)   # art touching the edge
         ys = [np.where((im[:, r[state][0]:r[state][1] + 1, 3] > 20).any(1))[0] for im, r in zip(ims, rr)]
         y0 = max(0, min(y.min() for y in ys) - 4); y1 = min(ims[0].shape[0] - 1, max(y.max() for y in ys) + 4)
         if state == 0:

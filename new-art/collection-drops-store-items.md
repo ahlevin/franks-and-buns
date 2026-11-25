@@ -14,7 +14,7 @@ If a drop's items aren't ready on time, the Collection still appears and BunBux 
 
 ★ marks a Limited Edition costume: purchase only, never BunBux.
 
-Total: 30 Collections, 165 costumes plus 3 added to Sports, so 198 items in each store.
+Total: 35 Collections, 188 costumes plus 3 added to Sports, so 226 items in each store.
 
 ## Tue Dec 1, 2026  (create by Nov 24)
 
@@ -174,7 +174,7 @@ Chill Dogs (Arctic and alpine animals), same day:
 | skin_walrus | Walrus | $0.99 |
 | col_chilldogs | Chill Dogs Collection (6 costumes) | $3.99 |
 
-## Tue Feb 2  (create by Jan 26)
+## Tue Feb 2  (create by Jan 26; 2 Collections, Groundhog Day)
 
 | Product id | Name | Price |
 |---|---|---|
@@ -184,8 +184,13 @@ Chill Dogs (Arctic and alpine animals), same day:
 | skin_roadhog | Road Hog | $0.99 |
 | skin_gravyboat | Gravy Boat | $0.99 |
 | col_fastfood | Fast Food Collection (5 costumes) | $3.99 |
+| skin_sunny | Sunny | $0.99 |
+| skin_rainbow | Rainbow ★ | $0.99 |
+| skin_snowday | Snow Day | $0.99 |
+| skin_stormchaser | Storm Chaser | $0.99 |
+| col_weatherreport | Weather Report Collection (4 costumes) | $3.99 |
 
-## Tue Feb 9  (create by Feb 2)
+## Tue Feb 9  (create by Feb 2; 2 Collections)
 
 | Product id | Name | Price |
 |---|---|---|
@@ -195,8 +200,13 @@ Chill Dogs (Arctic and alpine animals), same day:
 | skin_hereford | Hereford | $0.99 |
 | skin_highland | Highland Cow ★ | $0.99 |
 | col_holycow | Holy Cow Collection (5 costumes) | $3.99 |
+| skin_chesschamp | Chess Champ | $0.99 |
+| skin_dicedog | Dice Dog | $0.99 |
+| skin_kingofcards | King of Cards ★ | $0.99 |
+| skin_puzzlefrank | Puzzle Frank | $0.99 |
+| col_gamenight | Game Night Collection (4 costumes) | $3.99 |
 
-## Tue Feb 16  (create by Feb 9)
+## Tue Feb 16  (create by Feb 9; 2 Collections)
 
 | Product id | Name | Price |
 |---|---|---|
@@ -206,6 +216,11 @@ Chill Dogs (Arctic and alpine animals), same day:
 | skin_bison | Bison ★ | $0.99 |
 | skin_moose | Moose | $0.99 |
 | col_homeontherange | Home on the Range Collection (5 costumes) | $3.99 |
+| skin_lockedin | Locked In | $0.99 |
+| skin_daydreamer | Daydreamer ★ | $0.99 |
+| skin_overthinker | Overthinker | $0.99 |
+| skin_onebraincell | One Brain Cell | $0.99 |
+| col_brainmodes | Brain Modes Collection (4 costumes) | $3.99 |
 
 ## Tue Feb 23  (create by Feb 16)
 
@@ -219,7 +234,7 @@ Chill Dogs (Arctic and alpine animals), same day:
 | skin_rockhopper | Rockhopper | $0.99 |
 | col_birdbrains | Bird Brains Collection (6 costumes) | $3.99 |
 
-## Tue Mar 2  (create by Feb 23): 3 costumes added to Sports
+## Tue Mar 2  (create by Feb 23): 3 costumes added to Sports, plus Career Day
 
 | Product id | Name | Price |
 |---|---|---|
@@ -228,6 +243,19 @@ Chill Dogs (Arctic and alpine animals), same day:
 | skin_cleanandjerk | Clean & Jerk | $0.99 |
 
 Also update the Sports Collection's store description from 5 to 8 costumes. Everyone who already owns the Sports Collection gets these three free on Mar 2.
+
+Also on Mar 2, the new Career Day Collection:
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_detective | Detective ★ | $0.99 |
+| skin_doctor | Doctor | $0.99 |
+| skin_firefighter | Firefighter | $0.99 |
+| skin_pilot | Pilot | $0.99 |
+| skin_policeofficer | Police Officer | $0.99 |
+| skin_teacher | Teacher | $0.99 |
+| skin_veterinarian | Veterinarian | $0.99 |
+| col_careerday | Career Day Collection (7 costumes) | $3.99 |
 
 ## Tue Mar 9  (create by Mar 2)
 
@@ -268,6 +296,16 @@ Also update the Sports Collection's store description from 5 to 8 costumes. Ever
 | skin_redpanda | Red Panda | $0.99 |
 | skin_zebra | Zebra | $0.99 |
 | col_zoofranks | Zoo Franks Collection (8 costumes) | $3.99 |
+
+## Tue Mar 30, 2027  (create by Mar 23; April Fools week)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_forgotthebuns | Forgot the Buns | $0.99 |
+| skin_lowbattery | Low Battery | $0.99 |
+| skin_spilledthetea | Spilled the Tea ★ | $0.99 |
+| skin_wrongturn | Wrong Turn | $0.99 |
+| col_oopsallfranks | Oops! All Franks Collection (4 costumes) | $3.99 |
 
 ## Tue Apr 20, 2027  (create by Apr 13; national parks, National Park Week)
 
