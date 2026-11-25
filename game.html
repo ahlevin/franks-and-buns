@@ -2626,7 +2626,7 @@ function sndFork()      {
   playTone(900, 0.04, 'sine', 0.08); setTimeout(() => playTone(1100, 0.06, 'sine', 0.07), 40); } // clink sound
 
 // --- State ---
-const STATE = { MENU: 0, INTRO: 3, PLAYING: 1, GAMEOVER: 2, BONUS: 4 };
+const STATE = { MENU: 0, INTRO: 3, PLAYING: 1, GAMEOVER: 2, BONUS: 4, WIND: 5 };   // WIND: the Second Wind offer after the last life
 let state = STATE.MENU;
 let bonusTimer = 0, bonusDogs = [], nextBonusDogDist = 0, bonusScore = 0;
 const BONUS_DURATION = 300;
@@ -2641,6 +2641,110 @@ function safeGet(k) { try { return localStorage.getItem(k); } catch (e) { return
 function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 let bestScore = parseInt(safeGet('fb_best') || '0', 10);
 if (!(bestScore >= 0 && bestScore < 1e9)) bestScore = 0;
+// --- Feature switches. flags.json on franksandbuns.com turns each one on or off for everyone, apps included, so a feature can be
+// rolled back without an app update. Until it loads, the last answer this device saw is used (off on a first visit).
+// Test copies of the site can force one: ?stages=on|off, ?secondwind=on|off
+const FEAT = { stages: false, secondwind: false };
+function featApply(f) { if (f && typeof f === 'object') for (const k in FEAT) if (typeof f[k] === 'boolean') FEAT[k] = f[k]; }
+function featForce() {
+  if (!SHOP_TESTHOST) return;
+  const q = new URLSearchParams(location.search);
+  for (const k in FEAT) { const v = q.get(k); if (v === 'on' || v === 'off') FEAT[k] = v === 'on'; }
+}
+try { featApply(JSON.parse(safeGet('fb_feat') || 'null')); } catch (e) {}
+featForce();
+try {
+  fetch(PACKS_API.replace(/api\/$/, '') + 'flags.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : null)
+    .then(f => { if (f) { featApply(f); safeSet('fb_feat', JSON.stringify(FEAT)); featForce(); } }).catch(() => {});
+} catch (e) {}
+
+// --- Stages: after each Dog Parade the run moves up a stage, with a banner and a points bonus (switch: FEAT.stages)
+// A new stage after every Dog Parade. Past the last name, the last one repeats with a number: Hall of Flame 2, 3, 4 and on
+const STAGE_NAMES = ['Kitchen', 'Tailgate', 'Kyle’s Korndogs', 'Stacia’s Sausages', 'Food Truck Rally', 'Ballpark Frenzy', 'State Fair', 'Block Party', 'Boardwalk Bash',
+  'County Cookout', 'Midway Madness', 'Lunch Rush', 'Rooftop Grill', 'Fireworks Night', 'Stadium Showdown', 'Bun Run 500',
+  'Mustard Mountain', 'Ketchup Canyon', 'Relish Rapids', 'Chili Volcano', 'Frankfurter Frontier', 'Sausage Summit', 'Hot Dog Hall',
+  'Big Bun Bowl', 'World Wiener Cup', 'Grill Masters', 'Frank Legends', 'Bun Galaxy', 'Wiener Wonderland', 'Condiment Kingdom',
+  'Top Dog Tower', 'Hall of Flame'];
+const STAGE_BONUS = 1000;   // points for reaching stage n: (n - 1) x this
+function stageName(n) { return n <= STAGE_NAMES.length ? STAGE_NAMES[n - 1] : STAGE_NAMES[STAGE_NAMES.length - 1] + ' ' + (n - STAGE_NAMES.length + 1); }
+let stage = 1, stageBanner = 0;
+let bestStage = parseInt(safeGet('fb_best_stage') || '1', 10) || 1;
+function stageUp() {
+  if (!FEAT.stages) return;
+  stage++; stageBanner = 180;
+  const bonus = (stage - 1) * STAGE_BONUS; score += bonus;
+  addFloatingText(W/2, H/2+60, 'STAGE BONUS +'+bonus.toLocaleString(), '#7CFC00', 22);
+  if (stage > bestStage) { bestStage = stage; safeSet('fb_best_stage', String(stage)); }
+  sndCheer(true);
+}
+function drawStageBanner() {
+  if (!FEAT.stages || stageBanner <= 0) return;
+  const t = stageBanner, a = Math.min(1, t / 30, (180 - t) / 15 + 0.2);
+  ctx.save(); ctx.globalAlpha = a; ctx.textAlign = 'center';
+  const y = H * 0.28, w = Math.min(W - 24, 330);
+  ctx.fillStyle = 'rgba(20,10,40,0.78)'; rrect(W/2 - w/2, y - 36, w, 66, 14); ctx.fill();
+  ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2; rrect(W/2 - w/2, y - 36, w, 66, 14); ctx.stroke();
+  ctx.fillStyle = '#FFD700'; ctx.font = 'bold 15px Arial'; ctx.fillText('STAGE ' + stage, W/2, y - 14);
+  ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 24px Arial'; ctx.fillText(stageName(stage).toUpperCase(), W/2, y + 16);
+  ctx.restore();
+}
+
+// --- Second Wind: once a run, after the last life, spend BunBux to keep going (switch: FEAT.secondwind)
+const WIND_COST = 50, WIND_FRAMES = 360;   // 6 s to decide
+let windUsed = false, windTimer = 0, windBusy = false, windMsg = '';
+// Preview test: ?wind=test on a pages.dev preview or localhost offers Second Wind whatever the balance, and spends no real BunBux
+const WIND_TEST = /\.pages\.dev$|^localhost$|^127\.0\.0\.1$/.test(location.hostname) && new URLSearchParams(location.search).get('wind') === 'test';
+function windCanOffer() { return (FEAT.secondwind || WIND_TEST) && !windUsed && score > 0 && (WIND_TEST || (!SKINS_ALL && !!packsToken() && buxShown() >= WIND_COST)); }
+function windYesRect() { const w = Math.min(260, W - 40); return { x: W/2 - w/2, y: H * 0.52, w: w, h: 50 }; }
+function windNoRect() { return { x: W/2 - 70, y: H * 0.52 + 64, w: 140, h: 38 }; }
+function windHit(r, p) { return p.x >= r.x - 6 && p.x <= r.x + r.w + 6 && p.y >= r.y - 6 && p.y <= r.y + r.h + 6; }
+function isWindTap(cx, cy) {
+  if (state !== STATE.WIND) return false;
+  const p = toCanvasXY(cx, cy);
+  if (windBusy) return true;
+  if (windHit(windYesRect(), p)) { ensureAudio(); windAccept(); return true; }
+  if (windHit(windNoRect(), p)) { finishRun(); return true; }
+  return true;   // taps elsewhere do nothing, so a frantic tap can't skip the offer by accident
+}
+async function windAccept() {
+  windBusy = true; windMsg = '';
+  try {
+    if (!WIND_TEST) {
+      await buxFlush();   // send waiting games first, so the server's balance matches what the player sees
+      const j = await packsCall('POST', 'me/bux/wind', {});
+      buxKeep(j.bux); if (packsMe && packsMe.player) packsMe.player.bux = j.bux;
+    }
+    windUsed = true; windBusy = false;
+    state = STATE.PLAYING; lives = 1; frank.alive = true; frank.y = H * 0.35; frank.vy = 0;
+    gracePeriod = GRACE_FRAMES; forks = [];
+    addFloatingText(W/2, H/2-30, 'SECOND WIND!', '#7CFC00', 32); sndStreak(); shakeAmount = 6;
+  } catch (e) {
+    windBusy = false; windMsg = (e && e.message) || 'That didn’t go through.'; windTimer = Math.min(windTimer, 150);
+  }
+}
+function drawWind() {
+  ctx.fillStyle = 'rgba(30,15,5,0.78)'; ctx.fillRect(0, 0, W, H);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#7CFC00'; ctx.font = 'bold 34px Arial'; ctx.fillText('SECOND WIND?', W/2, H * 0.28);
+  ctx.fillStyle = '#FFD700'; ctx.font = 'bold 24px Arial'; ctx.fillText(score.toLocaleString(), W/2, H * 0.36);
+  ctx.fillStyle = '#ddd'; ctx.font = '15px Arial'; ctx.fillText('Keep this run going with 1 life.', W/2, H * 0.42);
+  ctx.fillText(WIND_TEST ? 'Test mode: no BunBux will be spent.' : 'You have ' + buxShown() + ' BunBux.', W/2, H * 0.42 + 22);
+  const y = windYesRect();
+  ctx.fillStyle = windBusy ? '#4a7a20' : '#5BBF1E'; rrect(y.x, y.y, y.w, y.h, 25); ctx.fill();
+  ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2; rrect(y.x, y.y, y.w, y.h, 25); ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 19px Arial';
+  ctx.fillText(windBusy ? 'One moment…' : 'Use ' + WIND_COST + ' BunBux', W/2, y.y + y.h/2 + 7);
+  const n = windNoRect();
+  ctx.fillStyle = 'rgba(0,0,0,0.5)'; rrect(n.x, n.y, n.w, n.h, 19); ctx.fill();
+  ctx.fillStyle = '#ccc'; ctx.font = 'bold 15px Arial'; ctx.fillText('No thanks', W/2, n.y + n.h/2 + 5);
+  // countdown ring
+  const f = Math.max(0, windTimer / WIND_FRAMES);
+  ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 5; ctx.beginPath();
+  ctx.arc(W/2, H * 0.52 + 150, 18, -Math.PI/2, -Math.PI/2 + f * Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 15px Arial'; ctx.fillText(String(Math.ceil(windTimer / 60)), W/2, H * 0.52 + 155);
+  if (windMsg) { ctx.fillStyle = '#FF8866'; ctx.font = 'bold 13px Arial'; fbCenterText(windMsg, H * 0.52 + 190, '#FF8866', 13, true); }
+}
+
 let lives = 3, streak = 0, bestStreak = 0, chiliCaught = 0;
 let franksLanded = 0, boxFranks = 0, boxesCompleted = 0, boxFlash = 0;
 let scrollSpeed = 2.2, scrollX = 0;
@@ -3046,6 +3150,7 @@ function resetGame() {
   buns=[]; splats=[]; particles=[]; glints=[]; floatingTexts=[]; forks=[]; gameDogs=[];
   score=0; runFrames=0; packsResult=null; buxResult=null; lives=3; streak=0; bestStreak=0; chiliCaught=0;
   franksLanded=0; boxFranks=0; boxesCompleted=0; boxFlash=0;
+  stage=1; stageBanner=0; windUsed=false; windTimer=0; windBusy=false; windMsg='';
   scrollSpeed=2.2; scrollX=0; nextBunDist=0;
   shakeAmount=0; streakText=''; streakTimer=0; gameOverDelay=0; gracePeriod=0;
   nextForkDist = 320; nextDogDist = 9999;
@@ -3080,6 +3185,7 @@ function onTap() {
   if (state === STATE.INTRO)    { resetGame(); return; }
   if (state === STATE.BONUS) { if (frank.alive) { frank.vy=FLAP_POWER; frank.squash=1.3; frank.stretch=0.7; sndFlap(); } return; } // tap to skip intro
   if (state === STATE.GAMEOVER) { if (gameOverDelay > 40) resetGame(); return; }
+  if (state === STATE.WIND) return;   // only its buttons answer (isWindTap)
   tapping = true;
   if (frank.alive) { frank.vy = FLAP_POWER; frank.squash = 1.3; frank.stretch = 0.7; sndFlap(); }
 }
@@ -3142,6 +3248,7 @@ function isMuteTap(clientX, clientY) {
 canvas.addEventListener('touchstart', e => {
   e.preventDefault();
   const t = e.touches[0];
+  if (isWindTap(t.clientX, t.clientY)) return;
   if (isMuteTap(t.clientX, t.clientY)) { muted = !muted; return; }
   if (isMusicTap(t.clientX, t.clientY)) { ensureAudio(); setMusic(!musicOn); return; }
   if (isCreditsTap(t.clientX, t.clientY)) { fbShowCredits(); return; }
@@ -3156,6 +3263,7 @@ canvas.addEventListener('touchstart', e => {
 let howtoArmed = false;
 canvas.addEventListener('touchend',   e => { e.preventDefault(); if (howtoArmed) { howtoArmed = false; howtoOpen(); return; } if (shareArmed) { shareArmed = false; shareScore(); return; } onRelease(); });   // share sheets need touchend, not touchstart
 canvas.addEventListener('mousedown', e => {
+  if (isWindTap(e.clientX, e.clientY)) return;
   if (isMuteTap(e.clientX, e.clientY)) { muted = !muted; return; }
   if (isMusicTap(e.clientX, e.clientY)) { ensureAudio(); setMusic(!musicOn); return; }
   if (isCreditsTap(e.clientX, e.clientY)) { fbShowCredits(); return; }
@@ -3278,6 +3386,7 @@ function endBonusRound() {
   if (lives < MAX_LIVES) { lives++; addFloatingText(W/2, H/2+20, '+1 LIFE!', '#FF4444', 28); }
   addFloatingText(W/2, H/2-20, 'BONUS: +'+bonusScore, '#FFD700', 28);
   sndBonusEnd(); shakeAmount=6; nextBunDist=120;
+  stageUp();
 }
 function updateBonusRound() {
   bonusTimer--;
@@ -3357,6 +3466,8 @@ function update() {
   if (state === STATE.PLAYING || state === STATE.BONUS) runFrames++;
   if (state === STATE.INTRO) { updateIntro(); return; }
   if (state === STATE.BONUS) { updateBonusRound(); return; }
+  if (state === STATE.WIND) { if (!windBusy && --windTimer <= 0) finishRun(); return; }
+  if (stageBanner > 0) stageBanner--;
   if (state !== STATE.PLAYING) { if (state === STATE.GAMEOVER) gameOverDelay++; return; }
 
   frank.vy += GRAVITY; frank.y += frank.vy;
@@ -3532,6 +3643,12 @@ function loseLife() {
   addParticles(frank.x, frank.y, '#CC1111', 18);
   shakeAmount=8;
   if (lives<=0) {
+    if (windCanOffer()) { state=STATE.WIND; frank.alive=false; windTimer=WIND_FRAMES; windBusy=false; windMsg=''; return; }
+    finishRun();
+  } else { frank.y=H*0.35; frank.vy=0; }
+}
+function finishRun() {   // the run is over: Game Over, saves and awards
+  {
     state=STATE.GAMEOVER; frank.alive=false; sndGameOver();
     const wasBest = score>bestScore && bestScore>0;
     if (score>bestScore) { bestScore=score; safeSet('fb_best',bestScore.toString()); }
@@ -3543,7 +3660,7 @@ function loseLife() {
     if (freshK.length) skinNew = (skinNew || []).concat(freshK.map(k => ({ name: k.name + ' kitchen', kitchen: true })));
     recordRun();
     buxSubmit({ streak: bestStreak, boxes: boxesCompleted, franks: franksLanded, chili: chiliCaught }, { score: score, frames: runFrames });
-  } else { frank.y=H*0.35; frank.vy=0; }
+  }
 }
 
 // ============================================================
@@ -4548,8 +4665,16 @@ function drawGameOver() {
     ctx.textAlign='center';
   }
   const sy=H*0.50; ctx.fillStyle='#ddd'; ctx.font='14px Arial';
-  ctx.fillText('Franks Landed: '+franksLanded+'  ·  Boxes Packed: '+boxesCompleted,W/2,sy);
-  ctx.fillText('Best Streak: '+bestStreak+'  ·  Best: '+bestScore.toLocaleString(),W/2,sy+24);
+  if (FEAT.stages && stage > 1) {   // same two lines, so the stage never runs into the Dog Houses button below
+    ctx.fillText('Franks: '+franksLanded+'  ·  Boxes: '+boxesCompleted+'  ·  Best Streak: '+bestStreak,W/2,sy);
+    const st='Stage '+stage+': '+stageName(stage), rest='  ·  Best: '+bestScore.toLocaleString();
+    ctx.font='bold 14px Arial'; const w1=ctx.measureText(st).width; ctx.font='14px Arial'; const w2=ctx.measureText(rest).width;
+    ctx.textAlign='left'; ctx.fillStyle='#7CFC00'; ctx.font='bold 14px Arial'; ctx.fillText(st,W/2-(w1+w2)/2,sy+24);
+    ctx.fillStyle='#ddd'; ctx.font='14px Arial'; ctx.fillText(rest,W/2-(w1+w2)/2+w1,sy+24); ctx.textAlign='center';
+  } else {
+    ctx.fillText('Franks Landed: '+franksLanded+'  ·  Boxes Packed: '+boxesCompleted,W/2,sy);
+    ctx.fillText('Best Streak: '+bestStreak+'  ·  Best: '+bestScore.toLocaleString(),W/2,sy+24);
+  }
   drawPacksPill();
   drawSkinsGoButton();
   drawShareGoButton();
@@ -4729,7 +4854,9 @@ function draw() {
   drawParticles(); fxDraw(); drawFloatingTexts();
   if (state===STATE.PLAYING) drawChiliRushOverlay();
   if (state===STATE.PLAYING) drawHUD();
+  if (state===STATE.PLAYING) drawStageBanner();
   ctx.restore();
+  if (state===STATE.WIND) drawWind();
   if (state===STATE.MENU) drawMenu();
   if (state===STATE.INTRO) drawIntro();
   if (state===STATE.GAMEOVER) drawGameOver();
