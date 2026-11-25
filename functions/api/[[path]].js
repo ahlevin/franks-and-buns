@@ -13,7 +13,7 @@ const RECOVER_TRIES_PER_IP_PER_DAY = 60;   // recovery codes can't be guessed (8
 const WRONG_JOIN_CODES_PER_DAY = 30;   // per player and per network: Dog House codes are short, so guessing them has to stay slow
 const NEW_CODES_PER_PLAYER_PER_DAY = 5;   // "Get a new recovery code"
 // BunBux: earned by playing (never sold). Amounts agreed with Alan, Nov 22, 2026.
-const BUX = { perBox: 1, maxBoxes: 10, daily: 25, cap: 100, cost: 300 };   // cap: most BunBux a day from games and the challenge
+const BUX = { perBox: 1, maxBoxes: 10, daily: 25, cap: 100, cost: 300, wind: 50 };   // wind: Second Wind (one more life in a run)   // cap: most BunBux a day from games and the challenge
 // Limited Edition costumes are purchase only (same list as SKINS_LIMITED in game.html)
 const BUX_LIMITED = new Set(['santa', 'bernedoodle', 'labradoodle', 'persian', 'mainecoon', 'slamdunk', 'goalgetter', 'axolotl', 'anglerfish', 'unidentifiedfryingobject', 'babykaiju', 'phoenix', 'shadowwizard',
   'glazedandconfused', 'blanketburrito', 'royaltreatment', 'raccoon', 'forkimpostor', 'professorfrank', 'glowgetter', 'specialdelivery',
@@ -345,7 +345,7 @@ function plausible(b) {
   if (franks > secs * 2 + 3) return false;
   if (boxes > Math.floor(franks / 6)) return false;
   const parades = Math.floor(boxes / 4);
-  const max = franks * 13100 + 50 * boxes * (boxes + 1) + parades * 40 * 500 + secs * 1500 + 5000;
+  const max = franks * 13100 + 50 * boxes * (boxes + 1) + parades * 40 * 500 + 500 * parades * (parades + 1) + secs * 1500 + 5000;   // 500*p*(p+1): stage bonuses
   return score <= max;
 }
 
@@ -432,6 +432,13 @@ async function route(request, env, path) {
       .bind(want, day, bonus, day, want, day, day, p.id).first();
     const earned = Math.max(0, r.bux - (p.bux || 0));
     return { bux: buxOf(r), day, earned, bonus, dailyDone: done, capped: r.bux_today >= BUX.cap };
+  }
+  if (method === 'POST' && path === 'me/bux/wind') {   // Second Wind: spend BunBux to keep a run going (the game allows it once a run)
+    const p = await needPlayer(db, request);
+    const r = await db.prepare(`UPDATE players SET bux = bux - ${BUX.wind} WHERE id = ? AND bux >= ${BUX.wind}
+        RETURNING bux, bux_skins, daily_last, daily_streak`).bind(p.id).first();
+    if (!r) fail(409, `Second Wind needs ${BUX.wind} BunBux. You have ${p.bux || 0}.`);
+    return { bux: buxOf(r) };
   }
   if (method === 'POST' && path === 'me/bux/spend') {   // unlock one shop costume (or a kitchen) for BunBux
     const p = await needPlayer(db, request);
