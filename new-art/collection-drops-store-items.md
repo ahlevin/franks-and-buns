@@ -14,7 +14,7 @@ If a drop's items aren't ready on time, the Collection still appears and BunBux 
 
 ★ marks a Limited Edition costume: purchase only, never BunBux.
 
-Total: 35 Collections, 188 costumes plus 3 added to Sports, so 226 items in each store.
+Total: 42 Collections, 216 costumes plus 3 added to Sports, so 261 items in each store.
 
 ## Tue Dec 1, 2026  (create by Nov 24)
 
@@ -222,7 +222,7 @@ Chill Dogs (Arctic and alpine animals), same day:
 | skin_onebraincell | One Brain Cell | $0.99 |
 | col_brainmodes | Brain Modes Collection (4 costumes) | $3.99 |
 
-## Tue Feb 23  (create by Feb 16)
+## Tue Feb 23  (create by Feb 16; 2 Collections)
 
 | Product id | Name | Price |
 |---|---|---|
@@ -233,6 +233,11 @@ Chill Dogs (Arctic and alpine animals), same day:
 | skin_emperorpenguin | Emperor Penguin | $0.99 |
 | skin_rockhopper | Rockhopper | $0.99 |
 | col_birdbrains | Bird Brains Collection (6 costumes) | $3.99 |
+| skin_cakechief | Cake Chief | $0.99 |
+| skin_cottoncandy | Cotton Candy | $0.99 |
+| skin_galaxydonut | Galaxy Donut ★ | $0.99 |
+| skin_gummyfrank | Gummy Frank | $0.99 |
+| col_fantasyfoods | Fantasy Foods Collection (4 costumes) | $3.99 |
 
 ## Tue Mar 2  (create by Feb 23): 3 costumes added to Sports, plus Career Day
 
@@ -257,7 +262,7 @@ Also on Mar 2, the new Career Day Collection:
 | skin_veterinarian | Veterinarian | $0.99 |
 | col_careerday | Career Day Collection (7 costumes) | $3.99 |
 
-## Tue Mar 9  (create by Mar 2)
+## Tue Mar 9  (create by Mar 2; 2 Collections)
 
 | Product id | Name | Price |
 |---|---|---|
@@ -266,6 +271,11 @@ Also on Mar 2, the new Career Day Collection:
 | skin_swordsman | Wandering Swordsman | $0.99 |
 | skin_powerup | Power-Up Hero ★ | $0.99 |
 | col_bunime | Bun-ime Collection (4 costumes) | $3.99 |
+| skin_arcadecabinet | Arcade Cabinet ★ | $0.99 |
+| skin_cassette | Cassette | $0.99 |
+| skin_floppydisk | Floppy Disk | $0.99 |
+| skin_pixelpal | Pixel Pal | $0.99 |
+| col_retrotech | Retro Tech Collection (4 costumes) | $3.99 |
 
 ## Tue Mar 16, 2027  (create by Mar 9; US states)
 
@@ -307,6 +317,26 @@ Also on Mar 2, the new Career Day Collection:
 | skin_wrongturn | Wrong Turn | $0.99 |
 | col_oopsallfranks | Oops! All Franks Collection (4 costumes) | $3.99 |
 
+## Tue Apr 6, 2027  (create by Mar 30)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_secretagent | Secret Agent ★ | $0.99 |
+| skin_undercover | Undercover | $0.99 |
+| skin_cluefinder | Clue Finder | $0.99 |
+| skin_bunbandit | Bun Bandit | $0.99 |
+| col_mysteryandmayhem | Mystery & Mayhem Collection (4 costumes) | $3.99 |
+
+## Tue Apr 13, 2027  (create by Apr 6; festival season)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_rockfrank | Rock Frank ★ | $0.99 |
+| skin_countrycrooner | Country Crooner | $0.99 |
+| skin_discofever | Disco Fever | $0.99 |
+| skin_djrelish | DJ Relish | $0.99 |
+| col_musicfestival | Music Festival Collection (4 costumes) | $3.99 |
+
 ## Tue Apr 20, 2027  (create by Apr 13; national parks, National Park Week)
 
 | Product id | Name | Price |
@@ -321,6 +351,26 @@ Also on Mar 2, the new Career Day Collection:
 | skin_yosemite | Yosemite | $0.99 |
 | skin_zion | Zion | $0.99 |
 | col_greatoutdogs | Great Outdogs Collection (9 costumes) | $3.99 |
+
+## Tue Apr 27, 2027  (create by Apr 20)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_dragonmailcarrier | Dragon Mail Carrier ★ | $0.99 |
+| skin_unicornmechanic | Unicorn Mechanic | $0.99 |
+| skin_vampiredentist | Vampire Dentist | $0.99 |
+| skin_wizardbarista | Wizard Barista | $0.99 |
+| col_mythicalprofessions | Mythical Professions Collection (4 costumes) | $3.99 |
+
+## Tue May 4, 2027  (create by Apr 27)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_earlybird | Early Bird ★ | $0.99 |
+| skin_groupchatadmin | Group Chat Admin | $0.99 |
+| skin_snackinspector | Snack Inspector | $0.99 |
+| skin_sweaterperson | Sweater Person | $0.99 |
+| col_everydayicons | Everyday Icons Collection (4 costumes) | $3.99 |
 
 ## Tue Jun 15, 2027  (create by Jun 8; flags pack, part 1)
 
@@ -358,6 +408,16 @@ Also on Mar 2, the new Career Day Collection:
 | skin_baldeagle | Bald Eagle | $0.99 |
 | skin_fogcitybridge | Fog City Bridge | $0.99 |
 | col_redwhiteandbun | Red, White & Bun Collection (4 costumes) | $3.99 |
+
+## Tue Sep 14, 2027  (create by Sep 7; Talk Like a Pirate Day is Sep 19)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_captainfrankbeard | Captain Frankbeard ★ | $0.99 |
+| skin_firstmate | First Mate | $0.99 |
+| skin_parrotpal | Parrot Pal | $0.99 |
+| skin_treasurefrank | Treasure Frank | $0.99 |
+| col_piratesandtreasure | Pirates & Treasure Collection (4 costumes) | $3.99 |
 
 ## Tue Oct 5, 2027  (create by Sep 28, 2027; held for Halloween)
 

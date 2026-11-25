@@ -41,12 +41,13 @@ FRAMES = {'bunny': ['bunny-a', 'bunny-b'], 'dragon': ['dragon-a', 'dragon-b'], '
           'tabby': ['cats/orange-tabby'], 'persian': ['cats/persian'], 'ragdoll': ['cats/ragdoll'],
           'siamese': ['cats/siamese'], 'sphynx': ['cats/sphynx'], 'tuxedo': ['cats/tuxedo']}
 # bun widths measured by hand where the costume hides the bun's top (poodle fluff)
-BUN_PX = {'poodle': 560, 'ragdoll': 600, 'persian': 600, 'sad': 636, 'forgotthebuns': 613, 'wrongturn': 603}   # sad: rain boots hang below the bun
+BUN_PX = {'poodle': 560, 'ragdoll': 600, 'persian': 600, 'sad': 636, 'forgotthebuns': 613, 'wrongturn': 603, 'bunbandit': (628, 1048)}   # (width, centre x) where the colour check misses the bun   # sad: rain boots hang below the bun
 # Collections cut by automatic body measurement (folder -> skins); ids are the file names without hyphens
 AUTO_SETS = ['questionable-decisions', 'space-cases', 'tiny-terrors', 'deep-sea-dogs', 'final-boss-franks', 'mythical-misfits',
              'trash-pack', 'sports', 'snack-pack', 'cozy-crew', 'main-character-energy',
              'academic', 'bugged-out', 'side-hustles', 'throwback-franks', 'wild-things', 'emotions',
-             'game-night', 'career-day', 'oops-all-franks', 'brain-modes', 'weather-report']
+             'game-night', 'career-day', 'oops-all-franks', 'brain-modes', 'weather-report',
+             'music-festival', 'mystery-and-mayhem', 'mythical-professions', 'retro-tech', 'everyday-icons', 'fantasy-foods', 'pirates-and-treasure']
 import glob, os
 for folder in AUTO_SETS:
     for f in sorted(glob.glob(f'{SRC}/{folder}/*.png')):
@@ -92,7 +93,9 @@ for skin, frames in FRAMES.items():
     # plain bun: scale and centre from the first frame; grilled bun uses the same scale,
     # centred the same distance from the picture's right (face) end, since grill marks upset the colour check
     bx0, bx1 = bun_box(ims[0], *rr[0][1])
-    if skin in BUN_PX: c = (bx0 + bx1) / 2; bx0, bx1 = c - BUN_PX[skin] / 2, c + BUN_PX[skin] / 2
+    if skin in BUN_PX:
+        bw, c = BUN_PX[skin] if isinstance(BUN_PX[skin], tuple) else (BUN_PX[skin], (bx0 + bx1) / 2)
+        bx0, bx1 = c - bw / 2, c + bw / 2
     elif skin not in BODY:   # automatic sets: cross-check the colour measurement against the bun's bottom edge
         x0_, x1_ = rr[0][1]; al = ims[0][:, x0_:x1_ + 1, 3]; bot = np.where((al > 20).any(1))[0].max()
         xs = np.where(al[bot - 70] > 200)[0]; edge = (xs.max() - xs.min()) * 1.035

@@ -17,7 +17,7 @@ const BUX = { perBox: 1, maxBoxes: 10, daily: 25, cap: 100, cost: 300 };   // ca
 // Limited Edition costumes are purchase only (same list as SKINS_LIMITED in game.html)
 const BUX_LIMITED = new Set(['santa', 'bernedoodle', 'labradoodle', 'persian', 'mainecoon', 'slamdunk', 'goalgetter', 'axolotl', 'anglerfish', 'unidentifiedfryingobject', 'babykaiju', 'phoenix', 'shadowwizard',
   'glazedandconfused', 'blanketburrito', 'royaltreatment', 'raccoon', 'forkimpostor', 'professorfrank', 'glowgetter', 'specialdelivery',
-  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland', 'bison', 'flamingo', 'ladyliberty', 'happy', 'rainbow', 'kingofcards', 'daydreamer', 'detective', 'spilledthetea', 'powerup', 'unitedkingdom', 'unitedstates', 'hawaiivolcanoes', 'california', 'giraffe', 'polarbear',
+  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland', 'bison', 'flamingo', 'ladyliberty', 'happy', 'rainbow', 'kingofcards', 'daydreamer', 'detective', 'spilledthetea', 'galaxydonut', 'arcadecabinet', 'secretagent', 'rockfrank', 'dragonmailcarrier', 'earlybird', 'captainfrankbeard', 'powerup', 'unitedkingdom', 'unitedstates', 'hawaiivolcanoes', 'california', 'giraffe', 'polarbear',
   'sterlingsilver', 'goldstandard', 'platinumprestige', 'diamonddog']);
 // The only costumes BunBux can unlock: the ones in Collections that are on sale (SHOP_COLS in game.html), minus Limited Edition.
 // Anything else (Free & Earned, Collections not on sale yet) is refused. When a Collection goes on sale, add its costumes here.
@@ -44,16 +44,21 @@ const BUX_DROPS = [
   [Date.UTC(2027, 1, 2, 8), ['hotrod', 'jetsetter', 'chopper', 'roadhog', 'gravyboat', 'sunny', 'rainbow', 'snowday', 'stormchaser']],   // fastfood + weatherreport
   [Date.UTC(2027, 1, 9, 8), ['holstein', 'jersey', 'angus', 'hereford', 'highland', 'chesschamp', 'dicedog', 'kingofcards', 'puzzlefrank']],   // holycow + gamenight
   [Date.UTC(2027, 1, 16, 8), ['longhorn', 'brahman', 'elk', 'bison', 'moose', 'lockedin', 'daydreamer', 'overthinker', 'onebraincell']],   // homeontherange + brainmodes
-  [Date.UTC(2027, 1, 23, 8), ['flamingo', 'toucan', 'snowyowl', 'barnowl', 'emperorpenguin', 'rockhopper']],   // birdbrains
+  [Date.UTC(2027, 1, 23, 8), ['flamingo', 'toucan', 'snowyowl', 'barnowl', 'emperorpenguin', 'rockhopper', 'cakechief', 'cottoncandy', 'galaxydonut', 'gummyfrank']],   // birdbrains + fantasyfoods
   [Date.UTC(2027, 2, 2, 8), ['homerun', 'doggypaddle', 'cleanandjerk', 'detective', 'doctor', 'firefighter', 'pilot', 'policeofficer', 'teacher', 'veterinarian']],   // added to sports + careerday
-  [Date.UTC(2027, 2, 9, 8), ['mechapilot', 'starguardian', 'swordsman', 'powerup']],   // bunime
+  [Date.UTC(2027, 2, 9, 8), ['mechapilot', 'starguardian', 'swordsman', 'powerup', 'arcadecabinet', 'cassette', 'floppydisk', 'pixelpal']],   // bunime + retrotech
   [Date.UTC(2027, 2, 16, 8), ['california', 'colorado', 'kentucky', 'michigan', 'nevada', 'newjersey', 'newyork', 'oregon', 'texas', 'vermont']],   // statefair
   [Date.UTC(2027, 2, 23, 8), ['brownbear', 'giraffe', 'gorilla', 'hippo', 'koala', 'monkey', 'redpanda', 'zebra']],   // zoofranks
   [Date.UTC(2027, 2, 30, 8), ['forgotthebuns', 'lowbattery', 'spilledthetea', 'wrongturn']],   // oopsallfranks
+  [Date.UTC(2027, 3, 6, 8), ['secretagent', 'undercover', 'cluefinder', 'bunbandit']],   // mysteryandmayhem
+  [Date.UTC(2027, 3, 13, 8), ['rockfrank', 'countrycrooner', 'discofever', 'djrelish']],   // musicfestival
   [Date.UTC(2027, 3, 20, 8), ['acadia', 'arches', 'grandcanyon', 'grandteton', 'smokymountains', 'hawaiivolcanoes', 'yellowstone', 'yosemite', 'zion']],   // greatoutdogs
+  [Date.UTC(2027, 3, 27, 8), ['dragonmailcarrier', 'unicornmechanic', 'vampiredentist', 'wizardbarista']],   // mythicalprofessions
+  [Date.UTC(2027, 4, 4, 8), ['earlybird', 'groupchatadmin', 'snackinspector', 'sweaterperson']],   // everydayicons
   [Date.UTC(2027, 5, 15, 8), ['unitedkingdom', 'france', 'germany', 'poland', 'croatia', 'switzerland', 'ukraine']],   // eurofranks
   [Date.UTC(2027, 5, 22, 8), ['unitedstates', 'canada', 'mexico', 'australia', 'japan', 'southkorea', 'china', 'india']],   // globalgrill
   [Date.UTC(2027, 5, 29, 8), ['ladyliberty', 'libertybell', 'baldeagle', 'fogcitybridge']],   // redwhiteandbun
+  [Date.UTC(2027, 8, 14, 8), ['captainfrankbeard', 'firstmate', 'parrotpal', 'treasurefrank']],   // piratesandtreasure
   [Date.UTC(2027, 9, 5, 8), ['ghost', 'witch', 'skeleton', 'mummy']],   // frightbites (same 8 AM UTC as dropAt in game.html)
 ];
 function buxSkinOk(id, now) {
