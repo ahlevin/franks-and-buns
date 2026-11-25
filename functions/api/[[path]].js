@@ -17,7 +17,7 @@ const BUX = { perBox: 1, maxBoxes: 10, daily: 25, cap: 100, cost: 300 };   // ca
 // Limited Edition costumes are purchase only (same list as SKINS_LIMITED in game.html)
 const BUX_LIMITED = new Set(['santa', 'bernedoodle', 'labradoodle', 'persian', 'mainecoon', 'slamdunk', 'goalgetter', 'axolotl', 'anglerfish', 'unidentifiedfryingobject', 'babykaiju', 'phoenix', 'shadowwizard',
   'glazedandconfused', 'blanketburrito', 'royaltreatment', 'raccoon', 'forkimpostor', 'professorfrank', 'glowgetter', 'specialdelivery',
-  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland', 'bison', 'flamingo', 'ladyliberty', 'powerup', 'unitedkingdom', 'unitedstates', 'hawaiivolcanoes', 'california', 'giraffe', 'polarbear',
+  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland', 'bison', 'flamingo', 'ladyliberty', 'happy', 'powerup', 'unitedkingdom', 'unitedstates', 'hawaiivolcanoes', 'california', 'giraffe', 'polarbear',
   'sterlingsilver', 'goldstandard', 'platinumprestige', 'diamonddog']);
 // The only costumes BunBux can unlock: the ones in Collections that are on sale (SHOP_COLS in game.html), minus Limited Edition.
 // Anything else (Free & Earned, Collections not on sale yet) is refused. When a Collection goes on sale, add its costumes here.
@@ -38,7 +38,7 @@ const BUX_DROPS = [
   [Date.UTC(2026, 11, 29, 8), ['discodog', 'radicalrelish', 'mixtape', 'ytwokbyte', 'incognidog', 'definitelyacarrot', 'emotionalbaggage', 'forkimpostor', 'bunindisguise', 'overcooked', 'businesscasualty', 'buffering', 'porcelainthrone']],   // throwbackfranks + questionabledecisions
   [Date.UTC(2027, 0, 5, 8), ['straightafrank', 'graddog', 'professorfrank', 'bookworm', 'sciencewhiz', 'chefspecial', 'brewcrew', 'hardhat', 'specialdelivery']],   // academic + sidehustles
   [Date.UTC(2027, 0, 12, 8), ['rat', 'pigeon', 'possummode', 'raccoon', 'skunk', 'armoredknight', 'frankexe', 'lightningfighter', 'ninja', 'shadowwizard']],   // trashpack + finalbossfranks
-  [Date.UTC(2027, 0, 19, 8), ['archer', 'fairmaiden', 'jester', 'joustingknight', 'king', 'wizard']],   // yeoldefranks
+  [Date.UTC(2027, 0, 19, 8), ['archer', 'fairmaiden', 'jester', 'joustingknight', 'king', 'wizard', 'happy', 'sad', 'angry', 'anxious', 'tired']],   // yeoldefranks + allthefeels
   [Date.UTC(2027, 0, 26, 8), ['camocommando', 'sailorfrank', 'dressblues', 'acepilot', 'spacecadet', 'rescueswimmer']],   // salutesquad
   [Date.UTC(2027, 0, 26, 8), ['arcticfox', 'arctichare', 'mountaingoat', 'polarbear', 'snowleopard', 'walrus']],   // chilldogs
   [Date.UTC(2027, 1, 2, 8), ['hotrod', 'jetsetter', 'chopper', 'roadhog', 'gravyboat']],   // fastfood
