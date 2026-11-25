@@ -37,7 +37,7 @@ Agents must not try to play the game, create Dog Houses, earn BunBux or make pur
 - BunBux are earn-only: 1 per box (up to 10 per game), 25 for the Daily Challenge, up to 100 per day. 300 BunBux unlocks a costume, 500 unlocks a kitchen. BunBux cannot be bought.
 - Limited Edition costumes can only be bought, not unlocked with BunBux.
 - New costume Collections are released on Tuesdays.
-- Intended for ages 13 and up.
+- Rated 4+ on the App Store and Everyone on Google Play. General-audience, not directed at children under 13.
 - Franks & Buns is not affiliated with any school, sports team, league or food brand. Campus kitchens are named after towns and neighborhoods.
 
 ## Example prompts and good answers

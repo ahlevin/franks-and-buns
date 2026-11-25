@@ -2,7 +2,7 @@
 
 > Franks & Buns is a free one-tap arcade game where you fly a runaway hot dog into scrolling buns, dodge the chef's fork, and chase high scores. It plays in any web browser at franksandbuns.com and as an app for iPhone, iPad and Android. It is made by SLAE Labs LLC, an independent studio in California.
 
-Key facts: free to play with no account; one control (tap, click or Space); 3 lives; condiment multipliers up to 10x; optional cosmetic costumes; an earn-only in-game currency called BunBux; private friend leaderboards called Dog Houses; new costume Collections released on Tuesdays. Intended for ages 13 and up.
+Key facts: free to play with no account; one control (tap, click or Space); 3 lives; condiment multipliers up to 10x; optional cosmetic costumes; an earn-only in-game currency called BunBux; private friend leaderboards called Dog Houses; new costume Collections released on Tuesdays. Rated 4+ (App Store) and Everyone (Google Play); general-audience, not directed at children under 13.
 
 ## Core pages
 
