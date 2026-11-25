@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="google-adsense-account" content="ca-pub-4015428134622878">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4015428134622878" crossorigin="anonymous"></script>
+  <meta name="description" content="Contact Franks &amp; Buns and SLAE Labs LLC: player support, Dog House reports, privacy and data requests, press, and how to report a security issue.">
+  <title>Contact Franks &amp; Buns | Support, Press &amp; Security</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="favicon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Boogaloo&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Google Analytics loads only after the visitor allows it (consent.js) -->
+  <!-- FB-CONSENT START (generated from consent.js by tools/inline_consent.py; edit consent.js, not this) -->
+<script>
+/* Franks & Buns: analytics consent.
+ * Google Analytics is NOT loaded until the player taps "Allow".
+ * The choice is saved on this device (fb_consent = granted | denied) and can be
+ * changed at any time with fbPrivacyChoices() (the "Privacy choices" links).
+ * Used by the website and, bundled as a local file, by the iPhone and Android apps. */
+(function () {
+  'use strict';
+  var GA_ID = 'G-5PVW85JQP6';
+  var KEY = 'fb_consent';
+  var CID_KEY = 'fb_ga_cid';
+  var loaded = false;
+
+  function store(k, v) {
+    try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {}
+  }
+  function read(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+
+  function appPlatform() {
+    var C = window.Capacitor;
+    try {
+      if (C && C.isNativePlatform && C.isNativePlatform()) return (C.getPlatform && C.getPlatform()) || 'app';
+    } catch (e) {}
+    return null;
+  }
+
+  function loadAnalytics() {
+    if (loaded) return;
+    loaded = true;
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    window.gtag('consent', 'default', {
+      analytics_storage: 'granted', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied'
+    });
+    window.gtag('js', new Date());
+    var cfg = {};
+    var platform = appPlatform();
+    if (platform) {
+      // In the apps the page is served from inside the app, where cookies are not kept.
+      // Keep a random ID on the device instead and label visits as app visits.
+      var cid = read(CID_KEY);
+      if (!cid) { cid = Math.floor(Math.random() * 2147483647) + '.' + Math.floor(Date.now() / 1000); store(CID_KEY, cid); }
+      cfg.client_storage = 'none';
+      cfg.client_id = cid;
+      cfg.page_location = 'https://franksandbuns.com/app-' + platform + '/';
+      cfg.page_title = 'Franks and Buns app (' + platform + ')';
+    }
+    window.gtag('config', GA_ID, cfg);
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+    document.head.appendChild(s);
+  }
+
+  function clearAnalyticsCookies() {
+    var host = location.hostname, parts = host.split('.');
+    var domains = ['', host, '.' + host];
+    if (parts.length > 2) domains.push('.' + parts.slice(-2).join('.'));
+    document.cookie.split(';').forEach(function (c) {
+      var name = c.split('=')[0].trim();
+      if (name === '_ga' || name.indexOf('_ga_') === 0 || name === '_gid') {
+        domains.forEach(function (d) {
+          document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/' + (d ? '; domain=' + d : '');
+        });
+      }
+    });
+  }
+
+  function decide(granted) {
+    store(KEY, granted ? 'granted' : 'denied');
+    hideBanner();
+    if (granted) {
+      loadAnalytics();
+    } else {
+      if (loaded && window.gtag) window.gtag('consent', 'update', { analytics_storage: 'denied' });
+      window['ga-disable-' + GA_ID] = true;
+      store(CID_KEY, null);
+      clearAnalyticsCookies();
+    }
+  }
+
+  var banner = null;
+  function hideBanner() { if (banner && banner.parentNode) banner.parentNode.removeChild(banner); banner = null; }
+
+  function showBanner() {
+    if (banner) return;
+    var policy = appPlatform() ? 'https://franksandbuns.com/privacy.html' : 'privacy.html';
+    banner = document.createElement('div');
+    banner.id = 'fb-consent';
+    banner.setAttribute('role', 'dialog');
+    banner.setAttribute('aria-label', 'Analytics choice');
+    banner.innerHTML =
+      '<p>Can we count plays with Google Analytics to help improve the game? It stays off unless you allow it. ' +
+      '<a href="' + policy + '" target="_blank" rel="noopener">Privacy Policy</a></p>' +
+      '<div class="fbc-btns"><button type="button" class="fbc-no">No thanks</button>' +
+      '<button type="button" class="fbc-yes">Allow</button></div>';
+    var css = document.createElement('style');
+    css.textContent =
+      '#fb-consent{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom));' +
+      'width:min(560px,calc(100% - 24px));box-sizing:border-box;z-index:2147483000;background:#1d0f02;color:#f3e3c3;' +
+      'border:1px solid #ff6600;border-radius:14px;padding:12px 14px;font:14px/1.4 -apple-system,Segoe UI,Roboto,Arial,sans-serif;' +
+      'box-shadow:0 6px 24px rgba(0,0,0,.5)}' +
+      '#fb-consent p{margin:0 0 10px}#fb-consent a{color:#ffb347}' +
+      '#fb-consent .fbc-btns{display:flex;gap:10px;justify-content:flex-end}' +
+      '#fb-consent button{font:600 14px/1 inherit;font-family:inherit;border-radius:999px;padding:10px 18px;cursor:pointer;border:1px solid #ff6600}' +
+      '#fb-consent .fbc-no{background:transparent;color:#f3e3c3}#fb-consent .fbc-yes{background:#ff6600;color:#fff}';
+    banner.appendChild(css);
+    ['touchstart', 'touchend', 'mousedown', 'pointerdown'].forEach(function (t) {
+      banner.addEventListener(t, function (e) { e.stopPropagation(); }, { passive: true });
+    });
+    banner.querySelector('.fbc-yes').addEventListener('click', function () { decide(true); });
+    banner.querySelector('.fbc-no').addEventListener('click', function () { decide(false); });
+    (document.body || document.documentElement).appendChild(banner);
+  }
+
+  // "Privacy choices" link: show the choice again (to allow or withdraw).
+  window.fbPrivacyChoices = function () { hideBanner(); showBanner(); return false; };
+
+  var choice = read(KEY);
+  if (choice === 'granted') loadAnalytics();
+  else if (choice !== 'denied') {
+    if (document.body) showBanner();
+    else document.addEventListener('DOMContentLoaded', showBanner);
+  }
+})();
+</script>
+<!-- FB-CONSENT END -->
+  <style>
+    :root{--bg:#1a0e05;--bg2:#2a1a0a;--orange:#FF6600;--gold:#FFD700;--cream:#fff8ee;--muted:#a08060;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:var(--bg);color:var(--cream);font-family:'Nunito',sans-serif;line-height:1.7;}
+    nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 5vw;height:60px;background:rgba(26,14,5,0.92);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,102,0,0.18);}
+    .nav-logo{font-family:'Boogaloo',cursive;font-size:1.5rem;color:var(--gold);text-decoration:none;}
+    .nav-logo span{color:var(--orange);}
+    nav ul{list-style:none;display:flex;gap:2rem;}
+    nav ul a{color:var(--cream);text-decoration:none;font-weight:600;font-size:0.9rem;letter-spacing:0.05em;text-transform:uppercase;opacity:0.8;transition:opacity 0.2s,color 0.2s;}
+    nav ul a:hover{opacity:1;color:var(--gold);}
+    .container{max-width:760px;margin:0 auto;padding:100px 5vw 80px;}
+    h1{font-family:'Boogaloo',cursive;font-size:2.8rem;color:var(--gold);margin-bottom:0.5rem;}
+    h2{font-family:'Boogaloo',cursive;font-size:1.6rem;color:var(--orange);margin:2.5rem 0 0.75rem;}
+    p{color:#c8a880;margin-bottom:1.2rem;font-size:1rem;}
+    .divider{width:60px;height:3px;background:linear-gradient(90deg,var(--orange),var(--gold));border-radius:2px;margin:0 0 2.5rem;}
+    .character-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;margin:1.5rem 0;}
+    .character-card{background:var(--bg2);border:1px solid rgba(255,102,0,0.15);border-radius:16px;padding:1.5rem;text-align:center;}
+    .character-card img{width:100px;height:100px;object-fit:contain;margin-bottom:0.8rem;}
+    .character-icon{font-size:3rem;margin-bottom:0.8rem;}
+    .character-card h3{font-family:'Boogaloo',cursive;color:var(--orange);font-size:1.2rem;margin-bottom:0.5rem;}
+    .character-card p{color:var(--muted);font-size:0.9rem;margin:0;}
+    .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin:1.5rem 0;}
+    .stat{background:var(--bg2);border:1px solid rgba(255,215,0,0.12);border-radius:12px;padding:1.2rem;text-align:center;}
+    .stat-num{font-family:'Boogaloo',cursive;font-size:2rem;color:var(--gold);}
+    .stat-label{font-size:0.8rem;color:var(--muted);margin-top:0.2rem;}
+    .condiment-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:1rem;margin:1.5rem 0;}
+    .condiment{background:var(--bg2);border:1px solid rgba(255,215,0,0.12);border-radius:12px;padding:1rem;text-align:center;}
+    .condiment svg{margin-bottom:0.4rem;}
+    .condiment h4{color:var(--gold);font-size:0.9rem;margin-bottom:0.2rem;}
+    .condiment p{color:var(--muted);font-size:0.8rem;margin:0;}
+    .bonus-band{background:linear-gradient(135deg,rgba(255,102,0,0.12),rgba(255,215,0,0.06));border:1px solid rgba(255,102,0,0.2);border-radius:16px;padding:1.5rem;margin:1.5rem 0;}
+    .bonus-band h3{font-family:'Boogaloo',cursive;color:var(--orange);font-size:1.3rem;margin-bottom:0.5rem;}
+    .bonus-band p{color:#c8a880;margin:0;font-size:0.95rem;}
+    .btn-play{display:inline-block;background:var(--orange);color:#fff;font-family:'Boogaloo',cursive;font-size:1.4rem;padding:0.6em 2em;border-radius:50px;text-decoration:none;margin-top:1rem;}
+    footer{background:#110a02;border-top:1px solid rgba(255,255,255,0.06);text-align:center;padding:2rem 5vw;color:var(--muted);font-size:0.85rem;}
+    .social-links{display:flex;justify-content:center;align-items:center;gap:0.9rem;margin:0.25rem 0 1rem;}
+    .social-links .follow{color:var(--muted);font-weight:600;margin-right:0.2rem;}
+    .social-links a.soc{width:40px;height:40px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;transition:transform .15s;}
+    .social-links a.soc:hover{transform:scale(1.1);text-decoration:none;}
+    .social-links a.soc svg{width:22px;height:22px;}
+    .social-links a.ig{background:radial-gradient(circle at 30% 107%,#fdf497 0%,#fdf497 5%,#fd5949 45%,#d6249f 60%,#285AEB 90%);}
+    .social-links a.fb{background:#fff;color:#0866FF;}
+    .social-links a.fb svg{width:40px;height:40px;}
+    .social-links a.tt{background:#000;border:1px solid rgba(255,255,255,0.25);}
+    footer a{color:var(--orange);text-decoration:none;}
+    .container p a{color:#ffb347;}
+    .footer-links{margin-bottom:0.75rem;display:flex;justify-content:center;gap:2rem;flex-wrap:wrap;}
+    .hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px;background:none;border:none;}
+    .hamburger span{display:block;width:24px;height:2px;background:var(--cream);border-radius:2px;transition:all 0.3s;}
+    .mobile-menu{display:none;position:fixed;top:60px;left:0;right:0;background:rgba(26,14,5,0.98);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,102,0,0.2);z-index:99;padding:1rem 5vw 1.5rem;}
+    .mobile-menu a{display:block;color:var(--cream);text-decoration:none;font-weight:600;font-size:1rem;letter-spacing:0.05em;text-transform:uppercase;padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.06);}
+    .mobile-menu a:last-child{border-bottom:none;}
+    .mobile-menu a:hover{color:var(--gold);}
+    .mobile-menu.open{display:block;}
+    nav ul a{white-space:nowrap;}
+    @media(max-width:960px){nav ul{display:none;}.hamburger{display:flex;}}
+    .container ul{margin:0 0 1.2rem 1.2rem;color:#c8a880;}
+    .container li{margin-bottom:0.4rem;}
+    .container li strong,.container p strong{color:var(--cream);}
+    .container ul a{color:#ffb347;}
+    section{scroll-margin-top:70px;}
+  </style>
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Franks &amp; Buns">
+  <meta property="og:title" content="Contact Franks &amp; Buns">
+  <meta property="og:description" content="Support, press, privacy and security contacts for Franks &amp; Buns.">
+  <meta property="og:url" content="https://franksandbuns.com/contact">
+  <meta property="og:image" content="https://franksandbuns.com/favicon-180.png">
+  <link rel="canonical" href="https://franksandbuns.com/contact">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"ContactPage","url":"https://franksandbuns.com/contact","name":"Contact Franks & Buns","mainEntity":{"@type":"Organization","@id":"https://franksandbuns.com/#org","name":"SLAE Labs LLC","url":"https://franksandbuns.com/","email":"admin@slaelabs.com","address":{"@type":"PostalAddress","addressRegion":"CA","addressCountry":"US"},"contactPoint":[{"@type":"ContactPoint","contactType":"customer support","email":"admin@slaelabs.com","availableLanguage":"en"},{"@type":"ContactPoint","contactType":"security","email":"admin@slaelabs.com"}],"sameAs":["https://www.instagram.com/franksandbunsgame/","https://www.tiktok.com/@franksandbuns","https://www.facebook.com/profile.php?id=61596439395625"]}}
+</script>
+</head>
+<body>
+<nav>
+  <a class="nav-logo" href="/">Franks <span>&</span> Buns</a>
+  <ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="videos.html">Videos</a></li>
+    <li><a href="game.html">Play Now</a></li>
+    <li><a href="https://shop.franksandbuns.com">Merch</a></li>
+    <li><a href="privacy.html">Privacy</a></li>
+    <li><a href="terms.html">Terms</a></li>
+  </ul>
+  <button class="hamburger" id="hamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="/">Home</a>
+  <a href="about.html">About</a>
+  <a href="videos.html">Videos</a>
+  <a href="game.html">Play Now</a>
+  <a href="https://shop.franksandbuns.com">Merch</a>
+  <a href="privacy.html">Privacy</a>
+  <a href="terms.html">Terms</a>
+</div>
+
+<div class="container">
+  <h1>Contact Franks &amp; Buns</h1>
+  <div class="divider"></div>
+
+  <section id="who">
+    <h2>Who makes Franks &amp; Buns</h2>
+    <p>Franks &amp; Buns is made and published by <strong>SLAE Labs LLC</strong>, a small independent game studio and California limited liability company in the United States. We run the website franksandbuns.com and the Franks &amp; Buns apps for iPhone, iPad and Android.</p>
+  </section>
+
+  <section id="email">
+    <h2>How to reach us</h2>
+    <p>Email <a href="mailto:admin@slaelabs.com">admin@slaelabs.com</a> for anything about the game. We usually reply within a few days. Please include what you were doing, which device you play on (web, iPhone, iPad or Android), and a screenshot if it helps.</p>
+    <ul>
+      <li><strong>Game help and bugs:</strong> what happened and on which device.</li>
+      <li><strong>Purchases:</strong> app purchases are handled by Apple or Google, and refunds are requested through them. For website purchases, email us with the date and the costume.</li>
+      <li><strong>Dog House reports:</strong> use Report a name or Dog House in the game, or email us the Dog House code.</li>
+      <li><strong>Privacy and data deletion:</strong> see the <a href="privacy.html">Privacy Policy</a> and <a href="delete-account.html">how to delete your data</a>.</li>
+      <li><strong>Press, creators and partnerships:</strong> put "Press" in the subject. Facts and links are in the <a href="guide.html">Complete Guide</a>.</li>
+    </ul>
+  </section>
+
+  <section id="security">
+    <h2>Reporting a security issue</h2>
+    <p>If you think you have found a security or privacy problem in the website, the apps or our servers, please email <a href="mailto:admin@slaelabs.com?subject=Security">admin@slaelabs.com</a> with "Security" in the subject. Tell us what you found and how to reproduce it.</p>
+    <ul>
+      <li>We will confirm we received your report and keep you updated while we fix it.</li>
+      <li>Please give us a reasonable time to fix the issue before sharing it publicly.</li>
+      <li>Please do not access other players' data, disrupt the game for others, or run automated attacks or load tests.</li>
+    </ul>
+    <p>Our machine-readable contact is at <a href="/.well-known/security.txt">/.well-known/security.txt</a>.</p>
+  </section>
+
+  <section id="follow">
+    <h2>Follow us</h2>
+    <p><a href="https://www.instagram.com/franksandbunsgame/" rel="noopener">Instagram</a> · <a href="https://www.tiktok.com/@franksandbuns" rel="noopener">TikTok</a> · <a href="https://www.facebook.com/profile.php?id=61596439395625" rel="noopener">Facebook</a></p>
+  </section>
+</div>
+
+<footer>
+  <div class="footer-links">
+    <a href="/">Home</a>
+    <a href="about.html">About</a>
+    <a href="videos.html">Videos</a>
+    <a href="game.html">Play the Game</a>
+    <a href="https://apps.apple.com/app/franks-buns/id6761290671" target="_blank" rel="noopener">iPhone &amp; iPad App</a>
+    <a href="https://play.google.com/store/apps/details?id=com.franksandbuns.game" target="_blank" rel="noopener">Android App</a>
+    <a href="https://shop.franksandbuns.com">Merch Shop</a>
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="terms.html">Terms of Service</a>
+    <a href="#" onclick="return fbPrivacyChoices()">Privacy choices</a>
+    <a href="mailto:admin@slaelabs.com">Contact</a>
+  </div>
+  <div class="social-links"><span class="follow">Follow us</span><a class="soc ig" href="https://www.instagram.com/franksandbunsgame/" target="_blank" rel="noopener" aria-label="Franks &amp; Buns on Instagram" title="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.3" cy="6.7" r="1.3" fill="currentColor"/></svg></a><a class="soc fb" href="https://www.facebook.com/profile.php?id=61596439395625" target="_blank" rel="noopener" aria-label="Franks &amp; Buns on Facebook" title="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"/></svg></a><a class="soc tt" href="https://www.tiktok.com/@franksandbuns" target="_blank" rel="noopener" aria-label="Franks &amp; Buns on TikTok" title="TikTok"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a></div>
+  <p>&copy; 2026 Franks &amp; Buns. All rights reserved.</p>
+</footer>
+
+<script>
+const hb = document.getElementById('hamburger');
+const mm = document.getElementById('mobileMenu');
+hb.addEventListener('click', () => mm.classList.toggle('open'));
+document.addEventListener('click', e => { if (!hb.contains(e.target) && !mm.contains(e.target)) mm.classList.remove('open'); });
+</script>
+</body>
+</html>
