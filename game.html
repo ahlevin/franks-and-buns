@@ -943,6 +943,66 @@ const SKINS = [
   { id: 'firstmate', name: 'First Mate', group: 'piratesandtreasure', frames: 1, fly: [-48.2, -28.7, 87.9, 45.7], bun: [-45.1, -54.8, 87.7, 56.7], grill: [-44.9, -72.3, 87.7, 74.2] },
   { id: 'parrotpal', name: 'Parrot Pal', group: 'piratesandtreasure', frames: 1, fly: [-47.6, -33.2, 87.3, 48.6], bun: [-42.8, -56.3, 84.3, 58.2], grill: [-42.7, -67.5, 84.1, 69.3] },
   { id: 'treasurefrank', name: 'Treasure Frank', group: 'piratesandtreasure', frames: 1, fly: [-49.1, -33.8, 90.5, 53.9], bun: [-41.5, -56.3, 83.8, 58.1], grill: [-41.7, -71.6, 83.6, 73.4] },
+  { id: 'bubblebath', name: 'Bubble Bath', group: 'cleanupcrew', frames: 1, fly: [-50.1, -29.1, 89.8, 51.3], bun: [-43.7, -54.3, 87.5, 56.2], grill: [-43.6, -71.7, 87.4, 73.6] },
+  { id: 'dishdominator', name: 'Dish Dominator', group: 'cleanupcrew', frames: 1, fly: [-49.6, -38.4, 89.6, 75.1], bun: [-44.4, -71.6, 90.6, 73.6], grill: [-45.0, -76.0, 91.2, 78.0] },
+  { id: 'laundryday', name: 'Laundry Day', group: 'cleanupcrew', frames: 1, fly: [-49.0, -27.8, 89.9, 67.7], bun: [-42.8, -60.3, 84.6, 63.0], grill: [-43.1, -76.4, 84.9, 79.0] },
+  { id: 'vacuumviking', name: 'Vacuum Viking', group: 'cleanupcrew', frames: 1, fly: [-49.2, -33.1, 95.0, 63.0], bun: [-49.3, -57.1, 92.1, 59.0], grill: [-49.7, -71.6, 92.5, 73.5] },
+  { id: 'cerealthriller', name: 'Cereal Thriller', group: 'riseanddine', frames: 1, fly: [-49.1, -40.2, 89.4, 60.9], bun: [-41.9, -62.6, 85.3, 64.5], grill: [-42.0, -68.3, 85.3, 70.2] },
+  { id: 'frenchtoast', name: 'French Toast', group: 'riseanddine', frames: 1, fly: [-49.2, -32.7, 90.6, 55.3], bun: [-46.3, -64.5, 93.2, 66.4], grill: [-46.2, -83.7, 93.1, 85.6] },
+  { id: 'pancakestack', name: 'Pancake Stack', group: 'riseanddine', frames: 1, fly: [-50.1, -34.6, 91.6, 67.1], bun: [-42.7, -64.8, 85.5, 66.7], grill: [-43.1, -80.3, 86.3, 82.2] },
+  { id: 'wafflewarrior', name: 'Waffle Warrior', group: 'riseanddine', frames: 1, fly: [-49.1, -28.3, 89.1, 58.8], bun: [-43.0, -53.7, 85.9, 55.5], grill: [-42.1, -69.2, 84.3, 71.1] },
+  { id: 'knittingninja', name: 'Knitting Ninja', group: 'wildhobbies', frames: 1, fly: [-49.7, -33.7, 91.2, 55.0], bun: [-41.6, -57.8, 85.7, 59.7], grill: [-41.6, -70.5, 85.7, 72.3] },
+  { id: 'mustardmasterpiece', name: 'Mustard Masterpiece', group: 'wildhobbies', frames: 1, fly: [-48.4, -28.8, 90.3, 44.0], bun: [-42.4, -54.9, 95.0, 56.8], grill: [-42.6, -74.9, 95.2, 76.8] },
+  { id: 'plantparent', name: 'Plant Parent', group: 'wildhobbies', frames: 1, fly: [-49.8, -31.5, 88.3, 65.3], bun: [-42.8, -62.8, 84.8, 64.5], grill: [-43.1, -73.7, 85.1, 75.4] },
+  { id: 'rockcollector', name: 'Rock Collector', group: 'wildhobbies', frames: 1, fly: [-52.8, -31.0, 101.1, 64.9], bun: [-43.9, -60.1, 95.4, 62.1], grill: [-43.8, -80.0, 95.4, 81.9] },
+  { id: 'campfirecamper', name: 'Campfire Camper', group: 'outdooradventure', frames: 1, fly: [-51.9, -27.6, 94.0, 49.9], bun: [-42.2, -55.8, 88.6, 57.7], grill: [-41.9, -74.1, 88.4, 75.9] },
+  { id: 'fishingfrank', name: 'Fishing Frank', group: 'outdooradventure', frames: 1, fly: [-49.2, -32.3, 90.9, 55.4], bun: [-42.9, -57.2, 89.9, 59.1], grill: [-43.5, -75.1, 90.6, 77.0] },
+  { id: 'kayakcaptain', name: 'Kayak Captain', group: 'outdooradventure', frames: 1, fly: [-50.2, -31.3, 90.3, 52.4], bun: [-43.6, -57.0, 87.4, 58.9], grill: [-44.0, -78.7, 88.3, 80.6] },
+  { id: 'marshmallowroaster', name: 'Marshmallow Roaster', group: 'outdooradventure', frames: 1, fly: [-48.9, -33.3, 88.6, 51.8], bun: [-44.8, -56.3, 86.4, 58.2], grill: [-44.9, -77.9, 86.5, 79.7] },
+  { id: 'brontosaurusdriver', name: 'Brontosaurus Driver', group: 'dinosindisguise', frames: 1, fly: [-50.7, -56.8, 94.7, 73.5], bun: [-42.8, -76.5, 90.0, 78.4], grill: [-42.8, -76.5, 90.0, 78.4] },
+  { id: 'stegosaurusskater', name: 'Stegosaurus Skater', group: 'dinosindisguise', frames: 1, fly: [-49.8, -29.2, 89.3, 60.1], bun: [-43.9, -59.5, 88.7, 61.4], grill: [-51.2, -71.8, 96.0, 73.7] },
+  { id: 'trexlibrarian', name: 'T-Rex Librarian', group: 'dinosindisguise', frames: 1, fly: [-46.8, -34.6, 88.2, 59.6], bun: [-41.4, -58.1, 85.2, 59.9], grill: [-41.1, -77.4, 84.8, 79.2] },
+  { id: 'triceratopschef', name: 'Triceratops Chef', group: 'dinosindisguise', frames: 1, fly: [-49.1, -43.5, 88.9, 65.0], bun: [-41.6, -64.1, 85.3, 66.0], grill: [-41.4, -69.5, 84.8, 71.4] },
+  { id: 'birdwatcher', name: 'Birdwatcher', group: 'backyardlegends', frames: 1, fly: [-51.1, -30.8, 91.3, 51.2], bun: [-44.4, -58.3, 88.9, 60.2], grill: [-44.6, -70.9, 89.5, 72.8] },
+  { id: 'gardengnome', name: 'Garden Gnome', group: 'backyardlegends', frames: 1, fly: [-47.9, -38.7, 88.2, 66.9], bun: [-41.2, -58.9, 82.9, 63.6], grill: [-43.8, -68.7, 85.4, 73.3] },
+  { id: 'grillking', name: 'Grill King', group: 'backyardlegends', frames: 1, fly: [-47.4, -33.7, 89.7, 58.6], bun: [-42.9, -67.1, 96.8, 69.0], grill: [-43.2, -80.0, 97.8, 82.0] },
+  { id: 'lawnmower', name: 'Lawn Mower', group: 'backyardlegends', frames: 1, fly: [-48.3, -33.3, 89.3, 62.3], bun: [-45.2, -61.0, 89.1, 62.9], grill: [-46.3, -68.3, 90.2, 70.2] },
+  { id: 'airportsprinter', name: 'Airport Sprinter', group: 'traveltroubles', frames: 1, fly: [-54.6, -25.8, 97.1, 60.5], bun: [-43.8, -51.4, 92.1, 64.2], grill: [-43.8, -70.0, 92.1, 82.9] },
+  { id: 'lostluggage', name: 'Lost Luggage', group: 'traveltroubles', frames: 1, fly: [-47.2, -32.7, 89.2, 63.7], bun: [-41.4, -56.3, 83.5, 58.7], grill: [-42.4, -67.1, 84.5, 69.4] },
+  { id: 'overpacked', name: 'Overpacked', group: 'traveltroubles', frames: 1, fly: [-48.8, -38.9, 88.8, 54.2], bun: [-42.3, -63.0, 84.0, 64.9], grill: [-42.5, -76.5, 84.4, 78.4] },
+  { id: 'touristmode', name: 'Tourist Mode', group: 'traveltroubles', frames: 1, fly: [-49.8, -37.4, 96.1, 55.5], bun: [-43.0, -60.2, 90.1, 62.1], grill: [-42.8, -70.4, 89.9, 72.3] },
+  { id: 'cookiecrumbles', name: 'Cookie Crumbles', group: 'dessertdisasters', frames: 1, fly: [-49.3, -30.9, 92.3, 51.1], bun: [-41.2, -59.9, 96.1, 61.8], grill: [-41.3, -72.9, 96.3, 74.9] },
+  { id: 'droppedscoop', name: 'Dropped Scoop', group: 'dessertdisasters', frames: 1, fly: [-47.1, -29.3, 87.1, 49.0], bun: [-42.0, -51.8, 86.7, 53.7], grill: [-41.9, -63.4, 86.5, 65.3] },
+  { id: 'meltingicecream', name: 'Melting Ice Cream', group: 'dessertdisasters', frames: 1, fly: [-49.7, -38.3, 90.0, 65.2], bun: [-41.9, -65.7, 88.6, 67.6], grill: [-42.7, -74.8, 90.8, 76.7] },
+  { id: 'runawaycupcake', name: 'Runaway Cupcake', group: 'dessertdisasters', frames: 1, fly: [-50.7, -36.3, 90.5, 54.3], bun: [-43.9, -57.1, 86.4, 58.9], grill: [-44.2, -62.7, 87.5, 64.6] },
+  { id: 'officechair', name: 'Office Chair', group: 'thingswithwheels', frames: 1, fly: [-50.0, -35.7, 91.5, 84.9], bun: [-41.8, -53.6, 82.8, 73.0], grill: [-41.3, -61.5, 82.4, 80.9] },
+  { id: 'rollerskate', name: 'Roller Skate', group: 'thingswithwheels', frames: 1, fly: [-46.3, -26.8, 86.4, 57.5], bun: [-41.4, -55.5, 87.0, 58.7], grill: [-42.2, -69.5, 87.0, 72.6] },
+  { id: 'shoppingcartracer', name: 'Shopping Cart Racer', group: 'thingswithwheels', frames: 1, fly: [-50.5, -35.6, 92.6, 60.8], bun: [-40.5, -41.9, 83.0, 54.0], grill: [-40.8, -54.5, 83.2, 66.6] },
+  { id: 'skateboardfrank', name: 'Skateboard Frank', group: 'thingswithwheels', frames: 1, fly: [-50.2, -28.7, 90.2, 49.7], bun: [-42.7, -53.6, 84.2, 55.5], grill: [-42.9, -66.4, 84.2, 68.3] },
+  { id: 'brickstep', name: 'Brick Step', group: 'petpeeves', frames: 1, fly: [-51.0, -33.3, 96.3, 74.6], bun: [-39.9, -51.4, 91.6, 69.4], grill: [-39.8, -68.2, 91.4, 86.2] },
+  { id: 'itchytag', name: 'Itchy Tag', group: 'petpeeves', frames: 1, fly: [-48.7, -29.6, 88.6, 49.1], bun: [-41.7, -53.7, 83.6, 55.6], grill: [-41.7, -67.9, 83.7, 69.7] },
+  { id: 'slowwifi', name: 'Slow Wi-Fi', group: 'petpeeves', frames: 1, fly: [-49.1, -41.9, 88.5, 59.3], bun: [-45.9, -66.2, 88.4, 68.1], grill: [-45.7, -66.7, 88.8, 68.6] },
+  { id: 'wetsock', name: 'Wet Sock', group: 'petpeeves', frames: 1, fly: [-46.5, -24.0, 87.0, 38.9], bun: [-41.3, -50.6, 95.5, 52.6], grill: [-41.2, -72.1, 95.2, 74.0] },
+  { id: 'everyscarf', name: 'Every Scarf', group: 'unnecessaryaccessories', frames: 1, fly: [-49.1, -35.3, 88.7, 57.4], bun: [-42.7, -57.7, 86.4, 59.6], grill: [-44.0, -69.4, 87.7, 71.3] },
+  { id: 'hatonahat', name: 'Hat on a Hat', group: 'unnecessaryaccessories', frames: 1, fly: [-48.3, -40.0, 88.3, 57.9], bun: [-44.3, -61.9, 86.9, 63.8], grill: [-44.5, -63.3, 86.7, 65.2] },
+  { id: 'maximumpockets', name: 'Maximum Pockets', group: 'unnecessaryaccessories', frames: 1, fly: [-50.3, -33.2, 90.9, 52.0], bun: [-42.3, -55.3, 86.1, 57.2], grill: [-42.5, -75.1, 86.6, 77.0] },
+  { id: 'toomanysunglasses', name: 'Too Many Sunglasses', group: 'unnecessaryaccessories', frames: 1, fly: [-48.3, -34.4, 88.5, 51.8], bun: [-42.9, -57.4, 85.6, 59.3], grill: [-43.2, -71.9, 86.0, 73.8] },
+  { id: 'artclass', name: 'Art Class', group: 'schooldays', frames: 1, fly: [-48.9, -29.3, 88.6, 50.3], bun: [-43.5, -57.2, 88.3, 59.1], grill: [-43.8, -71.9, 89.1, 73.8] },
+  { id: 'bandpractice', name: 'Band Practice', group: 'schooldays', frames: 1, fly: [-47.3, -42.3, 88.5, 56.6], bun: [-42.7, -68.5, 94.4, 70.5], grill: [-43.6, -68.7, 95.2, 70.6] },
+  { id: 'lunchboxlegend', name: 'Lunchbox Legend', group: 'schooldays', frames: 1, fly: [-48.7, -29.9, 88.6, 54.0], bun: [-43.2, -55.1, 87.3, 57.0], grill: [-42.9, -70.5, 87.0, 72.4] },
+  { id: 'recesschamp', name: 'Recess Champ', group: 'schooldays', frames: 1, fly: [-48.3, -26.6, 88.2, 54.0], bun: [-44.5, -52.1, 87.8, 54.0], grill: [-45.3, -71.0, 90.2, 72.9] },
+  { id: 'baldandbold', name: 'Bald and Bold', group: 'hairraising', frames: 1, fly: [-48.2, -22.9, 88.0, 40.6], bun: [-44.3, -51.7, 87.7, 53.6], grill: [-44.5, -69.8, 87.9, 71.7] },
+  { id: 'curlyfry', name: 'Curly Fry', group: 'hairraising', frames: 1, fly: [-48.4, -53.8, 90.3, 69.3], bun: [-41.6, -75.6, 88.9, 77.6], grill: [-42.5, -75.8, 88.6, 77.7] },
+  { id: 'mullet', name: 'Mullet', group: 'hairraising', frames: 1, fly: [-47.7, -41.9, 88.8, 60.2], bun: [-42.1, -61.5, 84.4, 63.4], grill: [-42.1, -78.2, 84.4, 80.1] },
+  { id: 'pillowhair', name: 'Pillow Hair', group: 'hairraising', frames: 1, fly: [-51.6, -38.7, 97.3, 60.9], bun: [-43.6, -64.3, 91.9, 66.2], grill: [-43.6, -77.5, 91.9, 79.4] },
+  { id: 'fuzzballfrank', name: 'Fuzzball Frank', group: 'minimonsters', frames: 1, fly: [-47.3, -30.4, 89.6, 49.3], bun: [-41.6, -57.3, 87.1, 59.2], grill: [-41.7, -72.5, 87.1, 74.4] },
+  { id: 'googlygoo', name: 'Googly Goo', group: 'minimonsters', frames: 1, fly: [-46.5, -29.5, 88.1, 52.8], bun: [-42.5, -52.6, 84.9, 54.4], grill: [-42.1, -71.9, 84.5, 73.7] },
+  { id: 'oneeyedwonder', name: 'One-Eyed Wonder', group: 'minimonsters', frames: 1, fly: [-48.1, -35.5, 88.1, 56.5], bun: [-42.2, -56.3, 85.7, 58.2], grill: [-43.1, -65.2, 86.5, 67.1] },
+  { id: 'sockgoblin', name: 'Sock Goblin', group: 'minimonsters', frames: 1, fly: [-49.7, -40.0, 91.1, 62.4], bun: [-45.5, -66.4, 90.4, 68.3], grill: [-45.7, -84.6, 90.6, 86.6] },
+  { id: 'bunnyhat', name: 'Bunny Hat', group: 'magicalmishaps', frames: 1, fly: [-48.0, -42.6, 93.4, 59.5], bun: [-41.4, -66.1, 92.1, 68.0], grill: [-44.5, -67.4, 95.3, 69.3] },
+  { id: 'frogprince', name: 'Frog Prince', group: 'magicalmishaps', frames: 1, fly: [-47.3, -31.4, 87.1, 53.2], bun: [-41.4, -56.8, 87.6, 58.7], grill: [-41.5, -63.4, 87.7, 65.2] },
+  { id: 'potionexplosion', name: 'Potion Explosion', group: 'magicalmishaps', frames: 1, fly: [-47.9, -36.6, 90.4, 60.0], bun: [-41.6, -64.3, 96.9, 66.2], grill: [-41.6, -73.3, 96.6, 75.3] },
+  { id: 'spellcheckwizard', name: 'Spellcheck Wizard', group: 'magicalmishaps', frames: 1, fly: [-48.3, -41.6, 91.3, 60.7], bun: [-41.4, -60.7, 84.6, 62.6], grill: [-41.3, -73.1, 84.5, 75.0] },
   { id: 'camocommando', name: 'Camo Commando', group: 'salutesquad', frames: 1, fly: [-44.6, -28.4, 85.1, 42.9], bun: [-41.8, -51.1, 85.6, 53.0], grill: [-41.8, -66.4, 85.5, 68.2] },
   { id: 'sailorfrank', name: 'Sailor Frank', group: 'salutesquad', frames: 1, fly: [-43.3, -25.8, 82.5, 40.3], bun: [-41.9, -52.5, 83.7, 54.4], grill: [-41.8, -68.4, 83.6, 70.3] },
   { id: 'dressblues', name: 'Dress Blues', group: 'salutesquad', frames: 1, fly: [-43.3, -35.4, 82.5, 49.9], bun: [-41.9, -57.5, 84.0, 59.4], grill: [-42.1, -71.2, 84.2, 73.1] },
@@ -1103,19 +1163,34 @@ const SKIN_GROUPS = { earn: { name: 'Free & Earned', how: 'earn' }, holiday: { n
   careerday: { name: 'Career Day', how: 'shop', from: dropAt(2027, 3, 2) },
   bunime: { name: 'Bun-ime', how: 'shop', from: dropAt(2027, 3, 9) },   // anime-style pack (generic names, no franchise characters)
   retrotech: { name: 'Retro Tech', how: 'shop', from: dropAt(2027, 3, 9) },
+  statefair: { name: 'State Fair', how: 'shop', from: dropAt(2027, 3, 16) },   // US states pack (playful, no official seals or school marks)
   zoofranks: { name: 'Zoo Franks', how: 'shop', from: dropAt(2027, 3, 23) },   // zoo animals pack
+  cleanupcrew: { name: 'Cleanup Crew', how: 'shop', from: dropAt(2027, 3, 23) },   // first week of spring
+  oopsallfranks: { name: 'Oops! All Franks', how: 'shop', from: dropAt(2027, 3, 30) },   // April Fools week
   mysteryandmayhem: { name: 'Mystery & Mayhem', how: 'shop', from: dropAt(2027, 4, 6) },
   musicfestival: { name: 'Music Festival', how: 'shop', from: dropAt(2027, 4, 13) },   // festival season
-  statefair: { name: 'State Fair', how: 'shop', from: dropAt(2027, 3, 16) },   // US states pack (playful, no official seals or school marks)
-  oopsallfranks: { name: 'Oops! All Franks', how: 'shop', from: dropAt(2027, 3, 30) },   // April Fools week
   greatoutdogs: { name: 'Great Outdogs', how: 'shop', from: dropAt(2027, 4, 20) },   // national parks pack, National Park Week (generic badges, no NPS arrowhead)
   mythicalprofessions: { name: 'Mythical Professions', how: 'shop', from: dropAt(2027, 4, 27) },
   everydayicons: { name: 'Everyday Icons', how: 'shop', from: dropAt(2027, 5, 4) },
+  riseanddine: { name: 'Rise & Dine', how: 'shop', from: dropAt(2027, 5, 11) },
+  wildhobbies: { name: 'Wild Hobbies', how: 'shop', from: dropAt(2027, 5, 18) },
+  outdooradventure: { name: 'Outdoor Adventure', how: 'shop', from: dropAt(2027, 5, 25) },   // Memorial Day weekend
+  dinosindisguise: { name: 'Dinos in Disguise', how: 'shop', from: dropAt(2027, 6, 1) },
   eurofranks: { name: 'Euro Franks', how: 'shop', from: dropAt(2027, 6, 15) },   // flags pack, part 1 (stylized flags, no coats of arms beyond simplified Croatia)
+  backyardlegends: { name: 'Backyard Legends', how: 'shop', from: dropAt(2027, 6, 15) },   // Father's Day is Jun 20
   globalgrill: { name: 'Global Grill', how: 'shop', from: dropAt(2027, 6, 22) },   // flags pack, part 2, week of the Women's World Cup kickoff
   redwhiteandbun: { name: 'Red, White & Bun', how: 'shop', from: dropAt(2027, 6, 29) },   // held for July 4
+  traveltroubles: { name: 'Travel Troubles', how: 'shop', from: dropAt(2027, 7, 6) },   // summer travel
+  dessertdisasters: { name: 'Dessert Disasters', how: 'shop', from: dropAt(2027, 7, 13) },   // National Ice Cream Day is Jul 18
+  thingswithwheels: { name: 'Things with Wheels', how: 'shop', from: dropAt(2027, 7, 20) },
+  petpeeves: { name: 'Pet Peeves', how: 'shop', from: dropAt(2027, 7, 27) },
+  unnecessaryaccessories: { name: 'Unnecessary Accessories', how: 'shop', from: dropAt(2027, 8, 3) },
+  schooldays: { name: 'School Days', how: 'shop', from: dropAt(2027, 8, 17) },   // back to school
   piratesandtreasure: { name: 'Pirates & Treasure', how: 'shop', from: dropAt(2027, 9, 14) },   // Talk Like a Pirate Day week
   frightbites: { name: 'Fright Bites', how: 'shop', from: dropAt(2027, 10, 5) },   // spooky pack, held for Halloween
+  hairraising: { name: 'Hair-Raising', how: 'shop', from: dropAt(2027, 10, 12) },
+  minimonsters: { name: 'Mini Monsters', how: 'shop', from: dropAt(2027, 10, 19) },
+  magicalmishaps: { name: 'Magical Mishaps', how: 'shop', from: dropAt(2027, 10, 26) },   // Halloween week
   // Premium Collection: own prices per costume (SKINS price), $16.99 for all four, purchase only (never BunBux), shine effects.
   // Held until Alan approves it: PREMIUM_HOLD keeps it hidden (vault and ?dropdate=2099-01-02 on test sites show it). Set a real dropAt() to launch.
   preciousgems: { name: 'Precious Metals & Gems', how: 'shop', premium: true, colPrice: '$16.99', from: PREMIUM_HOLD,
@@ -1229,7 +1304,7 @@ const BUX_COST = 300, BUX_DAILY = 25;
 // Limited Edition: costumes (one or two per Collection) that can only be bought, never unlocked with BunBux (same list as BUX_LIMITED in the API)
 const SKINS_LIMITED = ['santa', 'bernedoodle', 'labradoodle', 'persian', 'mainecoon', 'slamdunk', 'goalgetter', 'axolotl', 'anglerfish', 'unidentifiedfryingobject', 'babykaiju', 'phoenix', 'shadowwizard',
   'glazedandconfused', 'blanketburrito', 'royaltreatment', 'raccoon', 'forkimpostor', 'professorfrank', 'glowgetter', 'specialdelivery',
-  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland', 'bison', 'flamingo', 'ladyliberty', 'happy', 'rainbow', 'kingofcards', 'daydreamer', 'detective', 'spilledthetea', 'galaxydonut', 'arcadecabinet', 'secretagent', 'rockfrank', 'dragonmailcarrier', 'earlybird', 'captainfrankbeard', 'powerup', 'unitedkingdom', 'unitedstates', 'hawaiivolcanoes', 'california', 'giraffe', 'polarbear'];
+  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland', 'bison', 'flamingo', 'ladyliberty', 'happy', 'rainbow', 'kingofcards', 'daydreamer', 'detective', 'spilledthetea', 'galaxydonut', 'arcadecabinet', 'secretagent', 'rockfrank', 'dragonmailcarrier', 'earlybird', 'captainfrankbeard', 'vacuumviking', 'wafflewarrior', 'knittingninja', 'kayakcaptain', 'trexlibrarian', 'grillking', 'airportsprinter', 'runawaycupcake', 'shoppingcartracer', 'brickstep', 'hatonahat', 'bandpractice', 'mullet', 'googlygoo', 'frogprince', 'powerup', 'unitedkingdom', 'unitedstates', 'hawaiivolcanoes', 'california', 'giraffe', 'polarbear'];
 function skinLimited(id) { return SKINS_LIMITED.indexOf(id) >= 0; }
 function skinPremium(s) { const G = s && SKIN_GROUPS[s.group]; return !!(G && G.premium); }
 function skinBadge(s) { return SKIN_GROUPS[s.group].noCol ? '👑 ULTRA EXCLUSIVE' : '💎 PREMIUM'; }
