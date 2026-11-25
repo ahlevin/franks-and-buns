@@ -2145,7 +2145,7 @@ const PACKS_SHARE_URL = (PACKS_API.indexOf('https://') === 0 ? 'https://franksan
 let packsResult = null;
 let packsAfterBuy = '';   // name of what was just bought on the website: the Recovery code screen opens to save it   // Game Over: null, 'wait', 'off' (couldn't reach Dog Houses) or the server's answer for this game
 let packsApproval = true;   // new Packs: the leader lets each player in, unless they pick "Anyone with the code"
-let packsMe = null, packsView = 'home', packsCur = null, packsBoard = 'week', packsBusy = false, packsMsg = '', packsConfirm = '', packsEdit = false, packsPrefill = '';
+let packsMe = null, packsView = 'home', packsCur = null, packsBoard = 'all', packsBusy = false, packsMsg = '', packsConfirm = '', packsEdit = false, packsPrefill = '';
 function packsToken() { return safeGet('fb_pack_token') || ''; }
 function packsEsc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 async function packsCall(method, path, body) {
