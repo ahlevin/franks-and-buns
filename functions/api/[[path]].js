@@ -95,7 +95,7 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS players (id TEXT PRIMARY KEY, token_hash TEXT NOT NULL UNIQUE, nickname TEXT NOT NULL,
      best INTEGER NOT NULL DEFAULT 0, best_at INTEGER, last_score_at INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS packs (id TEXT PRIMARY KEY, code TEXT NOT NULL UNIQUE, name TEXT NOT NULL, owner_id TEXT NOT NULL,
-     default_board TEXT NOT NULL DEFAULT 'week', created_at INTEGER NOT NULL, approval INTEGER NOT NULL DEFAULT 1)`,
+     default_board TEXT NOT NULL DEFAULT 'all', created_at INTEGER NOT NULL, approval INTEGER NOT NULL DEFAULT 1)`,
   `CREATE TABLE IF NOT EXISTS members (pack_id TEXT NOT NULL, player_id TEXT NOT NULL, joined_at INTEGER NOT NULL,
      PRIMARY KEY (pack_id, player_id))`,
   `CREATE INDEX IF NOT EXISTS members_player ON members (player_id)`,
@@ -488,7 +488,7 @@ async function route(request, env, path) {
     const p = await needPlayer(db, request);
     await needName(db, p, body, ip);
     const name = cleanName(body.name, 3, 24, 'Dog House name');
-    const defaultBoard = body.defaultBoard === 'all' ? 'all' : 'week';
+    const defaultBoard = body.defaultBoard === 'week' ? 'week' : 'all';
     const approval = body.approval === false ? 0 : 1;
     if ((await packCount(db, p.id)) >= MAX_PACKS_PER_PLAYER) fail(409, `You can be in up to ${MAX_PACKS_PER_PLAYER} Dog Houses. Quit one to make a new one.`);
     if (!(await underLimit(db, 'nk:' + p.id, NEW_PACKS_PER_PLAYER_PER_DAY))) fail(429, 'That is a lot of new Dog Houses for one day. Try again tomorrow.');
