@@ -2643,8 +2643,9 @@ let bestScore = parseInt(safeGet('fb_best') || '0', 10);
 if (!(bestScore >= 0 && bestScore < 1e9)) bestScore = 0;
 // --- Feature switches. flags.json on franksandbuns.com turns each one on or off for everyone, apps included, so a feature can be
 // rolled back without an app update. Until it loads, the last answer this device saw is used (off on a first visit).
-// Test copies of the site can force one: ?stages=on|off, ?secondwind=on|off
-const FEAT = { stages: false, secondwind: false };
+// Test copies of the site can force one: ?stages=on|off, ?secondwind=on|off, ?firsttips=on|off
+// firsttips starts on, so a brand-new player gets the tips even before flags.json arrives; flags.json can still turn it off.
+const FEAT = { stages: false, secondwind: false, firsttips: true };
 function featApply(f) { if (f && typeof f === 'object') for (const k in FEAT) if (typeof f[k] === 'boolean') FEAT[k] = f[k]; }
 function featForce() {
   if (!SHOP_TESTHOST) return;
@@ -4022,6 +4023,16 @@ function drawHUD() {
   }
 }
 
+// TAP TO START / TAP TO RETRY: yellow text in the same yellow-outlined pill as the other buttons (tapping anywhere still plays)
+function drawTapPill(label, cy) {
+  ctx.save(); ctx.font = 'bold 18px Arial'; ctx.textAlign = 'center';
+  const w = Math.min(W - 40, ctx.measureText(label).width + 48), h = 36, x = W / 2 - w / 2, y = cy - h / 2;
+  ctx.fillStyle = 'rgba(0,0,0,0.55)'; rrect(x, y, w, h, h / 2); ctx.fill();
+  ctx.globalAlpha = 0.8 + Math.sin(frameCount * 0.06) * 0.2;   // the same gentle pulse as before
+  ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2; rrect(x, y, w, h, h / 2); ctx.stroke();
+  ctx.fillStyle = '#FFD700'; ctx.fillText(label, W / 2, cy + 6);
+  ctx.restore();
+}
 function drawMenu() {
   if (artReady('start')) {
     const si = bgArt.start, sh = si.naturalHeight * W / si.naturalWidth;
@@ -4044,9 +4055,8 @@ function drawMenu() {
     ctx.fillText('RELEASE to let it drop',W/2,H*0.58+24);
     ctx.fillText('Land in buns to score!',W/2,H*0.58+48);
   }
-  ctx.fillStyle='#FF6600'; ctx.font='bold 22px Arial';
-  ctx.globalAlpha=0.8+Math.sin(frameCount*0.06)*0.2; ctx.fillText('TAP TO START',W/2,Math.min(H*0.80,sideBtnY()-14)); ctx.globalAlpha=1;
   ctx.restore();
+  drawTapPill('TAP TO START', Math.min(H*0.80-7, sideBtnY()-24));
   const r = scoresBtnRect();
   ctx.fillStyle = 'rgba(0,0,0,0.45)'; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.fill();
   ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.stroke();
@@ -4678,7 +4688,7 @@ function drawGameOver() {
   drawPacksPill();
   drawSkinsGoButton();
   drawShareGoButton();
-  if (gameOverDelay>40) { ctx.fillStyle='#FF6600'; ctx.font='bold 20px Arial'; ctx.globalAlpha=0.8+Math.sin(frameCount*0.06)*0.2; ctx.fillText('TAP TO RETRY',W/2,H*0.82); ctx.globalAlpha=1; }
+  if (gameOverDelay>40) drawTapPill('TAP TO RETRY', Math.max(H*0.82-7, H*0.65+114));   // stays clear of a full Wienerboard on short screens
   drawLeaderboard(H * 0.65);
   drawGcButton();
   const quips=['"You\'re on a roll!"','"No bun intended."','"That was a frank failure."','"Ketchup to the competition!"','"Mustard up more courage!"','"Relish the attempt!"'];
@@ -4746,6 +4756,25 @@ function drawIntroDog(x, y, falling) {
   ctx.restore();
 }
 
+// --- First-time tips (switch: FEAT.firsttips): a brand-new player (no finished game, no best score) sees three short
+// captions during the opening chase. Test copies of the site can pretend to be new with ?newplayer=on.
+const INTRO_TIPS = [{ from: 0, to: 50, t: '👍 Thumbs ready!' }, { from: 50, to: 102, t: 'TAP to fly!' }, { from: 102, to: 999, t: 'Land in the bun!' }];
+function firstTimer() {
+  if (/\.pages\.dev$|^localhost$|^127\.0\.0\.1$/.test(location.hostname) && new URLSearchParams(location.search).get('newplayer') === 'on') return true;
+  return !(parseInt(safeGet('fb_games') || '0', 10) > 0) && !(bestScore > 0);
+}
+function introTipsOn() { return FEAT.firsttips && firstTimer(); }
+function drawIntroTips(frame) {
+  const tip = INTRO_TIPS.find(k => frame >= k.from && frame < k.to); if (!tip) return;
+  const age = frame - tip.from, a = Math.min(1, age / 8), pop = 1 + Math.max(0, 1 - age / 8) * 0.25;
+  ctx.save(); ctx.globalAlpha = a; ctx.translate(W / 2, H * 0.27); ctx.scale(pop, pop);
+  ctx.font = 'bold 30px Arial'; ctx.textAlign = 'left';
+  const tw = ctx.measureText(tip.t).width, fit = Math.min(1, (W - 40) / tw); ctx.scale(fit, fit);
+  ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 3;
+  ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(40,20,5,0.9)'; ctx.strokeText(tip.t, -tw / 2, 10);   // left-aligned and measured: iOS misplaces centred text with an emoji
+  ctx.shadowColor = 'transparent'; ctx.fillStyle = '#FFD700'; ctx.fillText(tip.t, -tw / 2, 10);
+  ctx.restore();
+}
 function drawIntro() {
   // Draw kitchen BG
   drawKitchenBG();
@@ -4787,6 +4816,7 @@ function drawIntro() {
     }
   }
 
+  if (introTipsOn()) { drawIntroTips(f.frame); return; }   // a new player gets the tips instead of TAP TO SKIP (a tap still starts)
   // "TAP TO SKIP" hint
   if (f.frame > 20) {
     ctx.save();
