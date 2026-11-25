@@ -4022,6 +4022,16 @@ function drawHUD() {
   }
 }
 
+// TAP TO START / TAP TO RETRY: yellow text in the same yellow-outlined pill as the other buttons (tapping anywhere still plays)
+function drawTapPill(label, cy) {
+  ctx.save(); ctx.font = 'bold 18px Arial'; ctx.textAlign = 'center';
+  const w = Math.min(W - 40, ctx.measureText(label).width + 48), h = 36, x = W / 2 - w / 2, y = cy - h / 2;
+  ctx.fillStyle = 'rgba(0,0,0,0.55)'; rrect(x, y, w, h, h / 2); ctx.fill();
+  ctx.globalAlpha = 0.8 + Math.sin(frameCount * 0.06) * 0.2;   // the same gentle pulse as before
+  ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2; rrect(x, y, w, h, h / 2); ctx.stroke();
+  ctx.fillStyle = '#FFD700'; ctx.fillText(label, W / 2, cy + 6);
+  ctx.restore();
+}
 function drawMenu() {
   if (artReady('start')) {
     const si = bgArt.start, sh = si.naturalHeight * W / si.naturalWidth;
@@ -4044,9 +4054,8 @@ function drawMenu() {
     ctx.fillText('RELEASE to let it drop',W/2,H*0.58+24);
     ctx.fillText('Land in buns to score!',W/2,H*0.58+48);
   }
-  ctx.fillStyle='#FF6600'; ctx.font='bold 22px Arial';
-  ctx.globalAlpha=0.8+Math.sin(frameCount*0.06)*0.2; ctx.fillText('TAP TO START',W/2,Math.min(H*0.80,sideBtnY()-14)); ctx.globalAlpha=1;
   ctx.restore();
+  drawTapPill('TAP TO START', Math.min(H*0.80-7, sideBtnY()-24));
   const r = scoresBtnRect();
   ctx.fillStyle = 'rgba(0,0,0,0.45)'; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.fill();
   ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.stroke();
@@ -4678,7 +4687,7 @@ function drawGameOver() {
   drawPacksPill();
   drawSkinsGoButton();
   drawShareGoButton();
-  if (gameOverDelay>40) { ctx.fillStyle='#FF6600'; ctx.font='bold 20px Arial'; ctx.globalAlpha=0.8+Math.sin(frameCount*0.06)*0.2; ctx.fillText('TAP TO RETRY',W/2,H*0.82); ctx.globalAlpha=1; }
+  if (gameOverDelay>40) drawTapPill('TAP TO RETRY', Math.max(H*0.82-7, H*0.65+114));   // stays clear of a full Wienerboard on short screens
   drawLeaderboard(H * 0.65);
   drawGcButton();
   const quips=['"You\'re on a roll!"','"No bun intended."','"That was a frank failure."','"Ketchup to the competition!"','"Mustard up more courage!"','"Relish the attempt!"'];
