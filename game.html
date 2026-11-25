@@ -2687,7 +2687,9 @@ function drawStageBanner() {
 // --- Second Wind: once a run, after the last life, spend BunBux to keep going (switch: FEAT.secondwind)
 const WIND_COST = 50, WIND_FRAMES = 360;   // 6 s to decide
 let windUsed = false, windTimer = 0, windBusy = false, windMsg = '';
-function windCanOffer() { return FEAT.secondwind && !windUsed && !SKINS_ALL && score > 0 && !!packsToken() && buxShown() >= WIND_COST; }
+// Preview test: ?wind=test on a pages.dev preview or localhost offers Second Wind whatever the balance, and spends no real BunBux
+const WIND_TEST = /\.pages\.dev$|^localhost$|^127\.0\.0\.1$/.test(location.hostname) && new URLSearchParams(location.search).get('wind') === 'test';
+function windCanOffer() { return (FEAT.secondwind || WIND_TEST) && !windUsed && score > 0 && (WIND_TEST || (!SKINS_ALL && !!packsToken() && buxShown() >= WIND_COST)); }
 function windYesRect() { const w = Math.min(260, W - 40); return { x: W/2 - w/2, y: H * 0.52, w: w, h: 50 }; }
 function windNoRect() { return { x: W/2 - 70, y: H * 0.52 + 64, w: 140, h: 38 }; }
 function windHit(r, p) { return p.x >= r.x - 6 && p.x <= r.x + r.w + 6 && p.y >= r.y - 6 && p.y <= r.y + r.h + 6; }
@@ -2702,9 +2704,11 @@ function isWindTap(cx, cy) {
 async function windAccept() {
   windBusy = true; windMsg = '';
   try {
-    await buxFlush();   // send waiting games first, so the server's balance matches what the player sees
-    const j = await packsCall('POST', 'me/bux/wind', {});
-    buxKeep(j.bux); if (packsMe && packsMe.player) packsMe.player.bux = j.bux;
+    if (!WIND_TEST) {
+      await buxFlush();   // send waiting games first, so the server's balance matches what the player sees
+      const j = await packsCall('POST', 'me/bux/wind', {});
+      buxKeep(j.bux); if (packsMe && packsMe.player) packsMe.player.bux = j.bux;
+    }
     windUsed = true; windBusy = false;
     state = STATE.PLAYING; lives = 1; frank.alive = true; frank.y = H * 0.35; frank.vy = 0;
     gracePeriod = GRACE_FRAMES; forks = [];
@@ -2719,7 +2723,7 @@ function drawWind() {
   ctx.fillStyle = '#7CFC00'; ctx.font = 'bold 34px Arial'; ctx.fillText('SECOND WIND?', W/2, H * 0.28);
   ctx.fillStyle = '#FFD700'; ctx.font = 'bold 24px Arial'; ctx.fillText(score.toLocaleString(), W/2, H * 0.36);
   ctx.fillStyle = '#ddd'; ctx.font = '15px Arial'; ctx.fillText('Keep this run going with 1 life.', W/2, H * 0.42);
-  ctx.fillText('You have ' + buxShown() + ' BunBux.', W/2, H * 0.42 + 22);
+  ctx.fillText(WIND_TEST ? 'Test mode: no BunBux will be spent.' : 'You have ' + buxShown() + ' BunBux.', W/2, H * 0.42 + 22);
   const y = windYesRect();
   ctx.fillStyle = windBusy ? '#4a7a20' : '#5BBF1E'; rrect(y.x, y.y, y.w, y.h, 25); ctx.fill();
   ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2; rrect(y.x, y.y, y.w, y.h, 25); ctx.stroke();
@@ -4656,9 +4660,16 @@ function drawGameOver() {
     ctx.textAlign='center';
   }
   const sy=H*0.50; ctx.fillStyle='#ddd'; ctx.font='14px Arial';
-  ctx.fillText('Franks Landed: '+franksLanded+'  ·  Boxes Packed: '+boxesCompleted,W/2,sy);
-  ctx.fillText('Best Streak: '+bestStreak+'  ·  Best: '+bestScore.toLocaleString(),W/2,sy+24);
-  if (FEAT.stages && stage > 1) { ctx.fillStyle='#7CFC00'; ctx.font='bold 14px Arial'; ctx.fillText('Reached Stage '+stage+': '+stageName(stage)+(bestStage>stage?'  ·  Best: Stage '+bestStage:''),W/2,sy+48); }
+  if (FEAT.stages && stage > 1) {   // same two lines, so the stage never runs into the Dog Houses button below
+    ctx.fillText('Franks: '+franksLanded+'  ·  Boxes: '+boxesCompleted+'  ·  Best Streak: '+bestStreak,W/2,sy);
+    const st='Stage '+stage+': '+stageName(stage), rest='  ·  Best: '+bestScore.toLocaleString();
+    ctx.font='bold 14px Arial'; const w1=ctx.measureText(st).width; ctx.font='14px Arial'; const w2=ctx.measureText(rest).width;
+    ctx.textAlign='left'; ctx.fillStyle='#7CFC00'; ctx.font='bold 14px Arial'; ctx.fillText(st,W/2-(w1+w2)/2,sy+24);
+    ctx.fillStyle='#ddd'; ctx.font='14px Arial'; ctx.fillText(rest,W/2-(w1+w2)/2+w1,sy+24); ctx.textAlign='center';
+  } else {
+    ctx.fillText('Franks Landed: '+franksLanded+'  ·  Boxes Packed: '+boxesCompleted,W/2,sy);
+    ctx.fillText('Best Streak: '+bestStreak+'  ·  Best: '+bestScore.toLocaleString(),W/2,sy+24);
+  }
   drawPacksPill();
   drawSkinsGoButton();
   drawShareGoButton();
