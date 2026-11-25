@@ -8,7 +8,10 @@ rm -rf dist
 mkdir -p dist
 
 # Site pages, images, videos (how-to-play.mp4) and config files at the top level
-cp *.html *.png *.jpg *.mp4 *.ico ads.txt robots.txt sitemap.xml _headers _redirects dist/
+cp *.html *.png *.jpg *.mp4 *.ico ads.txt robots.txt sitemap.xml llms.txt llms-full.txt _headers _redirects dist/
+
+# AI-facing guide for agents (franksandbuns.com/AGENTS.md); kept in ai/ so coding tools don't read it as repo instructions
+cp ai/AGENTS.md dist/AGENTS.md
 
 # App links: lets Pack invite links (franksandbuns.com/join/CODE) open the iPhone and Android apps
 cp -R .well-known dist/

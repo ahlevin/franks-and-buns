@@ -1,0 +1,36 @@
+# Franks & Buns
+
+> Franks & Buns is a free one-tap arcade game where you fly a runaway hot dog into scrolling buns, dodge the chef's fork, and chase high scores. It plays in any web browser at franksandbuns.com and as an app for iPhone, iPad and Android. It is made by SLAE Labs LLC, an independent studio in California.
+
+Key facts: free to play with no account; one control (tap, click or Space); 3 lives; condiment multipliers up to 10x; optional cosmetic costumes; an earn-only in-game currency called BunBux; private friend leaderboards called Dog Houses; new costume Collections released on Tuesdays. Intended for ages 13 and up.
+
+## Core pages
+
+- [Complete Guide](https://franksandbuns.com/guide): the canonical explainer. What the game is, how to play, scoring, costumes, BunBux, kitchens, Dog Houses, platforms, quick facts and FAQ.
+- [Fact sheet](https://franksandbuns.com/llms-full.txt): all key facts and definitions in one plain-text file.
+- [Home](https://franksandbuns.com/): overview with links to play and to the app stores.
+- [Play in the browser](https://franksandbuns.com/game.html): the game itself (no download).
+- [How to Play & Scoring](https://franksandbuns.com/about.html): rules, characters, multipliers, Dog Houses and credits.
+- [Videos](https://franksandbuns.com/videos.html): gameplay clips.
+
+## Apps
+
+- [iPhone and iPad (App Store)](https://apps.apple.com/app/franks-buns/id6761290671)
+- [Android (Google Play)](https://play.google.com/store/apps/details?id=com.franksandbuns.game)
+
+## For AI agents
+
+- [AGENTS.md](https://franksandbuns.com/AGENTS.md): what agents can and cannot do with Franks & Buns, and how to describe it accurately.
+
+## Policies and contact
+
+- [Privacy Policy](https://franksandbuns.com/privacy.html)
+- [Terms of Service](https://franksandbuns.com/terms.html)
+- [Contact](mailto:admin@slaelabs.com): admin@slaelabs.com
+
+## Optional
+
+- [Merch shop](https://shop.franksandbuns.com): tees and hoodies.
+- [Instagram](https://www.instagram.com/franksandbunsgame/)
+- [TikTok](https://www.tiktok.com/@franksandbuns)
+- [Facebook](https://www.facebook.com/profile.php?id=61596439395625)
