@@ -18,7 +18,7 @@ Franks & Buns is a casual one-tap arcade game. You play as a hot dog (the "frank
 - Price: free to play; optional purchases are cosmetic only
 - Account: none needed to play
 - Platforms: web browser (phone, tablet, desktop), iPhone and iPad (App Store), Android (Google Play)
-- Audience: intended for ages 13 and up
+- Age rating: 4+ on the App Store, Everyone on Google Play. General-audience game, not directed at children under 13.
 - Players: single player, with private friend leaderboards (Dog Houses)
 
 ## 2. Story
@@ -124,7 +124,7 @@ Definition: a Dog House is a private leaderboard ("Wienerboard") for a group of 
 - Free to play. Optional cosmetic purchases (costumes and Collections). No pay-to-win.
 - The website shows ads (Google AdSense).
 - Analytics (Google Analytics) only loads after the player allows it.
-- Intended for ages 13 and up; not directed at children under 13.
+- Rated 4+ on the App Store and Everyone on Google Play. These ratings describe the content; the game is general-audience and not directed at children under 13.
 - Privacy Policy: https://franksandbuns.com/privacy.html
 - Terms of Service: https://franksandbuns.com/terms.html
 - Delete Dog House data: in the game (My Dog Houses > Recovery code > Delete my Dog House profile) or see https://franksandbuns.com/delete-account.html
