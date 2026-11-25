@@ -3219,7 +3219,7 @@ function update() {
   frank.squash += (1-frank.squash)*0.15;
   frank.stretch += (1-frank.stretch)*0.15;
   if (frank.y < 10) { frank.y=10; frank.vy=0.5; }
-  if (frank.y > H-30) { frank.y=H-30; frank.vy=0; loseLifeNoGrace(); }
+  if (frank.y > H-30) { frank.y=H-30; frank.vy=0; loseLife(); }
 
   scrollX += scrollSpeed;
   nextBunDist -= scrollSpeed;
@@ -3368,12 +3368,6 @@ function landFrank(bun) {
   frank.vy=FLAP_POWER*0.7; frank.squash=0.7; frank.stretch=1.4;
 }
 
-function loseLifeNoGrace() {
-  const saved = gracePeriod;
-  gracePeriod = 0;
-  loseLife();
-  gracePeriod = saved;
-}
 let shieldMsgAt = -999;
 function loseLife() {
   if (chiliRush > 0) {   // Chili Rush is a full shield: missed buns and the floor cost no life either
@@ -3385,7 +3379,10 @@ function loseLife() {
     }
     return;
   }
-  if (gracePeriod > 0) return;
+  if (gracePeriod > 0) {   // still glowing from the last hit: safe, and the floor bounces the frank back up
+    if (frank.y >= H - 40) { frank.vy = FLAP_POWER; frank.squash = 1.3; frank.stretch = 0.7; }
+    return;
+  }
   lives--; streak=0; gracePeriod=GRACE_FRAMES; sndSplat();
   addSplat(frank.x, frank.y);
   addParticles(frank.x, frank.y, '#CC1111', 18);
