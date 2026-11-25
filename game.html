@@ -2659,7 +2659,12 @@ try {
 } catch (e) {}
 
 // --- Stages: after each Dog Parade the run moves up a stage, with a banner and a points bonus (switch: FEAT.stages)
-const STAGE_NAMES = ['Kitchen', 'Tailgate', 'Food Truck Rally', 'Ballpark Frenzy', 'State Fair', 'Grill Masters', 'Hall of Flame'];
+// A new stage after every Dog Parade. Past the last name, the last one repeats with a number: Hall of Flame 2, 3, 4 and on
+const STAGE_NAMES = ['Kitchen', 'Tailgate', 'Food Truck Rally', 'Ballpark Frenzy', 'State Fair', 'Block Party', 'Boardwalk Bash',
+  'County Cookout', 'Midway Madness', 'Lunch Rush', 'Rooftop Grill', 'Fireworks Night', 'Stadium Showdown', 'Bun Run 500',
+  'Mustard Mountain', 'Ketchup Canyon', 'Relish Rapids', 'Chili Volcano', 'Frankfurter Frontier', 'Sausage Summit', 'Hot Dog Hall',
+  'Big Bun Bowl', 'World Wiener Cup', 'Grill Masters', 'Frank Legends', 'Bun Galaxy', 'Wiener Wonderland', 'Condiment Kingdom',
+  'Top Dog Tower', 'Hall of Flame'];
 const STAGE_BONUS = 1000;   // points for reaching stage n: (n - 1) x this
 function stageName(n) { return n <= STAGE_NAMES.length ? STAGE_NAMES[n - 1] : STAGE_NAMES[STAGE_NAMES.length - 1] + ' ' + (n - STAGE_NAMES.length + 1); }
 let stage = 1, stageBanner = 0;
