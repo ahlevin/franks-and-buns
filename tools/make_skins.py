@@ -44,7 +44,9 @@ FRAMES = {'bunny': ['bunny-a', 'bunny-b'], 'dragon': ['dragon-a', 'dragon-b'], '
 BUN_PX = {'poodle': 560, 'ragdoll': 600, 'persian': 600, 'sad': 636, 'forgotthebuns': 613, 'wrongturn': 603, 'bunbandit': (628, 1048),
           'gardengnome': (655, 1035, 633), 'laundryday': (631, 1076, 653), 'plantparent': (622, 1058, 633), 'lostluggage': (660, 1068, 650),
           'rollerskate': (633, 1065, 630), 'officechair': (660, 1067, 540), 'airportsprinter': (530, 1075, 554), 'shoppingcartracer': (655, 1063, 532),
-          'brickstep': (560, 1020, 544)}   # (width, centre x) where the colour check misses the bun   # sad: rain boots hang below the bun
+          'brickstep': (560, 1020, 544), 'dieselengine': (670, 1083), 'bakedbeans': (554, 1058), 'lemonade': (542, 1056), 'tomatosoup': (536, 1059),
+          'dojochamp': (635, 1059.5), 'karatemaster': (639, 1066), 'nightninja': (605, 1080), 'chaosdad': (556, 1025, 626),
+          'sitcommom': (572, 1052, 590), 'trailerparkdad': (574, 1034, 583), 'trailerparkmom': (554, 1031, 590)}   # (width, centre x) where the colour check misses the bun   # sad: rain boots hang below the bun
 # Collections cut by automatic body measurement (folder -> skins); ids are the file names without hyphens
 AUTO_SETS = ['questionable-decisions', 'space-cases', 'tiny-terrors', 'deep-sea-dogs', 'final-boss-franks', 'mythical-misfits',
              'trash-pack', 'sports', 'snack-pack', 'cozy-crew', 'main-character-energy',
@@ -52,7 +54,9 @@ AUTO_SETS = ['questionable-decisions', 'space-cases', 'tiny-terrors', 'deep-sea-
              'game-night', 'career-day', 'oops-all-franks', 'brain-modes', 'weather-report',
              'music-festival', 'mystery-and-mayhem', 'mythical-professions', 'retro-tech', 'everyday-icons', 'fantasy-foods', 'pirates-and-treasure',
              'backyard-legends', 'rise-and-dine', 'cleanup-crew', 'dessert-disasters', 'dinos-in-disguise', 'hair-raising', 'wild-hobbies',
-             'magical-mishaps', 'mini-monsters', 'outdoor-adventure', 'pet-peeves', 'school-days', 'things-with-wheels', 'travel-troubles', 'unnecessary-accessories']
+             'magical-mishaps', 'mini-monsters', 'outdoor-adventure', 'pet-peeves', 'school-days', 'things-with-wheels', 'travel-troubles', 'unnecessary-accessories',
+             'all-aboard', 'blast-off', 'cans-and-bottles', 'campus-life', 'famous-sculptures', 'lunar-new-year', 'japanese-heroes',
+             'sitcom-families', 'fashion-couture', 'robot-rally']
 import glob, os
 for folder in AUTO_SETS:
     for f in sorted(glob.glob(f'{SRC}/{folder}/*.png')):
@@ -85,6 +89,10 @@ def runs(alpha):
         gl = out[i][0] - out[i - 1][1] if i > 0 else 1e9; gr = out[i + 1][0] - out[i][1] if i < len(out) - 1 else 1e9
         j = i - 1 if gl <= gr else i + 1; a, b = sorted((i, j))
         out[a:b + 1] = [(out[a][0], out[b][1])]
+    # pictures that touch (a long dragon): split the widest piece at its thinnest column near the middle
+    while len(out) < 3:
+        i = max(range(len(out)), key=lambda k: out[k][1] - out[k][0]); a, b = out[i]; m = (b - a) // 5
+        x = a + m + int(np.argmin(col[a + m:b - m + 1])); out[i:i + 1] = [(a, x - 1), (x, b)]
     assert len(out) == 3, out
     return out
 
