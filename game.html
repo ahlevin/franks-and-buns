@@ -306,7 +306,7 @@ function recordRun() {
   loadRuns();
   lastRunIndex = -1;
   if (score <= 0) return;
-  const run = { score: score, franks: franksLanded, boxes: boxesCompleted, streak: bestStreak, date: Date.now() };
+  const run = { score: score, franks: franksLanded, boxes: boxesCompleted, streak: bestStreak, date: Date.now(), frames: runFrames };
   bestRuns.push(run);
   bestRuns.sort((a, b) => b.score - a.score);
   bestRuns = bestRuns.slice(0, 5);
@@ -2236,7 +2236,23 @@ function packsKeepMe(j) {
   if (j && j.player && /^fb_[0-9a-f]{40}$/.test(j.player.buyerId || '')) { safeSet('fb_buyer_id', j.player.buyerId); safeSet('fb_buyer_tok', packsToken()); }
   if (j && j.token) { packsCloudSave(); if (SHOP_STORE) shopLink().catch(() => {}); }
   else if (j && j.player && SHOP_STORE) shopLink().catch(() => {});   // no-op unless the buyer id changed
-  if (j && j.player) { packsMe = { player: j.player, packs: j.packs || [], requests: j.requests || [] }; skinsMerge(j.player.skins); buxKeep(j.player.bux); }
+  if (j && j.player) { packsMe = { player: j.player, packs: j.packs || [], requests: j.requests || [] }; skinsMerge(j.player.skins); buxKeep(j.player.bux); packsBestSync(); }
+}
+// Best scores (switch: FEAT.mergecode). The profile's best and this device's best can differ: games played before the player
+// picked a name or entered their recovery code were never sent. Each side takes the higher one, so it shows everywhere.
+let packsBestSent = 0;
+function packsBestSync() {
+  if (!FEAT.mergecode || !packsMe || !packsMe.player.nickname) return;
+  const server = packsMe.player.best || 0;
+  if (server > bestScore && server < 1e9) { bestScore = server; safeSet('fb_best', String(server)); }
+  if (bestScore <= server || bestScore <= packsBestSent || !packsToken()) return;
+  packsBestSent = bestScore;
+  loadRuns();
+  const top = bestRuns[0] && bestRuns[0].score === bestScore ? bestRuns[0] : null;
+  const body = { score: bestScore, franks: top && top.franks != null ? top.franks : 0, boxes: top && top.boxes != null ? top.boxes : 0 };
+  if (top && Number.isInteger(top.frames)) body.frames = top.frames;
+  if (top && top.date) body.at = top.date;
+  packsCall('POST', 'me/best', body).then(r => { if (r && r.best && packsMe) packsMe.player.best = Math.max(packsMe.player.best || 0, r.best); }, () => {});
 }
 function packsIsOpen() { const b = document.getElementById('fb-packs'); return !!(b && b.style.display !== 'none'); }
 // Play button in My Dog Houses: close it and start a game (from the start screen or Game Over)
@@ -2506,7 +2522,7 @@ function packsClick(e) {
   });
   if (a === 'rename') packsDo(async keep => { packsKeepMe(await packsCall('POST', 'me/name', { nickname: keep['fbp-nick2'] })); packsView = 'home'; packsMsg = '✓ Name saved.'; });
   if (a === 'restore') packsDo(async keep => {
-    const j = await packsCall('POST', 'recover', { code: keep['fbp-rc'] });
+    const j = await packsCall('POST', 'recover', { code: keep['fbp-rc'], merge: FEAT.mergecode === true });
     const before = packsToken();
     packsKeepMe(j); packsView = 'home'; packsMsg = '✓ Welcome back' + (j.player.nickname ? ', ' + j.player.nickname : '') + '!';
     if (before && before !== packsToken()) skinsPush();   // costumes won on this device join the restored profile
@@ -2747,9 +2763,10 @@ let bestScore = parseInt(safeGet('fb_best') || '0', 10);
 if (!(bestScore >= 0 && bestScore < 1e9)) bestScore = 0;
 // --- Feature switches. flags.json on franksandbuns.com turns each one on or off for everyone, apps included, so a feature can be
 // rolled back without an app update. Until it loads, the last answer this device saw is used (off on a first visit).
-// Test copies of the site can force one: ?stages=on|off, ?secondwind=on|off, ?firsttips=on|off, ?soccer=on|off (sports: see SPORTS)
+// Test copies of the site can force one: ?stages=on|off, ?secondwind=on|off, ?firsttips=on|off, ?mergecode=on|off, ?soccer=on|off (sports: see SPORTS)
+// mergecode: entering a recovery code brings along what this device already had (BunBux, costumes, best score) instead of leaving it behind.
 // firsttips starts on, so a brand-new player gets the tips even before flags.json arrives; flags.json can still turn it off.
-const FEAT = { stages: false, secondwind: false, firsttips: true, soccer: false, basketball: false, football: false, waterpolo: false, golf: false, baseball: false, cricket: false, hockey: false };
+const FEAT = { stages: false, secondwind: false, firsttips: true, mergecode: false, soccer: false, basketball: false, football: false, waterpolo: false, golf: false, baseball: false, cricket: false, hockey: false };
 // sportdates: optional windows for the sports, e.g. { "soccer": { "from": "2026-12-01", "until": "2027-01-05" } } (dates on the
 // player's clock, both days included). A sport shows only while its switch is on AND today is inside its window (no window = always).
 // sportstag: the badge on every sport card in the picker ("" hides it). Kept apart from the true/false switches so older copies ignore them.

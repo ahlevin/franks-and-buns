@@ -276,6 +276,32 @@ async function meResponse(db, p, extra) {
     requests: requests.results.map(r => ({ id: r.id, name: r.name })) }, extra || {});
 }
 
+// Entering a recovery code on a device that already had its own profile: bring that profile's things along instead of
+// leaving them behind. A nameless profile (made quietly to keep costumes and BunBux) is folded in and deleted, BunBux and
+// all. A named one keeps its own code, Dog Houses and BunBux; only its costumes and best scores are copied over.
+async function mergeOnRecover(db, p, old) {
+  if (!old || old.id === p.id) return;
+  if (!(await underLimit(db, 'mg:' + p.id, 3))) return;   // folding in profiles can't become a way round the daily BunBux cap
+  const union = (a, b) => { const out = a.slice(); b.forEach(x => { if (out.indexOf(x) < 0) out.push(x); }); return out; };
+  const skins = union(skinList(p), skinList(old)).slice(0, MAX_SKINS).join(',');
+  const stmts = [];
+  if (!old.nickname) {
+    const bs = union(buxOf(p).skins, buxOf(old).skins).join(',').slice(0, 8000);
+    stmts.push(db.prepare('UPDATE players SET skins = ?, bux_skins = ?, bux = bux + COALESCE((SELECT bux FROM players WHERE id = ?), 0) WHERE id = ?')
+        .bind(skins, bs, old.id, p.id),
+      db.prepare('DELETE FROM requests WHERE player_id = ?').bind(old.id),
+      db.prepare('DELETE FROM players WHERE id = ?').bind(old.id));
+  } else {
+    stmts.push(db.prepare('UPDATE players SET skins = ?, best = MAX(best, ?), best_at = CASE WHEN ? > best THEN ? ELSE best_at END WHERE id = ?')
+        .bind(skins, old.best || 0, old.best || 0, old.best_at, p.id),
+      db.prepare(`INSERT INTO weekly (player_id, week, best, best_at) SELECT ?, week, best, best_at FROM weekly WHERE player_id = ? AND true
+          ON CONFLICT (player_id, week) DO UPDATE SET best = MAX(best, excluded.best),
+          best_at = CASE WHEN excluded.best > best THEN excluded.best_at ELSE best_at END`).bind(p.id, old.id));
+  }
+  await db.batch(stmts);
+  Object.assign(p, await db.prepare('SELECT * FROM players WHERE id = ?').bind(p.id).first());
+}
+
 // ---------- packs ----------
 async function packForMember(db, packId, playerId) {
   const pack = await db.prepare('SELECT p.*, EXISTS (SELECT 1 FROM members m WHERE m.pack_id = p.id AND m.player_id = ?) AS is_member FROM packs p WHERE p.id = ?')
@@ -388,6 +414,8 @@ async function route(request, env, path) {
     const p = await db.prepare('SELECT * FROM players WHERE token_hash = ?').bind(await sha256(tok)).first();
     if (!p) fail(404, 'That recovery code was not found. Check it and try again.');
     await ensureBuyerId(db, p, tok);
+    // merge (switch: flags.json `mergecode`, sent by the game): the profile this device was using until now comes along
+    if (body.merge === true) await mergeOnRecover(db, p, await authPlayer(db, request));
     return meResponse(db, p, { token: fmtToken(tok) });
   }
   if (method === 'GET' && path === 'me') return meResponse(db, await needPlayer(db, request));
@@ -593,6 +621,26 @@ async function route(request, env, path) {
       }
       return board(db, pack, p.id, body.board === 'all' ? 'all' : 'week', now);
     }
+  }
+  if (method === 'POST' && path === 'me/best') {
+    // Catch-up: a best score this device has that the profile doesn't (played before the player had a name, or before
+    // entering their recovery code). Only for named profiles: nameless ones never keep scores.
+    const p = await needPlayer(db, request);
+    if (!p.nickname) return { ok: true, best: 0 };
+    const run = { score: body.score, franks: body.franks, boxes: body.boxes,
+      // runs saved before this existed have no game length: assume a slow 2 seconds a frank (still just a sanity check)
+      frames: Number.isInteger(body.frames) ? body.frames : Math.max(60, (Number(body.franks) || 0) * 120) };
+    if (!plausible(run)) fail(422, 'That score could not be checked.');
+    if (run.score <= (p.best || 0)) return { ok: true, best: p.best };
+    if (!(await underLimit(db, 'mb:' + p.id, 5))) fail(429, 'Try again tomorrow.');
+    const at = Number.isInteger(body.at) && body.at > 0 && body.at <= now ? body.at : now;
+    const stmts = [db.prepare('UPDATE players SET best = MAX(best, ?), best_at = CASE WHEN ? > best THEN ? ELSE best_at END WHERE id = ?')
+      .bind(run.score, run.score, at, p.id)];
+    if (weekKey(at) === weekKey(now)) stmts.push(db.prepare(`INSERT INTO weekly (player_id, week, best, best_at) VALUES (?, ?, ?, ?)
+        ON CONFLICT (player_id, week) DO UPDATE SET best = MAX(best, excluded.best),
+        best_at = CASE WHEN excluded.best > best THEN excluded.best_at ELSE best_at END`).bind(p.id, weekKey(now), run.score, at));
+    await db.batch(stmts);
+    return { ok: true, best: run.score };
   }
   if (method === 'POST' && path === 'score') {
     const p = await needPlayer(db, request);
