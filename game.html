@@ -390,21 +390,29 @@ const GC_BTN = { w: 230, h: 34 };
 function gcInScores() { return state === STATE.MENU && scoresOpen; }
 function gcBtnRect() {
   if (gcInScores()) { const pr = scoresPanelRect(); return { x: W / 2 - GC_BTN.w / 2, y: pr.y + pr.h - 76, w: GC_BTN.w, h: GC_BTN.h }; }
-  return { x: W / 2 - GC_BTN.w / 2, y: H * 0.115 - GC_BTN.h / 2, w: GC_BTN.w, h: GC_BTN.h };
+  // Game Over: a compact button in the top row between SHARE and SKINS, so it never sits on the Game Mode pill below
+  const w = Math.max(96, Math.min(150, W - 228)); return { x: W / 2 - w / 2, y: 12, w: w, h: 30 };
 }
 function gcBtnVisible() { return (state === STATE.GAMEOVER || gcInScores()) && !!gcPlugin(); }
-function gcBtnLabel() { return gcSignedIn ? '🏆 Game Center Leaderboard' : '🏆 Connect Game Center'; }
+function gcBtnLabel() {
+  if (!gcInScores()) return gcSignedIn ? '🏆 Leaderboard' : '🏆 Game Center';
+  return gcSignedIn ? '🏆 Game Center Leaderboard' : '🏆 Connect Game Center';
+}
 function drawGcButton() {
   if (!gcBtnVisible()) return;
   const r = gcBtnRect();
   ctx.save();
   ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.roundRect(r.x, r.y, r.w, r.h, 16); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#FFD700'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(gcBtnLabel(), W / 2, r.y + r.h / 2 + 1);
+  const t = gcBtnLabel(); let fs = gcInScores() ? 14 : 13; ctx.font = 'bold ' + fs + 'px Arial';
+  const tw = ctx.measureText(t).width; if (tw > r.w - 14) { fs = Math.max(10, Math.floor(fs * (r.w - 14) / tw)); ctx.font = 'bold ' + fs + 'px Arial'; }
+  ctx.fillStyle = '#FFD700'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';   // measured: iOS misplaces centred text with an emoji
+  ctx.fillText(t, r.x + (r.w - ctx.measureText(t).width) / 2, r.y + r.h / 2 + 1);
+  ctx.textAlign = 'center';
   if (performance.now() < gcNoteUntil) {
     ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 12px Arial';
-    ctx.fillText('Sign in to Game Center in the Settings app', W / 2, r.y + r.h + 14);
+    const ny = (!gcInScores() && modeGoVisible()) ? modeGoRect().y + modeGoRect().h + 14 : r.y + r.h + 14;
+    ctx.fillText('Sign in to Game Center in the Settings app', W / 2, ny);
   }
   ctx.restore();
 }
