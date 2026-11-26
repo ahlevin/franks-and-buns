@@ -2591,13 +2591,44 @@ function packsOpenResults() { packsOpen(packsToken() && packsResult && packsResu
   if (document.readyState === 'complete') launch(); else window.addEventListener('load', launch);
 })();
 
+// --- Soccer mode sounds, made in code: a kick, a referee's whistle and a crowd cheer ---
+function sndKick(vol = 1) {
+  if (!audioCtx || muted) return;
+  const t = audioCtx.currentTime, o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(170, t); o.frequency.exponentialRampToValueAtTime(48, t + 0.11);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.32 * vol, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
+  o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + 0.16);
+  o.onended = () => { o.disconnect(); g.disconnect(); };
+  playNoise(0.05, 'highpass', 2500, 1500, 0.05 * vol, 0.7);   // the slap of the boot
+}
+function sndWhistle() {
+  if (!audioCtx || muted) return;
+  const blast = (when, dur) => {
+    const t = audioCtx.currentTime + when, o = audioCtx.createOscillator(), lfo = audioCtx.createOscillator(), lg = audioCtx.createGain(), g = audioCtx.createGain();
+    o.type = 'sine'; o.frequency.value = 2750; lfo.frequency.value = 32; lg.gain.value = 140;   // the pea rattling inside
+    lfo.connect(lg); lg.connect(o.frequency);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.07, t + 0.02); g.gain.setValueAtTime(0.07, t + dur - 0.04); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(audioCtx.destination); o.start(t); lfo.start(t); o.stop(t + dur + 0.02); lfo.stop(t + dur + 0.02);
+    o.onended = () => { o.disconnect(); lfo.disconnect(); lg.disconnect(); g.disconnect(); };
+    playNoise(dur, 'bandpass', 2800, 2600, 0.02, 2, when);
+  };
+  blast(0, 0.14); blast(0.2, 0.45);   // the short-long kickoff whistle
+}
+function sndCheer2() {
+  // a crowd roar: several bands of noise swelling and fading
+  [[0, 1.1, 900, 1300, 0.06], [0.05, 1.0, 1600, 2100, 0.035], [0.1, 0.9, 500, 700, 0.05]].forEach(([w, d, f0, f1, v]) => playNoise(d, 'bandpass', f0, f1, v, 0.8, w));
+}
+
 function sndFlap()      {
+  if (SOCCER_ON) { sndKick(); return; }
   if (playWavEffect(wavLaunchCount++ % 2 ? 'launch-bwoip-b' : 'launch-bwoip-a')) return;
   playTone(440, 0.06, 'sine', 0.10); }
 function sndLand()      {
+  if (SOCCER_ON) { sndKick(0.6); sndCheer2(); return; }
   if (playWavEffect('bun-landing', 0)) return;
   playTone(880, 0.08, 'sine', 0.15); playTone(1320, 0.12, 'sine', 0.10); sndSquish(); }
 function sndSplat()     {
+  if (SOCCER_ON) { sndKick(0.9); playNoise(0.6, 'bandpass', 500, 300, 0.05, 0.8, 0.05); return; }   // a dull thud and a groan from the crowd
   if (playWavEffect('splat', 0)) return;
   playTone(120, 0.25, 'sawtooth', 0.12); sndSplatWet(); }
 function sndBox()       {
@@ -3233,6 +3264,7 @@ function resetGame() {
   stopChaseEffects(); wavDuckUntil = 0;   // skipping the intro cuts the chase foley; gameplay music starts once
   frank = { x:70, y:H*0.4, vy:0, squash:1, stretch:1, alive:true };
   soccerKickUntil = frameCount + 28; soccerCheerUntil = 0;   // Soccer mode: the player kicks off
+  if (SOCCER_ON) sndWhistle();
   buns=[]; splats=[]; particles=[]; glints=[]; floatingTexts=[]; forks=[]; gameDogs=[];
   score=0; runFrames=0; packsResult=null; buxResult=null; lives=3; streak=0; bestStreak=0; chiliCaught=0;
   franksLanded=0; boxFranks=0; boxesCompleted=0; boxFlash=0;
@@ -3388,6 +3420,7 @@ function addSplat(x, y) {
   for (let i=0; i<4+Math.floor(Math.random()*4); i++) {
     drips.push({ x:x+(Math.random()-0.5)*55, y:y+Math.random()*8, len:25+Math.random()*70, w:3+Math.random()*5, speed:0.5+Math.random()*0.9, progress:0 });
   }
+  if (SOCCER_ON) { splats.push({ x, y, blobs, drips: [], turf: true, life:120, maxLife:120 }); addParticles(x, y, '#FFFFFF', 10); addParticles(x, y, '#4CAF50', 10); return; }   // Soccer mode: a puff of turf and chalk
   splats.push({ x, y, blobs, drips, life:200, maxLife:200 });
 }
 
@@ -3990,9 +4023,10 @@ function drawSplats() {
       ctx.save(); ctx.translate(bl.x,bl.y); ctx.rotate(bl.rot); ctx.scale(spawnT,spawnT);
       ctx.beginPath(); ctx.ellipse(0,0,bl.rx,bl.ry,0,0,Math.PI*2);
       const bg=ctx.createRadialGradient(-bl.rx*0.2,-bl.ry*0.2,0,0,0,Math.max(bl.rx,bl.ry));
-      bg.addColorStop(0,'rgba(230,15,15,0.97)'); bg.addColorStop(0.5,'rgba(190,5,5,0.92)'); bg.addColorStop(1,'rgba(110,0,0,0.45)');
+      if (s.turf) { bg.addColorStop(0,'rgba(250,252,245,0.9)'); bg.addColorStop(0.45,'rgba(150,205,110,0.85)'); bg.addColorStop(1,'rgba(60,130,50,0.3)'); }
+      else { bg.addColorStop(0,'rgba(230,15,15,0.97)'); bg.addColorStop(0.5,'rgba(190,5,5,0.92)'); bg.addColorStop(1,'rgba(110,0,0,0.45)'); }
       ctx.fillStyle=bg; ctx.fill();
-      ctx.beginPath(); ctx.ellipse(-bl.rx*0.28,-bl.ry*0.28,bl.rx*0.38,bl.ry*0.32,-0.3,0,Math.PI*2); ctx.fillStyle='rgba(255,120,120,0.22)'; ctx.fill();
+      ctx.beginPath(); ctx.ellipse(-bl.rx*0.28,-bl.ry*0.28,bl.rx*0.38,bl.ry*0.32,-0.3,0,Math.PI*2); ctx.fillStyle=s.turf?'rgba(255,255,255,0.35)':'rgba(255,120,120,0.22)'; ctx.fill();
       ctx.restore();
     }
     for (const d of s.drips) {
@@ -4343,7 +4377,7 @@ function shareCardCanvas(pts, best) {
 function shareScore() {
   const pts = score, best = score >= bestScore && score > 0;
   const url = 'https://franksandbuns.com/get';   // phones: their app store first; computers: the game
-  const text = 'I scored ' + pts.toLocaleString() + ' in Franks & Buns! 🌭 Can you beat me?';
+  const text = SOCCER_ON ? 'I scored ' + pts.toLocaleString() + ' in Franks & Buns Soccer Edition! ⚽ Can you beat me?' : 'I scored ' + pts.toLocaleString() + ' in Franks & Buns! 🌭 Can you beat me?';
   try { if (typeof gtag === 'function') gtag('event', 'share_score', { score: pts }); } catch (e) {}
   let file = null;
   try {
@@ -4531,7 +4565,7 @@ async function skinsRestore() {
 let kitchenBuy = null;   // id of the kitchen on the BunBux confirm screen
 function kitchenLockText(k) { return k.how === 'earn' ? '🔒 ' + k.goal.text : k.how === 'bux' ? k.cost + ' BunBux' : ''; }
 function kitchensRowHtml() {
-  const open = KITCHENS.filter(kitchenUnlocked).length, cur = kitchenById(kitchenCur || 'classic');
+  const open = KITCHENS.filter(kitchenUnlocked).length, cur = SOCCER_ON ? kitchenPicked() : kitchenById(kitchenCur || 'classic');   // Soccer mode shows the kitchen picked for the normal game
   return '<button type="button" class="fbs-col' + (skinsTab === 'kitchens' ? ' on' : '') + '" data-tab="kitchens"><span class="fbs-col-t"><b>🏙️ Kitchens</b>' +
     '<small>Using: ' + packsEsc(cur.name) + ' · ' + open + ' of ' + KITCHENS.length + ' unlocked</small></span>' +
     '<span class="fbs-col-p"><img class="fbs-kimg" src="' + kitchenPreview(cur) + '" alt=""></span><span class="fbs-col-a">›</span></button>';
@@ -4546,7 +4580,7 @@ function kitchensListHtml(msg) {
   cats.filter(c => c[1].length).forEach(c => {
   h += '<h4 class="fbs-kcat">' + packsEsc(c[0]) + '</h4><div class="fbs-grid">';
   c[1].forEach(k => {
-    const open = kitchenUnlocked(k), on = k.id === kitchenCur;
+    const open = kitchenUnlocked(k), on = k.id === (SOCCER_ON ? kitchenPicked().id : kitchenCur);
     h += '<button type="button" class="fbs-skin' + (on ? ' on' : '') + (open ? '' : ' lock') + '" data-kitchen="' + k.id + '">' +
       '<img class="fbs-kimg" src="' + kitchenPreview(k) + '" alt="">' + packsEsc(k.name) +
       '<small>' + (promo && !kitchenOwned(k) ? '🎉 Free through ' + KITCHEN_PROMO_TEXT + (on ? ' · ✓ Here' : '') : on ? '✓ Playing here' : open ? 'Tap to use' : k.how === 'bux' ? '<span class="fbs-p">' + BUX_ICON_HTML + ' ' + k.cost + '</span>' : kitchenLockText(k)) + '</small></button>';
@@ -4642,6 +4676,7 @@ function skinsRender() {
     '<button type="button" class="fbs-x" data-a="close" aria-label="Close">✕</button></div><div class="fbs-body">';
   if (SHOP_TEST) h += '<div class="fbs-test">TEST SHOP · pretend purchases, nothing is charged</div>';
   if (VAULT) h += '<div class="fbs-test">COSTUME VAULT · every costume, hidden ones too · buying is off</div>';
+  if (SOCCER_ON) h += '<div class="fbs-test" style="background:#C41E3A;color:#fff">⚽ Soccer mode is on: you play as the ball in the stadium. Costumes and kitchens you pick here show when you turn Soccer mode off.</div>';
   if (!SKINS_ALL) h += '<div class="fbs-bal">' + BUX_ICON_HTML + ' You have <b>' + buxShown().toLocaleString() + '</b> BunBux</div>';
   const msg = skinsMsg ? '<p class="fbs-msg' + (skinsMsgErr ? ' err' : '') + '">' + packsEsc(skinsMsg) + '</p>' : '';
   if (kBuy) h += kitchensBuyHtml(kBuy, msg);
@@ -4767,13 +4802,13 @@ function drawGameOver() {
   }
   const sy=H*0.50; ctx.fillStyle='#ddd'; ctx.font='14px Arial';
   if (FEAT.stages && stage > 1) {   // same two lines, so the stage never runs into the Dog Houses button below
-    ctx.fillText('Franks: '+franksLanded+'  ·  Boxes: '+boxesCompleted+'  ·  Best Streak: '+bestStreak,W/2,sy);
+    ctx.fillText(soccerT('Franks: ','Goals: ')+franksLanded+'  ·  Boxes: '+boxesCompleted+'  ·  Best Streak: '+bestStreak,W/2,sy);
     const st='Stage '+stage+': '+stageName(stage), rest='  ·  Best: '+bestScore.toLocaleString();
     ctx.font='bold 14px Arial'; const w1=ctx.measureText(st).width; ctx.font='14px Arial'; const w2=ctx.measureText(rest).width;
     ctx.textAlign='left'; ctx.fillStyle='#7CFC00'; ctx.font='bold 14px Arial'; ctx.fillText(st,W/2-(w1+w2)/2,sy+24);
     ctx.fillStyle='#ddd'; ctx.font='14px Arial'; ctx.fillText(rest,W/2-(w1+w2)/2+w1,sy+24); ctx.textAlign='center';
   } else {
-    ctx.fillText('Franks Landed: '+franksLanded+'  ·  Boxes Packed: '+boxesCompleted,W/2,sy);
+    ctx.fillText(soccerT('Franks Landed: ','Goals Scored: ')+franksLanded+'  ·  Boxes Packed: '+boxesCompleted,W/2,sy);
     ctx.fillText('Best Streak: '+bestStreak+'  ·  Best: '+bestScore.toLocaleString(),W/2,sy+24);
   }
   drawPacksPill();
@@ -4782,7 +4817,8 @@ function drawGameOver() {
   if (gameOverDelay>40) drawTapPill('TAP TO RETRY', Math.max(H*0.82-7, H*0.65+114));   // stays clear of a full Wienerboard on short screens
   drawLeaderboard(H * 0.65);
   drawGcButton();
-  const quips=['"You\'re on a roll!"','"No bun intended."','"That was a frank failure."','"Ketchup to the competition!"','"Mustard up more courage!"','"Relish the attempt!"'];
+  const quips=SOCCER_ON ? ['"Back of the net!"','"Keep your head in the game."','"That one hit the crossbar."','"Every miss is a free kick for next time."','"Total team effort!"','"The crowd wants a rematch!"']
+    : ['"You\'re on a roll!"','"No bun intended."','"That was a frank failure."','"Ketchup to the competition!"','"Mustard up more courage!"','"Relish the attempt!"'];
   ctx.fillStyle='#888'; ctx.font='italic 13px Arial'; ctx.fillText(quips[Math.floor(score/7)%quips.length],W/2,H*0.92);
   // Addiction warning: word-wrapped to the canvas width, box sized to the text,
   // anchored to the bottom so it stays centered and on-screen on any phone.
@@ -4856,7 +4892,8 @@ function firstTimer() {
 }
 function introTipsOn() { return FEAT.firsttips && firstTimer(); }
 function drawIntroTips(frame) {
-  const tip = INTRO_TIPS.find(k => frame >= k.from && frame < k.to); if (!tip) return;
+  const tip0 = INTRO_TIPS.find(k => frame >= k.from && frame < k.to); if (!tip0) return;
+  const tip = SOCCER_ON && tip0.t === 'Land in the bun!' ? { from: tip0.from, t: 'Drop it in the goal!' } : tip0;
   const age = frame - tip.from, a = Math.min(1, age / 8), pop = 1 + Math.max(0, 1 - age / 8) * 0.25;
   ctx.save(); ctx.globalAlpha = a; ctx.translate(W / 2, H * 0.27); ctx.scale(pop, pop);
   ctx.font = 'bold 30px Arial'; ctx.textAlign = 'left';
