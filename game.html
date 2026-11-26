@@ -2702,7 +2702,8 @@ try {
 // fire ball. Turning the switch off puts everyone back in the normal game at once. Picked per device (fb_soccer).
 // Art: new-art/soccer (Gemini, prompts in the project files), cut by tools/make_soccer.py. Test copies: ?soccer=on|off forces the switch.
 const SOCCER_SP = { bun: 'soccer-goal', grilled: 'soccer-goal-hot', 'bun-frank': 'soccer-goal-ball', 'grilled-frank': 'soccer-goal-hot-ball',
-  'dog-a': 'soccer-dog-a', 'dog-b': 'soccer-dog-b', 'chili-a': 'soccer-fireball-a', 'chili-b': 'soccer-fireball-b',
+  'dog-a': 'soccer-dog-yellow', 'dog-b': 'soccer-dog-red',   // bonus dogs carry a yellow or red card
+  'chili-a': 'soccer-fireball-a', 'chili-b': 'soccer-fireball-b',
   mustard: 'soccer-pick-mustard', ketchup: 'soccer-pick-ketchup', relish: 'soccer-pick-relish', cheese: 'soccer-pick-cheese', jalapeno: 'soccer-pick-jalapeno' };
 const SOCCER_IMGS = { chef: 'soccer-keeper', chefarm: 'soccer-keeper-arm', dog: 'soccer-dog', dognodog: 'soccer-dognodog', gamedog: 'soccer-dognodog', hotdog: 'soccer-ball' };
 const SOCCER_LABELS = { mustard: 'YELLOW CARD', ketchup: 'RED CARD', relish: 'WATER BREAK', cheese: 'WHISTLE', jalapeno: 'TROPHY' };
@@ -3100,7 +3101,9 @@ function updateGameDogs() {
 
 // Pre-process gamedog image to remove white background
 let gameDogCanvas = null;
-function getGameDogCanvas() {
+function getGameDogCanvas(d) {
+  // Soccer mode: each dog keeps its own card colour (dog-a yellow, dog-b red) instead of the two-frame run
+  if (SOCCER_ON && d && spriteReady('dog-a') && spriteReady('dog-b')) { if (d.card === undefined) d.card = Math.random() < 0.5 ? 1 : 0; return d.card ? sp['dog-b'] : sp['dog-a']; }
   if (spriteReady('dog-a')) return (spriteReady('dog-b') && Math.floor(frameCount / 7) % 2) ? sp['dog-b'] : sp['dog-a'];
   if (gameDogCanvas) return gameDogCanvas;
   const img = imgs.gamedog;
@@ -3135,7 +3138,7 @@ function drawGameDogs() {
     const pulse = 1 + Math.sin(d.phase * 2) * 0.04;
     ctx.scale(pulse, pulse);
 
-    const dogImg = getGameDogCanvas();
+    const dogImg = getGameDogCanvas(d);
     if (dogImg) {
       // Draw at a good gameplay size — small enough to be a bonus target
       // but large enough to be clearly visible
@@ -3551,7 +3554,7 @@ function drawBonusRound() {
     ctx.save();
     ctx.translate(d.x, d.y);
     ctx.scale(1+Math.sin(d.phase*2)*0.05, 1+Math.sin(d.phase*2)*0.05);
-    const dogImg = getGameDogCanvas();
+    const dogImg = getGameDogCanvas(d);
     if (dogImg) { ctx.drawImage(dogImg,-35,-26,70,52); }
     else { ctx.font='36px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('🐕',0,0); }
     ctx.beginPath(); ctx.arc(0,0,36,0,Math.PI*2);
@@ -3865,7 +3868,7 @@ function drawBun(b) {
   const hw=BUN_W/2, hh=BUN_H/2, rc=b.type.color;
   ctx.save(); ctx.translate(x,y);
   if (b.type.label==='dog') {
-    const dogImg = getGameDogCanvas();
+    const dogImg = getGameDogCanvas(b);
     if (dogImg) {
       ctx.save();
       ctx.globalAlpha = 0.9;
