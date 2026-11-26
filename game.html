@@ -2681,7 +2681,16 @@ if (!(bestScore >= 0 && bestScore < 1e9)) bestScore = 0;
 // Test copies of the site can force one: ?stages=on|off, ?secondwind=on|off, ?firsttips=on|off, ?soccer=on|off (sports: see SPORTS)
 // firsttips starts on, so a brand-new player gets the tips even before flags.json arrives; flags.json can still turn it off.
 const FEAT = { stages: false, secondwind: false, firsttips: true, soccer: false, basketball: false, football: false, waterpolo: false, golf: false, baseball: false, cricket: false, hockey: false };
-function featApply(f) { if (f && typeof f === 'object') for (const k in FEAT) if (typeof f[k] === 'boolean') FEAT[k] = f[k]; }
+// sportdates: optional windows for the sports, e.g. { "soccer": { "from": "2026-12-01", "until": "2027-01-05" } } (dates on the
+// player's clock, both days included). A sport shows only while its switch is on AND today is inside its window (no window = always).
+// sportstag: the badge on every sport card in the picker ("" hides it). Kept apart from the true/false switches so older copies ignore them.
+let SPORT_DATES = {}, SPORT_TAG = 'LIMITED TIME';
+function featApply(f) {
+  if (!f || typeof f !== 'object') return;
+  for (const k in FEAT) if (typeof f[k] === 'boolean') FEAT[k] = f[k];
+  if (f.sportdates && typeof f.sportdates === 'object') SPORT_DATES = f.sportdates;
+  if (typeof f.sportstag === 'string') SPORT_TAG = f.sportstag.slice(0, 20);
+}
 function featForce() {
   if (!SHOP_TESTHOST) return;
   const q = new URLSearchParams(location.search);
@@ -2689,9 +2698,10 @@ function featForce() {
 }
 try { featApply(JSON.parse(safeGet('fb_feat') || 'null')); } catch (e) {}
 featForce();
+try { featApply(JSON.parse(safeGet('fb_feat2') || 'null')); } catch (e) {}
 try {
   fetch(PACKS_API.replace(/api\/$/, '') + 'flags.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : null)
-    .then(f => { if (f) { featApply(f); safeSet('fb_feat', JSON.stringify(FEAT)); featForce(); } }).catch(() => {});
+    .then(f => { if (f) { featApply(f); safeSet('fb_feat', JSON.stringify(FEAT)); safeSet('fb_feat2', JSON.stringify({ sportdates: SPORT_DATES, sportstag: SPORT_TAG })); featForce(); } }).catch(() => {});
 } catch (e) {}
 
 // --- Sports modes (switches: FEAT.soccer, .basketball, .football, .waterpolo, .golf, .baseball, .cricket, .hockey in flags.json), picked with the
@@ -2803,7 +2813,22 @@ let soccerCheerUntil = 0, soccerKickUntil = 0;
 const SPORT_TESTQ = /\.pages\.dev$|^localhost$|^127\.0\.0\.1$/.test(location.hostname) ? new URLSearchParams(location.search) : null;
 function sportAvailable(id) {
   const v = SPORT_TESTQ && (SPORT_TESTQ.get(id) || SPORT_TESTQ.get('sports'));
-  return v === 'on' ? true : v === 'off' ? false : !!FEAT[id];
+  return v === 'on' ? true : v === 'off' ? false : !!FEAT[id] && sportInWindow(id);
+}
+function sportDay(d) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d || ''); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null; }
+function sportInWindow(id) {
+  const w = SPORT_DATES[id]; if (!w || typeof w !== 'object') return true;
+  const now = new Date(), a = sportDay(w.from), b = sportDay(w.until);
+  if (a && now < a) return false;
+  if (b && now >= new Date(b.getFullYear(), b.getMonth(), b.getDate() + 1)) return false;
+  return true;
+}
+// "UNTIL JAN 5" when the sport has an end date, otherwise the badge text from flags.json
+const MON3 = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+function sportBadge(id) {
+  if (!SPORT_TAG) return '';
+  const b = sportDay(SPORT_DATES[id] && SPORT_DATES[id].until);
+  return b ? 'UNTIL ' + MON3[b.getMonth()] + ' ' + b.getDate() : SPORT_TAG;
 }
 function soccerAvailable() { return sportAvailable('soccer'); }
 function sportCurId() { const m = modePicked(); return SPORTS[m] && sportAvailable(m) ? m : null; }
@@ -2951,9 +2976,15 @@ function drawModePicker() {
     ctx.fillStyle = sel ? '#ffffff' : '#FFD700'; ctx.font = 'bold ' + (r.h < 60 ? 17 : 20) + 'px Arial'; ctx.fillText(m.name.toUpperCase(), ix + sz + 12, r.y + r.h / 2 - (r.h < 60 ? 2 : 5));
     ctx.fillStyle = sel ? 'rgba(255,255,255,0.85)' : '#bbb'; ctx.font = (r.h < 60 ? 12 : 13) + 'px Arial'; ctx.fillText(m.sub, ix + sz + 12, r.y + r.h / 2 + (r.h < 60 ? 14 : 15));
     if (sel) { ctx.fillStyle = '#ffffff'; ctx.font = 'bold 20px Arial'; ctx.fillText('✓', r.x + r.w - 26, r.y + r.h / 2 + 7); }
+    const tag = soc ? sportBadge(m.id) : '';
+    if (tag) {   // small ribbon on the card's top-right corner
+      ctx.font = 'bold 9px Arial'; const bw = ctx.measureText(tag).width + 12, bx = r.x + r.w - bw - 8, by = r.y + 5;
+      ctx.fillStyle = '#FFD700'; rrect(bx, by, bw, 14, 7); ctx.fill();
+      ctx.fillStyle = '#2a1a0a'; ctx.fillText(tag, bx + 6, by + 10.5);
+    }
   });
   ctx.textAlign = 'center'; ctx.fillStyle = '#aaa'; ctx.font = '12px Arial';
-  ctx.fillText('More sports coming soon', W / 2, pr.y + pr.h - 34);
+  ctx.fillText(SPORT_TAG ? 'Sports modes are here for a limited time' : 'More sports coming soon', W / 2, pr.y + pr.h - 34);
   ctx.fillText('Your pick stays on until you change it', W / 2, pr.y + pr.h - 16);
 }
 // every tap goes here first while the picker is open: a card picks that mode, anywhere else closes it
