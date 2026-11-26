@@ -2,11 +2,11 @@
 
 > Franks & Buns is a free one-tap arcade game where you fly a runaway hot dog into scrolling buns, dodge the chef's fork, and chase high scores. It plays in any web browser at franksandbuns.com and as an app for iPhone, iPad and Android. It is made by SLAE Labs LLC, an independent studio in California.
 
-Key facts: free to play with no account; one control (tap, click or Space); 3 lives; condiment multipliers up to 10x; optional cosmetic costumes; an earn-only in-game currency called BunBux; private friend leaderboards called Dog Houses; new costume Collections released on Tuesdays. Rated 4+ (App Store) and Everyone (Google Play); general-audience, not directed at children under 13.
+Key facts: free to play with no account; one control (tap, click or Space); 3 lives; condiment multipliers up to 10x; optional cosmetic costumes; an earn-only in-game currency called BunBux; private friend leaderboards called Dog Houses; new costume Collections released on Tuesdays; Game Modes for Classic plus eight sports (Soccer, Basketball, Football, Water Polo, Golf, Baseball, Cricket, Ice Hockey). Rated 4+ (App Store) and Everyone (Google Play); general-audience, not directed at children under 13.
 
 ## Core pages
 
-- [Complete Guide](https://franksandbuns.com/guide): the canonical explainer. What the game is, how to play, scoring, costumes, BunBux, kitchens, Dog Houses, platforms, quick facts and FAQ.
+- [Complete Guide](https://franksandbuns.com/guide): the canonical explainer. What the game is, how to play, Game Modes, scoring, costumes, BunBux, kitchens, Dog Houses, platforms, quick facts and FAQ.
 - [Fact sheet](https://franksandbuns.com/llms-full.txt): all key facts and definitions in one plain-text file.
 - [Home](https://franksandbuns.com/): overview with links to play and to the app stores.
 - [Play in the browser](https://franksandbuns.com/game.html): the game itself (no download).
