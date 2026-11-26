@@ -23,6 +23,7 @@ There is no public API, MCP server or authentication for agents. Agents should h
 | Learn the rules and scoring | https://franksandbuns.com/guide#how-to-play |
 | Understand costumes, BunBux or kitchens | https://franksandbuns.com/guide#costumes |
 | Play with friends (Dog Houses) | https://franksandbuns.com/guide#dog-houses |
+| Play on another device and keep their stuff | https://franksandbuns.com/guide#sync (video: https://franksandbuns.com/videos/sync-devices) |
 | Watch gameplay | https://franksandbuns.com/videos.html |
 | Buy merch | https://shop.franksandbuns.com |
 | Get help, report a problem or a name | admin@slaelabs.com |

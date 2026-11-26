@@ -209,6 +209,11 @@
     .container li strong,.container p strong{color:var(--cream);}
     .container ul a{color:#ffb347;}
     section{scroll-margin-top:70px;}
+    .container ol.steps{margin:0 0 1.2rem 1.4rem;color:#c8a880;}
+    .container ol.steps li{margin-bottom:0.45rem;padding-left:0.2rem;}
+    .container ol.steps a,.container p a.vlink{color:#ffb347;}
+    .stepdev{color:var(--gold);font-weight:700;margin:0.8rem 0 0.4rem;}
+    .container h3[id]{scroll-margin-top:70px;}
     table.facts{width:100%;border-collapse:collapse;margin:0 0 1.2rem;font-size:0.95rem;}
     table.facts th,table.facts td{text-align:left;padding:0.5rem 0.6rem;border-bottom:1px solid rgba(255,255,255,0.08);vertical-align:top;}
     table.facts th{color:var(--gold);width:38%;font-weight:700;}
@@ -357,6 +362,14 @@
     },
     {
      "@type": "Question",
+     "name": "How do I sync my Franks & Buns account across devices?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Use your recovery code. On the device you already play on: tap MY DOG HOUSES on the start screen, tap Recovery code, and write it down, screenshot it or tap Copy code. On your other device (the iPhone, iPad or Android app, or franksandbuns.com/game in a browser): tap MY DOG HOUSES, tap Already in Dog Houses on another device? (or Use a different recovery code), enter the code and tap Restore. Your Wienerboard name, Dog Houses, costumes and BunBux sync, and both devices stay signed in. Keep the code private."
+     }
+    },
+    {
+     "@type": "Question",
      "name": "Is it pay to win?",
      "acceptedAnswer": {
       "@type": "Answer",
@@ -460,6 +473,7 @@
     <a href="#bunbux">BunBux</a>
     <a href="#kitchens">Kitchens</a>
     <a href="#dog-houses">Dog Houses</a>
+    <a href="#sync">Sync across devices</a>
     <a href="#platforms">Where to play</a>
     <a href="#facts">Quick facts</a>
     <a href="#faq">FAQ</a>
@@ -539,6 +553,35 @@
   <section id="dog-houses">
     <h2>Can you play with friends?</h2>
     <p>Yes. A <strong>Dog House</strong> is a private leaderboard for friends, family or coworkers. Create one with no email or password, then share a link or a 6-character code. Each Dog House has a This Week board (resets Monday at midnight UTC) and an All-Time board. Every game you play counts in all of your Dog Houses. You can join up to 5 Dog Houses, each with up to 50 players. Details are on the <a href="about.html">About page</a>.</p>
+    <p>&#9654; Watch <a class="vlink" href="videos/make-a-dog-house">Make a Dog House</a> (58 seconds): creating one, inviting a friend and letting them in, step by step.</p>
+  </section>
+
+  <section id="sync">
+    <h2>How do I sync my account across devices?</h2>
+    <p>Use your <strong>recovery code</strong>. It links the website and the iPhone, iPad and Android apps to one profile: your Wienerboard name, your Dog Houses, your costumes (won, unlocked with BunBux or bought) and your BunBux. There's no email or password.</p>
+    <p class="stepdev">On the device you already play on</p>
+    <ol class="steps">
+      <li>Open the game and tap <strong>&#127968; MY DOG HOUSES</strong> on the start screen.</li>
+      <li>Tap <strong>Recovery code</strong> near the bottom.</li>
+      <li>Write the code down, take a screenshot, or tap <strong>Copy code</strong>. It has 16 letters and numbers, like K7QF-2MXD-9PLA-4WZR.</li>
+    </ol>
+    <p class="stepdev">On your other device (the app, or <a href="game.html">franksandbuns.com/game</a> in a browser)</p>
+    <ol class="steps" start="4">
+      <li>Tap <strong>&#127968; MY DOG HOUSES</strong> on the start screen.</li>
+      <li>Tap <strong>Already in Dog Houses on another device?</strong> If you see <strong>Use a different recovery code</strong> instead, tap that.</li>
+      <li>Enter your code. Capital letters and dashes don't matter.</li>
+      <li>Tap <strong>Restore</strong>. You'll see &ldquo;Welcome back&rdquo; with your name and your Dog Houses.</li>
+    </ol>
+    <p>That's it. Both devices stay signed in, and games on either one count in all your Dog Houses. Do the same on as many devices as you like.</p>
+    <ul>
+      <li><strong>Costumes:</strong> costumes you won on the new device before restoring come with you. Costumes bought on the website or in the apps belong to your code too. If an app purchase is missing, tap Restore Purchases in the costume shop.</li>
+      <li><strong>BunBux:</strong> after restoring you see the balance saved with your code. BunBux this device had already earned on its own stay with its old profile.</li>
+      <li><strong>No Recovery code link?</strong> Nothing is saved online for you yet. Make or join a Dog House, or pack a box in a game to earn BunBux, and it appears.</li>
+      <li><strong>iPhone and iPad:</strong> the app also keeps your code in iCloud, so reinstalling the app, or a new iPhone with the same Apple ID, brings everything back by itself.</li>
+      <li><strong>Keep it private:</strong> anyone with your code can use your profile. If someone else has it, go to Recovery code and tap <em>Someone else has my code? Get a new one</em>, then enter the new code on your other devices. We can't look up a lost code, so keep a copy somewhere safe.</li>
+      <li><strong>&ldquo;Code not found&rdquo;?</strong> Check each character against your saved copy. If you got a new code, the old one no longer works anywhere.</li>
+    </ul>
+    <p>&#9654; Watch it start to finish: <a class="vlink" href="videos/sync-devices">Sync Across Devices</a> (49 seconds).</p>
   </section>
 
   <section id="platforms">
@@ -576,6 +619,8 @@
     <p>Yes. The whole game is free in the browser and in the apps. Optional purchases are cosmetic costumes only.</p>
     <h3>Do I need an account?</h3>
     <p>No. You can play right away. Dog Houses use a recovery code instead of an email or password.</p>
+    <h3>How do I play on another device and keep my stuff?</h3>
+    <p>Use your recovery code. On the device you already play on, tap MY DOG HOUSES, then Recovery code, and save the code. On the other device, tap MY DOG HOUSES, then <em>Already in Dog Houses on another device?</em> (or <em>Use a different recovery code</em>), enter the code and tap Restore. Your name, Dog Houses, costumes and BunBux come with it. <a href="#sync">Step-by-step guide</a> &middot; <a href="videos/sync-devices">49-second video</a></p>
     <h3>Is it pay to win?</h3>
     <p>No. Costumes and kitchens are cosmetic and never change scoring, speed or lives.</p>
     <h3>Can I buy BunBux?</h3>
