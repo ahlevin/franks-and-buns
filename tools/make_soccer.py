@@ -95,9 +95,20 @@ if __name__ == '__main__':
     d = sheet('soccer-dog.png', 2, 2)
     save(place((512, 512), d[(0, 0)], (14, 104, 468, 404)), 'soccer-dog.png')
     save(place((512, 512), d[(0, 1)], (14, 104, 468, 404)), 'soccer-dognodog.png')
-    sc = min(280 / max(d[(1, 0)].width, d[(1, 1)].width), 164 / max(d[(1, 0)].height, d[(1, 1)].height))
-    for c_, n in [((1, 0), 'a'), ((1, 1), 'b')]:
-        j = bottom_scaled(d[c_], sc); c = Image.new('RGBA', (280, 208), (0, 0, 0, 0)); c.alpha_composite(j, ((280 - j.width) // 2, 186 - j.height)); save(c, 'soccer-dog-' + n + '.png')
+    # bonus dogs (Dog Parade and the +1000 dogs): the plain dog with a referee's yellow or red card in its teeth (Alan, 2026-11-26).
+    # The card is cut from the pickups sheet above the referee's hand, laid over the lower jaw, and the upper muzzle is put back on top.
+    pk = sheet('soccer-pickups.png', 5, 1)
+    dog = d[(0, 1)]
+    for c_, n in [((0, 0), 'yellow'), ((0, 1), 'red')]:
+        card = pk[c_].crop((70, 0, pk[c_].width, 228)); card = bottom_scaled(card, 0.5)
+        w, h = card.size; pad = Image.new('RGBA', (w * 3, h * 3), (0, 0, 0, 0)); pad.alpha_composite(card, (w, h))
+        rot = pad.rotate(-125, center=(w + w // 2, h + h), resample=Image.BICUBIC)
+        cv = Image.new('RGBA', (dog.width + 200, dog.height + 200), (0, 0, 0, 0))
+        cv.alpha_composite(dog, (0, 0)); cv.alpha_composite(rot, (472 - (w + w // 2), 190 - (h + h)))
+        top = np.asarray(dog).copy(); yy, xx = np.mgrid[0:top.shape[0], 0:top.shape[1]]
+        top[..., 3] = np.where((yy < 188) & (xx > 400), top[..., 3], 0)
+        cv.alpha_composite(Image.fromarray(top), (0, 0)); cv = cv.crop(cv.getbbox())
+        save(place((280, 208), cv, (0, 22, 280, 186)), 'soccer-dog-' + n + '.png')
     # keeper (chef in the intro) and his arm (the fork hazard): glove where the fork's tines were
     save(place((512, 512), sheet('soccer-keeper.png', 1, 1)[(0, 0)], (38, 44, 436, 433)), 'soccer-keeper.png')
     save(place((512, 768), sheet('soccer-keeper-arm.png', 1, 1)[(0, 0)], (140, 64, 396, 740)), 'soccer-keeper-arm.png')
