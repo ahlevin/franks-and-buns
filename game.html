@@ -509,10 +509,11 @@ const OLD_ART_BLEND = (ART_SET === 'a' || ART_SET === 'b') ? 'source-over' : 'sc
 const bgArt = {};
 let kitchenCur = '';   // id of the kitchen on screen
 let kitchenPasser = null, kitchenPasserX = null, kitchenPasserWait = 600;   // the train / cable car rolling by (x: null while it's away)
-function kitchenById(id) { return KITCHENS.find(k => k.id === id) || KITCHENS[0]; }
+function kitchenById(id) { return KITCHENS.find(k => k.id === id) || (id === 'stadium' ? STADIUM : KITCHENS[0]); }
 function kitchenPicked() { return kitchenById(KITCHENS.some(k => k.id === BG_PARAM) ? BG_PARAM : safeGet('fb_kitchen') || 'classic'); }
 function kitchenPreview(k) { return k.set ? 'bg-wall-' + k.set + '.jpg' : k.art ? 'bg-wall-' + k.id + '.jpg' : kitchenStandin(k.id, 'wall'); }
 function kitchenLoad(id) {
+  if (SOCCER_ON) id = 'stadium';   // Soccer mode always plays in the stadium
   let k = kitchenById(id);
   if (!kitchenUnlocked(k) && BG_PARAM !== k.id) k = KITCHENS[0];
   if (BG_PARAM === 'a' || BG_PARAM === 'b' || BG_PARAM === 'off' || (BG_PARAM && !KITCHENS.some(x => x.id === BG_PARAM))) {
@@ -1771,7 +1772,12 @@ async function shopRestore() {
   const r = await shopPlugin().restorePurchases();
   return shopFromCustomer(r && r.customerInfo);
 }
-function curSkin() { const s = skinById(safeGet('fb_skin') || 'classic'); return skinUnlocked(s) ? s : SKINS[0]; }
+function pickedSkin() { const s = skinById(safeGet('fb_skin') || 'classic'); return skinUnlocked(s) ? s : SKINS[0]; }
+// Soccer Edition (see SOCCER below): the ball flies, lands and shows in the lives row through the costume code, as its own costume.
+// skin-soccer-*.png are cut by tools/make_soccer.py, which prints these boxes.
+var SOCCER_ON = false;
+const SOCCER_SKIN = { id: 'soccer', name: 'Soccer Ball', frames: 1, fly: [-19, -19, 38, 38], bun: [-44, -32, 88, 36.2], grill: [-44, -48.8, 88, 53] };
+function curSkin() { return SOCCER_ON ? SOCCER_SKIN : pickedSkin(); }
 let skinNew = null;   // Game Over: the skins this game won (array)
 function skinPreload(s) { if (s.frames) ['fly', 'bun', 'grill'].forEach(p => { skinPic(s.id, p); if (s.frames > 1) skinPic(s.id, p + '-b'); }); }
 // draws a skin's picture for part 'fly', 'bun' or 'grill' with its top-left at (ox, oy); false if not loaded yet
@@ -2643,9 +2649,9 @@ let bestScore = parseInt(safeGet('fb_best') || '0', 10);
 if (!(bestScore >= 0 && bestScore < 1e9)) bestScore = 0;
 // --- Feature switches. flags.json on franksandbuns.com turns each one on or off for everyone, apps included, so a feature can be
 // rolled back without an app update. Until it loads, the last answer this device saw is used (off on a first visit).
-// Test copies of the site can force one: ?stages=on|off, ?secondwind=on|off, ?firsttips=on|off
+// Test copies of the site can force one: ?stages=on|off, ?secondwind=on|off, ?firsttips=on|off, ?soccer=on|off
 // firsttips starts on, so a brand-new player gets the tips even before flags.json arrives; flags.json can still turn it off.
-const FEAT = { stages: false, secondwind: false, firsttips: true };
+const FEAT = { stages: false, secondwind: false, firsttips: true, soccer: false };
 function featApply(f) { if (f && typeof f === 'object') for (const k in FEAT) if (typeof f[k] === 'boolean') FEAT[k] = f[k]; }
 function featForce() {
   if (!SHOP_TESTHOST) return;
@@ -2658,6 +2664,79 @@ try {
   fetch(PACKS_API.replace(/api\/$/, '') + 'flags.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : null)
     .then(f => { if (f) { featApply(f); safeSet('fb_feat', JSON.stringify(FEAT)); featForce(); } }).catch(() => {});
 } catch (e) {}
+
+// --- Soccer Edition (switch: FEAT.soccer in flags.json): a mode players turn on with the SOCCER pill on the start screen.
+// The hot dog becomes a soccer ball, buns become goals, the kitchen becomes a night stadium, and a player in a pinstriped home kit
+// runs under the ball. The chef is a goalkeeper, his fork a keeper's glove, the condiments referee cards and friends, the chili dog a
+// fire ball. Turning the switch off puts everyone back in the normal game at once. Picked per device (fb_soccer).
+// Art: new-art/soccer (Gemini, prompts in the project files), cut by tools/make_soccer.py. Test copies: ?soccer=on|off forces the switch.
+const SOCCER_SP = { bun: 'soccer-goal', grilled: 'soccer-goal-hot', 'bun-frank': 'soccer-goal-ball', 'grilled-frank': 'soccer-goal-hot-ball',
+  'dog-a': 'soccer-dog-a', 'dog-b': 'soccer-dog-b', 'chili-a': 'soccer-fireball-a', 'chili-b': 'soccer-fireball-b',
+  mustard: 'soccer-pick-mustard', ketchup: 'soccer-pick-ketchup', relish: 'soccer-pick-relish', cheese: 'soccer-pick-cheese', jalapeno: 'soccer-pick-jalapeno' };
+const SOCCER_IMGS = { chef: 'soccer-keeper', chefarm: 'soccer-keeper-arm', dog: 'soccer-dog', dognodog: 'soccer-dognodog', gamedog: 'soccer-dognodog', hotdog: 'soccer-ball' };
+const SOCCER_LABELS = { mustard: 'YELLOW CARD', ketchup: 'RED CARD', relish: 'WATER BREAK', cheese: 'WHISTLE', jalapeno: 'TROPHY' };
+const STADIUM = { id: 'stadium', name: 'Stadium', how: 'free', art: true, mirror: true, passerY: 0.985, passerH: 0.13 };
+const soccerArt = { sp: {}, imgs: {}, player: {} }, soccerNormal = { sp: {}, imgs: {} };
+let soccerCheerUntil = 0, soccerKickUntil = 0;
+// test copies (pages.dev previews, localhost): ?soccer=on shows the mode even while flags.json has it off, ?soccer=off hides it
+const SOCCER_TEST = /\.pages\.dev$|^localhost$|^127\.0\.0\.1$/.test(location.hostname) ? new URLSearchParams(location.search).get('soccer') : null;
+function soccerAvailable() { return SOCCER_TEST === 'on' ? true : SOCCER_TEST === 'off' ? false : FEAT.soccer; }
+function soccerPicked() { return safeGet('fb_soccer') === '1'; }
+function soccerT(normal, soccer) { return SOCCER_ON ? soccer : normal; }   // words that change in Soccer mode
+function condLabel(c) { return SOCCER_ON && SOCCER_LABELS[c.name] || c.label; }
+function soccerLoad() {
+  if (soccerArt.loaded) return; soccerArt.loaded = true;
+  const img = src => { const im = new Image(); im.src = src + '.png'; return im; };
+  for (const k in SOCCER_SP) soccerArt.sp[k] = img(SOCCER_SP[k]);
+  for (const k in SOCCER_IMGS) soccerArt.imgs[k] = img(SOCCER_IMGS[k]);
+  ['run-a', 'run-b', 'kick', 'cheer'].forEach(p => { soccerArt.player[p] = img('soccer-player-' + p); });
+  ['fly', 'bun', 'grill'].forEach(p => skinPic('soccer', p));
+}
+// called every frame: swaps the art in or out when the switch or the player's pick changes
+function soccerSync() {
+  const on = !!(soccerAvailable() && soccerPicked());
+  if (on === SOCCER_ON) return;
+  if (on) soccerLoad();
+  SOCCER_ON = on;
+  for (const k in SOCCER_SP) if (sp[k]) { if (!(k in soccerNormal.sp)) soccerNormal.sp[k] = sp[k]; sp[k] = on ? soccerArt.sp[k] : soccerNormal.sp[k]; }
+  for (const k in SOCCER_IMGS) if (imgs[k]) { if (!(k in soccerNormal.imgs)) soccerNormal.imgs[k] = imgs[k]; imgs[k] = on ? soccerArt.imgs[k] : soccerNormal.imgs[k]; }
+  gameDogCanvas = null;
+  kitchenLoad(kitchenPicked().id);
+}
+function soccerToggle() {
+  safeSet('fb_soccer', soccerPicked() ? '0' : '1'); soccerSync();
+  try { if (typeof gtag === 'function') gtag('event', SOCCER_ON ? 'soccer_on' : 'soccer_off'); } catch (e) {}
+}
+// the player runs along the field just behind the ball: a kick as the game starts, a cheer after each goal
+function drawSoccerPlayer() {
+  const pose = frameCount < soccerCheerUntil ? 'cheer' : frameCount < soccerKickUntil ? 'kick' : (Math.floor(frameCount / 8) % 2 ? 'run-b' : 'run-a');
+  const im = soccerArt.player[pose]; if (!im || !im.complete || !im.naturalWidth) return;
+  const h = 72, w = im.naturalWidth * h / im.naturalHeight, x = frank.x - 30, ground = H * 0.78 + H * 0.22 * 0.55;
+  const hop = pose === 'cheer' ? Math.abs(Math.sin((soccerCheerUntil - frameCount) * 0.2)) * 12 : pose === 'kick' ? 0 : Math.abs(Math.sin(frameCount * 0.39)) * 3;
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.beginPath(); ctx.ellipse(x, ground - 1, w * 0.32 - hop, 5, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.drawImage(im, x - w / 2, ground - h - hop, w, h);
+  ctx.restore();
+}
+// start screen: the SOCCER pill under the SKINS button
+function soccerPillRect() { const sk = skinsBtnRect(), w = 176, h = 26; return { x: W / 2 - w / 2, y: sk.y + sk.h + 10, w: w, h: h }; }
+function drawSoccerPill() {
+  if (!soccerAvailable()) return;
+  const r = soccerPillRect(), on = SOCCER_ON;
+  ctx.save();
+  if (on) { ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 8 + Math.sin(frameCount * 0.08) * 4; }
+  ctx.fillStyle = on ? '#C41E3A' : 'rgba(0,0,0,0.45)'; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.fill();
+  ctx.restore();
+  ctx.strokeStyle = on ? '#ffffff' : '#FFD700'; ctx.lineWidth = 1.5; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.stroke();
+  ctx.fillStyle = on ? '#ffffff' : '#FFD700'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'left';
+  const t = on ? '⚽ SOCCER MODE: ON' : '⚽ PLAY SOCCER MODE'; ctx.fillText(t, r.x + (r.w - ctx.measureText(t).width) / 2, r.y + r.h / 2 + 4.5);
+  ctx.textAlign = 'center';
+}
+function isSoccerTap(p) {
+  if (!soccerAvailable()) return false;
+  const r = soccerPillRect();
+  return p.x >= r.x - 6 && p.x <= r.x + r.w + 6 && p.y >= r.y - 3 && p.y <= r.y + r.h + 6;
+}
 
 // --- Stages: after each Dog Parade the run moves up a stage, with a banner and a points bonus (switch: FEAT.stages)
 // A new stage after every Dog Parade. Past the last name, the last one repeats with a number: Hall of Flame 2, 3, 4 and on
@@ -2760,8 +2839,8 @@ let frank = { x: 70, y: 0, vy: 0, squash: 1, stretch: 1, alive: true };
 const FRANK_W = 40, FRANK_H = 14;
 const FRANK_ART_W = 78, FRANK_ART_H = 24;   // kitchen-art hot dog body as drawn
 // extra reach for hit checks, which were tuned for the 40x14 classic hot dog
-function frankGrowX() { return spriteReady('frank') ? (FRANK_ART_W - FRANK_W) / 2 : 0; }
-function frankGrowY() { return spriteReady('frank') ? (FRANK_ART_H - FRANK_H) / 2 : 0; }
+function frankGrowX() { return SOCCER_ON ? (SOCCER_SKIN.fly[2] - FRANK_W) / 2 : spriteReady('frank') ? (FRANK_ART_W - FRANK_W) / 2 : 0; }
+function frankGrowY() { return SOCCER_ON ? (SOCCER_SKIN.fly[3] - FRANK_H) / 2 : spriteReady('frank') ? (FRANK_ART_H - FRANK_H) / 2 : 0; }
 const GRAVITY = 0.38, FLAP_POWER = -5.5;
 
 let buns = [], nextBunDist = 0;
@@ -2861,7 +2940,7 @@ function updateForks() {
         if (chiliRush > 0) {   // red-hot frank blasts through the fork
           score += 250; sndForkSmash(); shakeAmount = 7;
           addParticles(tineX, tineY, '#C0C0C0', 14); addParticles(tineX, tineY, '#FF6600', 10);
-          addFloatingText(Math.min(Math.max(tineX, 130), W - 130), tineY - 30, 'FORK SMASHED! +250', '#FF6600', 22);
+          addFloatingText(Math.min(Math.max(tineX, 130), W - 130), tineY - 30, soccerT('FORK SMASHED!', 'GLOVE SMASHED!') + ' +250', '#FF6600', 22);
         } else {
           loseLife();
         }
@@ -3148,6 +3227,7 @@ function spawnBun() {
 function resetGame() {
   stopChaseEffects(); wavDuckUntil = 0;   // skipping the intro cuts the chase foley; gameplay music starts once
   frank = { x:70, y:H*0.4, vy:0, squash:1, stretch:1, alive:true };
+  soccerKickUntil = frameCount + 28; soccerCheerUntil = 0;   // Soccer mode: the player kicks off
   buns=[]; splats=[]; particles=[]; glints=[]; floatingTexts=[]; forks=[]; gameDogs=[];
   score=0; runFrames=0; packsResult=null; buxResult=null; lives=3; streak=0; bestStreak=0; chiliCaught=0;
   franksLanded=0; boxFranks=0; boxesCompleted=0; boxFlash=0;
@@ -3213,6 +3293,7 @@ function handleScoresTap(clientX, clientY) {
   if (p.x >= r.x - 6 && p.x <= r.x + r.w + 4 && p.y >= r.y - 6 && p.y <= r.y + r.h + 6) { ensureAudio(); loadRuns(); lastRunIndex = -1; scoresOpen = true; sndStreak(); return true; }
   const k = packsBtnRect();
   if (p.x >= k.x - 4 && p.x <= k.x + k.w + 6 && p.y >= k.y - 6 && p.y <= k.y + k.h + 6) { ensureAudio(); sndStreak(); packsOpen(); return true; }
+  if (isSoccerTap(p)) { ensureAudio(); sndStreak(); soccerToggle(); return true; }
   const sk = skinsBtnRect();   // SKINS button, or the hot dog above it
   if (p.x >= W / 2 - 70 && p.x <= W / 2 + 70 && p.y >= sk.y - 62 && p.y <= sk.y + sk.h + 6) { ensureAudio(); sndStreak(); skinsOpen(); return true; }
   return false;
@@ -3549,7 +3630,7 @@ function updateChili() {
     chiliRush = CHILI_RUSH_FRAMES; score += 500; chiliCaught++;
     sndChiliCatch(); if (!playWavEffect('chili-sizzle', .24)) sndSizzle(); shakeAmount = 8;
     addParticles(chili.x, chili.y, '#FF4500', 22); addParticles(chili.x, chili.y, '#FFD700', 12);
-    addFloatingText(W / 2, H / 2 - 50, 'CHILI RUSH!', '#FF3300', 34);
+    addFloatingText(W / 2, H / 2 - 50, soccerT('CHILI RUSH!', 'FIRE BALL!'), '#FF3300', 34);
     addFloatingText(chili.x, chili.y - 30, '+500', '#FFD700', 22);
     chili = null; chiliCooldown = nextChiliWait();
     return;
@@ -3588,14 +3669,15 @@ function drawChiliRushOverlay() {
   ctx.fillStyle = 'rgba(0,0,0,0.4)'; rrect(bx, by, bw, bh, 4); ctx.fill();
   ctx.fillStyle = '#FF3300'; rrect(bx, by, Math.max(bw * chiliRush / CHILI_RUSH_FRAMES, 0), bh, 4); ctx.fill();
   ctx.fillStyle = '#fff'; ctx.font = 'bold 10px Arial'; ctx.textAlign = 'center';
-  ctx.fillText('🌶 CHILI RUSH · x2 · SHIELD', W / 2, by + 20);
+  ctx.fillText(soccerT('🌶 CHILI RUSH', '🔥 FIRE BALL') + ' · x2 · SHIELD', W / 2, by + 20);
 }
 
 function landFrank(bun) {
   let mult = bun.type.multiplier||1;
+  if (SOCCER_ON) { soccerCheerUntil = frameCount + 40; addFloatingText(bun.x, bun.y - (bun.grilled ? 82 : 52), 'GOAL!', '#FFFFFF', 28); }
   if (bun.grilled) {
     score += 1000;
-    addFloatingText(bun.x, bun.y - 50, 'LET THEM COOK! +1000', '#FF6600', 26);
+    addFloatingText(bun.x, bun.y - 50, soccerT('LET THEM COOK!', 'HOT GOAL!') + ' +1000', '#FF6600', 26);
   }
   if (bun.condiment) { mult *= bun.condiment.multiplier; sndCondiment(); addParticles(bun.x,bun.y,bun.condiment.color,15); }
   streak++; franksLanded++; if (streak>bestStreak) bestStreak=streak;
@@ -3607,7 +3689,7 @@ function landFrank(bun) {
   const rushMult = chiliRush > 0 ? 2 : 1;
   const pts=Math.floor(100*mult*sm*rushMult); score+=pts; sndLand();
   addParticles(bun.x,bun.y,'#FFD700',10); fxLand(bun.x,bun.y); shakeAmount=bun.condiment?6:3;
-  addFloatingText(bun.x,bun.y-20,'+'+pts+(bun.condiment?' '+bun.condiment.label:'')+(rushMult>1?' x2':''),bun.condiment?bun.condiment.color:'#FFD700',bun.condiment?21:20);
+  addFloatingText(bun.x,bun.y-20,'+'+pts+(bun.condiment?' '+condLabel(bun.condiment):'')+(rushMult>1?' x2':''),bun.condiment?bun.condiment.color:'#FFD700',bun.condiment?21:20);
   boxFranks++;
   if (boxFranks>=6) {
     boxFranks=0; boxesCompleted++; gcAchieve('firstbox');
@@ -3669,6 +3751,7 @@ function finishRun() {   // the run is over: Game Over, saves and awards
 // ============================================================
 function drawFrank(x, y, sq, st) {
   ctx.save(); ctx.translate(x,y); ctx.scale(sq,st);
+  if (SOCCER_ON) ctx.rotate(frameCount * 0.14);   // the ball spins as it flies
   const hw=FRANK_W/2, hh=FRANK_H/2;
   if (drawSkinPart(curSkin(), 'fly', sq > 1.08, 0, 0)) {
     // costume skin
@@ -4012,7 +4095,7 @@ function drawHUD() {
   const bgrad=ctx.createLinearGradient(bbX,0,bbX+bbW,0); bgrad.addColorStop(0,'#FF6600'); bgrad.addColorStop(1,'#FFaa00');
   ctx.fillStyle=bgrad; rrect(bbX,bbY,Math.max(fw,0),bbH,4); ctx.fill();
   ctx.fillStyle='#fff'; ctx.font='bold 10px Arial'; ctx.textAlign='center';
-  ctx.fillText('🌭 '+boxFranks+'/6  |  Boxes: '+boxesCompleted,W/2,bbY+12);
+  ctx.fillText(soccerT('🌭 ', '⚽ ')+boxFranks+'/6  |  Boxes: '+boxesCompleted,W/2,bbY+12);
   if (boxFlash>0) { ctx.fillStyle=`rgba(255,102,0,${boxFlash/60*0.15})`; ctx.fillRect(0,0,W,H); }
   if (streakTimer>0&&streakText) {
     ctx.save(); ctx.globalAlpha=Math.min(streakTimer/20,1);
@@ -4047,13 +4130,15 @@ function drawMenu() {
   ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.85)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 2;
   ctx.fillStyle='#FFD700'; ctx.font='bold 38px Arial'; ctx.textAlign='center';
   ctx.fillText('FRANKS',W/2,H*0.25); ctx.fillText('& BUNS',W/2,H*0.25+42);
+  if (SOCCER_ON) { ctx.fillStyle = '#ffffff'; ctx.font = 'bold 17px Arial'; ctx.fillText('⚽  SOCCER EDITION  ⚽', W/2, H*0.25+70); }
   drawMenuSkin();
+  drawSoccerPill();
   if (dailyCardShown()) { drawDailyCard(H*0.58-20); if (frameCount % 30 === 0) buxIntroMaybe(); }
   else {
     ctx.fillStyle='#ddd'; ctx.font='16px Arial';
-    ctx.fillText('TAP to boost your frank up',W/2,H*0.58);
+    ctx.fillText(soccerT('TAP to boost your frank up', 'TAP to boost your ball up'),W/2,H*0.58);
     ctx.fillText('RELEASE to let it drop',W/2,H*0.58+24);
-    ctx.fillText('Land in buns to score!',W/2,H*0.58+48);
+    ctx.fillText(soccerT('Land in buns to score!', 'Drop it in the goals to score!'),W/2,H*0.58+48);
   }
   ctx.restore();
   drawTapPill('TAP TO START', Math.min(H*0.80-7, sideBtnY()-24));
@@ -4160,6 +4245,7 @@ function skinsBtnRect() { const w = SKINS_ALL ? 112 : 176, h = 24; return { x: W
 function drawMenuSkin() {
   const s = curSkin(), cy = H * 0.44, flap = Math.floor(frameCount / 18) % 2 === 1;
   ctx.save(); ctx.translate(W / 2, cy + Math.sin(frameCount * 0.05) * 3); ctx.scale(1.25, 1.25);
+  if (SOCCER_ON) ctx.rotate(frameCount * 0.03);
   if (!drawSkinPart(s, 'fly', flap, 0, 0)) {
     if (spriteReady('frank')) ctx.drawImage(sp.frank, -41, -14, 82, 28);
     else { ctx.font = '48px Arial'; ctx.textAlign = 'center'; ctx.fillText('🌭', 0, 16); }
@@ -4527,7 +4613,7 @@ function skinsSearchDraw() {
   const q = skinsQ.trim();
   home.style.display = q ? 'none' : ''; res.style.display = q ? '' : 'none';
   if (!q) { res.innerHTML = ''; return; }
-  const hits = skinsSearchHits(q), cur = curSkin();
+  const hits = skinsSearchHits(q), cur = pickedSkin();
   res.innerHTML = '<p class="fbs-sub">' + (hits.length ? hits.length + (hits.length === 1 ? ' costume' : ' costumes') : 'No costumes match “' + packsEsc(q) + '”') + '</p>' +
     '<div class="fbs-grid">' + hits.map(s => skinsCardHtml(s, cur, '<small class="fbs-grp">' + packsEsc((SKIN_GROUPS[s.group || 'earn'] || {}).name || '') + '</small>')).join('') + '</div>';
 }
@@ -4538,7 +4624,7 @@ function skinsVaultWhen(g) {   // vault only: when a Collection that isn't out y
 }
 function skinsRender() {
   const box = document.getElementById('fb-skins'); if (!box) return;
-  const cur = curSkin(), groups = Object.keys(SKIN_GROUPS).filter(g => skinsGroupList(g).length);
+  const cur = pickedSkin(), groups = Object.keys(SKIN_GROUPS).filter(g => skinsGroupList(g).length);
   if (!SKINS_ALL) groups.sort((a, b) => (groupNew(b) ? SKIN_GROUPS[b].from : 0) - (groupNew(a) ? SKIN_GROUPS[a].from : 0));   // this week's drop first
   if (skinsTab && skinsTab !== 'kitchens' && groups.indexOf(skinsTab) < 0) skinsTab = null;
   const buyP = skinsBuy && shopProducts()[skinsBuy];
@@ -4865,11 +4951,13 @@ function drawMuteBtn() {
 }
 
 function draw() {
+  soccerSync();
   ctx.clearRect(0,0,W,H);
   if (state===STATE.BONUS) { drawBonusRound(); drawMuteBtn(); return; }
   ctx.save();
   if (shakeAmount>0) ctx.translate((Math.random()-0.5)*shakeAmount,(Math.random()-0.5)*shakeAmount);
   drawKitchenBG();
+  if (SOCCER_ON && state===STATE.PLAYING) drawSoccerPlayer();
   drawSplats();
   for (const b of buns) drawBun(b);
   drawForks();
