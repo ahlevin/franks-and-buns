@@ -14,7 +14,7 @@ SPORTS = {
     # ball: game size of the flying ball (w, h). target: game width of the goal picture and where its opening is
     # (fraction of the empty target's height from the top; None: the bottom sits where the bun's bottom is, like Soccer)
     'basketball': dict(key='green', venue='arena', ball=(38, 38), target=(80, 0.36)),
-    'football': dict(key='green', venue='gridiron', ball=(48, 30), target=(88, None)),
+    'football': dict(key='green', venue='gridiron', ball=(48, 30), target=(96, 0.42)),
     'waterpolo': dict(key='green', venue='pool', ball=(38, 38), target=(84, None)),
     'golf': dict(key='magenta', venue=None, ball=(32, 32), target=(88, 0.62)),
 }
