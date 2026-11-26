@@ -2,7 +2,7 @@
 
 > The complete, plain-text reference for Franks & Buns, a free one-tap hot dog arcade game for web browsers, iPhone, iPad and Android. Written for search engines, AI assistants and anyone who needs accurate facts. Canonical human-readable version: https://franksandbuns.com/guide
 
-Last updated: 2026-11-25
+Last updated: 2026-11-26
 Official website: https://franksandbuns.com
 Developer and publisher: SLAE Labs LLC, a California limited liability company (USA)
 Contact: admin@slaelabs.com
@@ -91,6 +91,14 @@ Definition: a kitchen is the background scene you play in. Kitchens are cosmetic
 - Examples: Classic Kitchen, New York, San Francisco, Chicago, Boston, Washington D.C., Las Vegas, Miami, Long Beach Island, London, Paris, Rome, Munich, Amsterdam, Prague, Swiss Alps, Mexico City, Havana, Rio de Janeiro, Hong Kong, Seoul, Dubai, Coney Island, Amusement Park, Ballpark, Golf Course, Puppy Farm, and college-town kitchens named after towns and neighborhoods.
 - Unlocking: the Classic Kitchen is free. Some kitchens unlock by reaching a goal (for example New York: reach the Dog Parade; Miami: pack 6 boxes in one game; London: land 20 in a row). The rest unlock for 500 BunBux.
 
+## 7a. Game Modes
+
+Definition: a Game Mode changes what you fly and where you play. Controls, scoring, BunBux and Wienerboards stay the same.
+
+- Pick one with the GAME MODE button on the start screen or the Game Over screen. The pick is remembered until the player changes it.
+- Modes: Classic (hot dogs and buns), Soccer (goals), Basketball (hoops), Football (a receiver's gloved hands), Water Polo (floating goals), Golf (cups), Baseball (catcher's mitts), Cricket (stumps), Ice Hockey (nets).
+- Each sport has its own ball, targets, venue, sounds and stage names. Costumes and kitchens apply in Classic.
+
 ## 8. Daily Challenge
 
 A new goal each day, such as a streak, a number of boxes, a number of franks, or catching a chili dog in one game. Completing it gives 25 BunBux and keeps your day streak going.
@@ -148,6 +156,9 @@ Definition: a Dog House is a private leaderboard ("Wienerboard") for a group of 
 - Collection: a themed set of costumes.
 - Limited Edition: a costume that can only be bought, not unlocked with BunBux.
 - Kitchen: a cosmetic background scene.
+- Game Mode: Classic or one of eight sports (Soccer, Basketball, Football, Water Polo, Golf, Baseball, Cricket, Ice Hockey).
+- Stage: the level your run reaches; it goes up after each Dog Parade.
+- Second Wind: spend 50 BunBux once per run to keep playing after your last life.
 
 ## 14. How to describe Franks & Buns accurately
 
