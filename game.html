@@ -2713,7 +2713,9 @@ let soccerCheerUntil = 0, soccerKickUntil = 0;
 // test copies (pages.dev previews, localhost): ?soccer=on shows the mode even while flags.json has it off, ?soccer=off hides it
 const SOCCER_TEST = /\.pages\.dev$|^localhost$|^127\.0\.0\.1$/.test(location.hostname) ? new URLSearchParams(location.search).get('soccer') : null;
 function soccerAvailable() { return SOCCER_TEST === 'on' ? true : SOCCER_TEST === 'off' ? false : FEAT.soccer; }
-function soccerPicked() { return safeGet('fb_soccer') === '1'; }
+// the mode a player picked stays picked (fb_mode) until they pick another; older copies saved fb_soccer
+function modePicked() { const m = safeGet('fb_mode'); return m || (safeGet('fb_soccer') === '1' ? 'soccer' : 'classic'); }
+function soccerPicked() { return modePicked() === 'soccer'; }
 function soccerT(normal, soccer) { return SOCCER_ON ? soccer : normal; }   // words that change in Soccer mode
 function condLabel(c) { return SOCCER_ON && SOCCER_LABELS[c.name] || c.label; }
 function soccerLoad() {
@@ -2735,9 +2737,10 @@ function soccerSync() {
   gameDogCanvas = null;
   kitchenLoad(kitchenPicked().id);
 }
-function soccerToggle() {
-  safeSet('fb_soccer', soccerPicked() ? '0' : '1'); soccerSync();
-  try { if (typeof gtag === 'function') gtag('event', SOCCER_ON ? 'soccer_on' : 'soccer_off'); } catch (e) {}
+function modeSet(id) {
+  if (id === modePicked()) return;
+  safeSet('fb_mode', id); safeSet('fb_soccer', id === 'soccer' ? '1' : '0'); soccerSync();
+  try { if (typeof gtag === 'function') gtag('event', 'game_mode', { mode: id }); } catch (e) {}
 }
 // the player runs along the field just behind the ball: a kick as the game starts, a cheer after each goal
 function drawSoccerPlayer() {
@@ -2750,23 +2753,73 @@ function drawSoccerPlayer() {
   ctx.drawImage(im, x - w / 2, ground - h - hop, w, h);
   ctx.restore();
 }
-// start screen: the SOCCER pill under the SKINS button
-function soccerPillRect() { const sk = skinsBtnRect(), w = 176, h = 26; return { x: W / 2 - w / 2, y: sk.y + sk.h + 10, w: w, h: h }; }
-function drawSoccerPill() {
-  if (!soccerAvailable()) return;
-  const r = soccerPillRect(), on = SOCCER_ON;
+// --- Game Mode: a pill under the SKINS button opens a picker of modes. A new sport joins GAME_MODES with its own
+// flags.json switch; a mode whose switch is off is left out, and the pill hides when Classic is the only mode.
+const GAME_MODES = [
+  { id: 'classic', name: 'Classic', icon: '🌭', sub: 'Land the franks in the buns', pic: 'hotdog.png', on: () => true },
+  { id: 'soccer', name: 'Soccer', icon: '⚽', sub: 'Drop the ball in the goals', pic: 'soccer-ball.png', on: () => soccerAvailable() },
+];
+let modeOpen = false;
+const modePics = {};
+function modesOn() { return GAME_MODES.filter(m => m.on()); }
+function modeCur() { return modesOn().find(m => m.id === modePicked()) || GAME_MODES[0]; }
+function modePillRect() { const sk = skinsBtnRect(), w = 186, h = 26; return { x: W / 2 - w / 2, y: sk.y + sk.h + 10, w: w, h: h }; }
+function drawModePill() {
+  if (modesOn().length < 2 || scoresOpen) return;
+  const r = modePillRect(), m = modeCur(), soc = m.id === 'soccer';
   ctx.save();
-  if (on) { ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 8 + Math.sin(frameCount * 0.08) * 4; }
-  ctx.fillStyle = on ? '#C41E3A' : 'rgba(0,0,0,0.45)'; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.fill();
+  if (soc) { ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 8 + Math.sin(frameCount * 0.08) * 4; }
+  ctx.fillStyle = soc ? '#C41E3A' : 'rgba(0,0,0,0.45)'; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.fill();
   ctx.restore();
-  ctx.strokeStyle = on ? '#ffffff' : '#FFD700'; ctx.lineWidth = 1.5; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.stroke();
-  ctx.fillStyle = on ? '#ffffff' : '#FFD700'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'left';
-  const t = on ? '⚽ SOCCER MODE: ON' : '⚽ PLAY SOCCER MODE'; ctx.fillText(t, r.x + (r.w - ctx.measureText(t).width) / 2, r.y + r.h / 2 + 4.5);
+  ctx.strokeStyle = soc ? '#ffffff' : '#FFD700'; ctx.lineWidth = 1.5; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.stroke();
+  ctx.fillStyle = soc ? '#ffffff' : '#FFD700'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'left';   // measured: iOS misplaces centred text with an emoji
+  const t = m.icon + ' GAME MODE: ' + m.name.toUpperCase() + ' ▾'; ctx.fillText(t, r.x + (r.w - ctx.measureText(t).width) / 2, r.y + r.h / 2 + 4.5);
   ctx.textAlign = 'center';
 }
-function isSoccerTap(p) {
-  if (!soccerAvailable()) return false;
-  const r = soccerPillRect();
+function modePanelRect() { const n = modesOn().length, pw = Math.min(W - 32, 340), ph = 118 + n * 86; return { x: W / 2 - pw / 2, y: H * 0.5 - ph / 2, w: pw, h: ph }; }
+function modeCardRect(i) { const pr = modePanelRect(); return { x: pr.x + 16, y: pr.y + 62 + i * 86, w: pr.w - 32, h: 74 }; }
+function modeOpenPicker() {
+  modeOpen = true; soccerLoad();
+  GAME_MODES.forEach(m => { if (!modePics[m.id]) { const im = new Image(); im.src = m.pic; modePics[m.id] = im; } });
+}
+function drawModePicker() {
+  ctx.fillStyle = 'rgba(10,5,0,0.9)'; ctx.fillRect(0, 0, W, H);
+  const pr = modePanelRect(), list = modesOn(), cur = modeCur();
+  ctx.fillStyle = '#2a1a0a'; rrect(pr.x, pr.y, pr.w, pr.h, 16); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,215,0,0.5)'; ctx.lineWidth = 2; rrect(pr.x, pr.y, pr.w, pr.h, 16); ctx.stroke();
+  ctx.textAlign = 'center'; ctx.fillStyle = '#FFD700'; ctx.font = 'bold 26px Arial'; ctx.fillText('GAME MODE', W / 2, pr.y + 42);
+  list.forEach((m, i) => {
+    const r = modeCardRect(i), sel = m.id === cur.id, soc = m.id === 'soccer';
+    ctx.save();
+    if (sel) { ctx.shadowColor = soc ? '#ffffff' : '#FFD700'; ctx.shadowBlur = 10 + Math.sin(frameCount * 0.08) * 4; }
+    ctx.fillStyle = sel ? (soc ? '#C41E3A' : '#7a4a12') : 'rgba(255,255,255,0.06)'; rrect(r.x, r.y, r.w, r.h, 14); ctx.fill();
+    ctx.restore();
+    ctx.strokeStyle = sel ? (soc ? '#ffffff' : '#FFD700') : 'rgba(255,215,0,0.35)'; ctx.lineWidth = sel ? 2.5 : 1.5; rrect(r.x, r.y, r.w, r.h, 14); ctx.stroke();
+    const im = modePics[m.id], sz = 56, ix = r.x + 12, iy = r.y + (r.h - sz) / 2;
+    if (im && im.complete && im.naturalWidth) {
+      const k = Math.min(sz / im.naturalWidth, sz / im.naturalHeight), w = im.naturalWidth * k, h = im.naturalHeight * k;
+      ctx.drawImage(im, ix + (sz - w) / 2, iy + (sz - h) / 2 + (sel ? Math.sin(frameCount * 0.1) * 2 : 0), w, h);
+    }
+    ctx.textAlign = 'left';
+    ctx.fillStyle = sel ? '#ffffff' : '#FFD700'; ctx.font = 'bold 20px Arial'; ctx.fillText(m.name.toUpperCase(), ix + sz + 12, r.y + 32);
+    ctx.fillStyle = sel ? 'rgba(255,255,255,0.85)' : '#bbb'; ctx.font = '13px Arial'; ctx.fillText(m.sub, ix + sz + 12, r.y + 52);
+    if (sel) { ctx.fillStyle = '#ffffff'; ctx.font = 'bold 20px Arial'; ctx.fillText('✓', r.x + r.w - 26, r.y + r.h / 2 + 7); }
+  });
+  ctx.textAlign = 'center'; ctx.fillStyle = '#aaa'; ctx.font = '12px Arial';
+  ctx.fillText('More sports coming soon', W / 2, pr.y + pr.h - 34);
+  ctx.fillText('Your pick stays on until you change it', W / 2, pr.y + pr.h - 16);
+}
+// every tap goes here first while the picker is open: a card picks that mode, anywhere else closes it
+function modeTap(clientX, clientY) {
+  if (!modeOpen) return false;
+  if (state !== STATE.MENU) { modeOpen = false; return false; }
+  const p = toCanvasXY(clientX, clientY);
+  modesOn().forEach((m, i) => { const r = modeCardRect(i); if (p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h) { ensureAudio(); sndStreak(); modeSet(m.id); } });
+  modeOpen = false; return true;
+}
+function isModePillTap(p) {
+  if (modesOn().length < 2) return false;
+  const r = modePillRect();
   return p.x >= r.x - 6 && p.x <= r.x + r.w + 6 && p.y >= r.y - 3 && p.y <= r.y + r.h + 6;
 }
 
@@ -3333,14 +3386,14 @@ function handleScoresTap(clientX, clientY) {
   if (p.x >= r.x - 6 && p.x <= r.x + r.w + 4 && p.y >= r.y - 6 && p.y <= r.y + r.h + 6) { ensureAudio(); loadRuns(); lastRunIndex = -1; scoresOpen = true; sndStreak(); return true; }
   const k = packsBtnRect();
   if (p.x >= k.x - 4 && p.x <= k.x + k.w + 6 && p.y >= k.y - 6 && p.y <= k.y + k.h + 6) { ensureAudio(); sndStreak(); packsOpen(); return true; }
-  if (isSoccerTap(p)) { ensureAudio(); sndStreak(); soccerToggle(); return true; }
+  if (isModePillTap(p)) { ensureAudio(); sndStreak(); modeOpenPicker(); return true; }
   const sk = skinsBtnRect();   // SKINS button, or the hot dog above it
   if (p.x >= W / 2 - 70 && p.x <= W / 2 + 70 && p.y >= sk.y - 62 && p.y <= sk.y + sk.h + 6) { ensureAudio(); sndStreak(); skinsOpen(); return true; }
   return false;
 }
 
 const CREDITS_BTN = { w: 86, h: 30 };
-function creditsBtnVisible() { return state === STATE.MENU && !scoresOpen; }   // start screen (game over has its own warning text there)
+function creditsBtnVisible() { return state === STATE.MENU && !scoresOpen && !modeOpen; }   // start screen (game over has its own warning text there)
 function isCreditsTap(clientX, clientY) {
   if (!creditsBtnVisible()) return false;
   const rect = canvas.getBoundingClientRect();
@@ -3370,6 +3423,7 @@ function isMuteTap(clientX, clientY) {
 canvas.addEventListener('touchstart', e => {
   e.preventDefault();
   const t = e.touches[0];
+  if (modeTap(t.clientX, t.clientY)) return;
   if (isWindTap(t.clientX, t.clientY)) return;
   if (isMuteTap(t.clientX, t.clientY)) { muted = !muted; return; }
   if (isMusicTap(t.clientX, t.clientY)) { ensureAudio(); setMusic(!musicOn); return; }
@@ -3385,6 +3439,7 @@ canvas.addEventListener('touchstart', e => {
 let howtoArmed = false;
 canvas.addEventListener('touchend',   e => { e.preventDefault(); if (howtoArmed) { howtoArmed = false; howtoOpen(); return; } if (shareArmed) { shareArmed = false; shareScore(); return; } onRelease(); });   // share sheets need touchend, not touchstart
 canvas.addEventListener('mousedown', e => {
+  if (modeTap(e.clientX, e.clientY)) return;
   if (isWindTap(e.clientX, e.clientY)) return;
   if (isMuteTap(e.clientX, e.clientY)) { muted = !muted; return; }
   if (isMusicTap(e.clientX, e.clientY)) { ensureAudio(); setMusic(!musicOn); return; }
@@ -3399,7 +3454,7 @@ canvas.addEventListener('mousedown', e => {
 });
 canvas.addEventListener('mouseup', onRelease);
 document.addEventListener('keydown', e => {
-  if (e.code === 'Space') { if (packsIsOpen() || skinsIsOpen() || howtoIsOpen()) return; e.preventDefault(); if (scoresOpen) { scoresOpen = false; return; } onTap(); }
+  if (e.code === 'Space') { if (packsIsOpen() || skinsIsOpen() || howtoIsOpen()) return; e.preventDefault(); if (modeOpen) { modeOpen = false; return; } if (scoresOpen) { scoresOpen = false; return; } onTap(); }
 });
 document.addEventListener('keyup',   e => { if (e.code === 'Space') onRelease(); });
 
@@ -4174,7 +4229,7 @@ function drawMenu() {
   ctx.fillText('FRANKS',W/2,H*0.25); ctx.fillText('& BUNS',W/2,H*0.25+42);
   if (SOCCER_ON) { ctx.fillStyle = '#ffffff'; ctx.font = 'bold 17px Arial'; ctx.fillText('⚽  SOCCER EDITION  ⚽', W/2, H*0.25+70); }
   drawMenuSkin();
-  drawSoccerPill();
+  drawModePill();
   if (dailyCardShown()) { drawDailyCard(H*0.58-20); if (frameCount % 30 === 0) buxIntroMaybe(); }
   else {
     ctx.fillStyle='#ddd'; ctx.font='16px Arial';
@@ -4199,6 +4254,7 @@ function drawMenu() {
   ctx.fillText(dhLabel, k.x + k.w / 2, k.y + k.h / 2 - 1);
   ctx.fillStyle = '#ddd'; ctx.font = '11px Arial'; ctx.fillText('Compete with friends', k.x + k.w / 2, k.y + k.h / 2 + 13);
   if (scoresOpen) drawScoresPanel();
+  if (modeOpen) drawModePicker();
 }
 // --- How to play: a short video (how-to-play.mp4, bundled in the apps too), opened from a button on the start screen.
 // The button glows for a player's first 3 games; it never gets in the way of TAP TO START.
@@ -4217,7 +4273,7 @@ function drawHowtoBtn() {
   ctx.fillText('▶︎ How to play', W / 2, r.y + r.h / 2 + 4);
 }
 function isHowtoTap(clientX, clientY) {
-  if (state !== STATE.MENU || scoresOpen) return false;
+  if (state !== STATE.MENU || scoresOpen || modeOpen) return false;
   const p = toCanvasXY(clientX, clientY), r = howtoBtnRect();
   return p.x >= r.x - 6 && p.x <= r.x + r.w + 6 && p.y >= r.y - 6 && p.y <= r.y + r.h + 6;
 }
@@ -4255,7 +4311,7 @@ function howtoOpen() {
 // (so current players see it on their first visit after the update, and new players after their third game)
 function buxIntroIsOpen() { const b = document.getElementById('fb-buxintro'); return !!(b && b.style.display !== 'none'); }
 function buxIntroMaybe() {
-  if (SKINS_ALL || safeGet('fb_bux_intro') || buxIntroIsOpen() || howtoIsOpen() || skinsIsOpen() || packsIsOpen() || scoresOpen) return;
+  if (SKINS_ALL || safeGet('fb_bux_intro') || buxIntroIsOpen() || howtoIsOpen() || skinsIsOpen() || packsIsOpen() || scoresOpen || modeOpen) return;
   safeSet('fb_bux_intro', '1');
   try { if (typeof gtag === 'function') gtag('event', 'bux_intro'); } catch (e) {}
   const b = document.createElement('div'); b.id = 'fb-buxintro'; b.setAttribute('role', 'dialog'); b.setAttribute('aria-label', 'New: BunBux');
