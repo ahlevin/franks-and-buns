@@ -2913,10 +2913,27 @@ function drawModePicker() {
 // every tap goes here first while the picker is open: a card picks that mode, anywhere else closes it
 function modeTap(clientX, clientY) {
   if (!modeOpen) return false;
-  if (state !== STATE.MENU) { modeOpen = false; return false; }
+  if (state !== STATE.MENU && state !== STATE.GAMEOVER) { modeOpen = false; return false; }
   const p = toCanvasXY(clientX, clientY);
   modesOn().forEach((m, i) => { const r = modeCardRect(i); if (p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h) { ensureAudio(); sndStreak(); modeSet(m.id); } });
   modeOpen = false; return true;
+}
+// Game Over: the same pill, centred between SHARE and SKINS, opens the picker; the next game plays the new mode
+function modeGoVisible() { return state === STATE.GAMEOVER && gameOverDelay > 20 && modesOn().length > 1 && !modeOpen && !skinsIsOpen() && !packsIsOpen(); }
+function modeGoRect() { const r = modePillRect(); return { x: r.x, y: 52, w: r.w, h: r.h }; }
+function drawModeGoButton() {
+  if (!modeGoVisible()) return;
+  const r = modeGoRect(), m = modeCur(), soc = m.id !== 'classic';
+  ctx.fillStyle = soc ? '#C41E3A' : 'rgba(0,0,0,0.55)'; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.fill();
+  ctx.strokeStyle = soc ? '#ffffff' : '#FFD700'; ctx.lineWidth = 1.5; rrect(r.x, r.y, r.w, r.h, r.h / 2); ctx.stroke();
+  ctx.fillStyle = soc ? '#ffffff' : '#FFD700'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'left';
+  const t = modePillText(); ctx.fillText(t, r.x + (r.w - ctx.measureText(t).width) / 2, r.y + r.h / 2 + 4.5); ctx.textAlign = 'center';
+}
+function isModeGoTap(clientX, clientY) {
+  if (!modeGoVisible()) return false;
+  const p = toCanvasXY(clientX, clientY), r = modeGoRect();
+  if (p.x >= r.x - 6 && p.x <= r.x + r.w + 6 && p.y >= r.y - 6 && p.y <= r.y + r.h + 6) { ensureAudio(); sndStreak(); modeOpenPicker(); return true; }
+  return false;
 }
 function isModePillTap(p) {
   if (modesOn().length < 2) return false;
@@ -3532,6 +3549,7 @@ canvas.addEventListener('touchstart', e => {
   if (isGcTap(t.clientX, t.clientY)) { gcShowBoard(); return; }
   if (isPacksPillTap(t.clientX, t.clientY)) { packsOpenResults(); return; }
   if (isShareGoTap(t.clientX, t.clientY)) { shareArmed = true; return; }
+  if (isModeGoTap(t.clientX, t.clientY)) return;
   if (isSkinsGoTap(t.clientX, t.clientY)) return;
   if (isHowtoTap(t.clientX, t.clientY)) { howtoArmed = true; return; }   // opened on touchend, so the video may play with sound
   if (handleScoresTap(t.clientX, t.clientY)) return;
@@ -3548,6 +3566,7 @@ canvas.addEventListener('mousedown', e => {
   if (isGcTap(e.clientX, e.clientY)) { gcShowBoard(); return; }
   if (isPacksPillTap(e.clientX, e.clientY)) { packsOpenResults(); return; }
   if (isShareGoTap(e.clientX, e.clientY)) { shareScore(); return; }
+  if (isModeGoTap(e.clientX, e.clientY)) return;
   if (isSkinsGoTap(e.clientX, e.clientY)) return;
   if (isHowtoTap(e.clientX, e.clientY)) { howtoOpen(); return; }
   if (handleScoresTap(e.clientX, e.clientY)) return;
@@ -4494,7 +4513,7 @@ function shareGoVisible() { return state === STATE.GAMEOVER && gameOverDelay > 2
 function drawShareGoButton() {
   if (shareMsg && frameCount - shareMsgT < 200) {
     ctx.fillStyle = '#7CFC00'; ctx.font = 'bold 13px Arial'; ctx.textAlign = 'left';
-    ctx.fillText(shareMsg, (W - ctx.measureText(shareMsg).width) / 2, 64); ctx.textAlign = 'center';
+    ctx.fillText(shareMsg, (W - ctx.measureText(shareMsg).width) / 2, modesOn().length > 1 ? 98 : 64); ctx.textAlign = 'center';
   }
   if (!shareGoVisible()) return;
   const r = shareGoRect();
@@ -4974,6 +4993,7 @@ function drawGameOver() {
   drawPacksPill();
   drawSkinsGoButton();
   drawShareGoButton();
+  drawModeGoButton();
   if (gameOverDelay>40) drawTapPill('TAP TO RETRY', Math.max(H*0.82-7, H*0.65+114));   // stays clear of a full Wienerboard on short screens
   drawLeaderboard(H * 0.65);
   drawGcButton();
@@ -5179,7 +5199,7 @@ function draw() {
   if (state===STATE.WIND) drawWind();
   if (state===STATE.MENU) drawMenu();
   if (state===STATE.INTRO) drawIntro();
-  if (state===STATE.GAMEOVER) drawGameOver();
+  if (state===STATE.GAMEOVER) { drawGameOver(); if (modeOpen) drawModePicker(); }
   drawMuteBtn(); // always visible, outside shake transform
 }
 
