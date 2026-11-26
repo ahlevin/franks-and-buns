@@ -2680,7 +2680,7 @@ if (!(bestScore >= 0 && bestScore < 1e9)) bestScore = 0;
 // rolled back without an app update. Until it loads, the last answer this device saw is used (off on a first visit).
 // Test copies of the site can force one: ?stages=on|off, ?secondwind=on|off, ?firsttips=on|off, ?soccer=on|off (sports: see SPORTS)
 // firsttips starts on, so a brand-new player gets the tips even before flags.json arrives; flags.json can still turn it off.
-const FEAT = { stages: false, secondwind: false, firsttips: true, soccer: false, basketball: false, football: false, waterpolo: false, golf: false };
+const FEAT = { stages: false, secondwind: false, firsttips: true, soccer: false, basketball: false, football: false, waterpolo: false, golf: false, baseball: false, cricket: false, hockey: false };
 function featApply(f) { if (f && typeof f === 'object') for (const k in FEAT) if (typeof f[k] === 'boolean') FEAT[k] = f[k]; }
 function featForce() {
   if (!SHOP_TESTHOST) return;
@@ -2694,7 +2694,7 @@ try {
     .then(f => { if (f) { featApply(f); safeSet('fb_feat', JSON.stringify(FEAT)); featForce(); } }).catch(() => {});
 } catch (e) {}
 
-// --- Sports modes (switches: FEAT.soccer, FEAT.basketball, FEAT.football, FEAT.waterpolo, FEAT.golf in flags.json), picked with the
+// --- Sports modes (switches: FEAT.soccer, .basketball, .football, .waterpolo, .golf, .baseball, .cricket, .hockey in flags.json), picked with the
 // GAME MODE pill on the start screen. The hot dog becomes the sport's ball, buns become its targets (goals, hoops, nets, greens), the
 // kitchen becomes its venue, and a player in a pinstriped home kit runs under the ball. The chef is a rival, his fork the rival's arm,
 // the chili dog a fire ball. Turning a switch off puts its players back in the normal game at once. Picked per device (fb_mode).
@@ -2704,7 +2704,8 @@ const SOCCER_LABELS = { mustard: 'YELLOW CARD', ketchup: 'RED CARD', relish: 'WA
 const SPORT_VENUE = { how: 'free', art: true, mirror: true, passerY: 0.985, passerH: 0.13 };
 var STADIUM = Object.assign({ id: 'stadium', name: 'Stadium' }, SPORT_VENUE);
 var SPORT_VENUES = [STADIUM, Object.assign({ id: 'arena', name: 'Arena' }, SPORT_VENUE), Object.assign({ id: 'gridiron', name: 'Gridiron' }, SPORT_VENUE),
-  Object.assign({ id: 'pool', name: 'Pool' }, SPORT_VENUE)];
+  Object.assign({ id: 'pool', name: 'Pool' }, SPORT_VENUE), Object.assign({ id: 'diamond', name: 'Ballpark' }, SPORT_VENUE),
+  Object.assign({ id: 'green', name: 'Cricket Green' }, SPORT_VENUE), Object.assign({ id: 'rink', name: 'Rink' }, SPORT_VENUE)];
 const SPORT_CHEER = ['"Total team effort!"', '"The crowd wants a rematch!"'];
 // tg: where each target picture is drawn, relative to the bun's centre (goal: empty, goal-hot: hot, goal-ball / goal-hot-ball: scored)
 var SPORTS = {
@@ -2759,8 +2760,41 @@ var SPORTS = {
       'Water Hazard', 'Fairway Drive', 'Chip Shot', 'Birdie Bay', 'Eagle Ridge', 'Albatross Point', 'Back Nine', 'Windy Links',
       'Rough Patch', 'Tee Time', 'Island Green', 'Long Drive', 'Clubhouse Turn', 'Pro-Am', 'Senior Tour', 'Playoff Hole',
       'Sudden Death', 'Final Round', 'Sunday Charge', 'Hole in One', 'Trophy Lift', 'Victory Lap', 'Legends Day', 'Hall of Fame'] },
+  baseball: { id: 'baseball', name: 'Baseball', icon: '⚾', sub: 'Drop the ball in the catcher’s mitts', ballWord: 'baseball', targets: 'mitts', tip: 'Drop it in the mitt!',
+    score: 'STRIKE!', hot: 'HOT MITT!', fire: 'FIRE BALL', smash: 'BAT SMASHED!', count: 'Catches', countLong: 'Catches Made', kitchen: 'diamond',
+    snd: 'pop', whistle: false, spin: 0.16,
+    puff: ['rgba(255,248,235,0.9)', 'rgba(210,140,90,0.85)', 'rgba(150,85,45,0.3)', '#FFFFFF', '#C8784A'],
+    skin: { fly: [-17, -17, 34, 34], bun: [-44, -42.8, 88, 47.8], grill: [-44, -49, 88, 54] },
+    tg: { goal: [-43.9, -29.8, 87.8, 47.8], 'goal-ball': [-44, -29.8, 88, 47.8], 'goal-hot': [-44, -36, 88, 54], 'goal-hot-ball': [-44, -36, 88, 54] },
+    quips: ['"Take me out to the ball game!"', '"That one was a little outside."', '"Every miss is a new at-bat."', '"Keep your eye on the ball."'].concat(SPORT_CHEER),
+    stages: ['Opening Day', 'Batting Practice', 'Kyle’s Curveballs', 'Stacia’s Sluggers', 'Bullpen', 'First Pitch', 'Home Opener', 'Seventh-Inning Stretch',
+      'Dugout Row', 'Line Drive', 'Pop Fly', 'Stolen Base', 'Double Play', 'Grand Slam', 'Rally Caps', 'Extra Innings',
+      'Bottom of the Ninth', 'Walk-Off', 'Bleacher Seats', 'Rivalry Weekend', 'Doubleheader', 'Conference Clash', 'Senior Day', 'Regionals',
+      'Super Regionals', 'Championship Night', 'Perfect Game', 'Dog Pile', 'Trophy Lift', 'Victory Lap', 'Legends Night', 'Hall of Fame'] },
+  cricket: { id: 'cricket', name: 'Cricket', icon: '🏏', sub: 'Knock the bails off the stumps', ballWord: 'ball', targets: 'stumps', tip: 'Drop it on the stumps!',
+    score: 'HOWZAT!', hot: 'HOT HOWZAT!', fire: 'FIRE BALL', smash: 'HAND SMASHED!', count: 'Wickets', countLong: 'Wickets Taken', kitchen: 'green',
+    snd: 'knock', whistle: false, spin: 0.16,
+    puff: ['rgba(250,252,245,0.9)', 'rgba(150,205,110,0.85)', 'rgba(60,130,50,0.3)', '#FFFFFF', '#4CAF50'],
+    skin: { fly: [-17, -17, 34, 34], bun: [-42.1, -47.5, 84.2, 52.5], grill: [-42.1, -47.5, 84.2, 52.5] },
+    tg: { goal: [-42, -26.8, 84, 44.8], 'goal-ball': [-42.1, -34.5, 84.2, 52.5], 'goal-hot': [-42, -27.5, 84, 45.5], 'goal-hot-ball': [-42.1, -34.5, 84.2, 52.5] },
+    quips: ['"Howzat!"', '"Just clipped the bails."', '"Every miss is another over."', '"Lovely line and length!"'].concat(SPORT_CHEER),
+    stages: ['First Over', 'Nets Practice', 'Kyle’s Googlies', 'Stacia’s Sixes', 'Village Green', 'Tea Break', 'Home Ground', 'Silly Point',
+      'Square Leg', 'Cover Drive', 'Leg Spin', 'Yorker Lane', 'Bouncer Bay', 'Maiden Over', 'Hat-Trick Ball', 'Super Over',
+      'Golden Duck', 'Boundary Rope', 'Six and Out', 'Rivalry Day', 'Rain Delay', 'County Clash', 'Senior Day', 'Quarterfinals',
+      'Semifinals', 'Championship Day', 'Last Ball', 'Century', 'Trophy Lift', 'Victory Lap', 'Legends Day', 'Hall of Fame'] },
+  hockey: { id: 'hockey', name: 'Ice Hockey', icon: '🏒', sub: 'Slap the puck into the nets', ballWord: 'puck', targets: 'nets', tip: 'Drop it in the net!',
+    score: 'LIGHT THE LAMP!', hot: 'HOT GOAL!', fire: 'FIRE PUCK', smash: 'STICK SMASHED!', count: 'Goals', countLong: 'Goals Scored', kitchen: 'rink',
+    snd: 'puck', whistle: true, spin: 0.12,
+    puff: ['rgba(255,255,255,0.95)', 'rgba(200,230,250,0.85)', 'rgba(140,190,230,0.3)', '#FFFFFF', '#BFE3FF'],
+    skin: { fly: [-22, -15, 44, 30], bun: [-44, -51.8, 88, 56.8], grill: [-44, -54.8, 88, 59.8] },
+    tg: { goal: [-44, -35.8, 88, 53.8], 'goal-ball': [-44, -38.8, 88, 56.8], 'goal-hot': [-44, -36, 88, 54], 'goal-hot-ball': [-44, -41.8, 88, 59.8] },
+    quips: ['"Light the lamp!"', '"That one rang off the post."', '"Every miss is a line change."', '"Keep your stick on the ice."'].concat(SPORT_CHEER),
+    stages: ['Puck Drop', 'Warm-Up Skate', 'Kyle’s Clappers', 'Stacia’s Snipers', 'Morning Skate', 'Faceoff Circle', 'Home Opener', 'Blue Line',
+      'Breakaway', 'Wrist Shot', 'Slap Shot', 'Power Play', 'Penalty Kill', 'Top Shelf', 'Five-Hole', 'Overtime',
+      'Hat Trick', 'Empty Net', 'Fresh Sheet', 'Rivalry Night', 'Outdoor Classic', 'Conference Clash', 'Senior Night', 'Quarterfinals',
+      'Semifinals', 'Championship Night', 'Sudden Death', 'Shootout', 'Trophy Lift', 'Victory Lap', 'Legends Night', 'Hall of Fame'] },
 };
-const SPORT_ORDER = ['soccer', 'basketball', 'football', 'waterpolo', 'golf'];
+const SPORT_ORDER = ['soccer', 'basketball', 'football', 'waterpolo', 'golf', 'baseball', 'cricket', 'hockey'];
 SPORT_ORDER.forEach(id => { const s = SPORTS[id]; s.skin = Object.assign({ id: id, name: s.name + ' Ball', frames: 1 }, s.skin); });
 const sportArt = {}, sportNormal = { sp: {}, imgs: {} };
 let soccerCheerUntil = 0, soccerKickUntil = 0;
@@ -2832,6 +2866,18 @@ function sndSport(ev) {   // ev: 'flap', 'land' or 'miss'
     if (ev === 'flap') { playTone(1900, 0.04, 'triangle', 0.09); playNoise(0.03, 'highpass', 5000, 4000, 0.04, 0.7); }
     else if (ev === 'land') { playTone(520, 0.05, 'sine', 0.14); setTimeout(() => playTone(330, 0.09, 'sine', 0.12), 60); sndClap(); }
     else { playTone(150, 0.15, 'sine', 0.15); groan(); }
+  } else if (k === 'pop') {   // baseball: the crack of a bat, the pop of the mitt
+    if (ev === 'flap') { playTone(1400, 0.03, 'square', 0.05); playNoise(0.05, 'highpass', 3500, 2500, 0.06, 0.8); }
+    else if (ev === 'land') { playNoise(0.09, 'lowpass', 1200, 400, 0.18, 0.8); sndCheer2(); }
+    else { playTone(110, 0.15, 'sine', 0.2); groan(); }
+  } else if (k === 'knock') {   // cricket: the tock of willow, the clatter of the stumps and a polite clap
+    if (ev === 'flap') playTone(820, 0.05, 'triangle', 0.13);
+    else if (ev === 'land') { [0, 70, 150].forEach((d, i) => setTimeout(() => playTone(700 - i * 120, 0.05, 'triangle', 0.12), d)); sndClap(); }
+    else { playTone(140, 0.15, 'sine', 0.18); groan(); }
+  } else if (k === 'puck') {   // hockey: a slap shot, the goal horn, a thud on the boards
+    if (ev === 'flap') { playNoise(0.06, 'highpass', 2500, 1800, 0.08, 0.7); playTone(180, 0.06, 'sine', 0.15); }
+    else if (ev === 'land') { playTone(150, 0.7, 'sawtooth', 0.05); playTone(190, 0.7, 'sawtooth', 0.035); sndCheer2(); }
+    else { playTone(90, 0.15, 'sine', 0.25); groan(); }
   } else {
     if (ev === 'flap') sndKick();
     else if (ev === 'land') { sndKick(0.6); sndCheer2(); }
@@ -3890,7 +3936,7 @@ function drawChiliRushOverlay() {
 
 function landFrank(bun) {
   let mult = bun.type.multiplier||1;
-  if (SPORT) { soccerCheerUntil = frameCount + 40; addFloatingText(bun.x, bun.y - (bun.grilled ? 82 : 52), SPORT.score, '#FFFFFF', 28); }
+  if (SPORT) { soccerCheerUntil = frameCount + 40; addFloatingText(Math.min(Math.max(bun.x, 120), W - 120), bun.y - (bun.grilled ? 82 : 52), SPORT.score, '#FFFFFF', 28);   // long words stay on screen }
   if (bun.grilled) {
     score += 1000;
     addFloatingText(bun.x, bun.y - 50, sportT('LET THEM COOK!', 'hot') + ' +1000', '#FF6600', 26);

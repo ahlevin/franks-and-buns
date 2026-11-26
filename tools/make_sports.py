@@ -17,6 +17,10 @@ SPORTS = {
     'football': dict(key='green', venue='gridiron', ball=(48, 30), target=(96, 0.42)),
     'waterpolo': dict(key='green', venue='pool', ball=(38, 38), target=(84, None)),
     'golf': dict(key='magenta', venue=None, ball=(32, 32), target=(88, 0.62)),
+    # venue_src: file prefix of the venue art when it differs from the kitchen id (ballpark is already a normal kitchen)
+    'baseball': dict(key='green', venue='diamond', venue_src='ballpark', ball=(34, 34), target=(88, None)),
+    'cricket': dict(key='green', venue='green', ball=(34, 34), target=(84, None)),
+    'hockey': dict(key='green', venue='rink', ball=(44, 30), ballfile='hockey-puck', target=(88, None)),
 }
 BUN_BOTTOM = 18      # game px below the bun's centre where the bun picture ends
 MOUTH_Y = -6         # game px: where a target's opening sits (rim, cup)
@@ -56,12 +60,13 @@ def canvas_of(im, w, h, x, y):
 def build(sport):
     cfg, out = SPORTS[sport], {}
     # ball: flying (skin fly picture) and the 512 title / intro ball
-    ball = largest(sheet(sport, sport + '-ball', 2, 1)[(0, 0)])
+    ball = largest(sheet(sport, cfg.get('ballfile', sport + '-ball'), 2, 1)[(0, 0)])
     bw, bh = cfg['ball']
     save(ms.fit(ball, bw * 4, bh * 4), 'skin-%s-fly.png' % sport); out['fly'] = [-bw / 2, -bh / 2, bw, bh]
     save(ms.place((512, 512), ball, (96, 96, 416, 416)), sport + '-ball.png')
     # targets: one scale for all four, bottoms lined up; boxes relative to the bun's centre
-    tname = {'basketball': 'basketball-hoops', 'football': 'football-nets', 'waterpolo': 'waterpolo-goals', 'golf': 'golf-greens'}[sport]
+    tname = {'basketball': 'basketball-hoops', 'football': 'football-nets', 'waterpolo': 'waterpolo-goals', 'golf': 'golf-greens',
+             'baseball': 'baseball-mitts', 'cricket': 'cricket-stumps', 'hockey': 'hockey-nets'}[sport]
     if sport == 'football' and os.path.exists('new-art/sports/football/football-hands.png'): tname = 'football-hands'   # Alan's diamond catch
     t = sheet(sport, tname, 2, 2)
     states = {'goal': t[(0, 0)], 'goal-ball': t[(0, 1)], 'goal-hot': t[(1, 0)], 'goal-hot-ball': t[(1, 1)]}
@@ -102,10 +107,11 @@ def build(sport):
     # venue: back wall, ground strip, start screen, passer-by
     v = cfg['venue']
     if v:
-        pb = sheet(sport, v + '-passer-by', 1, 1)[(0, 0)]
+        vs = cfg.get('venue_src', v)
+        pb = sheet(sport, vs + '-passer-by', 1, 1)[(0, 0)]
         save(ms.bottom_scaled(pb, 560 / pb.width), 'kitchen-%s-passer.png' % v)
         for src, name in [('back-wall', 'wall'), ('counter', 'counter'), ('start', 'start')]:
-            Image.open('new-art/sports/%s/%s-%s.png' % (sport, v, src)).convert('RGB').save('bg-%s-%s.jpg' % (name, v), quality=84, optimize=True); print('bg-%s-%s.jpg' % (name, v))
+            Image.open('new-art/sports/%s/%s-%s.png' % (sport, vs, src)).convert('RGB').save('bg-%s-%s.jpg' % (name, v), quality=84, optimize=True); print('bg-%s-%s.jpg' % (name, v))
     return out
 
 if __name__ == '__main__':
