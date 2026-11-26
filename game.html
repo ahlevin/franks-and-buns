@@ -3936,7 +3936,7 @@ function drawChiliRushOverlay() {
 
 function landFrank(bun) {
   let mult = bun.type.multiplier||1;
-  if (SPORT) { soccerCheerUntil = frameCount + 40; addFloatingText(Math.min(Math.max(bun.x, 120), W - 120), bun.y - (bun.grilled ? 82 : 52), SPORT.score, '#FFFFFF', 28);   // long words stay on screen }
+  if (SPORT) { soccerCheerUntil = frameCount + 40; addFloatingText(Math.min(Math.max(bun.x, 120), W - 120), bun.y - (bun.grilled ? 82 : 52), SPORT.score, '#FFFFFF', 28); }   // long words stay on screen
   if (bun.grilled) {
     score += 1000;
     addFloatingText(bun.x, bun.y - 50, sportT('LET THEM COOK!', 'hot') + ' +1000', '#FF6600', 26);
