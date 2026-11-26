@@ -21,12 +21,18 @@ VIDEOS = [
     dict(slug='dog-house', title="What's a Dog House?", src='videos/what-is-a-dog-house.mp4',
          poster='videos/what-is-a-dog-house.jpg', secs=26,
          desc='A private leaderboard for your family or friends. You can be in up to 5 Dog Houses, with up to 50 players in each.'),
+    dict(slug='make-a-dog-house', title='Make a Dog House', src='videos/make-a-dog-house.mp4',
+         poster='videos/make-a-dog-house.jpg', secs=58, date='2026-11-26',
+         desc='Step by step: create a Dog House, invite a friend, and let them in. From the start screen to both of you on the Wienerboard.'),
     dict(slug='dog-house-tour', title='Dog House Tour', src='videos/dog-house-tour.mp4',
          poster='videos/dog-house-tour.jpg', secs=39,
          desc='Your code, inviting friends, letting new players in, and the weekly and all-time Wienerboards.'),
     dict(slug='recovery-code', title='Your Recovery Code', src='videos/recovery-code.mp4',
          poster='videos/recovery-code.jpg', secs=32,
          desc='Your code brings back your Dog Houses and costumes on a new phone or browser. Keep it safe and never share it.'),
+    dict(slug='sync-devices', title='Sync Across Devices', src='videos/sync-devices.mp4',
+         poster='videos/sync-devices.jpg', secs=49, date='2026-11-26',
+         desc='Play on your phone, tablet and computer with the same name, Dog Houses, costumes and BunBux. Start to finish with your recovery code.'),
 ]
 
 FONT_BOLD = '/usr/share/fonts/opentype/inter/InterDisplay-Bold.otf'
@@ -128,10 +134,10 @@ def main():
             '@context': 'https://schema.org', '@type': 'VideoObject',
             'name': v['title'], 'description': v['desc'],
             'thumbnailUrl': f"{SITE}/{v['poster']}", 'contentUrl': f"{SITE}/{v['src']}",
-            'uploadDate': '2026-11-22', 'duration': f"PT{v['secs']}S",
+            'uploadDate': v.get('date', '2026-11-22'), 'duration': f"PT{v['secs']}S",
             'url': f"{SITE}/videos/{v['slug']}",
         }
-        e = {k: html.escape(str(val), quote=True) for k, val in v.items()}
+        e = {k: html.escape(str(val), quote=True) for k, val in v.items() if k != 'date'}
         page = PAGE.format(site=SITE, ld=json.dumps(ld, ensure_ascii=False).replace('</', '<\\/'), **e)
         (ROOT / 'videos' / f"{v['slug']}.html").write_text(page)
         print('wrote', f"videos/{v['slug']}.html", card(v).relative_to(ROOT))
