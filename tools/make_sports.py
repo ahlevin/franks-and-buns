@@ -3,6 +3,7 @@ split the sheets and write the game pictures <sport>-*.png at game sizes (4 spri
 tools/make_soccer.py does for Soccer. Run from the repo root: python3 tools/make_sports.py
 It prints each sport's boxes for SPORTS in game.html."""
 import json
+import os
 import numpy as np
 from PIL import Image
 from scipy import ndimage
@@ -60,7 +61,9 @@ def build(sport):
     save(ms.fit(ball, bw * 4, bh * 4), 'skin-%s-fly.png' % sport); out['fly'] = [-bw / 2, -bh / 2, bw, bh]
     save(ms.place((512, 512), ball, (96, 96, 416, 416)), sport + '-ball.png')
     # targets: one scale for all four, bottoms lined up; boxes relative to the bun's centre
-    t = sheet(sport, {'basketball': 'basketball-hoops', 'football': 'football-nets', 'waterpolo': 'waterpolo-goals', 'golf': 'golf-greens'}[sport], 2, 2)
+    tname = {'basketball': 'basketball-hoops', 'football': 'football-nets', 'waterpolo': 'waterpolo-goals', 'golf': 'golf-greens'}[sport]
+    if sport == 'football' and os.path.exists('new-art/sports/football/football-hands.png'): tname = 'football-hands'   # Alan's diamond catch
+    t = sheet(sport, tname, 2, 2)
     states = {'goal': t[(0, 0)], 'goal-ball': t[(0, 1)], 'goal-hot': t[(1, 0)], 'goal-hot-ball': t[(1, 1)]}
     tw, frac = cfg['target']
     s = tw * 4 / max(states['goal'].width, states['goal-hot'].width)
