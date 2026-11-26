@@ -3966,6 +3966,7 @@ function finishRun() {   // the run is over: Game Over, saves and awards
 // DRAW
 // ============================================================
 function drawFrank(x, y, sq, st) {
+  if (SPORT) sq = st = 1;   // a ball keeps its shape: no squash and stretch (it would wobble as it spins)
   ctx.save(); ctx.translate(x,y); ctx.scale(sq,st);
   if (SPORT) ctx.rotate(frameCount * SPORT.spin);   // the ball spins as it flies
   const hw=FRANK_W/2, hh=FRANK_H/2;
