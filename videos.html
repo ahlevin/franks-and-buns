@@ -230,6 +230,16 @@
     .vid p{margin:0;font-size:.95rem;line-height:1.5}
     .vid .len{color:#a08060;font-size:.8rem;margin-top:6px}
     .container p a{color:#ffb347}
+    .vid{scroll-margin-top:80px;transition:box-shadow .3s,border-color .3s}
+    .vid.focus{border-color:#FFD700;box-shadow:0 0 0 3px rgba(255,215,0,.55),0 0 34px rgba(255,102,0,.45);animation:vidpulse 1.1s ease-in-out 3}
+    @keyframes vidpulse{50%{box-shadow:0 0 0 6px rgba(255,215,0,.25),0 0 44px rgba(255,102,0,.6)}}
+    .vid .share{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+    .vid .share button{flex:1;min-width:110px;font:700 .9rem 'Nunito',sans-serif;border-radius:999px;padding:8px 12px;cursor:pointer;border:1px solid #FF6600;background:transparent;color:#fff8ee;transition:background .15s}
+    .vid .share button:hover{background:rgba(255,102,0,.18)}
+    .vid .share button.primary{background:#FF6600;color:#fff}
+    .vid .share button.primary:hover{background:#ff7a1f}
+    .vid .share button.done{background:#2e7d32;border-color:#2e7d32;color:#fff}
+    @media (prefers-reduced-motion:reduce){.vid.focus{animation:none}}
   </style>
 </head>
 <body>
@@ -263,7 +273,7 @@
 <div class="container">
   <h1>Videos 🎬</h1>
   <div class="divider"></div>
-  <p>Quick videos on how Franks &amp; Buns works. Each one is under 40 seconds.</p>
+  <p>Quick videos on how Franks &amp; Buns works. Each one is under 40 seconds. Tap <strong>Copy link</strong> or <strong>Share</strong> under a video to send someone straight to it.</p>
 
   <div class="vids">
     <div class="vid" id="how-to-play">
@@ -297,10 +307,73 @@
 </div>
 
 <script>
-// play one video at a time
+// play one video at a time; the address bar follows the playing video so it can be copied
 document.querySelectorAll('.vid video').forEach(v => v.addEventListener('play', () => {
   document.querySelectorAll('.vid video').forEach(o => { if (o !== v) o.pause(); });
+  const id = v.closest('.vid').id;
+  if (location.hash !== '#' + id) history.replaceState(null, '', '#' + id);
 }));
+
+// Direct links: franksandbuns.com/videos/<id> (with link previews, made by tools/make_video_links.py)
+// lands on videos.html#<id>, which scrolls to and highlights that video.
+function videoLink(id) { return location.origin + '/videos/' + id; }
+function focusVideo(smooth) {
+  const id = decodeURIComponent(location.hash.slice(1));
+  const card = id && document.getElementById(id);
+  if (!card || !card.classList.contains('vid')) return;
+  document.querySelectorAll('.vid.focus').forEach(c => c.classList.remove('focus'));
+  card.classList.add('focus');
+  const v = card.querySelector('video');
+  if (v && v.preload === 'none') v.preload = 'metadata';
+  card.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+}
+function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+  return new Promise((ok, fail) => {
+    const t = document.createElement('textarea');
+    t.value = text; t.setAttribute('readonly', ''); t.style.position = 'fixed'; t.style.opacity = '0';
+    document.body.appendChild(t); t.select();
+    try { document.execCommand('copy') ? ok() : fail(); } catch (e) { fail(e); }
+    t.remove();
+  });
+}
+function flash(btn, label) {
+  const old = btn.dataset.label || (btn.dataset.label = btn.textContent);
+  btn.textContent = label; btn.classList.add('done');
+  clearTimeout(btn._t);
+  btn._t = setTimeout(() => { btn.textContent = old; btn.classList.remove('done'); }, 2000);
+}
+document.querySelectorAll('.vid').forEach(card => {
+  const title = card.querySelector('h2').textContent;
+  const url = videoLink(card.id);
+  const row = document.createElement('div');
+  row.className = 'share';
+  const copy = document.createElement('button');
+  copy.type = 'button';
+  copy.textContent = '🔗 Copy link';
+  copy.setAttribute('aria-label', 'Copy link to ' + title);
+  copy.addEventListener('click', () => {
+    copyText(url).then(() => flash(copy, '✓ Link copied'), () => window.prompt('Copy this link:', url));
+  });
+  row.appendChild(copy);
+  if (navigator.share) {
+    const share = document.createElement('button');
+    share.type = 'button';
+    share.className = 'primary';
+    share.textContent = '📤 Share';
+    share.setAttribute('aria-label', 'Share ' + title);
+    share.addEventListener('click', () => {
+      navigator.share({ title: title + ' | Franks & Buns', text: 'Franks & Buns: ' + title, url }).catch(() => {});
+    });
+    row.appendChild(share);
+  }
+  card.appendChild(row);
+});
+window.addEventListener('hashchange', () => focusVideo(true));
+if (location.hash) {
+  focusVideo(false);
+  window.addEventListener('load', () => focusVideo(false));  // again once fonts and posters have settled the layout
+}
 </script>
 
 <footer>
