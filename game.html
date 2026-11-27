@@ -1012,6 +1012,19 @@ const SKINS = [
   { id: 'frogprince', name: 'Frog Prince', group: 'magicalmishaps', frames: 1, fly: [-47.3, -31.4, 87.1, 53.2], bun: [-41.4, -56.8, 87.6, 58.7], grill: [-41.5, -63.4, 87.7, 65.2] },
   { id: 'potionexplosion', name: 'Potion Explosion', group: 'magicalmishaps', frames: 1, fly: [-47.9, -36.6, 90.4, 60.0], bun: [-41.6, -64.3, 96.9, 66.2], grill: [-41.6, -73.3, 96.6, 75.3] },
   { id: 'spellcheckwizard', name: 'Spellcheck Wizard', group: 'magicalmishaps', frames: 1, fly: [-48.3, -41.6, 91.3, 60.7], bun: [-41.4, -60.7, 84.6, 62.6], grill: [-41.3, -73.1, 84.5, 75.0] },
+  { id: 'glitch', name: 'Glitch', group: 'definitelyai', frames: 1, fly: [-47.9, -24.2, 88.0, 40.7], bun: [-41.4, -47.9, 82.8, 49.8], grill: [-42.4, -64.6, 84.6, 66.5] },
+  { id: 'hallucination', name: 'Hallucination', group: 'definitelyai', frames: 1, fly: [-51.8, -38.6, 92.6, 61.8], bun: [-44.2, -67.7, 87.7, 69.6], grill: [-44.1, -70.6, 87.6, 72.5] },
+  { id: 'promptwizard', name: 'Prompt Wizard', group: 'definitelyai', frames: 1, fly: [-48.4, -30.6, 94.5, 53.8], bun: [-43.6, -60.0, 104.0, 62.0], grill: [-44.0, -64.4, 103.3, 66.4] },
+  { id: 'superbrain', name: 'Superbrain', group: 'definitelyai', frames: 1, fly: [-48.5, -34.4, 88.2, 48.5], bun: [-43.2, -57.0, 84.9, 58.9], grill: [-43.7, -71.4, 86.2, 73.3] },
+  { id: 'eightbit', name: '8-Bit', group: 'definitelyai', frames: 1, fly: [-49.4, -38.9, 88.9, 58.6], bun: [-43.9, -60.4, 85.0, 62.3], grill: [-44.4, -70.5, 85.4, 72.4] },
+  { id: 'analog', name: 'Analog', group: 'definitelyai', frames: 1, fly: [-49.4, -30.8, 90.0, 50.6], bun: [-41.5, -57.8, 86.0, 59.7], grill: [-41.5, -75.5, 85.4, 77.4] },
+  { id: 'sixties', name: '1960s', group: 'decades', frames: 1, fly: [-46.3, -26.9, 87.3, 46.2], bun: [-42.0, -49.0, 84.1, 50.8], grill: [-42.0, -68.0, 84.1, 69.9] },
+  { id: 'seventies', name: '1970s', group: 'decades', frames: 1, fly: [-47.1, -35.2, 89.9, 53.7], bun: [-40.5, -56.1, 85.7, 58.0], grill: [-40.5, -65.5, 85.7, 67.4] },
+  { id: 'eighties', name: '1980s', group: 'decades', frames: 1, fly: [-48.6, -32.4, 88.2, 64.8], bun: [-44.8, -51.6, 89.0, 67.1], grill: [-45.4, -66.8, 88.9, 82.3] },
+  { id: 'nineties', name: '1990s', group: 'decades', frames: 1, fly: [-48.0, -31.0, 89.4, 65.3], bun: [-43.4, -53.6, 89.8, 65.8], grill: [-43.4, -62.1, 89.8, 74.2] },
+  { id: 'noughties', name: '2000s', group: 'decades', frames: 1, fly: [-47.0, -34.8, 86.9, 51.7], bun: [-41.6, -55.0, 85.0, 56.8], grill: [-41.8, -62.0, 85.3, 63.8] },
+  { id: 'twentytens', name: '2010s', group: 'decades', frames: 1, fly: [-48.9, -33.6, 89.9, 48.2], bun: [-41.9, -53.0, 84.1, 54.8], grill: [-41.9, -63.7, 84.2, 65.5] },
+  { id: 'twentytwenties', name: '2020s', group: 'decades', frames: 1, fly: [-47.9, -26.4, 87.4, 56.2], bun: [-42.7, -50.6, 84.9, 52.5], grill: [-42.5, -65.2, 84.6, 67.1] },
   { id: 'dragondance', name: 'Dragon Dance', group: 'lunarnewyear', frames: 1, fly: [-48.9, -31.7, 93.0, 49.4], bun: [-45.6, -57.6, 93.8, 59.5], grill: [-46.0, -68.0, 94.2, 69.9] },
   { id: 'firegoat', name: 'Fire Goat', group: 'lunarnewyear', frames: 1, fly: [-46.7, -34.2, 87.6, 53.0], bun: [-41.3, -55.4, 82.9, 57.2], grill: [-41.4, -70.1, 82.9, 71.9] },
   { id: 'lanternfestival', name: 'Lantern Festival', group: 'lunarnewyear', frames: 1, fly: [-48.4, -32.6, 88.3, 50.0], bun: [-43.1, -58.8, 89.3, 60.7], grill: [-43.2, -72.7, 89.4, 74.6] },
@@ -1182,7 +1195,9 @@ const DROP_TEST = /\.pages\.dev$|^localhost$|^127\.0\.0\.1$/.test(location.hostn
 function dropNow() { return DROP_TEST ? dropAt(+DROP_TEST[1], +DROP_TEST[2], +DROP_TEST[3]) + 3600000 : Date.now(); }
 // Costume Vault (?vault=bunvault): a private preview of the costume screen with every Collection open, hidden ones included; buying is off
 const VAULT = new URLSearchParams(location.search).get('vault') === 'bunvault';
-function skinOpen(s) { return VAULT || !s.from || dropNow() >= s.from; }   // a costume added to a Collection later can have its own drop date
+function skinOpen(s) { if (!VAULT && s.group && groupBuxOnly(s.group) && skinLimited(s.id)) return false;   // a Limited Edition costume waits for its store item
+  return VAULT || !s.from || dropNow() >= s.from; }   // a costume added to a Collection later can have its own drop date
+function groupBuxOnly(g) { const G = SKIN_GROUPS[g]; return !!(G && G.buxOnlyUntil && dropNow() < G.buxOnlyUntil); }   // early release: BunBux only (no store items yet), the shop opens on buxOnlyUntil
 function groupOpen(g) { const G = SKIN_GROUPS[g]; return !!G && (VAULT || !G.from || dropNow() >= G.from); }
 function groupNew(g) { const G = SKIN_GROUPS[g]; return !!(G && G.from && groupOpen(g) && dropNow() >= G.from && dropNow() < G.from + 7 * 864e5); }   // the first week after its drop
 function anyGroupNew() { return Object.keys(SKIN_GROUPS).some(groupNew); }
@@ -1193,6 +1208,10 @@ const SKIN_GROUPS = { earn: { name: 'Free & Earned', how: 'earn' }, holiday: { n
   deepseadogs: { name: 'Deep Sea Dogs', how: 'shop' },
   // Weekly drops: 2 Collections a week through Jan 12, then 1 a week. Each Collection stays hidden until its date (midnight Pacific), then goes on sale like Sports.
   // Its store items (skin_<id> for each costume, col_<group>) must exist in Stripe, App Store Connect and Google Play by then.
+  // Released early on Nov 27, 2026 (Alan asked for more costumes right away): BunBux only until their store items are live.
+  // Then set buxOnlyUntil to that day (or remove it) and add the Stripe ids to SHOP_STRIPE. Limited Edition ones stay hidden until then.
+  definitelyai: { name: 'Definitely AI', how: 'shop', from: dropAt(2026, 11, 27), buxOnlyUntil: dropAt(2099, 1, 1) },
+  decades: { name: 'Decades', how: 'shop', from: dropAt(2026, 11, 27), buxOnlyUntil: dropAt(2099, 1, 1) },
   spacecases: { name: 'Space Cases', how: 'shop', from: dropAt(2026, 12, 1) },
   tinyterrors: { name: 'Tiny Terrors', how: 'shop', from: dropAt(2026, 12, 1) },
   mythicalmisfits: { name: 'Mythical Misfits', how: 'shop', from: dropAt(2026, 12, 8) },
@@ -1373,7 +1392,7 @@ const BUX_COST = 300, BUX_DAILY = 25;
 // Limited Edition: costumes (one or two per Collection) that can only be bought, never unlocked with BunBux (same list as BUX_LIMITED in the API)
 const SKINS_LIMITED = ['santa', 'bernedoodle', 'labradoodle', 'persian', 'mainecoon', 'slamdunk', 'goalgetter', 'axolotl', 'anglerfish', 'unidentifiedfryingobject', 'babykaiju', 'phoenix', 'shadowwizard',
   'glazedandconfused', 'blanketburrito', 'royaltreatment', 'raccoon', 'forkimpostor', 'professorfrank', 'glowgetter', 'specialdelivery',
-  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland', 'bison', 'flamingo', 'ladyliberty', 'happy', 'rainbow', 'kingofcards', 'daydreamer', 'detective', 'spilledthetea', 'galaxydonut', 'arcadecabinet', 'secretagent', 'rockfrank', 'dragonmailcarrier', 'earlybird', 'captainfrankbeard', 'firegoat', 'lemonade', 'thinker', 'sororityspirit', 'neonbot', 'runwayroyalty', 'chaosmom', 'shogun', 'galaxycruiser', 'holidaytrain', 'vacuumviking', 'wafflewarrior', 'knittingninja', 'kayakcaptain', 'trexlibrarian', 'grillking', 'airportsprinter', 'runawaycupcake', 'shoppingcartracer', 'brickstep', 'hatonahat', 'bandpractice', 'mullet', 'googlygoo', 'frogprince', 'powerup', 'unitedkingdom', 'unitedstates', 'hawaiivolcanoes', 'california', 'giraffe', 'polarbear'];
+  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland', 'bison', 'flamingo', 'ladyliberty', 'happy', 'rainbow', 'kingofcards', 'daydreamer', 'detective', 'spilledthetea', 'galaxydonut', 'arcadecabinet', 'secretagent', 'rockfrank', 'dragonmailcarrier', 'earlybird', 'captainfrankbeard', 'hallucination', 'eighties', 'firegoat', 'lemonade', 'thinker', 'sororityspirit', 'neonbot', 'runwayroyalty', 'chaosmom', 'shogun', 'galaxycruiser', 'holidaytrain', 'vacuumviking', 'wafflewarrior', 'knittingninja', 'kayakcaptain', 'trexlibrarian', 'grillking', 'airportsprinter', 'runawaycupcake', 'shoppingcartracer', 'brickstep', 'hatonahat', 'bandpractice', 'mullet', 'googlygoo', 'frogprince', 'powerup', 'unitedkingdom', 'unitedstates', 'hawaiivolcanoes', 'california', 'giraffe', 'polarbear'];
 function skinLimited(id) { return SKINS_LIMITED.indexOf(id) >= 0; }
 function skinPremium(s) { const G = s && SKIN_GROUPS[s.group]; return !!(G && G.premium); }
 function skinBadge(s) { return SKIN_GROUPS[s.group].noCol ? '👑 ULTRA EXCLUSIVE' : '💎 PREMIUM'; }
@@ -1579,6 +1598,7 @@ function shopProducts() {
   const real = (pid, usd) => SHOP_STORE && !VAULT ? (st[pid] ? packsEsc(st[pid].priceString || '') : '') : usd;   // store text: escaped before it goes into the page
   const usdStore = pid => !SHOP_STORE || (st[pid] && st[pid].currencyCode === 'USD');
   SHOP_COLS.forEach(g => {
+    if (groupBuxOnly(g)) { shopColSkins(g).forEach(id => { out['skin_' + id] = { kind: 'skin', name: skinById(id).name, skins: [id], price: '', bux: true }; }); return; }   // no money price, no Collection deal
     shopColSkins(g).forEach(id => { out['skin_' + id] = { kind: 'skin', name: skinById(id).name, skins: [id], price: real('skin_' + id, skinById(id).price || '$0.99') }; });
     const cid = 'col_' + g, G = SKIN_GROUPS[g];
     if (G.noCol) return;   // sold one at a time only
@@ -5144,6 +5164,7 @@ function skinsShineImg(s, cls) {
   return s.fx ? '<span class="fbs-shine fbs-fx-' + s.fx + '" style="--m:url(' + skinsPic(s) + ')">' + im + '<i></i><i></i><i></i></span>' : im;
 }
 // premium Collection page: one row per costume, picture on the left and its name, tagline, description and price on the right
+function skinsPriceHtml(id) { const p = shopProducts()['skin_' + id] || {}; return p.bux ? BUX_ICON_HTML + ' ' + BUX_COST : p.price || '…'; }   // card price: money, or BunBux for an early release
 function skinsPremRowHtml(s, cur) {
   const open = skinUnlocked(s), on = s.id === cur.id, how = skinHow(s), pr = (shopProducts()['skin_' + s.id] || {}).price;
   return '<button type="button" class="fbs-prow' + (on ? ' on' : '') + (open ? '' : ' lock') + '" data-skin="' + s.id + '">' +
@@ -5155,7 +5176,7 @@ function skinsCardHtml(s, cur, extra) {
   const open = skinUnlocked(s), on = s.id === cur.id, how = skinHow(s);
   return '<button type="button" class="fbs-skin' + (on ? ' on' : '') + (open ? '' : ' lock') + (open || how === 'earn' || how === 'shop' ? '' : ' soon') + '" data-skin="' + s.id + '"' +
         (open || how === 'shop' ? '' : ' aria-disabled="true"') + '>' + (how === 'shop' && skinLimited(s.id) ? '<span class="fbs-ltd fbs-ltd-c">★ LIMITED</span>' : how === 'shop' && skinPremium(s) ? '<span class="fbs-ltd fbs-prem fbs-ltd-c">' + skinBadge(s) + '</span>' : '') + skinsShineImg(s) + s.name + (extra || '') +
-        '<small>' + (on ? '✓ Wearing' : open ? 'Tap to wear' : how === 'shop' ? '<span class="fbs-p">' + (shopProducts()['skin_' + s.id].price || '…') + '</span>' : how === 'earn' ? '🔒 ' + (skinNext() === s || !skinPrev(s) ? '' : 'After ' + skinPrev(s).name + ': ') + s.goal.text : '🔒 ' + (s.note || 'Coming soon')) + '</small></button>';
+        '<small>' + (on ? '✓ Wearing' : open ? 'Tap to wear' : how === 'shop' ? '<span class="fbs-p">' + skinsPriceHtml(s.id) + '</span>' : how === 'earn' ? '🔒 ' + (skinNext() === s || !skinPrev(s) ? '' : 'After ' + skinPrev(s).name + ': ') + s.goal.text : '🔒 ' + (s.note || 'Coming soon')) + '</small></button>';
 }
 // keyword search on the costume screen: costume name, Collection name or note; every word must match
 let skinsQ = '';
@@ -5221,7 +5242,7 @@ function skinsRender() {
       if (buyP.premium) h += '<p>' + skinsSepHtml(buyP) + '</p>';
       h += '<p style="font-size:12px;color:#c8a878">Future costumes aren’t included.</p>';
     }
-    h += '<p>' + (buyP.was ? '<span class="fbs-was">' + buyP.was + '</span>' : '') + '<span class="fbs-now">' + (buyP.price || '…') + '</span></p>' +
+    if (!buyP.bux) h += '<p>' + (buyP.was ? '<span class="fbs-was">' + buyP.was + '</span>' : '') + '<span class="fbs-now">' + (buyP.price || '…') + '</span></p>' +
       '<button type="button" class="fbs-go" data-a="pay"' + (skinsBusy || !buyP.price ? ' disabled' : '') + '>' + (skinsBusy ? 'One moment…' : buyP.price ? 'Buy for ' + buyP.price : shopStore.loaded ? 'Not available yet' : 'Loading price…') + '</button>';
     if (buyP.kind === 'skin' && skinLimited(buyP.skins[0])) h += '<p class="fbs-buxnote">★ Limited Edition: only for purchase, not for BunBux.</p>';
     else if (bs && skinPremium(bs) || buyP.premium) h += '<p class="fbs-buxnote">Purchase only, not for BunBux. Looks only: it doesn’t change the game or your score.</p>';
@@ -5241,7 +5262,7 @@ function skinsRender() {
       const list = skinsGroupList(g), open = list.filter(s => skinUnlocked(s)).length, how = SKINS_ALL ? '' : skinHow(list[0]), soon = how === 'soon';
       const here = list.indexOf(cur) >= 0;
       h += '<button type="button" class="fbs-col' + (here ? ' on' : '') + '" data-tab="' + g + '"><span class="fbs-col-t"><b>' + packsEsc(SKIN_GROUPS[g].name) + (!SKINS_ALL && groupNew(g) ? ' <span class="fbs-new">NEW</span>' : '') + '</b>' +
-        '<small>' + (skinsVaultWhen(g) ? skinsVaultWhen(g) + ' · ' : '') + (soon ? '🔒 Coming soon · ' + list.length + ' costumes' : how === 'shop' ? (open === list.length ? '✓ All ' + list.length + ' owned' : (open ? open + ' of ' + list.length + ' owned · ' : list.length + ' costumes · ') + 'from ' + (shopProducts()['skin_' + list[0].id].price || '…')) : open + ' of ' + list.length + ' unlocked') + '</small></span><span class="fbs-col-p">';
+        '<small>' + (skinsVaultWhen(g) ? skinsVaultWhen(g) + ' · ' : '') + (soon ? '🔒 Coming soon · ' + list.length + ' costumes' : how === 'shop' ? (open === list.length ? '✓ All ' + list.length + ' owned' : (open ? open + ' of ' + list.length + ' owned · ' : list.length + ' costumes · ') + 'from ' + skinsPriceHtml(list[0].id)) : open + ' of ' + list.length + ' unlocked') + '</small></span><span class="fbs-col-p">';
       (here ? [cur].concat(list.filter(s => s !== cur)) : list).slice(0, 3).forEach(s => { h += '<img src="' + skinsPic(s) + '" alt="" loading="lazy">'; });
       h += '</span><span class="fbs-col-a">›</span></button>';
     });
@@ -5254,8 +5275,9 @@ function skinsRender() {
     h += '<p class="fbs-sub">' + (soon ? 'Coming soon. Check back for these costumes!' :
       skinsTab === 'earn' ? 'Win them in order, one per game: pull off the challenge in a single game.' :
       how0 === 'shop' && SKIN_GROUPS[skinsTab].premium ? packsEsc(SKIN_GROUPS[skinsTab].intro) + '</p><p class="fbs-sub">' + (SKIN_GROUPS[skinsTab].noCol ? 'Each one is sold on its own' : 'Each costume has its own price, or get all ' + list.length + ' together') + '. Purchase only, not for BunBux. Looks only: no costume changes the game.' :
+      how0 === 'shop' && groupBuxOnly(skinsTab) ? 'Early release: unlock each costume for ' + BUX_COST + ' BunBux. The rest of this Collection arrives later.' :
       how0 === 'shop' ? 'Get one costume for ' + (shopProducts()['skin_' + list[0].id].price || '$0.99') + ' or ' + BUX_COST + ' BunBux (★ Limited Edition: purchase only), or the whole Collection.' : 'Dress up your frank.') + '</p>' + msg;
-    if (how0 === 'shop' && !SKIN_GROUPS[skinsTab].noCol) h += skinsDeal('col_' + skinsTab);
+    if (how0 === 'shop' && !SKIN_GROUPS[skinsTab].noCol && !groupBuxOnly(skinsTab)) h += skinsDeal('col_' + skinsTab);
     if (SKIN_GROUPS[skinsTab].premium) { h += '<div class="fbs-prows">' + list.map(s => skinsPremRowHtml(s, cur)).join('') + '</div>' + skinsFxNote(); }
     else {
     h += '<div class="fbs-grid">';

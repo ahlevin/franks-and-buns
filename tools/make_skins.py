@@ -46,7 +46,7 @@ BUN_PX = {'poodle': 560, 'ragdoll': 600, 'persian': 600, 'sad': 636, 'forgottheb
           'rollerskate': (633, 1065, 630), 'officechair': (660, 1067, 540), 'airportsprinter': (530, 1075, 554), 'shoppingcartracer': (655, 1063, 532),
           'brickstep': (560, 1020, 544), 'dieselengine': (670, 1083), 'bakedbeans': (554, 1058), 'lemonade': (542, 1056), 'tomatosoup': (536, 1059),
           'dojochamp': (635, 1059.5), 'karatemaster': (639, 1066), 'nightninja': (605, 1080), 'chaosdad': (556, 1025, 626),
-          'sitcommom': (572, 1052, 590), 'trailerparkdad': (574, 1034, 583), 'trailerparkmom': (554, 1031, 590)}   # (width, centre x) where the colour check misses the bun   # sad: rain boots hang below the bun
+          'sitcommom': (572, 1052, 590), 'trailerparkdad': (574, 1034, 583), 'trailerparkmom': (554, 1031, 590), 'eighties': (592, 1065, 556), 'nineties': (580, 1058, 544)}   # (width, centre x) where the colour check misses the bun   # sad: rain boots hang below the bun
 # Collections cut by automatic body measurement (folder -> skins); ids are the file names without hyphens
 AUTO_SETS = ['questionable-decisions', 'space-cases', 'tiny-terrors', 'deep-sea-dogs', 'final-boss-franks', 'mythical-misfits',
              'trash-pack', 'sports', 'snack-pack', 'cozy-crew', 'main-character-energy',
@@ -56,7 +56,7 @@ AUTO_SETS = ['questionable-decisions', 'space-cases', 'tiny-terrors', 'deep-sea-
              'backyard-legends', 'rise-and-dine', 'cleanup-crew', 'dessert-disasters', 'dinos-in-disguise', 'hair-raising', 'wild-hobbies',
              'magical-mishaps', 'mini-monsters', 'outdoor-adventure', 'pet-peeves', 'school-days', 'things-with-wheels', 'travel-troubles', 'unnecessary-accessories',
              'all-aboard', 'blast-off', 'cans-and-bottles', 'campus-life', 'famous-sculptures', 'lunar-new-year', 'japanese-heroes',
-             'sitcom-families', 'fashion-couture', 'robot-rally']
+             'sitcom-families', 'fashion-couture', 'robot-rally', 'definitely-ai', 'decades']
 import glob, os
 for folder in AUTO_SETS:
     for f in sorted(glob.glob(f'{SRC}/{folder}/*.png')):
