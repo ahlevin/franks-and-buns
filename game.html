@@ -1210,6 +1210,7 @@ const SKIN_GROUPS = { earn: { name: 'Free & Earned', how: 'earn' }, holiday: { n
   // Its store items (skin_<id> for each costume, col_<group>) must exist in Stripe, App Store Connect and Google Play by then.
   // Released early on Nov 27, 2026 (Alan asked for more costumes right away): BunBux only until their store items are live.
   // Then set buxOnlyUntil to that day (or remove it) and add the Stripe ids to SHOP_STRIPE. Limited Edition ones stay hidden until then.
+  // Apps already out keep this file, so for them add the group to "shopopen" in flags.json instead (see featApply).
   definitelyai: { name: 'Definitely AI', how: 'shop', from: dropAt(2026, 11, 27), buxOnlyUntil: dropAt(2099, 1, 1) },
   decades: { name: 'Decades', how: 'shop', from: dropAt(2026, 11, 27), buxOnlyUntil: dropAt(2099, 1, 1) },
   spacecases: { name: 'Space Cases', how: 'shop', from: dropAt(2026, 12, 1) },
@@ -2806,7 +2807,12 @@ function featApply(f) {
   if (f.sportdates && typeof f.sportdates === 'object') SPORT_DATES = f.sportdates;
   if (typeof f.sportstag === 'string') SPORT_TAG = f.sportstag.slice(0, 20);
   if (f.xmasgiftwindow && typeof f.xmasgiftwindow === 'object' && Date.parse(f.xmasgiftwindow.start) > 0 && Date.parse(f.xmasgiftwindow.end) > 0) GIFT_WIN = f.xmasgiftwindow;
+  if (Array.isArray(f.shopopen)) { SHOP_OPEN = f.shopopen.filter(g => typeof g === 'string').slice(0, 50); shopOpenApply(); }
 }
+// shopopen: ["definitelyai", ...] opens the money shop for an early-release Collection (one with buxOnlyUntil in SKIN_GROUPS) as soon as
+// its store items are live, without an app update: money prices, the Collection deal and its Limited Edition costumes appear.
+let SHOP_OPEN = [];
+function shopOpenApply() { SHOP_OPEN.forEach(g => { if (SKIN_GROUPS[g] && SKIN_GROUPS[g].buxOnlyUntil) delete SKIN_GROUPS[g].buxOnlyUntil; }); }
 function featForce() {
   if (!SHOP_TESTHOST) return;
   const q = new URLSearchParams(location.search);
@@ -2817,7 +2823,7 @@ featForce();
 try { featApply(JSON.parse(safeGet('fb_feat2') || 'null')); } catch (e) {}
 try {
   fetch(PACKS_API.replace(/api\/$/, '') + 'flags.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : null)
-    .then(f => { if (f) { featApply(f); safeSet('fb_feat', JSON.stringify(FEAT)); safeSet('fb_feat2', JSON.stringify({ sportdates: SPORT_DATES, sportstag: SPORT_TAG, xmasgiftwindow: GIFT_WIN })); featForce(); } }).catch(() => {});
+    .then(f => { if (f) { featApply(f); safeSet('fb_feat', JSON.stringify(FEAT)); safeSet('fb_feat2', JSON.stringify({ sportdates: SPORT_DATES, sportstag: SPORT_TAG, xmasgiftwindow: GIFT_WIN, shopopen: SHOP_OPEN })); featForce(); } }).catch(() => {});
 } catch (e) {}
 
 // --- Sports modes (switches: FEAT.soccer, .basketball, .football, .waterpolo, .golf, .baseball, .cricket, .hockey in flags.json), picked with the
