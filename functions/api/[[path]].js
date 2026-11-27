@@ -747,7 +747,7 @@ async function giftRoute(db, request, env, body, path, now) {
   const id = String(body.skin || '');
   if (!/^[a-z]{2,24}$/.test(id) || BUX_LIMITED.has(id) || !buxSkinOk(id, now)) fail(400, 'That costume can’t be your gift. Pick one you could unlock with BunBux.');
   const c = await db.prepare('SELECT skin FROM gift_claims WHERE player_id = ? AND gift_id = ?').bind(p.id, g.id).first();
-  if (c) fail(409, 'You already picked your gift. Merry Christmas!');
+  if (c) fail(409, 'You already picked your free gift.');
   if (buxOf(p).skins.concat(skinList(p)).indexOf(id) >= 0) fail(409, 'You already have that costume. Pick another one.');
   // one transaction: the claim row first (the primary key stops a second claim), then the costume, only for the claim just made
   const res = await db.batch([
@@ -757,7 +757,7 @@ async function giftRoute(db, request, env, body, path, now) {
         RETURNING bux, bux_skins, daily_last, daily_streak`).bind(id, id, p.id, ',' + id + ',', p.id, g.id, now, id),
   ]);
   const r = res[1].results && res[1].results[0];
-  if (!r) fail(409, 'You already picked your gift. Merry Christmas!');
+  if (!r) fail(409, 'You already picked your free gift.');
   return { bux: buxOf(r), unlocked: id, gift: g.id, claimed: true, skin: id };
 }
 
