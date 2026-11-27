@@ -1232,11 +1232,11 @@ const SKIN_GROUPS = { earn: { name: 'Free & Earned', how: 'earn' }, holiday: { n
   // Apps already out keep this file, so for them add the group to "shopopen" in flags.json instead (see featApply).
   definitelyai: { name: 'Definitely AI', how: 'shop', from: dropAt(2026, 11, 27), buxOnlyUntil: dropAt(2099, 1, 1), webShop: true },
   decades: { name: 'Decades', how: 'shop', from: dropAt(2026, 11, 27), buxOnlyUntil: dropAt(2099, 1, 1), webShop: true },
-  // Also released early, Nov 27, 2026 (Alan picked these 4 of the 10 new packs to go live now; the rest are weekly drops). BunBux only until store items exist.
-  condimentcouncil: { name: 'Condiment Council', how: 'shop', from: dropAt(2026, 11, 27), buxOnlyUntil: dropAt(2099, 1, 1) },
-  sleepover: { name: 'Sleepover', how: 'shop', from: dropAt(2026, 11, 27), buxOnlyUntil: dropAt(2099, 1, 1) },
-  roadtrip: { name: 'Road Trip', how: 'shop', from: dropAt(2026, 11, 27), buxOnlyUntil: dropAt(2099, 1, 1) },
-  tinyvillains: { name: 'Tiny Villains', how: 'shop', from: dropAt(2026, 11, 27), buxOnlyUntil: dropAt(2099, 1, 1) },
+  // Also released early, Nov 27, 2026 (Alan picked these 4 of the 10 new packs to go live now; the rest are weekly drops). webShop: Stripe items exist, so the website sells them; apps wait for "shopopen".
+  condimentcouncil: { name: 'Condiment Council', how: 'shop', from: dropAt(2026, 11, 27), buxOnlyUntil: dropAt(2099, 1, 1), webShop: true },
+  sleepover: { name: 'Sleepover', how: 'shop', from: dropAt(2026, 11, 27), buxOnlyUntil: dropAt(2099, 1, 1), webShop: true },
+  roadtrip: { name: 'Road Trip', how: 'shop', from: dropAt(2026, 11, 27), buxOnlyUntil: dropAt(2099, 1, 1), webShop: true },
+  tinyvillains: { name: 'Tiny Villains', how: 'shop', from: dropAt(2026, 11, 27), buxOnlyUntil: dropAt(2099, 1, 1), webShop: true },
   spacecases: { name: 'Space Cases', how: 'shop', from: dropAt(2026, 12, 1) },
   tinyterrors: { name: 'Tiny Terrors', how: 'shop', from: dropAt(2026, 12, 1) },
   mythicalmisfits: { name: 'Mythical Misfits', how: 'shop', from: dropAt(2026, 12, 8) },
@@ -1683,7 +1683,19 @@ const SHOP_STRIPE = {
   skin_seventies: ['price_1UgUbZ6LJdPzXq2bYRGFmYFd', 'prod_VhuQXPIL32dVdS'], skin_eighties: ['price_1UgUbg6LJdPzXq2bHRG7NxUt', 'prod_VhuQ7G8NLFdfqX'],
   skin_nineties: ['price_1UgUbn6LJdPzXq2b8dhhag7Y', 'prod_VhuQtQZ0fwzRvZ'], skin_noughties: ['price_1UgUbv6LJdPzXq2bFExfRhlm', 'prod_VhuQtF9wMb46A7'],
   skin_twentytens: ['price_1UgUc26LJdPzXq2bVULZ2Dk6', 'prod_VhuQSwpATLldsu'], skin_twentytwenties: ['price_1UgUcH6LJdPzXq2bqg4Dx5Fj', 'prod_VhuRsDcEAh66rc'],
-  col_decades: ['price_1UgUcg6LJdPzXq2bCRmB1GoO', 'prod_VhuRtbiCaNeGt2']
+  col_decades: ['price_1UgUcg6LJdPzXq2bCRmB1GoO', 'prod_VhuRtbiCaNeGt2'],
+  // Condiment Council, Sleepover, Road Trip, Tiny Villains (released early Nov 27, 2026)
+  skin_jalapenopopper: ['price_1UgVIN6LJdPzXq2bKCuhOtZc', 'prod_Vhv8H3zTE3WrjM'], skin_ketchupking: ['price_1UgVIU6LJdPzXq2bTHhSgLBO', 'prod_Vhv8SvUs6PmgS0'],
+  skin_mustardknight: ['price_1UgVIb6LJdPzXq2bqE3aacPC', 'prod_Vhv8ocZOruAIew'], skin_queencheese: ['price_1UgVIi6LJdPzXq2bvAD287OY', 'prod_Vhv9MEgC62VavL'],
+  skin_relishrascal: ['price_1UgVIp6LJdPzXq2bDygaRqYk', 'prod_Vhv9fAhAU8KRm3'], col_condimentcouncil: ['price_1UgVIx6LJdPzXq2bSFBkiNeC', 'prod_Vhv9dL2L3RdGmY'],
+  skin_flashlighttales: ['price_1UgVJX6LJdPzXq2bjWC0glVe', 'prod_Vhv9FQRgFKvdIZ'], skin_moviemarathon: ['price_1UgVJe6LJdPzXq2bSJjw7JvR', 'prod_Vhv9D5YviU3B8y'],
+  skin_pajamaparty: ['price_1UgVJm6LJdPzXq2bzLiNBVwx', 'prod_VhvAwA1ftvwLKA'], skin_pillowfort: ['price_1UgVJt6LJdPzXq2bI70NpUbs', 'prod_VhvAKEBl3BV9Cs'],
+  skin_sleepyhead: ['price_1UgVK06LJdPzXq2bktk89H5d', 'prod_VhvA53aJYW3wzb'], col_sleepover: ['price_1UgVK76LJdPzXq2b72GDBhB1', 'prod_VhvA3mHu1Cln5M'],
+  skin_happycamper: ['price_1UgVKu6LJdPzXq2bZKuVLh2x', 'prod_VhvBki30WWEPwS'], skin_navigator: ['price_1UgVL16LJdPzXq2bizpF0nrj', 'prod_VhvBMoNpLp16Ti'],
+  skin_snackstop: ['price_1UgVL86LJdPzXq2b21iCyLRO', 'prod_VhvB5KW0VLxZR3'], skin_sightseer: ['price_1UgVLF6LJdPzXq2bWFXcTnP4', 'prod_VhvBQyVgMi79t0'],
+  col_roadtrip: ['price_1UgVLM6LJdPzXq2bkA6X1tbB', 'prod_VhvBMUNFIPh4oH'], skin_capedmenace: ['price_1UgVLT6LJdPzXq2bsZa8x8ZR', 'prod_VhvBtG3djyBTVQ'],
+  skin_evilgenius: ['price_1UgVLb6LJdPzXq2bMwO5Wqhq', 'prod_VhvBnBzcCz85P8'], skin_madscientist: ['price_1UgVLi6LJdPzXq2bTKePPMgI', 'prod_VhvCR3CfW25Jew'],
+  skin_picklepilferer: ['price_1UgVLp6LJdPzXq2bMt9tNPbc', 'prod_VhvCS8j5tKeV3q'], col_tinyvillains: ['price_1UgVMI6LJdPzXq2bfne00E0f', 'prod_VhvCBSUIma0eoD']
 };
 function shopIdOf(storeId) {
   if (shopProducts()[storeId]) return storeId;
