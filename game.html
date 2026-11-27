@@ -2772,16 +2772,20 @@ if (!(bestScore >= 0 && bestScore < 1e9)) bestScore = 0;
 // mergecode: entering a recovery code brings along what this device already had (BunBux, costumes, best score) instead of leaving it behind.
 // firsttips starts on, so a brand-new player gets the tips even before flags.json arrives; flags.json can still turn it off.
 // metrics: anonymous play stats (one short summary per finished game, see "Anonymous play stats" below).
-const FEAT = { metrics: false, stages: false, secondwind: false, firsttips: true, mergecode: false, soccer: false, basketball: false, football: false, waterpolo: false, golf: false, baseball: false, cricket: false, hockey: false };
+// xmasgift: one free BunBux costume per player, only between the dates in "xmasgiftwindow" (see "Christmas gift" below).
+const FEAT = { xmasgift: false, metrics: false, stages: false, secondwind: false, firsttips: true, mergecode: false, soccer: false, basketball: false, football: false, waterpolo: false, golf: false, baseball: false, cricket: false, hockey: false };
 // sportdates: optional windows for the sports, e.g. { "soccer": { "from": "2026-12-01", "until": "2027-01-05" } } (dates on the
 // player's clock, both days included). A sport shows only while its switch is on AND today is inside its window (no window = always).
 // sportstag: the badge on every sport card in the picker ("" hides it). Kept apart from the true/false switches so older copies ignore them.
 let SPORT_DATES = {}, SPORT_TAG = 'LIMITED TIME';
+// xmasgiftwindow: { "id": "xmas2026", "start": "2026-12-24T08:00:00Z", "end": "2027-01-02T08:00:00Z" } (UTC; the server reads the same file)
+let GIFT_WIN = { id: 'xmas2026', start: '2026-12-24T08:00:00Z', end: '2027-01-02T08:00:00Z' };
 function featApply(f) {
   if (!f || typeof f !== 'object') return;
   for (const k in FEAT) if (typeof f[k] === 'boolean') FEAT[k] = f[k];
   if (f.sportdates && typeof f.sportdates === 'object') SPORT_DATES = f.sportdates;
   if (typeof f.sportstag === 'string') SPORT_TAG = f.sportstag.slice(0, 20);
+  if (f.xmasgiftwindow && typeof f.xmasgiftwindow === 'object' && Date.parse(f.xmasgiftwindow.start) > 0 && Date.parse(f.xmasgiftwindow.end) > 0) GIFT_WIN = f.xmasgiftwindow;
 }
 function featForce() {
   if (!SHOP_TESTHOST) return;
@@ -2793,7 +2797,7 @@ featForce();
 try { featApply(JSON.parse(safeGet('fb_feat2') || 'null')); } catch (e) {}
 try {
   fetch(PACKS_API.replace(/api\/$/, '') + 'flags.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : null)
-    .then(f => { if (f) { featApply(f); safeSet('fb_feat', JSON.stringify(FEAT)); safeSet('fb_feat2', JSON.stringify({ sportdates: SPORT_DATES, sportstag: SPORT_TAG })); featForce(); } }).catch(() => {});
+    .then(f => { if (f) { featApply(f); safeSet('fb_feat', JSON.stringify(FEAT)); safeSet('fb_feat2', JSON.stringify({ sportdates: SPORT_DATES, sportstag: SPORT_TAG, xmasgiftwindow: GIFT_WIN })); featForce(); } }).catch(() => {});
 } catch (e) {}
 
 // --- Sports modes (switches: FEAT.soccer, .basketball, .football, .waterpolo, .golf, .baseball, .cricket, .hockey in flags.json), picked with the
@@ -4556,6 +4560,7 @@ function drawMenu() {
   if (SPORT) { ctx.fillStyle = '#ffffff'; ctx.font = 'bold 17px Arial'; ctx.fillText(SPORT.icon + '  ' + SPORT.name.toUpperCase() + ' EDITION  ' + SPORT.icon, W/2, H*0.25+70); }
   drawMenuSkin();
   drawModePill();
+  if (frameCount % 30 === 15) giftMaybe();
   if (dailyCardShown()) { drawDailyCard(H*0.58-20); if (frameCount % 30 === 0) buxIntroMaybe(); }
   else {
     ctx.fillStyle='#ddd'; ctx.font='16px Arial';
@@ -4661,6 +4666,118 @@ function buxIntroMaybe() {
   ['touchstart', 'touchend', 'mousedown', 'pointerdown', 'keydown'].forEach(t => b.addEventListener(t, e => e.stopPropagation(), { passive: true }));
   (document.body || document.documentElement).appendChild(b);
 }
+// --- Christmas gift: every player can pick ONE costume that BunBux could unlock, free (switch: FEAT.xmasgift, dates: "xmasgiftwindow"
+// in flags.json, both read by the server too). The server (api/gift) has the final word: it says whether the gift is open, whether this
+// player already claimed it and which costumes it can be. No answer (offline) = nothing shows. The pop-up shows at most once a day;
+// while the gift is unclaimed the SKINS button wears a FREE GIFT tag and the costume screen has a gift row at the top.
+// Test copies (pages.dev, localhost with a port): ?xmasgift=test opens it whatever the date or switch (the server goes along only there).
+const GIFT_TEST = (/\.pages\.dev$/.test(location.hostname) || ((location.hostname === 'localhost' || location.hostname === '127.0.0.1') && !!location.port)) &&
+  new URLSearchParams(location.search).get('xmasgift') === 'test';
+let giftSt = null, giftAt = 0, giftLoading = false, giftPick = null, giftDone = '', giftCC = null, giftCCAt = 0;
+function giftLive() { const n = Date.now(); return !VAULT && (GIFT_TEST || (FEAT.xmasgift && n >= Date.parse(GIFT_WIN.start) && n < Date.parse(GIFT_WIN.end))); }
+function giftQ() { return GIFT_TEST ? '?test=1' : ''; }
+function giftLoad(force) {   // asks the server, at most every 2 minutes (or right away with force)
+  if (!giftLive()) return Promise.resolve(null);
+  if (giftLoading || (!force && Date.now() - giftAt < 120000)) return Promise.resolve(giftSt);
+  giftLoading = true; giftAt = Date.now();
+  return packsCall('GET', 'gift' + giftQ()).then(j => { giftSt = j && typeof j === 'object' ? j : null; }, () => { giftSt = null; })
+    .then(() => { giftLoading = false; giftCC = null; return giftSt; });
+}
+function giftOwns(id) { return shopOwned().indexOf(id) >= 0 || buxOwned().indexOf(id) >= 0 || skinsWon().indexOf(id) >= 0; }
+function giftChoices() {   // costumes the server accepts that this copy of the game sells for BunBux and the player doesn't own
+  if (giftCC && Date.now() - giftCCAt < 1000) return giftCC;
+  const prods = giftLive() && giftSt && giftSt.open && !giftSt.claimed && Array.isArray(giftSt.eligible) ? shopProducts() : null;
+  giftCC = prods ? giftSt.eligible.filter(id => prods['skin_' + id] && !skinNoBux(id) && !giftOwns(id)).map(skinById) : [];
+  giftCCAt = Date.now();
+  return giftCC;
+}
+function giftEnds() {   // "Jan 1": the last day, California time
+  const e = (giftSt && giftSt.end) || Date.parse(GIFT_WIN.end);
+  try { return new Date(e - 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Los_Angeles' }); } catch (x) { return 'Jan 1'; }
+}
+function giftPopIsOpen() { const b = document.getElementById('fb-gift'); return !!(b && b.style.display !== 'none'); }
+function giftMaybe() {
+  if (!giftLive()) return;
+  if (!giftSt) { giftLoad(); return; }   // also feeds the SKINS button's gift tag; the pop-up shows on a later check, once the server has answered
+  if (safeGet('fb_gift_day') === fbDay() || giftPopIsOpen() || document.getElementById('fb-consent') || buxIntroIsOpen() || howtoIsOpen() || skinsIsOpen() || packsIsOpen() || scoresOpen || modeOpen) return;
+  const list = giftChoices(); if (!list.length) return;
+  safeSet('fb_gift_day', fbDay());
+  let b = document.getElementById('fb-gift');
+  if (!b) {
+    b = document.createElement('div'); b.id = 'fb-gift'; b.setAttribute('role', 'dialog'); b.setAttribute('aria-label', 'Merry Christmas');
+    b.style.cssText = 'position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(10,5,0,.86);padding:16px;box-sizing:border-box';
+    b.addEventListener('click', e => {
+      const a = e.target.closest('[data-a]'), k = a && a.getAttribute('data-a');
+      if (!k && e.target !== b) return;
+      b.style.display = 'none'; try { sndStreak(); } catch (x) {}
+      if (k === 'pick') { skinsOpen(); skinsTab = 'gift'; skinsRender(); }
+    });
+    ['touchstart', 'touchend', 'mousedown', 'pointerdown', 'keydown'].forEach(t => b.addEventListener(t, e => e.stopPropagation(), { passive: true }));
+    (document.body || document.documentElement).appendChild(b);
+  }
+  b.innerHTML = '<div style="max-width:360px;width:100%;background:linear-gradient(180deg,#3a0f0f,#2a1a0a 55%);border:2px solid #FFD700;box-shadow:0 0 0 4px #1f6b32;border-radius:18px;padding:20px 18px 14px;box-sizing:border-box;color:#f3e3c8;font:15px/1.4 Arial;max-height:100%;overflow-y:auto;text-align:center">' +
+    '<div style="font-size:40px;line-height:1">🎄🎁</div>' +
+    '<h2 style="margin:8px 0 6px;color:#FFD700;font:bold 26px Arial">Merry Christmas!</h2>' +
+    '<p style="margin:0 0 12px">Pick any BunBux costume, <b style="color:#9be29b">free</b> — our gift to you. Ends ' + packsEsc(giftEnds()) + '.</p>' +
+    '<div style="display:flex;justify-content:center;gap:4px;margin:0 0 6px">' + list.slice(0, 4).map(s => '<img src="' + skinsPic(s) + '" alt="" style="width:70px;height:46px;object-fit:contain">').join('') + '</div>' +
+    '<p style="margin:0;font-size:12px;color:#c8a878">One pick per player · ★ Limited Edition costumes aren’t included</p>' +
+    '<button type="button" data-a="pick" style="display:block;width:100%;margin:14px 0 0;font:bold 17px Arial;border-radius:999px;padding:12px;border:none;background:#ff6600;color:#fff;cursor:pointer">🎁 Pick my gift</button>' +
+    '<button type="button" data-a="later" style="display:block;margin:6px auto 0;background:none;border:none;color:#ffb347;text-decoration:underline;font:14px Arial;cursor:pointer;padding:8px">Later</button></div>';
+  b.style.display = 'flex';
+}
+function drawGiftTag(r) {   // start screen: a FREE GIFT tag on the SKINS button's left corner while the gift is waiting
+  if (!giftChoices().length) return;
+  const tw = 70, tx = r.x - 6, ty = r.y - 8;
+  ctx.fillStyle = '#C41E3A'; rrect(tx, ty, tw, 15, 7.5); ctx.fill();
+  ctx.strokeStyle = '#1f9d4a'; ctx.lineWidth = 1.5; rrect(tx, ty, tw, 15, 7.5); ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 9px Arial'; ctx.textAlign = 'center'; ctx.fillText('🎁 FREE GIFT', tx + tw / 2, ty + 11);
+}
+const GIFT_ROW = 'border-color:#FFD700;background:linear-gradient(135deg,rgba(196,30,58,.45),rgba(31,107,50,.4))';
+function giftRowHtml() {   // the costume screen's way back to the gift
+  if (giftLive() && !giftSt && !giftLoading && Date.now() - giftAt >= 120000) giftLoad().then(j => { if (j && skinsIsOpen() && !skinsTab) skinsRender(); });
+  const list = giftChoices(); if (!list.length) return '';
+  return '<button type="button" class="fbs-col" data-tab="gift" style="' + GIFT_ROW + '"><span class="fbs-col-t"><b>🎁 Your free Christmas costume</b>' +
+    '<small style="color:#f3e3c3">Pick any BunBux costume, free · ends ' + packsEsc(giftEnds()) + '</small></span><span class="fbs-col-p">' +
+    list.slice(0, 3).map(s => '<img src="' + skinsPic(s) + '" alt="" loading="lazy">').join('') + '</span><span class="fbs-col-a">›</span></button>';
+}
+function giftPickHtml(msg) {
+  if (giftDone) {   // thank-you
+    const s = skinById(giftDone);
+    return '<div class="fbs-buy"><div style="font-size:34px">🎄</div><img src="' + skinsPic(s) + '" alt="" style="width:200px;height:116px"><h3>' + packsEsc(s.name) + ' is yours!</h3>' +
+      '<p>You’re wearing it now. Thank you for playing Franks &amp; Buns, and Merry Christmas! 🎁</p>' +
+      '<button type="button" class="fbs-go" data-a="close">Let’s play!</button></div>';
+  }
+  if (giftPick) {   // confirm
+    const s = skinById(giftPick);
+    return '<div class="fbs-buy"><img src="' + skinsPic(s) + '" alt="" style="width:200px;height:116px"><h3>' + packsEsc(s.name) + '</h3>' +
+      '<p>Make <b>' + packsEsc(s.name) + '</b> your free Christmas gift?<br><span style="font-size:12px;color:#c8a878">You get one pick, and it’s yours to keep.</span></p>' +
+      '<button type="button" class="fbs-go" data-a="giftok"' + (skinsBusy ? ' disabled' : '') + '>' + (skinsBusy ? 'One moment…' : '🎁 Yes, this is my gift') + '</button>' +
+      '<button type="button" class="fbs-link" data-a="home">Pick a different one</button>' + msg + '</div>';
+  }
+  const list = giftChoices();
+  if (!list.length) return '<p class="fbs-sub">' + (giftSt && giftSt.claimed ? 'You already picked your gift. Merry Christmas! 🎄' : 'Checking your gift…') + '</p>' + msg;
+  return '<p class="fbs-sub">Pick any one of these costumes, free. Our gift to you, until ' + packsEsc(giftEnds()) + '.</p>' + msg +
+    '<div class="fbs-grid">' + list.map(s => '<button type="button" class="fbs-skin" data-gift="' + s.id + '">' + skinsShineImg(s) + packsEsc(s.name) +
+      '<small><span class="fbs-p" style="background:#1f9d4a">FREE</span></small></button>').join('') + '</div>';
+}
+async function giftClaim() {
+  if (skinsBusy || !giftPick) return;
+  const id = giftPick;
+  skinsBusy = true; skinsMsg = ''; skinsRender();
+  try {
+    if (!packsToken()) packsKeepMe(await packsCall('POST', 'player', { silent: true }));   // nameless profile, like a BunBux unlock needs
+    const j = await packsCall('POST', 'gift/claim' + giftQ(), { skin: id });
+    buxKeep(j.bux); if (packsMe && packsMe.player) packsMe.player.bux = j.bux;
+    giftSt = Object.assign({}, giftSt, { claimed: true, skin: id, eligible: [] }); giftCC = null;
+    giftPick = null; giftDone = id; skinsMsgErr = false;
+    safeSet('fb_skin', id); skinPreload(skinById(id)); try { sndBox(); } catch (x) {}
+    statEvent('skin_pick', id);
+  } catch (e) {
+    skinsMsgErr = true; skinsMsg = (e && e.message) || 'That didn’t go through. Please try again.';
+    if (e && e.status === 409) giftLoad(true).then(() => { if (skinsIsOpen()) skinsRender(); });
+  }
+  skinsBusy = false; skinsRender();
+}
 function drawNewTag(r) {   // a red NEW tag on a SKINS button's corner for a week after each Collection drop
   if (SKINS_ALL || !anyGroupNew()) return;
   const tw = 30, tx = r.x + r.w - tw + 6, ty = r.y - 7;
@@ -4683,7 +4800,7 @@ function drawMenuSkin() {
   ctx.fillStyle = '#FFD700'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center';
   if (SKINS_ALL) ctx.fillText('🎭 SKINS', r.x + r.w / 2, r.y + r.h / 2 + 4);
   else { const t = '🎭 SKINS  ·  🪙 ' + buxShown().toLocaleString(); ctx.textAlign = 'left'; fbIconText(t, r.x + (r.w - fbIconW(t, 12)) / 2, r.y + r.h / 2 + 4, 12); ctx.textAlign = 'center'; }
-  drawNewTag(r);
+  drawNewTag(r); drawGiftTag(r);
 }
 // Game Over: SKINS button in the top-right corner, so you can change costume between games
 function skinsGoRect() { const w = 96, h = 30; return { x: W - w - 10, y: 12, w: w, h: h }; }
@@ -4868,12 +4985,14 @@ function skinsOpen() {
       '#fb-skins .fbs-close{flex:none;font:600 15px Arial;border-radius:999px;padding:11px 16px;border:1px solid rgba(255,179,71,.5);background:transparent;color:#ffb347;cursor:pointer;width:100%;margin:12px 0 0}';
     document.head.appendChild(css);
     box.addEventListener('click', e => {
-      const t = e.target.closest('[data-skin],[data-a],[data-tab],[data-buy],[data-kitchen],[data-kbuy]');
+      const t = e.target.closest('[data-skin],[data-a],[data-tab],[data-buy],[data-kitchen],[data-kbuy],[data-gift]');
+      if (t && t.hasAttribute('data-gift')) { if (!skinsBusy) { giftPick = t.getAttribute('data-gift'); skinsMsg = ''; sndStreak(); skinsRender(); } return; }
+      if (t && t.getAttribute('data-a') === 'giftok') { giftClaim(); return; }
       if (t && t.hasAttribute('data-kbuy')) { if (!skinsBusy) { kitchenBuy = t.getAttribute('data-kbuy'); skinsMsg = ''; sndStreak(); skinsRender(); } return; }
       if (t && t.hasAttribute('data-kitchen')) { kitchensTap(t.getAttribute('data-kitchen')); return; }
       if (t && t.getAttribute('data-a') === 'kbux') { kitchensBux(); return; }
       if (t && t.hasAttribute('data-tab')) { skinsTab = t.getAttribute('data-tab'); skinsBuy = null; kitchenBuy = null; skinsMsg = ''; sndStreak(); skinsRender(); return; }
-      if (t && t.getAttribute('data-a') === 'home') { if (kitchenBuy) kitchenBuy = null; else if (skinsBuy) skinsBuy = null; else skinsTab = null; skinsMsg = ''; sndStreak(); skinsRender(); return; }
+      if (t && t.getAttribute('data-a') === 'home') { if (giftPick && skinsTab === 'gift') giftPick = null; else if (kitchenBuy) kitchenBuy = null; else if (skinsBuy) skinsBuy = null; else skinsTab = null; skinsMsg = ''; sndStreak(); skinsRender(); return; }
       if (t && t.hasAttribute('data-buy')) { if (!skinsBusy) { skinsBuy = t.getAttribute('data-buy'); skinsMsg = ''; sndStreak(); skinsRender(); } return; }
       if (VAULT && t && ['pay', 'bux', 'kbux', 'restore'].indexOf(t.getAttribute('data-a')) >= 0) { skinsMsgErr = true; skinsMsg = 'Costume Vault preview: buying is turned off here.'; skinsRender(); return; }
       if (t && t.getAttribute('data-a') === 'pay') { skinsPay(); return; }
@@ -5054,11 +5173,12 @@ function skinsRender() {
   const box = document.getElementById('fb-skins'); if (!box) return;
   const cur = pickedSkin(), groups = Object.keys(SKIN_GROUPS).filter(g => skinsGroupList(g).length);
   if (!SKINS_ALL) groups.sort((a, b) => (groupNew(b) ? SKIN_GROUPS[b].from : 0) - (groupNew(a) ? SKIN_GROUPS[a].from : 0));   // this week's drop first
-  if (skinsTab && skinsTab !== 'kitchens' && groups.indexOf(skinsTab) < 0) skinsTab = null;
+  if (skinsTab === 'gift' ? !giftLive() : skinsTab && skinsTab !== 'kitchens' && groups.indexOf(skinsTab) < 0) skinsTab = null;
+  if (skinsTab !== 'gift') { giftPick = null; giftDone = ''; }
   const buyP = skinsBuy && shopProducts()[skinsBuy];
   if (!buyP) skinsBuy = null;
   const kBuy = kitchenBuy && kitchenById(kitchenBuy);
-  const title = kBuy ? 'Get Kitchen' : buyP ? (buyP.kind === 'skin' ? 'Get Costume' : 'Get Collection') : skinsTab === 'kitchens' ? '🏙️ Kitchens' : skinsTab ? SKIN_GROUPS[skinsTab].name : '🎭 SKINS';
+  const title = kBuy ? 'Get Kitchen' : buyP ? (buyP.kind === 'skin' ? 'Get Costume' : 'Get Collection') : skinsTab === 'kitchens' ? '🏙️ Kitchens' : skinsTab === 'gift' ? '🎁 Your Gift' : skinsTab ? SKIN_GROUPS[skinsTab].name : '🎭 SKINS';
   let h = '<div class="fbs-card"><div class="fbs-top">' +
     (skinsTab || buyP || kBuy ? '<button type="button" class="fbs-back" data-a="home" aria-label="Back">‹</button>' : '<span class="fbs-x" style="visibility:hidden" aria-hidden="true"></span>') +
     '<h2>' + packsEsc(title) + '</h2>' +
@@ -5070,6 +5190,7 @@ function skinsRender() {
   const msg = skinsMsg ? '<p class="fbs-msg' + (skinsMsgErr ? ' err' : '') + '">' + packsEsc(skinsMsg) + '</p>' : '';
   if (kBuy) h += kitchensBuyHtml(kBuy, msg);
   else if (skinsTab === 'kitchens') h += kitchensListHtml(msg);
+  else if (skinsTab === 'gift') h += giftPickHtml(msg);
   else if (buyP) {
     // confirm screen: exactly what you get, what you already own, the price
     const own = shopOwnedOf(buyP.skins), n = buyP.skins.length, left = n - own.length;
@@ -5102,7 +5223,7 @@ function skinsRender() {
     h += '<input type="search" class="fbs-q" placeholder="🔍 Search costumes" aria-label="Search costumes" autocomplete="off" value="' + packsEsc(skinsQ) + '">';   // keyword search: filters costumes as you type
     h += '<div class="fbs-res"></div><div class="fbs-home">';
     h += '<p class="fbs-sub">Wearing: <b>' + packsEsc(cur.name) + '</b>' + '</p>' + msg;
-    h += kitchensRowHtml();
+    h += giftRowHtml() + kitchensRowHtml();
     groups.forEach(g => {
       const list = skinsGroupList(g), open = list.filter(s => skinUnlocked(s)).length, how = SKINS_ALL ? '' : skinHow(list[0]), soon = how === 'soon';
       const here = list.indexOf(cur) >= 0;
