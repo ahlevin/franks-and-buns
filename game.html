@@ -5002,6 +5002,7 @@ function skinsOpen() {
       '#fb-skins .fbs-col-t small{font:12px Arial;color:#c8a878;margin-top:2px}#fb-skins .fbs-col-p{display:flex;flex:none}#fb-skins .fbs-col-p img{width:46px;height:30px;object-fit:contain;margin-left:-6px}' +
       '#fb-skins .fbs-col-a{flex:none;color:#ffb347;font:bold 22px Arial}' +
       '#fb-skins .fbs-khead{margin:4px 2px 6px}' +
+      '#fb-skins .fbs-earnrow{border:3px solid #4ade80;background:rgba(74,222,128,.1)}#fb-skins .fbs-earnrow.on{border-color:#7cf5a8;box-shadow:0 0 10px rgba(74,222,128,.55)}#fb-skins .fbs-earnrow .fbs-col-t b{color:#7cf5a8}' +
       '#fb-skins .fbs-kitrow{position:relative;margin-bottom:14px;padding:12px 14px;border:3px solid #3fe0ff;background:linear-gradient(135deg,rgba(40,90,170,.45),rgba(120,50,170,.35));box-shadow:0 0 12px rgba(63,224,255,.55);animation:fbsKGlow 2.4s ease-in-out infinite}' +
       '#fb-skins .fbs-kitrow .fbs-col-t b{color:#fff;font-size:18px}#fb-skins .fbs-kitrow .fbs-col-t small{color:#bfe9ff}' +
       '#fb-skins .fbs-kn{display:inline-block;background:#3fe0ff;color:#08203a;border-radius:999px;padding:1px 7px;font:bold 11px Arial;vertical-align:3px;margin-left:6px}' +
@@ -5257,6 +5258,7 @@ function skinsRender() {
   const box = document.getElementById('fb-skins'); if (!box) return;
   const cur = pickedSkin(), groups = Object.keys(SKIN_GROUPS).filter(g => skinsGroupList(g).length);
   if (!SKINS_ALL) groups.sort((a, b) => (groupNew(b) ? SKIN_GROUPS[b].from : 0) - (groupNew(a) ? SKIN_GROUPS[a].from : 0));   // this week's drop first
+  groups.sort((a, b) => (b === 'earn') - (a === 'earn'));   // Free & Earned always stays at the top of the costumes (stable sort keeps the rest in order)
   if (skinsTab === 'gift' ? !giftLive() : skinsTab && skinsTab !== 'kitchens' && groups.indexOf(skinsTab) < 0) skinsTab = null;
   if (skinsTab !== 'gift') { giftPick = null; giftDone = ''; }
   const buyP = skinsBuy && shopProducts()[skinsBuy];
@@ -5311,7 +5313,7 @@ function skinsRender() {
     groups.forEach(g => {
       const list = skinsGroupList(g), open = list.filter(s => skinUnlocked(s)).length, how = SKINS_ALL ? '' : skinHow(list[0]), soon = how === 'soon';
       const here = list.indexOf(cur) >= 0;
-      h += '<button type="button" class="fbs-col' + (here ? ' on' : '') + '" data-tab="' + g + '"><span class="fbs-col-t"><b>' + packsEsc(SKIN_GROUPS[g].name) + (!SKINS_ALL && groupNew(g) ? ' <span class="fbs-new">NEW</span>' : '') + '</b>' +
+      h += '<button type="button" class="fbs-col' + (here ? ' on' : '') + (g === 'earn' ? ' fbs-earnrow' : '') + '" data-tab="' + g + '"><span class="fbs-col-t"><b>' + packsEsc(SKIN_GROUPS[g].name) + (!SKINS_ALL && groupNew(g) ? ' <span class="fbs-new">NEW</span>' : '') + '</b>' +
         '<small>' + (skinsVaultWhen(g) ? skinsVaultWhen(g) + ' · ' : '') + (soon ? '🔒 Coming soon · ' + list.length + ' costumes' : how === 'shop' ? (open === list.length ? '✓ All ' + list.length + ' owned' : (open ? open + ' of ' + list.length + ' owned · ' : list.length + ' costumes · ') + 'from ' + skinsPriceHtml(list[0].id)) : open + ' of ' + list.length + ' unlocked') + '</small></span><span class="fbs-col-p">';
       (here ? [cur].concat(list.filter(s => s !== cur)) : list).slice(0, 3).forEach(s => { h += '<img src="' + skinsPic(s) + '" alt="" loading="lazy">'; });
       h += '</span><span class="fbs-col-a">›</span></button>';
