@@ -4944,7 +4944,7 @@ function skinsOpen() {
       '#fb-skins .fbs-skin{background:rgba(0,0,0,.25);border:2px solid rgba(255,215,0,.25);border-radius:12px;padding:8px 6px;color:#f3e3c3;font:600 14px Arial;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px}' +
       '#fb-skins .fbs-skin img{width:100%;max-width:150px;height:64px;object-fit:contain}' +
       '#fb-skins .fbs-skin img.fbs-kimg,#fb-skins .fbs-col-p img.fbs-kimg{object-fit:cover;border-radius:8px;border:2px solid rgba(58,36,20,.8)}#fb-skins .fbs-col-p img.fbs-kimg{width:64px;height:40px;margin:0}' +
-      '#fb-skins .fbs-kkeeps{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:6px 0 0}#fb-skins .fbs-kkeep{font:600 12px Arial;color:#FFD700;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.5);border-radius:999px;padding:6px 10px;cursor:pointer}' +
+      '#fb-skins .fbs-kkeeps{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:6px 0 0}#fb-skins .fbs-kkeep{display:block;width:max-content;margin:5px auto 0;font:bold 12px Arial;color:#FFD700;background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.6);border-radius:999px;padding:4px 10px;cursor:pointer}#fb-skins .fbs-kgoal{display:block;margin-top:4px;color:#c8a878}' +
       '#fb-skins .fbs-buy img.fbs-kbig{width:100%;max-width:300px;height:150px;object-fit:cover;border-radius:12px;border:2px solid rgba(255,215,0,.5)}' +
       '#fb-skins .fbs-skin small{font:12px Arial;color:#c8a878}' +
       '#fb-skins .fbs-skin.on{border-color:#FFD700;background:rgba(255,215,0,.12)}#fb-skins .fbs-skin.on small{color:#FFD700}' +
@@ -5104,14 +5104,13 @@ function kitchensListHtml(msg) {
     const open = kitchenUnlocked(k), on = k.id === (SPORT ? kitchenPicked().id : kitchenCur);
     h += '<button type="button" class="fbs-skin' + (on ? ' on' : '') + (open ? '' : ' lock') + '" data-kitchen="' + k.id + '">' +
       '<img class="fbs-kimg" src="' + kitchenPreview(k) + '" alt="">' + packsEsc(k.name) +
-      '<small>' + (promo && !kitchenOwned(k) ? '🎉 Free through ' + KITCHEN_PROMO_TEXT + (on ? ' · ✓ Here' : '') : on ? '✓ Playing here' : open ? 'Tap to use' : k.how === 'bux' ? '<span class="fbs-p">' + BUX_ICON_HTML + ' ' + k.cost + '</span>' : kitchenLockText(k)) + '</small></button>';
+      '<small>' + (promo && !kitchenOwned(k) ? '🎉 Free through ' + KITCHEN_PROMO_TEXT + (on ? ' · ✓ Here' : '') +
+        // Keep it after the special: BunBux button (or the earn goal) right on the kitchen, instead of a long list below
+        (k.how === 'bux' ? '<span class="fbs-kkeep" role="button" data-kbuy="' + k.id + '">Keep · ' + BUX_ICON_HTML + ' ' + k.cost + '</span>' :
+         k.how === 'earn' ? '<span class="fbs-kgoal">To keep: ' + packsEsc(k.goal.text) + '</span>' : '') : on ? '✓ Playing here' : open ? 'Tap to use' : k.how === 'bux' ? '<span class="fbs-p">' + BUX_ICON_HTML + ' ' + k.cost + '</span>' : kitchenLockText(k)) + '</small></button>';
   });
   h += '</div>';
   });
-  const keep = promo ? KITCHENS.filter(k => k.how === 'bux' && !kitchenOwned(k)) : [];
-  if (keep.length) h += '<p class="fbs-buxnote">Keep a city now with BunBux:</p><div class="fbs-kkeeps">' +
-    keep.map(k => '<button type="button" class="fbs-kkeep" data-kbuy="' + k.id + '">' + packsEsc(k.name) + ' · ' + BUX_ICON_HTML + ' ' + k.cost + '</button>').join('') + '</div>';
-  if (promo) KITCHENS.filter(k => k.how === 'earn' && !kitchenOwned(k)).forEach(k => { h += '<p class="fbs-buxnote">To keep ' + packsEsc(k.name) + ': ' + packsEsc(k.goal.text.charAt(0).toLowerCase() + k.goal.text.slice(1)) + ' once.</p>'; });
   return h + '<p class="fbs-buxnote">More cities coming soon.</p>';
 }
 function kitchensBuyHtml(k, msg) {
