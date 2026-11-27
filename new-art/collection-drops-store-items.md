@@ -14,7 +14,29 @@ If a drop's items aren't ready on time, the Collection still appears and BunBux 
 
 ★ marks a Limited Edition costume: purchase only, never BunBux.
 
-Total: 67 Collections, 326 costumes plus 3 added to Sports, so 396 items in each store.
+Total: 69 Collections, 339 costumes plus 3 added to Sports, so 411 items in each store.
+
+## Released early, Fri Nov 27, 2026  (create now; live for BunBux only until these exist)
+
+Alan asked for these right away, so they are on sale for 300 BunBux now. When the store items are live, set `buxOnlyUntil` on the two groups in game.html to that day (or remove it), add the Stripe ids to SHOP_STRIPE, and the money prices, Collection deals and the two ★ Limited costumes switch on.
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_glitch | Glitch | $0.99 |
+| skin_hallucination | Hallucination ★ | $0.99 |
+| skin_promptwizard | Prompt Wizard | $0.99 |
+| skin_superbrain | Superbrain | $0.99 |
+| skin_eightbit | 8-Bit | $0.99 |
+| skin_analog | Analog | $0.99 |
+| col_definitelyai | Definitely AI Collection (6 costumes) | $3.99 |
+| skin_sixties | 1960s | $0.99 |
+| skin_seventies | 1970s | $0.99 |
+| skin_eighties | 1980s ★ | $0.99 |
+| skin_nineties | 1990s | $0.99 |
+| skin_noughties | 2000s | $0.99 |
+| skin_twentytens | 2010s | $0.99 |
+| skin_twentytwenties | 2020s | $0.99 |
+| col_decades | Decades Collection (7 costumes) | $3.99 |
 
 ## Tue Dec 1, 2026  (create by Nov 24)
 
