@@ -39,3 +39,13 @@
   Content-Type: application/json
   Access-Control-Allow-Origin: *
   Cache-Control: public, max-age=300
+
+/stats
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
+  Referrer-Policy: no-referrer
+
+/stats.html
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
+  Referrer-Policy: no-referrer

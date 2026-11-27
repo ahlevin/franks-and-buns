@@ -2175,7 +2175,7 @@ document.addEventListener('click', e => {
 // --- Music credits (CC BY 4.0 attribution), opened from the Credits button and the page footer ---
 function fbShowCredits() {
   let box = document.getElementById('fb-credits');
-  if (box) { box.style.display = 'flex'; fbCreditsSoundNote(); return false; }
+  if (box) { box.style.display = 'flex'; fbCreditsSoundNote(); statCreditsNote(); return false; }
   box = document.createElement('div');
   box.id = 'fb-credits'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'Credits');
   box.innerHTML =
@@ -2188,6 +2188,7 @@ function fbShowCredits() {
     '<p>Changes: excerpted, converted to mono, and edited into a 30.476-second gameplay loop.</p>' +
     '<p class="fbcr-small">The opening chase music, Dog Parade music and game sound effects are original cues made for Franks &amp; Buns.</p>' +
     '<p class="fbcr-small" id="fbcr-sound"></p>' +
+    '<p class="fbcr-small" id="fbcr-stats"></p>' +
     '<p class="fbcr-small" style="text-align:center;margin:0 0 8px">&copy; 2026 SLAE Labs LLC. All rights reserved.</p>' +
     '<button type="button" class="fbcr-close">Close</button></div>';
   const css = document.createElement('style');
@@ -2196,12 +2197,16 @@ function fbShowCredits() {
     '#fb-credits .fbcr-card{max-width:420px;width:100%;box-sizing:border-box;background:#2a1a0a;color:#f3e3c3;border:2px solid rgba(255,215,0,.5);border-radius:16px;padding:18px 18px 14px;font:14px/1.45 -apple-system,Segoe UI,Roboto,Arial,sans-serif;text-align:left}' +
     '#fb-credits h2{margin:0 0 10px;color:#FFD700;font:bold 22px Arial;text-align:center}#fb-credits p{margin:0 0 10px}' +
     '#fb-credits a{color:#ffb347;word-break:break-word}#fb-credits .fbcr-small{font-size:12px;color:#c8a878}' +
+    '#fb-credits #fbcr-statsbtn{font:600 12px Arial;border-radius:999px;padding:4px 12px;margin-left:6px;border:1px solid #ff6600;background:transparent;color:#ffb347;cursor:pointer}' +
     '#fb-credits .fbcr-close{display:block;margin:6px auto 0;font:600 15px Arial;border-radius:999px;padding:10px 26px;border:1px solid #ff6600;background:#ff6600;color:#fff;cursor:pointer}';
   box.appendChild(css);
   ['touchstart', 'touchend', 'mousedown', 'pointerdown'].forEach(t => box.addEventListener(t, e => e.stopPropagation(), { passive: true }));
-  box.addEventListener('click', e => { if (e.target === box || e.target.classList.contains('fbcr-close')) box.style.display = 'none'; });
+  box.addEventListener('click', e => {
+    if (e.target && e.target.id === 'fbcr-statsbtn') { safeSet(STAT_OFF_KEY, safeGet(STAT_OFF_KEY) === '1' ? '' : '1'); statCreditsNote(); return; }
+    if (e.target === box || e.target.classList.contains('fbcr-close')) box.style.display = 'none';
+  });
   (document.body || document.documentElement).appendChild(box);
-  fbCreditsSoundNote();
+  fbCreditsSoundNote(); statCreditsNote();
   return false;
 }
 function fbCreditsSoundNote() { const n = document.getElementById('fbcr-sound'); if (n) n.textContent = wavLoadNote ? 'Sound files loaded: ' + wavLoadNote : ''; }
@@ -2766,7 +2771,8 @@ if (!(bestScore >= 0 && bestScore < 1e9)) bestScore = 0;
 // Test copies of the site can force one: ?stages=on|off, ?secondwind=on|off, ?firsttips=on|off, ?mergecode=on|off, ?soccer=on|off (sports: see SPORTS)
 // mergecode: entering a recovery code brings along what this device already had (BunBux, costumes, best score) instead of leaving it behind.
 // firsttips starts on, so a brand-new player gets the tips even before flags.json arrives; flags.json can still turn it off.
-const FEAT = { stages: false, secondwind: false, firsttips: true, mergecode: false, soccer: false, basketball: false, football: false, waterpolo: false, golf: false, baseball: false, cricket: false, hockey: false };
+// metrics: anonymous play stats (one short summary per finished game, see "Anonymous play stats" below).
+const FEAT = { metrics: false, stages: false, secondwind: false, firsttips: true, mergecode: false, soccer: false, basketball: false, football: false, waterpolo: false, golf: false, baseball: false, cricket: false, hockey: false };
 // sportdates: optional windows for the sports, e.g. { "soccer": { "from": "2026-12-01", "until": "2027-01-05" } } (dates on the
 // player's clock, both days included). A sport shows only while its switch is on AND today is inside its window (no window = always).
 // sportstag: the badge on every sport card in the picker ("" hides it). Kept apart from the true/false switches so older copies ignore them.
@@ -2958,6 +2964,7 @@ function modeSet(id) {
   if (id === modePicked()) return;
   safeSet('fb_mode', id); safeSet('fb_soccer', id === 'soccer' ? '1' : '0'); soccerSync();
   try { if (typeof gtag === 'function') gtag('event', 'game_mode', { mode: id }); } catch (e) {}
+  statEvent('game_mode', id);
 }
 // where a target picture goes (relative to the bun's centre): the sport's box, or the bun's own 88x37
 function targetBox(key) { return SPORT ? SPORT.tg[key] : [-44, -19, 88, 37]; }
@@ -4109,6 +4116,40 @@ function loseLife() {
     finishRun();
   } else { frank.y=H*0.35; frank.vy=0; }
 }
+// --- Anonymous play stats (switch: FEAT.metrics in flags.json; a player can turn it off on the Credits screen).
+// When a game ends the game sends a short summary (score, how far it got, mode, costume, kitchen, iPhone/Android/web) to /api/m.
+// No ID of any kind goes with it: no Dog House profile, recovery code, nickname or device ID. To count new and returning players,
+// this device only remembers the day it first played, the last day it played and how many games it has played, and sends those.
+// The privacy policy describes this ("Anonymous gameplay statistics"); keep the two in step.
+const STAT_OFF_KEY = 'fb_m_off';
+// Players from before stats existed aren't new: mark them so their next game isn't counted as someone's first
+if (!safeGet('fb_m_first') && (parseInt(safeGet('fb_best') || '0', 10) > 0 || safeGet('fb_pack_token'))) safeSet('fb_m_first', 'old');
+function statOn() { return FEAT.metrics && safeGet(STAT_OFF_KEY) !== '1'; }
+function statPlat() { try { const C = window.Capacitor, p = C && C.getPlatform ? C.getPlatform() : ''; return p === 'ios' || p === 'android' ? p : 'web'; } catch (e) { return 'web'; } }
+function statDay() { try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); } catch (e) { return new Date().toISOString().slice(0, 10); } }
+function statSend(o) {
+  if (!statOn()) return;
+  o.p = statPlat();
+  try { fetch(PACKS_API + 'm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(o), keepalive: true }).catch(() => {}); } catch (e) {}
+}
+function statEvent(name, val) { statSend({ e: name, v: val ? String(val).slice(0, 40) : '' }); }
+function statGame() {
+  const day = statDay(), n = (parseInt(safeGet('fb_m_n') || '0', 10) || 0) + 1;
+  let inst = safeGet('fb_m_first');
+  if (!inst) { inst = day; safeSet('fb_m_first', day); }
+  const firstToday = safeGet('fb_m_last') !== day;
+  safeSet('fb_m_last', day); safeSet('fb_m_n', String(n));
+  statSend({ e: 'game', inst: inst, f: n === 1 && inst !== 'old' ? 1 : 0, t: firstToday ? 1 : 0, nb: n === 1 ? 1 : n <= 5 ? 2 : n <= 20 ? 3 : 4,
+    m: SPORT ? modePicked() : 'classic', s: Math.floor(score), b: boxesCompleted, fr: franksLanded, sec: Math.round(runFrames / 60),
+    st: FEAT.stages ? stage : 0, w: windUsed ? 1 : 0, sk: pickedSkin().id, k: kitchenCur || '', nm: packsMe && packsMe.player && packsMe.player.nickname ? 1 : 0 });
+}
+function statCreditsNote() {
+  const n = document.getElementById('fbcr-stats'); if (!n) return;
+  const off = safeGet(STAT_OFF_KEY) === '1';
+  n.innerHTML = '<strong>Anonymous play stats:</strong> ' + (off ? 'Off' : 'On') + ' <button type="button" id="fbcr-statsbtn">' + (off ? 'Turn on' : 'Turn off') + '</button><br>' +
+    'When a game ends we count its score and how far it got, with no name or ID. <a href="privacy.html#play-stats" target="_blank" rel="noopener">Privacy Policy</a>';
+}
+
 function finishRun() {   // the run is over: Game Over, saves and awards
   {
     state=STATE.GAMEOVER; frank.alive=false; sndGameOver();
@@ -4121,6 +4162,7 @@ function finishRun() {   // the run is over: Game Over, saves and awards
     const freshK = kitchensAward({ boxes: boxesCompleted, streak: bestStreak, franks: franksLanded });
     if (freshK.length) skinNew = (skinNew || []).concat(freshK.map(k => ({ name: k.name + ' kitchen', kitchen: true })));
     recordRun();
+    statGame();
     buxSubmit({ streak: bestStreak, boxes: boxesCompleted, franks: franksLanded, chili: chiliCaught }, { score: score, frames: runFrames });
   }
 }
@@ -4572,6 +4614,7 @@ function howtoClose(play) {
 function howtoOpen() {
   safeSet('fb_howto_seen', '1');
   try { if (typeof gtag === 'function') gtag('event', 'howto_video'); } catch (e) {}
+  statEvent('howto_video');
   let b = document.getElementById('fb-howto');
   if (!b) {
     b = document.createElement('div'); b.id = 'fb-howto'; b.setAttribute('role', 'dialog'); b.setAttribute('aria-label', 'How to play');
@@ -4598,6 +4641,7 @@ function buxIntroMaybe() {
   if (SKINS_ALL || safeGet('fb_bux_intro') || buxIntroIsOpen() || howtoIsOpen() || skinsIsOpen() || packsIsOpen() || scoresOpen || modeOpen) return;
   safeSet('fb_bux_intro', '1');
   try { if (typeof gtag === 'function') gtag('event', 'bux_intro'); } catch (e) {}
+  statEvent('bux_intro');
   const b = document.createElement('div'); b.id = 'fb-buxintro'; b.setAttribute('role', 'dialog'); b.setAttribute('aria-label', 'New: BunBux');
   b.style.cssText = 'position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(10,5,0,.86);padding:16px;box-sizing:border-box';
   const li = 'margin:0 0 9px;padding-left:30px;text-indent:-30px';
@@ -4722,6 +4766,7 @@ function shareScore() {
   const url = 'https://franksandbuns.com/get';   // phones: their app store first; computers: the game
   const text = SPORT ? 'I scored ' + pts.toLocaleString() + ' in Franks & Buns ' + SPORT.name + ' Edition! ' + SPORT.icon + ' Can you beat me?' : 'I scored ' + pts.toLocaleString() + ' in Franks & Buns! 🌭 Can you beat me?';
   try { if (typeof gtag === 'function') gtag('event', 'share_score', { score: pts }); } catch (e) {}
+  statEvent('share_score');
   let file = null;
   try {
     const d = shareCardCanvas(pts, best).toDataURL('image/png'), bin = atob(d.split(',')[1]), u = new Uint8Array(bin.length);
@@ -4750,6 +4795,7 @@ function shareScore() {
 function skinsClose() { const b = document.getElementById('fb-skins'); if (b) b.style.display = 'none'; }
 function skinsIsOpen() { const b = document.getElementById('fb-skins'); return !!(b && b.style.display !== 'none'); }
 function skinsOpen() {
+  statEvent('closet_open');
   skinsView = ''; skinsScroll = {};   // opening the screen always starts at the top
   let box = document.getElementById('fb-skins');
   if (!box) {
@@ -4839,7 +4885,7 @@ function skinsOpen() {
       if (!t || !t.hasAttribute('data-skin')) return;
       const s = skinById(t.getAttribute('data-skin'));
       if (!skinUnlocked(s)) { if (skinHow(s) === 'shop' && !skinsBusy) { skinsBuy = 'skin_' + s.id; skinsMsg = ''; sndStreak(); skinsRender(); } return; }
-      safeSet('fb_skin', s.id); skinPreload(s); sndStreak(); skinsRender();
+      safeSet('fb_skin', s.id); skinPreload(s); sndStreak(); skinsRender(); statEvent('skin_pick', s.id);
     });
     box.addEventListener('input', e => { if (e.target.classList.contains('fbs-q')) { skinsQ = e.target.value; skinsSearchDraw(); } });
     ['touchstart', 'touchend', 'mousedown', 'pointerdown', 'keydown'].forEach(t => box.addEventListener(t, e => e.stopPropagation(), { passive: true }));
