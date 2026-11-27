@@ -1197,7 +1197,8 @@ function dropNow() { return DROP_TEST ? dropAt(+DROP_TEST[1], +DROP_TEST[2], +DR
 const VAULT = new URLSearchParams(location.search).get('vault') === 'bunvault';
 function skinOpen(s) { if (!VAULT && s.group && groupBuxOnly(s.group) && skinLimited(s.id)) return false;   // a Limited Edition costume waits for its store item
   return VAULT || !s.from || dropNow() >= s.from; }   // a costume added to a Collection later can have its own drop date
-function groupBuxOnly(g) { const G = SKIN_GROUPS[g]; return !!(G && G.buxOnlyUntil && dropNow() < G.buxOnlyUntil); }   // early release: BunBux only (no store items yet), the shop opens on buxOnlyUntil
+function groupBuxOnly(g) { const G = SKIN_GROUPS[g]; if (G && G.webShop && !(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) return false;   // webShop: Stripe items exist, so the website sells it now; apps wait for "shopopen"
+  return !!(G && G.buxOnlyUntil && dropNow() < G.buxOnlyUntil); }   // early release: BunBux only (no store items yet), the shop opens on buxOnlyUntil
 function groupOpen(g) { const G = SKIN_GROUPS[g]; return !!G && (VAULT || !G.from || dropNow() >= G.from); }
 function groupNew(g) { const G = SKIN_GROUPS[g]; return !!(G && G.from && groupOpen(g) && dropNow() >= G.from && dropNow() < G.from + 7 * 864e5); }   // the first week after its drop
 function anyGroupNew() { return Object.keys(SKIN_GROUPS).some(groupNew); }
@@ -1211,8 +1212,8 @@ const SKIN_GROUPS = { earn: { name: 'Free & Earned', how: 'earn' }, holiday: { n
   // Released early on Nov 27, 2026 (Alan asked for more costumes right away): BunBux only until their store items are live.
   // Then set buxOnlyUntil to that day (or remove it) and add the Stripe ids to SHOP_STRIPE. Limited Edition ones stay hidden until then.
   // Apps already out keep this file, so for them add the group to "shopopen" in flags.json instead (see featApply).
-  definitelyai: { name: 'Definitely AI', how: 'shop', from: dropAt(2026, 11, 27), buxOnlyUntil: dropAt(2099, 1, 1) },
-  decades: { name: 'Decades', how: 'shop', from: dropAt(2026, 11, 27), buxOnlyUntil: dropAt(2099, 1, 1) },
+  definitelyai: { name: 'Definitely AI', how: 'shop', from: dropAt(2026, 11, 27), buxOnlyUntil: dropAt(2099, 1, 1), webShop: true },
+  decades: { name: 'Decades', how: 'shop', from: dropAt(2026, 11, 27), buxOnlyUntil: dropAt(2099, 1, 1), webShop: true },
   spacecases: { name: 'Space Cases', how: 'shop', from: dropAt(2026, 12, 1) },
   tinyterrors: { name: 'Tiny Terrors', how: 'shop', from: dropAt(2026, 12, 1) },
   mythicalmisfits: { name: 'Mythical Misfits', how: 'shop', from: dropAt(2026, 12, 8) },
@@ -1650,7 +1651,16 @@ const SHOP_STRIPE = {
   skin_yetiornot: ['price_1UfD1R6LJdPzXq2bD2mbVcLB', 'prod_VgaBj8Uf3E3iMb'], col_mythicalmisfits: ['price_1UfD6u6LJdPzXq2bzeGOfAQw', 'prod_VgaHghx4YwWIGF'],
   skin_maneevent: ['price_1UfD1u6LJdPzXq2bOZGFBpqg', 'prod_VgaCLyEzeQCi7k'], skin_stripehype: ['price_1UfD376LJdPzXq2b2xpSUnFe', 'prod_VgaDQ3qqy1qAgK'],
   skin_pandamonium: ['price_1UfD5x6LJdPzXq2b5gOyylBi', 'prod_VgaGR5oZzwEIXg'], skin_trunkshow: ['price_1UfD6Q6LJdPzXq2bjVoqekFJ', 'prod_VgaG30WP26Mql8'],
-  col_wildthings: ['price_1UfD7O6LJdPzXq2bOvHEILSF', 'prod_VgaHku9oSzFQay']
+  col_wildthings: ['price_1UfD7O6LJdPzXq2bOvHEILSF', 'prod_VgaHku9oSzFQay'],
+  // Definitely AI and Decades (released early Nov 27, 2026)
+  skin_glitch: ['price_1UgUZQ6LJdPzXq2bLOCtk1Yu', 'prod_VhuOPjlk9sOnuH'], skin_hallucination: ['price_1UgUZs6LJdPzXq2bizgxk5fV', 'prod_VhuO9JjoSSrmff'],
+  skin_promptwizard: ['price_1UgUaA6LJdPzXq2bGvcBBEjJ', 'prod_VhuOecBuYHSzEw'], skin_superbrain: ['price_1UgUaj6LJdPzXq2b6trtOdqP', 'prod_VhuPAeA28NfnMM'],
+  skin_eightbit: ['price_1UgUar6LJdPzXq2bsjIC1KGJ', 'prod_VhuPzaybjBfe6g'], skin_analog: ['price_1UgUay6LJdPzXq2bl4o9mkrK', 'prod_VhuP1N7zxdmy24'],
+  col_definitelyai: ['price_1UgUcY6LJdPzXq2bRXbeM9HQ', 'prod_VhuRMR6EUvdC8k'], skin_sixties: ['price_1UgUb56LJdPzXq2bymwBatgG', 'prod_VhuP4fERwYMPhQ'],
+  skin_seventies: ['price_1UgUbZ6LJdPzXq2bYRGFmYFd', 'prod_VhuQXPIL32dVdS'], skin_eighties: ['price_1UgUbg6LJdPzXq2bHRG7NxUt', 'prod_VhuQ7G8NLFdfqX'],
+  skin_nineties: ['price_1UgUbn6LJdPzXq2b8dhhag7Y', 'prod_VhuQtQZ0fwzRvZ'], skin_noughties: ['price_1UgUbv6LJdPzXq2bFExfRhlm', 'prod_VhuQtF9wMb46A7'],
+  skin_twentytens: ['price_1UgUc26LJdPzXq2bVULZ2Dk6', 'prod_VhuQSwpATLldsu'], skin_twentytwenties: ['price_1UgUcH6LJdPzXq2bqg4Dx5Fj', 'prod_VhuRsDcEAh66rc'],
+  col_decades: ['price_1UgUcg6LJdPzXq2bCRmB1GoO', 'prod_VhuRtbiCaNeGt2']
 };
 function shopIdOf(storeId) {
   if (shopProducts()[storeId]) return storeId;
