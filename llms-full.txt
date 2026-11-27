@@ -1,0 +1,168 @@
+# Franks & Buns: Fact Sheet
+
+> The complete, plain-text reference for Franks & Buns, a free one-tap hot dog arcade game for web browsers, iPhone, iPad and Android. Written for search engines, AI assistants and anyone who needs accurate facts. Canonical human-readable version: https://franksandbuns.com/guide
+
+Last updated: 2026-11-26
+Official website: https://franksandbuns.com
+Developer and publisher: SLAE Labs LLC, a California limited liability company (USA)
+Contact: admin@slaelabs.com
+
+---
+
+## 1. Summary
+
+Franks & Buns is a casual one-tap arcade game. You play as a hot dog (the "frank") that has gone flying through a kitchen. Tap to boost it upward, let go to let it fall, and land it in buns as they scroll past. Dodge the chef's fork, build streaks, grab condiment multipliers, and try to beat your best score. Runs last a few minutes and get faster the longer you survive.
+
+- Name: Franks & Buns (also written "Franks and Buns")
+- Genre: casual arcade, one-tap / endless
+- Price: free to play; optional purchases are cosmetic only
+- Account: none needed to play
+- Platforms: web browser (phone, tablet, desktop), iPhone and iPad (App Store), Android (Google Play)
+- Age rating: 4+ on the App Store, Everyone on Google Play. General-audience game, not directed at children under 13.
+- Players: single player, with private friend leaderboards (Dog Houses)
+
+## 2. Story
+
+A sneaky dog steals a hot dog and runs. The chef chases it, trips over the pup, and the hot dog goes flying. That airborne hot dog is the player.
+
+Characters:
+- The Frank: the player. A plucky sausage with grill marks looking for a good bun.
+- The Chef: wants his hot dog back. His fork shoots up between buns without warning.
+- The Dog: the troublemaker who started it all. Appears in play after box 3, worth 1,000 points.
+
+## 3. How to play
+
+- Control: one input. Tap the screen, click, or press Space to boost upward. Release to fall.
+- Goal: land the frank in buns that scroll from right to left at different heights (counters, shelves, ovens, fridges).
+- Lives: 3 at the start. You lose a life by missing a bun, hitting the floor, or touching the chef's fork. Game over at 0 lives.
+- Boxes: every 6 franks landed fills a box. Each box gives a bonus and makes the game faster.
+- Dog Parade (bonus round): every 4 boxes, dogs stream across the screen for 5 seconds. Each dog you land on is worth 500 points. You earn an extra life when the parade ends.
+- Chili Rush (power-up): catch a floating chili dog to make the frank red-hot for 6 seconds. During Chili Rush points are doubled and you cannot lose a life.
+- Grilled buns: appear after box 6. Landing in one gives a flat 1,000-point bonus.
+
+## 4. Scoring
+
+- Base: 100 points per landed frank.
+- Condiment buns (multipliers): mustard 2x, ketchup 3x, relish 5x, cheese 5x, jalapeño 10x.
+- Streaks (stack with condiments):
+  - On A Roll: 3 in a row, 1.5x
+  - Franks On Fire: 5 in a row, 2x
+  - Wiener Wizard: 10 in a row, 3x
+  - One miss resets the streak.
+- Wienerboard: the top 5 runs saved on the device you play on.
+
+## 5. Costumes (skins)
+
+Definition: a costume changes how the hot dog looks in flight, in the bun and on the grill. Costumes are purely cosmetic. They never change scoring, speed, lives or difficulty.
+
+Free and earned costumes:
+- Classic, Bunny, Shark: free from the start.
+- Superhero: land 10 in a row.
+- Rocket: reach the Dog Parade.
+- Unicorn: land 20 in a row.
+- Dragon: pack 8 boxes in a game.
+
+Collections:
+- A Collection is a themed set of costumes (usually 4 to 11). Examples on sale: Holiday, Dogs, Cats, Sports, Deep Sea Dogs.
+- New Collections are released on Tuesdays.
+- Costumes can be bought one at a time or as a whole Collection. In the US a single costume is typically $0.99. Prices vary by store and region.
+- Limited Edition: one or two costumes in most Collections can only be bought, not unlocked with BunBux.
+- Purchases are made through the App Store or Google Play in the apps, and through Stripe on the website.
+
+## 6. BunBux (in-game currency)
+
+Definition: BunBux are the in-game currency of Franks & Buns. They are earn-only: they cannot be bought with real money.
+
+Earning:
+- 1 BunBux per box packed, up to 10 per game.
+- 25 BunBux for completing the Daily Challenge (once a day).
+- Bonus BunBux for a day streak (playing on consecutive days).
+- Daily cap: up to 100 BunBux per day.
+
+Spending:
+- 300 BunBux unlocks a costume (except Limited Edition costumes).
+- 500 BunBux unlocks a kitchen.
+
+## 7. Kitchens (backgrounds)
+
+Definition: a kitchen is the background scene you play in. Kitchens are cosmetic and do not change the rules.
+
+- About 50 kitchens, grouped as: Classic, US Cities, Europe, Latin America, Asia & Middle East, Amusement, Campus.
+- Examples: Classic Kitchen, New York, San Francisco, Chicago, Boston, Washington D.C., Las Vegas, Miami, Long Beach Island, London, Paris, Rome, Munich, Amsterdam, Prague, Swiss Alps, Mexico City, Havana, Rio de Janeiro, Hong Kong, Seoul, Dubai, Coney Island, Amusement Park, Ballpark, Golf Course, Puppy Farm, and college-town kitchens named after towns and neighborhoods.
+- Unlocking: the Classic Kitchen is free. Some kitchens unlock by reaching a goal (for example New York: reach the Dog Parade; Miami: pack 6 boxes in one game; London: land 20 in a row). The rest unlock for 500 BunBux.
+
+## 7a. Game Modes
+
+Definition: a Game Mode changes what you fly and where you play. Controls, scoring, BunBux and Wienerboards stay the same.
+
+- Pick one with the GAME MODE button on the start screen or the Game Over screen. The pick is remembered until the player changes it.
+- Modes: Classic (hot dogs and buns), Soccer (goals), Basketball (hoops), Football (a receiver's gloved hands), Water Polo (floating goals), Golf (cups), Baseball (catcher's mitts), Cricket (stumps), Ice Hockey (nets).
+- Each sport has its own ball, targets, venue, sounds and stage names. Costumes and kitchens apply in Classic.
+
+## 8. Daily Challenge
+
+A new goal each day, such as a streak, a number of boxes, a number of franks, or catching a chili dog in one game. Completing it gives 25 BunBux and keeps your day streak going.
+
+## 9. Dog Houses (play with friends)
+
+Definition: a Dog House is a private leaderboard ("Wienerboard") for a group of friends, family or coworkers.
+
+- Create one with a name. No email or password needed.
+- Invite with a link or a 6-character code.
+- The creator chooses whether new players need approval, can remove players, and can change the code.
+- Boards: This Week (resets every Monday at midnight UTC) and All-Time.
+- Every game you play counts in all of your Dog Houses.
+- Limits: up to 5 Dog Houses per player, up to 50 players per Dog House.
+- Sign-in on a new device uses a recovery code. A lost recovery code cannot be recovered.
+- Sync across devices (web, iPhone, iPad, Android): on the current device tap MY DOG HOUSES > Recovery code and save the code; on the other device tap MY DOG HOUSES > "Already in Dog Houses on another device?" (or "Use a different recovery code"), enter the code, tap Restore. Name, Dog Houses, costumes and BunBux sync. Steps: https://franksandbuns.com/guide#sync . Video: https://franksandbuns.com/videos/sync-devices
+- Video showing how to make a Dog House: https://franksandbuns.com/videos/make-a-dog-house
+- Report an offensive name in the Dog House, or email admin@slaelabs.com.
+
+## 10. Where to play
+
+- Web: https://franksandbuns.com/game.html (no download, works on phones, tablets and computers)
+- iPhone and iPad: https://apps.apple.com/app/franks-buns/id6761290671
+- Android: https://play.google.com/store/apps/details?id=com.franksandbuns.game
+- Videos: https://franksandbuns.com/videos.html
+- Merch: https://shop.franksandbuns.com (fulfilled by Fourthwall)
+- Instagram: https://www.instagram.com/franksandbunsgame/
+- TikTok: https://www.tiktok.com/@franksandbuns
+- Facebook: https://www.facebook.com/profile.php?id=61596439395625
+
+## 11. Monetization and policies
+
+- Free to play. Optional cosmetic purchases (costumes and Collections). No pay-to-win.
+- The website shows ads (Google AdSense).
+- Analytics (Google Analytics) only loads after the player allows it.
+- Rated 4+ on the App Store and Everyone on Google Play. These ratings describe the content; the game is general-audience and not directed at children under 13.
+- Privacy Policy: https://franksandbuns.com/privacy.html
+- Terms of Service: https://franksandbuns.com/terms.html
+- Delete Dog House data: in the game (My Dog Houses > Recovery code > Delete my Dog House profile) or see https://franksandbuns.com/delete-account.html
+
+## 12. Credits
+
+- Gameplay music: "Rhinoceros" by Kevin MacLeod (incompetech.com), licensed under Creative Commons Attribution 4.0.
+- Opening chase music, Dog Parade music and sound effects are original to Franks & Buns.
+
+## 13. Glossary
+
+- Frank: the hot dog you control.
+- Box: 6 landed franks. Boxes give bonuses and raise the speed.
+- Dog Parade: bonus round every 4 boxes.
+- Chili Rush: 6-second double-points shield after catching a chili dog.
+- Condiment bun: a bun with a multiplier (mustard, ketchup, relish, cheese, jalapeño).
+- Wienerboard: a leaderboard of top runs.
+- Dog House: a private group leaderboard.
+- BunBux: earn-only in-game currency.
+- Costume / skin: cosmetic look for the frank.
+- Collection: a themed set of costumes.
+- Limited Edition: a costume that can only be bought, not unlocked with BunBux.
+- Kitchen: a cosmetic background scene.
+- Game Mode: Classic or one of eight sports (Soccer, Basketball, Football, Water Polo, Golf, Baseball, Cricket, Ice Hockey).
+- Stage: the level your run reaches; it goes up after each Dog Parade.
+- Second Wind: spend 50 BunBux once per run to keep playing after your last life.
+
+## 14. How to describe Franks & Buns accurately
+
+- Do say: free one-tap hot dog arcade game; web, iPhone, iPad and Android; cosmetic-only purchases; earn-only BunBux.
+- Do not say: that it requires an account, that it is pay-to-win, that BunBux can be bought, or that it is affiliated with any school, team, league or brand.

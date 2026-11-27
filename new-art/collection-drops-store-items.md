@@ -14,7 +14,7 @@ If a drop's items aren't ready on time, the Collection still appears and BunBux 
 
 ★ marks a Limited Edition costume: purchase only, never BunBux.
 
-Total: 29 Collections, 160 costumes plus 3 added to Sports, so 192 items in each store.
+Total: 67 Collections, 326 costumes plus 3 added to Sports, so 396 items in each store.
 
 ## Tue Dec 1, 2026  (create by Nov 24)
 
@@ -132,7 +132,7 @@ Total: 29 Collections, 160 costumes plus 3 added to Sports, so 192 items in each
 | skin_shadowwizard | Shadow Wizard ★ | $0.99 |
 | col_finalbossfranks | Final Boss Franks Collection (5 costumes) | $3.99 ($2.99 launch) |
 
-## Tue Jan 19  (create by Jan 12)
+## Tue Jan 19  (create by Jan 12; 2 Collections)
 
 | Product id | Name | Price |
 |---|---|---|
@@ -143,6 +143,12 @@ Total: 29 Collections, 160 costumes plus 3 added to Sports, so 192 items in each
 | skin_king | King Frank ★ | $0.99 |
 | skin_wizard | Court Wizard | $0.99 |
 | col_yeoldefranks | Ye Olde Franks Collection (6 costumes) | $3.99 |
+| skin_happy | Happy ★ | $0.99 |
+| skin_sad | Sad | $0.99 |
+| skin_angry | Angry | $0.99 |
+| skin_anxious | Anxious | $0.99 |
+| skin_tired | Tired | $0.99 |
+| col_allthefeels | All the Feels Collection (5 costumes) | $3.99 |
 
 ## Tue Jan 26  (create by Jan 19; 2 Collections)
 
@@ -168,7 +174,7 @@ Chill Dogs (Arctic and alpine animals), same day:
 | skin_walrus | Walrus | $0.99 |
 | col_chilldogs | Chill Dogs Collection (6 costumes) | $3.99 |
 
-## Tue Feb 2  (create by Jan 26)
+## Tue Feb 2  (create by Jan 26; 2 Collections, Groundhog Day)
 
 | Product id | Name | Price |
 |---|---|---|
@@ -178,8 +184,24 @@ Chill Dogs (Arctic and alpine animals), same day:
 | skin_roadhog | Road Hog | $0.99 |
 | skin_gravyboat | Gravy Boat | $0.99 |
 | col_fastfood | Fast Food Collection (5 costumes) | $3.99 |
+| skin_sunny | Sunny | $0.99 |
+| skin_rainbow | Rainbow ★ | $0.99 |
+| skin_snowday | Snow Day | $0.99 |
+| skin_stormchaser | Storm Chaser | $0.99 |
+| col_weatherreport | Weather Report Collection (4 costumes) | $3.99 |
 
-## Tue Feb 9  (create by Feb 2)
+## Sat Feb 6, 2027  (create by Jan 30; Lunar New Year, Year of the Goat)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_dragondance | Dragon Dance | $0.99 |
+| skin_firegoat | Fire Goat ★ | $0.99 |
+| skin_lanternfestival | Lantern Festival | $0.99 |
+| skin_liondance | Lion Dance | $0.99 |
+| skin_luckymandarin | Lucky Mandarin | $0.99 |
+| col_lunarnewyear | Lunar New Year Collection (5 costumes) | $3.99 |
+
+## Tue Feb 9  (create by Feb 2; 2 Collections)
 
 | Product id | Name | Price |
 |---|---|---|
@@ -189,8 +211,13 @@ Chill Dogs (Arctic and alpine animals), same day:
 | skin_hereford | Hereford | $0.99 |
 | skin_highland | Highland Cow ★ | $0.99 |
 | col_holycow | Holy Cow Collection (5 costumes) | $3.99 |
+| skin_chesschamp | Chess Champ | $0.99 |
+| skin_dicedog | Dice Dog | $0.99 |
+| skin_kingofcards | King of Cards ★ | $0.99 |
+| skin_puzzlefrank | Puzzle Frank | $0.99 |
+| col_gamenight | Game Night Collection (4 costumes) | $3.99 |
 
-## Tue Feb 16  (create by Feb 9)
+## Tue Feb 16  (create by Feb 9; 2 Collections)
 
 | Product id | Name | Price |
 |---|---|---|
@@ -200,8 +227,13 @@ Chill Dogs (Arctic and alpine animals), same day:
 | skin_bison | Bison ★ | $0.99 |
 | skin_moose | Moose | $0.99 |
 | col_homeontherange | Home on the Range Collection (5 costumes) | $3.99 |
+| skin_lockedin | Locked In | $0.99 |
+| skin_daydreamer | Daydreamer ★ | $0.99 |
+| skin_overthinker | Overthinker | $0.99 |
+| skin_onebraincell | One Brain Cell | $0.99 |
+| col_brainmodes | Brain Modes Collection (4 costumes) | $3.99 |
 
-## Tue Feb 23  (create by Feb 16)
+## Tue Feb 23  (create by Feb 16; 2 Collections)
 
 | Product id | Name | Price |
 |---|---|---|
@@ -212,8 +244,13 @@ Chill Dogs (Arctic and alpine animals), same day:
 | skin_emperorpenguin | Emperor Penguin | $0.99 |
 | skin_rockhopper | Rockhopper | $0.99 |
 | col_birdbrains | Bird Brains Collection (6 costumes) | $3.99 |
+| skin_cakechief | Cake Chief | $0.99 |
+| skin_cottoncandy | Cotton Candy | $0.99 |
+| skin_galaxydonut | Galaxy Donut ★ | $0.99 |
+| skin_gummyfrank | Gummy Frank | $0.99 |
+| col_fantasyfoods | Fantasy Foods Collection (4 costumes) | $3.99 |
 
-## Tue Mar 2  (create by Feb 23): 3 costumes added to Sports
+## Tue Mar 2  (create by Feb 23): 3 costumes added to Sports, plus Career Day
 
 | Product id | Name | Price |
 |---|---|---|
@@ -223,7 +260,20 @@ Chill Dogs (Arctic and alpine animals), same day:
 
 Also update the Sports Collection's store description from 5 to 8 costumes. Everyone who already owns the Sports Collection gets these three free on Mar 2.
 
-## Tue Mar 9  (create by Mar 2)
+Also on Mar 2, the new Career Day Collection:
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_detective | Detective ★ | $0.99 |
+| skin_doctor | Doctor | $0.99 |
+| skin_firefighter | Firefighter | $0.99 |
+| skin_pilot | Pilot | $0.99 |
+| skin_policeofficer | Police Officer | $0.99 |
+| skin_teacher | Teacher | $0.99 |
+| skin_veterinarian | Veterinarian | $0.99 |
+| col_careerday | Career Day Collection (7 costumes) | $3.99 |
+
+## Tue Mar 9  (create by Mar 2; 2 Collections)
 
 | Product id | Name | Price |
 |---|---|---|
@@ -232,6 +282,11 @@ Also update the Sports Collection's store description from 5 to 8 costumes. Ever
 | skin_swordsman | Wandering Swordsman | $0.99 |
 | skin_powerup | Power-Up Hero ★ | $0.99 |
 | col_bunime | Bun-ime Collection (4 costumes) | $3.99 |
+| skin_arcadecabinet | Arcade Cabinet ★ | $0.99 |
+| skin_cassette | Cassette | $0.99 |
+| skin_floppydisk | Floppy Disk | $0.99 |
+| skin_pixelpal | Pixel Pal | $0.99 |
+| col_retrotech | Retro Tech Collection (4 costumes) | $3.99 |
 
 ## Tue Mar 16, 2027  (create by Mar 9; US states)
 
@@ -263,6 +318,46 @@ Also update the Sports Collection's store description from 5 to 8 costumes. Ever
 | skin_zebra | Zebra | $0.99 |
 | col_zoofranks | Zoo Franks Collection (8 costumes) | $3.99 |
 
+Also on Mar 23, the new Cleanup Crew Collection:
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_bubblebath | Bubble Bath | $0.99 |
+| skin_dishdominator | Dish Dominator | $0.99 |
+| skin_laundryday | Laundry Day | $0.99 |
+| skin_vacuumviking | Vacuum Viking ★ | $0.99 |
+| col_cleanupcrew | Cleanup Crew Collection (4 costumes) | $3.99 |
+
+## Tue Mar 30, 2027  (create by Mar 23; April Fools week)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_forgotthebuns | Forgot the Buns | $0.99 |
+| skin_lowbattery | Low Battery | $0.99 |
+| skin_spilledthetea | Spilled the Tea ★ | $0.99 |
+| skin_wrongturn | Wrong Turn | $0.99 |
+| col_oopsallfranks | Oops! All Franks Collection (4 costumes) | $3.99 |
+
+## Tue Apr 6, 2027  (create by Mar 30)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_secretagent | Secret Agent ★ | $0.99 |
+| skin_undercover | Undercover | $0.99 |
+| skin_cluefinder | Clue Finder | $0.99 |
+| skin_bunbandit | Bun Bandit | $0.99 |
+| col_mysteryandmayhem | Mystery & Mayhem Collection (4 costumes) | $3.99 |
+
+## Tue Apr 13, 2027  (create by Apr 6; festival season)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_rockfrank | Rock Frank ★ | $0.99 |
+| skin_countrycrooner | Country Crooner | $0.99 |
+| skin_discofever | Disco Fever | $0.99 |
+| skin_djrelish | DJ Relish | $0.99 |
+| col_musicfestival | Music Festival Collection (4 costumes) | $3.99 |
+
 ## Tue Apr 20, 2027  (create by Apr 13; national parks, National Park Week)
 
 | Product id | Name | Price |
@@ -278,6 +373,76 @@ Also update the Sports Collection's store description from 5 to 8 costumes. Ever
 | skin_zion | Zion | $0.99 |
 | col_greatoutdogs | Great Outdogs Collection (9 costumes) | $3.99 |
 
+## Tue Apr 27, 2027  (create by Apr 20)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_dragonmailcarrier | Dragon Mail Carrier ★ | $0.99 |
+| skin_unicornmechanic | Unicorn Mechanic | $0.99 |
+| skin_vampiredentist | Vampire Dentist | $0.99 |
+| skin_wizardbarista | Wizard Barista | $0.99 |
+| col_mythicalprofessions | Mythical Professions Collection (4 costumes) | $3.99 |
+
+## Tue May 4, 2027  (create by Apr 27)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_earlybird | Early Bird ★ | $0.99 |
+| skin_groupchatadmin | Group Chat Admin | $0.99 |
+| skin_snackinspector | Snack Inspector | $0.99 |
+| skin_sweaterperson | Sweater Person | $0.99 |
+| col_everydayicons | Everyday Icons Collection (4 costumes) | $3.99 |
+
+## Tue May 11, 2027  (create by May 4)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_cerealthriller | Cereal Thriller | $0.99 |
+| skin_frenchtoast | French Toast | $0.99 |
+| skin_pancakestack | Pancake Stack | $0.99 |
+| skin_wafflewarrior | Waffle Warrior ★ | $0.99 |
+| col_riseanddine | Rise & Dine Collection (4 costumes) | $3.99 |
+
+## Tue May 18, 2027  (create by May 11)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_knittingninja | Knitting Ninja ★ | $0.99 |
+| skin_mustardmasterpiece | Mustard Masterpiece | $0.99 |
+| skin_plantparent | Plant Parent | $0.99 |
+| skin_rockcollector | Rock Collector | $0.99 |
+| col_wildhobbies | Wild Hobbies Collection (4 costumes) | $3.99 |
+
+## Tue May 25, 2027  (create by May 18; Memorial Day weekend)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_campfirecamper | Campfire Camper | $0.99 |
+| skin_fishingfrank | Fishing Frank | $0.99 |
+| skin_kayakcaptain | Kayak Captain ★ | $0.99 |
+| skin_marshmallowroaster | Marshmallow Roaster | $0.99 |
+| col_outdooradventure | Outdoor Adventure Collection (4 costumes) | $3.99 |
+
+## Tue Jun 1, 2027  (create by May 25)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_brontosaurusdriver | Brontosaurus Driver | $0.99 |
+| skin_stegosaurusskater | Stegosaurus Skater | $0.99 |
+| skin_trexlibrarian | T-Rex Librarian ★ | $0.99 |
+| skin_triceratopschef | Triceratops Chef | $0.99 |
+| col_dinosindisguise | Dinos in Disguise Collection (4 costumes) | $3.99 |
+
+## Tue Jun 8, 2027  (create by Jun 1; summer drinks)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_bakedbeans | Baked Beans | $0.99 |
+| skin_lemonade | Lemonade ★ | $0.99 |
+| skin_sparklingwater | Sparkling Water | $0.99 |
+| skin_tomatosoup | Tomato Soup | $0.99 |
+| col_cansandbottles | Cans & Bottles Collection (4 costumes) | $3.99 |
+
 ## Tue Jun 15, 2027  (create by Jun 8; flags pack, part 1)
 
 | Product id | Name | Price |
@@ -290,6 +455,16 @@ Also update the Sports Collection's store description from 5 to 8 costumes. Ever
 | skin_switzerland | Switzerland | $0.99 |
 | skin_ukraine | Ukraine | $0.99 |
 | col_eurofranks | Euro Franks Collection (7 costumes) | $3.99 |
+
+Also on Jun 15, the new Backyard Legends Collection:
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_birdwatcher | Birdwatcher | $0.99 |
+| skin_gardengnome | Garden Gnome | $0.99 |
+| skin_grillking | Grill King ★ | $0.99 |
+| skin_lawnmower | Lawn Mower | $0.99 |
+| col_backyardlegends | Backyard Legends Collection (4 costumes) | $3.99 |
 
 ## Tue Jun 22, 2027  (create by Jun 15; flags pack, part 2, Women's World Cup week)
 
@@ -315,6 +490,142 @@ Also update the Sports Collection's store description from 5 to 8 costumes. Ever
 | skin_fogcitybridge | Fog City Bridge | $0.99 |
 | col_redwhiteandbun | Red, White & Bun Collection (4 costumes) | $3.99 |
 
+## Tue Jul 6, 2027  (create by Jun 29; summer travel)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_airportsprinter | Airport Sprinter ★ | $0.99 |
+| skin_lostluggage | Lost Luggage | $0.99 |
+| skin_overpacked | Overpacked | $0.99 |
+| skin_touristmode | Tourist Mode | $0.99 |
+| col_traveltroubles | Travel Troubles Collection (4 costumes) | $3.99 |
+
+## Tue Jul 13, 2027  (create by Jul 6; National Ice Cream Day is Jul 18)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_cookiecrumbles | Cookie Crumbles | $0.99 |
+| skin_droppedscoop | Dropped Scoop | $0.99 |
+| skin_meltingicecream | Melting Ice Cream | $0.99 |
+| skin_runawaycupcake | Runaway Cupcake ★ | $0.99 |
+| col_dessertdisasters | Dessert Disasters Collection (4 costumes) | $3.99 |
+
+## Tue Jul 20, 2027  (create by Jul 13)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_officechair | Office Chair | $0.99 |
+| skin_rollerskate | Roller Skate | $0.99 |
+| skin_shoppingcartracer | Shopping Cart Racer ★ | $0.99 |
+| skin_skateboardfrank | Skateboard Frank | $0.99 |
+| col_thingswithwheels | Things with Wheels Collection (4 costumes) | $3.99 |
+
+## Tue Jul 27, 2027  (create by Jul 20)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_brickstep | Brick Step ★ | $0.99 |
+| skin_itchytag | Itchy Tag | $0.99 |
+| skin_slowwifi | Slow Wi-Fi | $0.99 |
+| skin_wetsock | Wet Sock | $0.99 |
+| col_petpeeves | Pet Peeves Collection (4 costumes) | $3.99 |
+
+## Tue Aug 3, 2027  (create by Jul 27)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_everyscarf | Every Scarf | $0.99 |
+| skin_hatonahat | Hat on a Hat ★ | $0.99 |
+| skin_maximumpockets | Maximum Pockets | $0.99 |
+| skin_toomanysunglasses | Too Many Sunglasses | $0.99 |
+| col_unnecessaryaccessories | Unnecessary Accessories Collection (4 costumes) | $3.99 |
+
+## Tue Aug 10, 2027  (create by Aug 3)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_copperliberty | Copper Liberty | $0.99 |
+| skin_david | David | $0.99 |
+| skin_moai | Moai | $0.99 |
+| skin_thinker | The Thinker ★ | $0.99 |
+| skin_venus | Venus | $0.99 |
+| col_famoussculptures | Famous Sculptures Collection (5 costumes) | $3.99 |
+
+## Tue Aug 17, 2027  (create by Aug 10; back to school)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_artclass | Art Class | $0.99 |
+| skin_bandpractice | Band Practice ★ | $0.99 |
+| skin_lunchboxlegend | Lunchbox Legend | $0.99 |
+| skin_recesschamp | Recess Champ | $0.99 |
+| col_schooldays | School Days Collection (4 costumes) | $3.99 |
+
+## Tue Aug 24, 2027  (create by Aug 17; move-in and rush week)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_fraternityprep | Fraternity Prep | $0.99 |
+| skin_fraternitytailgate | Fraternity Tailgate | $0.99 |
+| skin_sororityprep | Sorority Prep | $0.99 |
+| skin_sororityspirit | Sorority Spirit ★ | $0.99 |
+| col_campuslife | Campus Life Collection (4 costumes) | $3.99 |
+
+## Tue Aug 31, 2027  (create by Aug 24)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_junkyardbot | Junkyard Bot | $0.99 |
+| skin_neonbot | Neon Bot ★ | $0.99 |
+| skin_retrorobo | Retro Robo | $0.99 |
+| skin_spacebot | Space Bot | $0.99 |
+| col_robotrally | Robot Rally Collection (4 costumes) | $3.99 |
+
+## Tue Sep 7, 2027  (create by Aug 31; New York Fashion Week)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_blacktiefrank | Black Tie Frank | $0.99 |
+| skin_discodiva | Disco Diva | $0.99 |
+| skin_fashionweek | Fashion Week | $0.99 |
+| skin_jazzageglam | Jazz Age Glam | $0.99 |
+| skin_runwayroyalty | Runway Royalty ★ | $0.99 |
+| col_fashioncouture | Fashion Couture Collection (5 costumes) | $3.99 |
+
+## Tue Sep 14, 2027  (create by Sep 7; Talk Like a Pirate Day is Sep 19)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_captainfrankbeard | Captain Frankbeard ★ | $0.99 |
+| skin_firstmate | First Mate | $0.99 |
+| skin_parrotpal | Parrot Pal | $0.99 |
+| skin_treasurefrank | Treasure Frank | $0.99 |
+| col_piratesandtreasure | Pirates & Treasure Collection (4 costumes) | $3.99 |
+
+## Tue Sep 21, 2027  (create by Sep 14; fall TV premieres)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_chaosdad | Chaos Dad | $0.99 |
+| skin_chaosmom | Chaos Mom ★ | $0.99 |
+| skin_sitcomdad | Sitcom Dad | $0.99 |
+| skin_sitcommom | Sitcom Mom | $0.99 |
+| skin_trailerparkdad | Trailer Park Dad | $0.99 |
+| skin_trailerparkmom | Trailer Park Mom | $0.99 |
+| col_sitcomfamilies | Sitcom Families Collection (6 costumes) | $3.99 |
+
+## Tue Sep 28, 2027  (create by Sep 21)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_dojochamp | Dojo Champ | $0.99 |
+| skin_festivalhero | Festival Hero | $0.99 |
+| skin_karatemaster | Karate Master | $0.99 |
+| skin_nightninja | Night Ninja | $0.99 |
+| skin_samuraifrank | Samurai Frank | $0.99 |
+| skin_shogun | Shogun ★ | $0.99 |
+| col_japaneseheroes | Japanese Heroes Collection (6 costumes) | $3.99 |
+
 ## Tue Oct 5, 2027  (create by Sep 28, 2027; held for Halloween)
 
 | Product id | Name | Price |
@@ -325,7 +636,60 @@ Also update the Sports Collection's store description from 5 to 8 costumes. Ever
 | skin_mummy | Mummy Dog | $0.99 |
 | col_frightbites | Fright Bites Collection (4 costumes) | $3.99 |
 
+Also on Oct 5, the new Blast Off Collection:
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_alienship | Alien Ship | $0.99 |
+| skin_classicrocket | Classic Rocket | $0.99 |
+| skin_flyingsaucer | Flying Saucer | $0.99 |
+| skin_galaxycruiser | Galaxy Cruiser ★ | $0.99 |
+| skin_spaceshuttle | Space Shuttle | $0.99 |
+| col_blastoff | Blast Off Collection (5 costumes) | $3.99 |
+
+## Tue Oct 12, 2027  (create by Oct 5)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_baldandbold | Bald and Bold | $0.99 |
+| skin_curlyfry | Curly Fry | $0.99 |
+| skin_mullet | Mullet ★ | $0.99 |
+| skin_pillowhair | Pillow Hair | $0.99 |
+| col_hairraising | Hair-Raising Collection (4 costumes) | $3.99 |
+
+## Tue Oct 19, 2027  (create by Oct 12)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_fuzzballfrank | Fuzzball Frank | $0.99 |
+| skin_googlygoo | Googly Goo ★ | $0.99 |
+| skin_oneeyedwonder | One-Eyed Wonder | $0.99 |
+| skin_sockgoblin | Sock Goblin | $0.99 |
+| col_minimonsters | Mini Monsters Collection (4 costumes) | $3.99 |
+
+## Tue Oct 26, 2027  (create by Oct 19; Halloween week)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_bunnyhat | Bunny Hat | $0.99 |
+| skin_frogprince | Frog Prince ★ | $0.99 |
+| skin_potionexplosion | Potion Explosion | $0.99 |
+| skin_spellcheckwizard | Spellcheck Wizard | $0.99 |
+| col_magicalmishaps | Magical Mishaps Collection (4 costumes) | $3.99 |
+
 The launch price ends Jan 15, so Collections from Jan 19 on start at $3.99.
+
+## Tue Nov 30, 2027  (create by Nov 23; holiday travel)
+
+| Product id | Name | Price |
+|---|---|---|
+| skin_bullettrain | Bullet Train | $0.99 |
+| skin_dieselengine | Diesel Engine | $0.99 |
+| skin_holidaytrain | Holiday Train ★ | $0.99 |
+| skin_maglev | Maglev | $0.99 |
+| skin_steamengine | Steam Engine | $0.99 |
+| skin_subwaytrain | Subway Train | $0.99 |
+| col_allaboard | All Aboard Collection (6 costumes) | $3.99 |
 
 ## Premium (held: no date yet, nothing created in any store)
 

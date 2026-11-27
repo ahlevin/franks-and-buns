@@ -13,11 +13,11 @@ const RECOVER_TRIES_PER_IP_PER_DAY = 60;   // recovery codes can't be guessed (8
 const WRONG_JOIN_CODES_PER_DAY = 30;   // per player and per network: Dog House codes are short, so guessing them has to stay slow
 const NEW_CODES_PER_PLAYER_PER_DAY = 5;   // "Get a new recovery code"
 // BunBux: earned by playing (never sold). Amounts agreed with Alan, Nov 22, 2026.
-const BUX = { perBox: 1, maxBoxes: 10, daily: 25, cap: 100, cost: 300 };   // cap: most BunBux a day from games and the challenge
+const BUX = { perBox: 1, maxBoxes: 10, daily: 25, cap: 100, cost: 300, wind: 50 };   // wind: Second Wind (one more life in a run)   // cap: most BunBux a day from games and the challenge
 // Limited Edition costumes are purchase only (same list as SKINS_LIMITED in game.html)
 const BUX_LIMITED = new Set(['santa', 'bernedoodle', 'labradoodle', 'persian', 'mainecoon', 'slamdunk', 'goalgetter', 'axolotl', 'anglerfish', 'unidentifiedfryingobject', 'babykaiju', 'phoenix', 'shadowwizard',
   'glazedandconfused', 'blanketburrito', 'royaltreatment', 'raccoon', 'forkimpostor', 'professorfrank', 'glowgetter', 'specialdelivery',
-  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland', 'bison', 'flamingo', 'ladyliberty', 'powerup', 'unitedkingdom', 'unitedstates', 'hawaiivolcanoes', 'california', 'giraffe', 'polarbear',
+  'discodog', 'maneevent', 'king', 'hotrod', 'witch', 'highland', 'bison', 'flamingo', 'ladyliberty', 'happy', 'rainbow', 'kingofcards', 'daydreamer', 'detective', 'spilledthetea', 'galaxydonut', 'arcadecabinet', 'secretagent', 'rockfrank', 'dragonmailcarrier', 'earlybird', 'captainfrankbeard', 'firegoat', 'lemonade', 'thinker', 'sororityspirit', 'neonbot', 'runwayroyalty', 'chaosmom', 'shogun', 'galaxycruiser', 'holidaytrain', 'vacuumviking', 'wafflewarrior', 'knittingninja', 'kayakcaptain', 'trexlibrarian', 'grillking', 'airportsprinter', 'runawaycupcake', 'shoppingcartracer', 'brickstep', 'hatonahat', 'bandpractice', 'mullet', 'googlygoo', 'frogprince', 'powerup', 'unitedkingdom', 'unitedstates', 'hawaiivolcanoes', 'california', 'giraffe', 'polarbear',
   'sterlingsilver', 'goldstandard', 'platinumprestige', 'diamonddog']);
 // The only costumes BunBux can unlock: the ones in Collections that are on sale (SHOP_COLS in game.html), minus Limited Edition.
 // Anything else (Free & Earned, Collections not on sale yet) is refused. When a Collection goes on sale, add its costumes here.
@@ -38,22 +38,50 @@ const BUX_DROPS = [
   [Date.UTC(2026, 11, 29, 8), ['discodog', 'radicalrelish', 'mixtape', 'ytwokbyte', 'incognidog', 'definitelyacarrot', 'emotionalbaggage', 'forkimpostor', 'bunindisguise', 'overcooked', 'businesscasualty', 'buffering', 'porcelainthrone']],   // throwbackfranks + questionabledecisions
   [Date.UTC(2027, 0, 5, 8), ['straightafrank', 'graddog', 'professorfrank', 'bookworm', 'sciencewhiz', 'chefspecial', 'brewcrew', 'hardhat', 'specialdelivery']],   // academic + sidehustles
   [Date.UTC(2027, 0, 12, 8), ['rat', 'pigeon', 'possummode', 'raccoon', 'skunk', 'armoredknight', 'frankexe', 'lightningfighter', 'ninja', 'shadowwizard']],   // trashpack + finalbossfranks
-  [Date.UTC(2027, 0, 19, 8), ['archer', 'fairmaiden', 'jester', 'joustingknight', 'king', 'wizard']],   // yeoldefranks
+  [Date.UTC(2027, 0, 19, 8), ['archer', 'fairmaiden', 'jester', 'joustingknight', 'king', 'wizard', 'happy', 'sad', 'angry', 'anxious', 'tired']],   // yeoldefranks + allthefeels
   [Date.UTC(2027, 0, 26, 8), ['camocommando', 'sailorfrank', 'dressblues', 'acepilot', 'spacecadet', 'rescueswimmer']],   // salutesquad
   [Date.UTC(2027, 0, 26, 8), ['arcticfox', 'arctichare', 'mountaingoat', 'polarbear', 'snowleopard', 'walrus']],   // chilldogs
-  [Date.UTC(2027, 1, 2, 8), ['hotrod', 'jetsetter', 'chopper', 'roadhog', 'gravyboat']],   // fastfood
-  [Date.UTC(2027, 1, 9, 8), ['holstein', 'jersey', 'angus', 'hereford', 'highland']],   // holycow
-  [Date.UTC(2027, 1, 16, 8), ['longhorn', 'brahman', 'elk', 'bison', 'moose']],   // homeontherange
-  [Date.UTC(2027, 1, 23, 8), ['flamingo', 'toucan', 'snowyowl', 'barnowl', 'emperorpenguin', 'rockhopper']],   // birdbrains
-  [Date.UTC(2027, 2, 2, 8), ['homerun', 'doggypaddle', 'cleanandjerk']],   // added to sports
-  [Date.UTC(2027, 2, 9, 8), ['mechapilot', 'starguardian', 'swordsman', 'powerup']],   // bunime
+  [Date.UTC(2027, 1, 2, 8), ['hotrod', 'jetsetter', 'chopper', 'roadhog', 'gravyboat', 'sunny', 'rainbow', 'snowday', 'stormchaser']],   // fastfood + weatherreport
+  [Date.UTC(2027, 1, 6, 8), ['dragondance', 'firegoat', 'lanternfestival', 'liondance', 'luckymandarin']],   // lunarnewyear
+  [Date.UTC(2027, 1, 9, 8), ['holstein', 'jersey', 'angus', 'hereford', 'highland', 'chesschamp', 'dicedog', 'kingofcards', 'puzzlefrank']],   // holycow + gamenight
+  [Date.UTC(2027, 1, 16, 8), ['longhorn', 'brahman', 'elk', 'bison', 'moose', 'lockedin', 'daydreamer', 'overthinker', 'onebraincell']],   // homeontherange + brainmodes
+  [Date.UTC(2027, 1, 23, 8), ['flamingo', 'toucan', 'snowyowl', 'barnowl', 'emperorpenguin', 'rockhopper', 'cakechief', 'cottoncandy', 'galaxydonut', 'gummyfrank']],   // birdbrains + fantasyfoods
+  [Date.UTC(2027, 2, 2, 8), ['homerun', 'doggypaddle', 'cleanandjerk', 'detective', 'doctor', 'firefighter', 'pilot', 'policeofficer', 'teacher', 'veterinarian']],   // added to sports + careerday
+  [Date.UTC(2027, 2, 9, 8), ['mechapilot', 'starguardian', 'swordsman', 'powerup', 'arcadecabinet', 'cassette', 'floppydisk', 'pixelpal']],   // bunime + retrotech
   [Date.UTC(2027, 2, 16, 8), ['california', 'colorado', 'kentucky', 'michigan', 'nevada', 'newjersey', 'newyork', 'oregon', 'texas', 'vermont']],   // statefair
-  [Date.UTC(2027, 2, 23, 8), ['brownbear', 'giraffe', 'gorilla', 'hippo', 'koala', 'monkey', 'redpanda', 'zebra']],   // zoofranks
+  [Date.UTC(2027, 2, 23, 8), ['brownbear', 'giraffe', 'gorilla', 'hippo', 'koala', 'monkey', 'redpanda', 'zebra', 'bubblebath', 'dishdominator', 'laundryday', 'vacuumviking']],   // zoofranks + cleanupcrew
+  [Date.UTC(2027, 2, 30, 8), ['forgotthebuns', 'lowbattery', 'spilledthetea', 'wrongturn']],   // oopsallfranks
+  [Date.UTC(2027, 3, 6, 8), ['secretagent', 'undercover', 'cluefinder', 'bunbandit']],   // mysteryandmayhem
+  [Date.UTC(2027, 3, 13, 8), ['rockfrank', 'countrycrooner', 'discofever', 'djrelish']],   // musicfestival
   [Date.UTC(2027, 3, 20, 8), ['acadia', 'arches', 'grandcanyon', 'grandteton', 'smokymountains', 'hawaiivolcanoes', 'yellowstone', 'yosemite', 'zion']],   // greatoutdogs
-  [Date.UTC(2027, 5, 15, 8), ['unitedkingdom', 'france', 'germany', 'poland', 'croatia', 'switzerland', 'ukraine']],   // eurofranks
+  [Date.UTC(2027, 3, 27, 8), ['dragonmailcarrier', 'unicornmechanic', 'vampiredentist', 'wizardbarista']],   // mythicalprofessions
+  [Date.UTC(2027, 4, 4, 8), ['earlybird', 'groupchatadmin', 'snackinspector', 'sweaterperson']],   // everydayicons
+  [Date.UTC(2027, 4, 11, 8), ['cerealthriller', 'frenchtoast', 'pancakestack', 'wafflewarrior']],   // riseanddine
+  [Date.UTC(2027, 4, 18, 8), ['knittingninja', 'mustardmasterpiece', 'plantparent', 'rockcollector']],   // wildhobbies
+  [Date.UTC(2027, 4, 25, 8), ['campfirecamper', 'fishingfrank', 'kayakcaptain', 'marshmallowroaster']],   // outdooradventure
+  [Date.UTC(2027, 5, 1, 8), ['brontosaurusdriver', 'stegosaurusskater', 'trexlibrarian', 'triceratopschef']],   // dinosindisguise
+  [Date.UTC(2027, 5, 8, 8), ['bakedbeans', 'lemonade', 'sparklingwater', 'tomatosoup']],   // cansandbottles
+  [Date.UTC(2027, 5, 15, 8), ['unitedkingdom', 'france', 'germany', 'poland', 'croatia', 'switzerland', 'ukraine', 'birdwatcher', 'gardengnome', 'grillking', 'lawnmower']],   // eurofranks + backyardlegends
   [Date.UTC(2027, 5, 22, 8), ['unitedstates', 'canada', 'mexico', 'australia', 'japan', 'southkorea', 'china', 'india']],   // globalgrill
   [Date.UTC(2027, 5, 29, 8), ['ladyliberty', 'libertybell', 'baldeagle', 'fogcitybridge']],   // redwhiteandbun
-  [Date.UTC(2027, 9, 5, 8), ['ghost', 'witch', 'skeleton', 'mummy']],   // frightbites (same 8 AM UTC as dropAt in game.html)
+  [Date.UTC(2027, 6, 6, 8), ['airportsprinter', 'lostluggage', 'overpacked', 'touristmode']],   // traveltroubles
+  [Date.UTC(2027, 6, 13, 8), ['cookiecrumbles', 'droppedscoop', 'meltingicecream', 'runawaycupcake']],   // dessertdisasters
+  [Date.UTC(2027, 6, 20, 8), ['officechair', 'rollerskate', 'shoppingcartracer', 'skateboardfrank']],   // thingswithwheels
+  [Date.UTC(2027, 6, 27, 8), ['brickstep', 'itchytag', 'slowwifi', 'wetsock']],   // petpeeves
+  [Date.UTC(2027, 7, 3, 8), ['everyscarf', 'hatonahat', 'maximumpockets', 'toomanysunglasses']],   // unnecessaryaccessories
+  [Date.UTC(2027, 7, 10, 8), ['copperliberty', 'david', 'moai', 'thinker', 'venus']],   // famoussculptures
+  [Date.UTC(2027, 7, 17, 8), ['artclass', 'bandpractice', 'lunchboxlegend', 'recesschamp']],   // schooldays
+  [Date.UTC(2027, 7, 24, 8), ['fraternityprep', 'fraternitytailgate', 'sororityprep', 'sororityspirit']],   // campuslife
+  [Date.UTC(2027, 7, 31, 8), ['junkyardbot', 'neonbot', 'retrorobo', 'spacebot']],   // robotrally
+  [Date.UTC(2027, 8, 7, 8), ['blacktiefrank', 'discodiva', 'fashionweek', 'jazzageglam', 'runwayroyalty']],   // fashioncouture
+  [Date.UTC(2027, 8, 14, 8), ['captainfrankbeard', 'firstmate', 'parrotpal', 'treasurefrank']],   // piratesandtreasure
+  [Date.UTC(2027, 8, 21, 8), ['chaosdad', 'chaosmom', 'sitcomdad', 'sitcommom', 'trailerparkdad', 'trailerparkmom']],   // sitcomfamilies
+  [Date.UTC(2027, 8, 28, 8), ['dojochamp', 'festivalhero', 'karatemaster', 'nightninja', 'samuraifrank', 'shogun']],   // japaneseheroes
+  [Date.UTC(2027, 9, 5, 8), ['ghost', 'witch', 'skeleton', 'mummy', 'alienship', 'classicrocket', 'flyingsaucer', 'galaxycruiser', 'spaceshuttle']],   // frightbites (same 8 AM UTC as dropAt in game.html) + blastoff
+  [Date.UTC(2027, 9, 12, 8), ['baldandbold', 'curlyfry', 'mullet', 'pillowhair']],   // hairraising
+  [Date.UTC(2027, 9, 19, 8), ['fuzzballfrank', 'googlygoo', 'oneeyedwonder', 'sockgoblin']],   // minimonsters
+  [Date.UTC(2027, 9, 26, 8), ['bunnyhat', 'frogprince', 'potionexplosion', 'spellcheckwizard']],   // magicalmishaps
+  [Date.UTC(2027, 10, 30, 8), ['bullettrain', 'dieselengine', 'holidaytrain', 'maglev', 'steamengine', 'subwaytrain']],   // allaboard
 ];
 function buxSkinOk(id, now) {
   if (BUX_SKINS.has(id)) return true;
@@ -76,7 +104,7 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS players (id TEXT PRIMARY KEY, token_hash TEXT NOT NULL UNIQUE, nickname TEXT NOT NULL,
      best INTEGER NOT NULL DEFAULT 0, best_at INTEGER, last_score_at INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS packs (id TEXT PRIMARY KEY, code TEXT NOT NULL UNIQUE, name TEXT NOT NULL, owner_id TEXT NOT NULL,
-     default_board TEXT NOT NULL DEFAULT 'week', created_at INTEGER NOT NULL, approval INTEGER NOT NULL DEFAULT 1)`,
+     default_board TEXT NOT NULL DEFAULT 'all', created_at INTEGER NOT NULL, approval INTEGER NOT NULL DEFAULT 1)`,
   `CREATE TABLE IF NOT EXISTS members (pack_id TEXT NOT NULL, player_id TEXT NOT NULL, joined_at INTEGER NOT NULL,
      PRIMARY KEY (pack_id, player_id))`,
   `CREATE INDEX IF NOT EXISTS members_player ON members (player_id)`,
@@ -88,6 +116,19 @@ const SCHEMA = [
   `CREATE INDEX IF NOT EXISTS requests_player ON requests (player_id)`,
   `CREATE INDEX IF NOT EXISTS weekly_week ON weekly (week, best)`,   // last week's top dog
   `CREATE INDEX IF NOT EXISTS limits_day ON limits (day)`,            // clearing old counters
+  // Anonymous play stats (see "play stats" below): one row per finished game, no player, device or IP of any kind
+  `CREATE TABLE IF NOT EXISTS plays (day TEXT NOT NULL, hr INTEGER NOT NULL, plat TEXT NOT NULL, cc TEXT NOT NULL, inst TEXT NOT NULL,
+     first INTEGER NOT NULL, today1 INTEGER NOT NULL, nb INTEGER NOT NULL, mode TEXT NOT NULL, score INTEGER NOT NULL, boxes INTEGER NOT NULL,
+     franks INTEGER NOT NULL, secs INTEGER NOT NULL, stage INTEGER NOT NULL, wind INTEGER NOT NULL, skin TEXT NOT NULL, kitchen TEXT NOT NULL,
+     named INTEGER NOT NULL, test INTEGER NOT NULL)`,
+  `CREATE INDEX IF NOT EXISTS plays_day ON plays (day)`,
+  `CREATE TABLE IF NOT EXISTS ev (day TEXT NOT NULL, plat TEXT NOT NULL, name TEXT NOT NULL, val TEXT NOT NULL, test INTEGER NOT NULL)`,
+  `CREATE INDEX IF NOT EXISTS ev_day ON ev (day)`,
+  // daily totals kept after the 90-day-old rows are deleted
+  `CREATE TABLE IF NOT EXISTS plays_daily (day TEXT NOT NULL, plat TEXT NOT NULL, games INTEGER NOT NULL, players INTEGER NOT NULL,
+     new_players INTEGER NOT NULL, avg_score INTEGER NOT NULL, PRIMARY KEY (day, plat))`,
+  // store download numbers, entered from App Store Connect / Play Console for the stats page
+  `CREATE TABLE IF NOT EXISTS store_dl (day TEXT NOT NULL, store TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (day, store))`,
 ];
 const MAX_WAITING_PER_PACK = 50, MAX_REQUESTS_PER_PLAYER = 5;
 let schemaReady = false;
@@ -97,8 +138,9 @@ async function ensureSchema(db) {
   // and the full setup below only when a table, column or index is missing.
   try {
     const r = await db.prepare(`SELECT (SELECT rc_id FROM players LIMIT 0) AS c, (SELECT bux_skins FROM players LIMIT 0) AS b,
-        (SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name IN ('weekly_week', 'limits_day', 'requests_player', 'members_player')) AS ix`).first();
-    if (r && r.ix === 4) { schemaReady = true; return; }
+        (SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name IN ('weekly_week', 'limits_day', 'requests_player', 'members_player', 'plays_day', 'ev_day')) AS ix,
+        (SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN ('plays_daily', 'store_dl')) AS tb`).first();
+    if (r && r.ix === 6 && r.tb === 2) { schemaReady = true; return; }
   } catch (e) {}
   await db.batch(SCHEMA.map(s => db.prepare(s)));
   // Packs made before "approve to join" existed get the column (it already exists everywhere after the first run)
@@ -248,6 +290,32 @@ async function meResponse(db, p, extra) {
     requests: requests.results.map(r => ({ id: r.id, name: r.name })) }, extra || {});
 }
 
+// Entering a recovery code on a device that already had its own profile: bring that profile's things along instead of
+// leaving them behind. A nameless profile (made quietly to keep costumes and BunBux) is folded in and deleted, BunBux and
+// all. A named one keeps its own code, Dog Houses and BunBux; only its costumes and best scores are copied over.
+async function mergeOnRecover(db, p, old) {
+  if (!old || old.id === p.id) return;
+  if (!(await underLimit(db, 'mg:' + p.id, 3))) return;   // folding in profiles can't become a way round the daily BunBux cap
+  const union = (a, b) => { const out = a.slice(); b.forEach(x => { if (out.indexOf(x) < 0) out.push(x); }); return out; };
+  const skins = union(skinList(p), skinList(old)).slice(0, MAX_SKINS).join(',');
+  const stmts = [];
+  if (!old.nickname) {
+    const bs = union(buxOf(p).skins, buxOf(old).skins).join(',').slice(0, 8000);
+    stmts.push(db.prepare('UPDATE players SET skins = ?, bux_skins = ?, bux = bux + COALESCE((SELECT bux FROM players WHERE id = ?), 0) WHERE id = ?')
+        .bind(skins, bs, old.id, p.id),
+      db.prepare('DELETE FROM requests WHERE player_id = ?').bind(old.id),
+      db.prepare('DELETE FROM players WHERE id = ?').bind(old.id));
+  } else {
+    stmts.push(db.prepare('UPDATE players SET skins = ?, best = MAX(best, ?), best_at = CASE WHEN ? > best THEN ? ELSE best_at END WHERE id = ?')
+        .bind(skins, old.best || 0, old.best || 0, old.best_at, p.id),
+      db.prepare(`INSERT INTO weekly (player_id, week, best, best_at) SELECT ?, week, best, best_at FROM weekly WHERE player_id = ? AND true
+          ON CONFLICT (player_id, week) DO UPDATE SET best = MAX(best, excluded.best),
+          best_at = CASE WHEN excluded.best > best THEN excluded.best_at ELSE best_at END`).bind(p.id, old.id));
+  }
+  await db.batch(stmts);
+  Object.assign(p, await db.prepare('SELECT * FROM players WHERE id = ?').bind(p.id).first());
+}
+
 // ---------- packs ----------
 async function packForMember(db, packId, playerId) {
   const pack = await db.prepare('SELECT p.*, EXISTS (SELECT 1 FROM members m WHERE m.pack_id = p.id AND m.player_id = ?) AS is_member FROM packs p WHERE p.id = ?')
@@ -326,7 +394,7 @@ function plausible(b) {
   if (franks > secs * 2 + 3) return false;
   if (boxes > Math.floor(franks / 6)) return false;
   const parades = Math.floor(boxes / 4);
-  const max = franks * 13100 + 50 * boxes * (boxes + 1) + parades * 40 * 500 + secs * 1500 + 5000;
+  const max = franks * 13100 + 50 * boxes * (boxes + 1) + parades * 40 * 500 + 500 * parades * (parades + 1) + secs * 1500 + 5000;   // 500*p*(p+1): stage bonuses
   return score <= max;
 }
 
@@ -360,6 +428,8 @@ async function route(request, env, path) {
     const p = await db.prepare('SELECT * FROM players WHERE token_hash = ?').bind(await sha256(tok)).first();
     if (!p) fail(404, 'That recovery code was not found. Check it and try again.');
     await ensureBuyerId(db, p, tok);
+    // merge (switch: flags.json `mergecode`, sent by the game): the profile this device was using until now comes along
+    if (body.merge === true) await mergeOnRecover(db, p, await authPlayer(db, request));
     return meResponse(db, p, { token: fmtToken(tok) });
   }
   if (method === 'GET' && path === 'me') return meResponse(db, await needPlayer(db, request));
@@ -413,6 +483,13 @@ async function route(request, env, path) {
       .bind(want, day, bonus, day, want, day, day, p.id).first();
     const earned = Math.max(0, r.bux - (p.bux || 0));
     return { bux: buxOf(r), day, earned, bonus, dailyDone: done, capped: r.bux_today >= BUX.cap };
+  }
+  if (method === 'POST' && path === 'me/bux/wind') {   // Second Wind: spend BunBux to keep a run going (the game allows it once a run)
+    const p = await needPlayer(db, request);
+    const r = await db.prepare(`UPDATE players SET bux = bux - ${BUX.wind} WHERE id = ? AND bux >= ${BUX.wind}
+        RETURNING bux, bux_skins, daily_last, daily_streak`).bind(p.id).first();
+    if (!r) fail(409, `Second Wind needs ${BUX.wind} BunBux. You have ${p.bux || 0}.`);
+    return { bux: buxOf(r) };
   }
   if (method === 'POST' && path === 'me/bux/spend') {   // unlock one shop costume (or a kitchen) for BunBux
     const p = await needPlayer(db, request);
@@ -469,7 +546,7 @@ async function route(request, env, path) {
     const p = await needPlayer(db, request);
     await needName(db, p, body, ip);
     const name = cleanName(body.name, 3, 24, 'Dog House name');
-    const defaultBoard = body.defaultBoard === 'all' ? 'all' : 'week';
+    const defaultBoard = body.defaultBoard === 'week' ? 'week' : 'all';
     const approval = body.approval === false ? 0 : 1;
     if ((await packCount(db, p.id)) >= MAX_PACKS_PER_PLAYER) fail(409, `You can be in up to ${MAX_PACKS_PER_PLAYER} Dog Houses. Quit one to make a new one.`);
     if (!(await underLimit(db, 'nk:' + p.id, NEW_PACKS_PER_PLAYER_PER_DAY))) fail(429, 'That is a lot of new Dog Houses for one day. Try again tomorrow.');
@@ -559,6 +636,26 @@ async function route(request, env, path) {
       return board(db, pack, p.id, body.board === 'all' ? 'all' : 'week', now);
     }
   }
+  if (method === 'POST' && path === 'me/best') {
+    // Catch-up: a best score this device has that the profile doesn't (played before the player had a name, or before
+    // entering their recovery code). Only for named profiles: nameless ones never keep scores.
+    const p = await needPlayer(db, request);
+    if (!p.nickname) return { ok: true, best: 0 };
+    const run = { score: body.score, franks: body.franks, boxes: body.boxes,
+      // runs saved before this existed have no game length: assume a slow 2 seconds a frank (still just a sanity check)
+      frames: Number.isInteger(body.frames) ? body.frames : Math.max(60, (Number(body.franks) || 0) * 120) };
+    if (!plausible(run)) fail(422, 'That score could not be checked.');
+    if (run.score <= (p.best || 0)) return { ok: true, best: p.best };
+    if (!(await underLimit(db, 'mb:' + p.id, 5))) fail(429, 'Try again tomorrow.');
+    const at = Number.isInteger(body.at) && body.at > 0 && body.at <= now ? body.at : now;
+    const stmts = [db.prepare('UPDATE players SET best = MAX(best, ?), best_at = CASE WHEN ? > best THEN ? ELSE best_at END WHERE id = ?')
+      .bind(run.score, run.score, at, p.id)];
+    if (weekKey(at) === weekKey(now)) stmts.push(db.prepare(`INSERT INTO weekly (player_id, week, best, best_at) VALUES (?, ?, ?, ?)
+        ON CONFLICT (player_id, week) DO UPDATE SET best = MAX(best, excluded.best),
+        best_at = CASE WHEN excluded.best > best THEN excluded.best_at ELSE best_at END`).bind(p.id, weekKey(now), run.score, at));
+    await db.batch(stmts);
+    return { ok: true, best: run.score };
+  }
   if (method === 'POST' && path === 'score') {
     const p = await needPlayer(db, request);
     // nameless profiles only keep costumes: their scores are never stored (the privacy policy promises this)
@@ -586,7 +683,99 @@ async function route(request, env, path) {
     return { ok: true, score: run.score, weekBest, newWeekBest: run.score >= weekBest,
       packs: results.map(r => ({ id: r.id, name: r.name, rank: r.ahead + 1, players: r.players })) };
   }
+  if (method === 'POST' && path === 'm') return playStat(db, request, body, ip, now);
+  if (path === 'stats' || path === 'stats/store') return statsRoute(db, request, body, path, now);
   fail(404, 'Not found.');
+}
+
+// ---------- play stats ----------
+// Anonymous play statistics (privacy.html, "Anonymous gameplay statistics"). The game sends one short summary when a game ends,
+// plus a few screen events. Nothing in a row says who or which device sent it: no player, token, nickname, device ID or IP.
+// Day-1/day-7 return is worked out from the day each device first played (a date shared by everyone who started that day).
+// Switch: "metrics" in flags.json (the game stops sending when it's off). Rows older than 90 days are deleted; daily totals stay.
+const PLAY_STATS_PER_NET_PER_DAY = 400;   // stops one network filling the database (and the free plan's daily writes)
+const PLAY_STATS_KEEP_DAYS = 90;
+const STAT_EVENTS = new Set(['closet_open', 'skin_pick', 'howto_video', 'share_score', 'bux_intro', 'game_mode']);
+// The stats page's key is never stored here, only its SHA-256 (the key itself is in the link Alan was given).
+const STATS_KEY_SHA256 = '3a0e7575a0e889fac4d9ad68d2b5e708bf1e02887443c2fd175522f98c4f6d98';
+const mStr = (v, max) => { v = String(v == null ? '' : v).toLowerCase(); return /^[a-z0-9_-]{1,60}$/.test(v) ? v.slice(0, max || 40) : ''; };
+const mInt = (v, max) => { v = Math.floor(Number(v)); return v >= 0 && v <= max ? v : 0; };
+const pacHour = ms => Number(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', hourCycle: 'h23' }).format(new Date(ms))) % 24;
+async function playStat(db, request, body, ip, now) {
+  if (!(await underLimit(db, 'ps:' + (await sha256(netOf(ip) + today())).slice(0, 32), PLAY_STATS_PER_NET_PER_DAY))) return { ok: true };
+  const day = pacDay(now), plat = ['ios', 'android'].includes(body.p) ? body.p : 'web';
+  let test = 0;
+  try { const o = new URL(request.headers.get('Origin') || request.headers.get('Referer') || 'https://franksandbuns.com'); test = /franksandbuns\.com$/.test(o.hostname) || o.hostname === 'localhost' && plat !== 'web' ? 0 : 1; } catch (e) {}
+  if (body.e === 'game') {
+    const cc = request.cf && /^[A-Z]{2}$/.test(String(request.cf.country || '')) ? request.cf.country : '';
+    const inst = body.inst === 'old' ? 'old' : /^\d{4}-\d{2}-\d{2}$/.test(String(body.inst)) && body.inst >= '2026-01-01' && body.inst <= day ? body.inst : '';
+    const nb = mInt(body.nb, 4) || 1, first = inst !== 'old' && body.f === 1 ? 1 : 0;
+    await db.prepare(`INSERT INTO plays (day, hr, plat, cc, inst, first, today1, nb, mode, score, boxes, franks, secs, stage, wind, skin, kitchen, named, test)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+      .bind(day, pacHour(now), plat, cc, inst, first, body.t === 1 || first ? 1 : 0, nb, mStr(body.m, 20) || 'classic', mInt(body.s, 1e8), mInt(body.b, 1e5),
+        mInt(body.fr, 1e6), mInt(body.sec, 86400), mInt(body.st, 1000), body.w === 1 ? 1 : 0, mStr(body.sk), mStr(body.k), body.nm === 1 ? 1 : 0, test).run();
+  } else if (STAT_EVENTS.has(body.e)) {
+    await db.prepare('INSERT INTO ev (day, plat, name, val, test) VALUES (?, ?, ?, ?, ?)').bind(day, plat, body.e, mStr(body.v), test).run();
+  } else fail(400, 'Unknown stat.');
+  if (Math.random() < 0.01) {   // now and then: keep daily totals for old days, then delete their rows
+    const cutoff = pacDay(now - PLAY_STATS_KEEP_DAYS * 864e5);
+    await db.batch([
+      db.prepare(`INSERT OR IGNORE INTO plays_daily (day, plat, games, players, new_players, avg_score)
+          SELECT day, plat, COUNT(*), SUM(today1), SUM(first), CAST(AVG(score) AS INTEGER) FROM plays WHERE day < ? AND test = 0 GROUP BY day, plat`).bind(cutoff),
+      db.prepare('DELETE FROM plays WHERE day < ?').bind(cutoff),
+      db.prepare('DELETE FROM ev WHERE day < ?').bind(cutoff),
+    ]);
+  }
+  return { ok: true };
+}
+
+async function statsRoute(db, request, body, path, now) {
+  const key = String(request.headers.get('X-Stats-Key') || '');
+  if (!key || key.length > 100 || (await sha256('fb-stats:' + key)) !== STATS_KEY_SHA256) fail(403, 'This page needs its private link.');
+  if (path === 'stats/store') {   // { store: 'ios' | 'android', days: { 'YYYY-MM-DD': n } }: first-time downloads copied from the stores
+    if (request.method !== 'POST') fail(405, 'Use POST.');
+    const store = body.store === 'android' ? 'android' : body.store === 'ios' ? 'ios' : fail(400, 'store must be ios or android');
+    const rows = Object.entries(body.days || {}).filter(([d, n]) => /^\d{4}-\d{2}-\d{2}$/.test(d) && Number.isInteger(n) && n >= 0 && n < 1e7).slice(0, 400);
+    for (let i = 0; i < rows.length; i += 50) await db.batch(rows.slice(i, i + 50).map(([d, n]) =>
+      db.prepare('INSERT INTO store_dl (day, store, n) VALUES (?, ?, ?) ON CONFLICT (day, store) DO UPDATE SET n = excluded.n').bind(d, store, n)));
+    return { ok: true, saved: rows.length };
+  }
+  const u = new URL(request.url), days = Math.min(90, Math.max(1, parseInt(u.searchParams.get('days') || '30', 10) || 30));
+  const test = u.searchParams.get('test') === '1' ? 1 : 0;   // test=1: only rows from preview copies of the site
+  const since = pacDay(now - (days - 1) * 864e5), sinceMs = now - days * 864e5;
+  const q = (sql, ...a) => db.prepare(sql).bind(...a);
+  const W = 'day >= ? AND test = ?';
+  const top = col => q(`SELECT ${col} AS k, COUNT(*) AS n FROM plays WHERE ${W} AND ${col} != '' GROUP BY ${col} ORDER BY n DESC LIMIT 12`, since, test);
+  const res = await db.batch([
+    q(`SELECT day, plat, COUNT(*) AS games, SUM(today1) AS players, SUM(first) AS new_players, CAST(AVG(score) AS INTEGER) AS avg_score
+       FROM plays WHERE ${W} GROUP BY day, plat ORDER BY day`, since, test),
+    q(`SELECT inst AS day, SUM(first) AS n,
+         SUM(CASE WHEN today1 = 1 AND day = date(inst, '+1 day') THEN 1 ELSE 0 END) AS d1,
+         SUM(CASE WHEN today1 = 1 AND day = date(inst, '+7 day') THEN 1 ELSE 0 END) AS d7,
+         SUM(CASE WHEN today1 = 1 AND day = date(inst, '+30 day') THEN 1 ELSE 0 END) AS d30
+       FROM plays WHERE ${W} AND inst >= ? GROUP BY inst ORDER BY inst`, since, test, since),
+    q(`SELECT first, COUNT(*) AS n, SUM(franks >= 1) AS f1, SUM(franks >= 2) AS f2, SUM(franks >= 5) AS f5, SUM(boxes >= 1) AS b1,
+         SUM(stage >= 2) AS s2, SUM(stage >= 3) AS s3, SUM(score <= 100) AS le100, SUM(wind) AS wind, SUM(named) AS named,
+         CAST(AVG(secs) AS INTEGER) AS secs, CAST(AVG(score) AS INTEGER) AS score
+       FROM plays WHERE ${W} GROUP BY first`, since, test),
+    q(`SELECT CASE WHEN score = 0 THEN '0' WHEN score <= 100 THEN '1-100' WHEN score <= 300 THEN '101-300' WHEN score <= 1000 THEN '301-1K'
+         WHEN score <= 5000 THEN '1K-5K' WHEN score <= 20000 THEN '5K-20K' WHEN score <= 100000 THEN '20K-100K' ELSE '100K+' END AS k,
+         MIN(score) AS lo, COUNT(*) AS n, SUM(first) AS nf FROM plays WHERE ${W} GROUP BY k ORDER BY lo`, since, test),
+    q(`SELECT nb, COUNT(*) AS n, CAST(AVG(score) AS INTEGER) AS score, ROUND(AVG(franks), 1) AS franks, CAST(AVG(secs) AS INTEGER) AS secs,
+         SUM(franks >= 2) AS f2 FROM plays WHERE ${W} GROUP BY nb ORDER BY nb`, since, test),
+    top('mode'), top('skin'), top('kitchen'), top('cc'),
+    q(`SELECT hr AS k, COUNT(*) AS n FROM plays WHERE ${W} GROUP BY hr ORDER BY hr`, since, test),
+    q(`SELECT name, val, COUNT(*) AS n FROM ev WHERE ${W} GROUP BY name, val ORDER BY n DESC LIMIT 60`, since, test),
+    q('SELECT day, store, n FROM store_dl ORDER BY day'),
+    q(`SELECT (SELECT COUNT(*) FROM packs WHERE created_at >= ?) AS packs_new, (SELECT COUNT(*) FROM members WHERE joined_at >= ?) AS joins_new,
+         (SELECT COUNT(*) FROM packs) AS packs, (SELECT COUNT(*) FROM players WHERE nickname != '') AS named,
+         (SELECT COUNT(*) FROM players WHERE nickname != '' AND created_at >= ?) AS named_new,
+         (SELECT COUNT(*) FROM players WHERE daily_last >= ?) AS daily_done`, sinceMs, sinceMs, sinceMs, since),
+    q('SELECT day, plat, games, players, new_players, avg_score FROM plays_daily ORDER BY day'),
+  ]);
+  const r = i => res[i].results;
+  return { days, since, today: pacDay(now), test: !!test, daily: r(0), cohorts: r(1), funnel: r(2), scores: r(3), byGames: r(4),
+    modes: r(5), skins: r(6), kitchens: r(7), countries: r(8), hours: r(9), events: r(10), store: r(11), dogHouses: r(12)[0] || {}, older: r(13) };
 }
 
 function corsHeaders(request) {

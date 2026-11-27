@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="google-adsense-account" content="ca-pub-4015428134622878">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4015428134622878" crossorigin="anonymous"></script>
+  <meta name="description" content="The complete guide to Franks &amp; Buns, the free one-tap hot dog arcade game: how to play, Game Modes (Soccer, Basketball, Football, Water Polo, Golf, Baseball, Cricket, Ice Hockey), scoring, costumes and Collections, BunBux, kitchens, Dog Houses, where to play, and FAQ.">
+  <title>Franks &amp; Buns Guide | What It Is, How to Play, Costumes, BunBux &amp; FAQ</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="favicon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Boogaloo&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Google Analytics loads only after the visitor allows it (consent.js) -->
+  <!-- FB-CONSENT START (generated from consent.js by tools/inline_consent.py; edit consent.js, not this) -->
+<script>
+/* Franks & Buns: analytics consent.
+ * Google Analytics is NOT loaded until the player taps "Allow".
+ * The choice is saved on this device (fb_consent = granted | denied) and can be
+ * changed at any time with fbPrivacyChoices() (the "Privacy choices" links).
+ * Used by the website and, bundled as a local file, by the iPhone and Android apps. */
+(function () {
+  'use strict';
+  var GA_ID = 'G-5PVW85JQP6';
+  var KEY = 'fb_consent';
+  var CID_KEY = 'fb_ga_cid';
+  var loaded = false;
+
+  function store(k, v) {
+    try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {}
+  }
+  function read(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+
+  function appPlatform() {
+    var C = window.Capacitor;
+    try {
+      if (C && C.isNativePlatform && C.isNativePlatform()) return (C.getPlatform && C.getPlatform()) || 'app';
+    } catch (e) {}
+    return null;
+  }
+
+  function loadAnalytics() {
+    if (loaded) return;
+    loaded = true;
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    window.gtag('consent', 'default', {
+      analytics_storage: 'granted', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied'
+    });
+    window.gtag('js', new Date());
+    var cfg = {};
+    var platform = appPlatform();
+    if (platform) {
+      // In the apps the page is served from inside the app, where cookies are not kept.
+      // Keep a random ID on the device instead and label visits as app visits.
+      var cid = read(CID_KEY);
+      if (!cid) { cid = Math.floor(Math.random() * 2147483647) + '.' + Math.floor(Date.now() / 1000); store(CID_KEY, cid); }
+      cfg.client_storage = 'none';
+      cfg.client_id = cid;
+      cfg.page_location = 'https://franksandbuns.com/app-' + platform + '/';
+      cfg.page_title = 'Franks and Buns app (' + platform + ')';
+    }
+    window.gtag('config', GA_ID, cfg);
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+    document.head.appendChild(s);
+  }
+
+  function clearAnalyticsCookies() {
+    var host = location.hostname, parts = host.split('.');
+    var domains = ['', host, '.' + host];
+    if (parts.length > 2) domains.push('.' + parts.slice(-2).join('.'));
+    document.cookie.split(';').forEach(function (c) {
+      var name = c.split('=')[0].trim();
+      if (name === '_ga' || name.indexOf('_ga_') === 0 || name === '_gid') {
+        domains.forEach(function (d) {
+          document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/' + (d ? '; domain=' + d : '');
+        });
+      }
+    });
+  }
+
+  function decide(granted) {
+    store(KEY, granted ? 'granted' : 'denied');
+    hideBanner();
+    if (granted) {
+      loadAnalytics();
+    } else {
+      if (loaded && window.gtag) window.gtag('consent', 'update', { analytics_storage: 'denied' });
+      window['ga-disable-' + GA_ID] = true;
+      store(CID_KEY, null);
+      clearAnalyticsCookies();
+    }
+  }
+
+  var banner = null;
+  function hideBanner() { if (banner && banner.parentNode) banner.parentNode.removeChild(banner); banner = null; }
+
+  function showBanner() {
+    if (banner) return;
+    var policy = appPlatform() ? 'https://franksandbuns.com/privacy.html' : 'privacy.html';
+    banner = document.createElement('div');
+    banner.id = 'fb-consent';
+    banner.setAttribute('role', 'dialog');
+    banner.setAttribute('aria-label', 'Analytics choice');
+    banner.innerHTML =
+      '<p>Can we count plays with Google Analytics to help improve the game? It stays off unless you allow it. ' +
+      '<a href="' + policy + '" target="_blank" rel="noopener">Privacy Policy</a></p>' +
+      '<div class="fbc-btns"><button type="button" class="fbc-no">No thanks</button>' +
+      '<button type="button" class="fbc-yes">Allow</button></div>';
+    var css = document.createElement('style');
+    css.textContent =
+      '#fb-consent{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom));' +
+      'width:min(560px,calc(100% - 24px));box-sizing:border-box;z-index:2147483000;background:#1d0f02;color:#f3e3c3;' +
+      'border:1px solid #ff6600;border-radius:14px;padding:12px 14px;font:14px/1.4 -apple-system,Segoe UI,Roboto,Arial,sans-serif;' +
+      'box-shadow:0 6px 24px rgba(0,0,0,.5)}' +
+      '#fb-consent p{margin:0 0 10px}#fb-consent a{color:#ffb347}' +
+      '#fb-consent .fbc-btns{display:flex;gap:10px;justify-content:flex-end}' +
+      '#fb-consent button{font:600 14px/1 inherit;font-family:inherit;border-radius:999px;padding:10px 18px;cursor:pointer;border:1px solid #ff6600}' +
+      '#fb-consent .fbc-no{background:transparent;color:#f3e3c3}#fb-consent .fbc-yes{background:#ff6600;color:#fff}';
+    banner.appendChild(css);
+    ['touchstart', 'touchend', 'mousedown', 'pointerdown'].forEach(function (t) {
+      banner.addEventListener(t, function (e) { e.stopPropagation(); }, { passive: true });
+    });
+    banner.querySelector('.fbc-yes').addEventListener('click', function () { decide(true); });
+    banner.querySelector('.fbc-no').addEventListener('click', function () { decide(false); });
+    (document.body || document.documentElement).appendChild(banner);
+  }
+
+  // "Privacy choices" link: show the choice again (to allow or withdraw).
+  window.fbPrivacyChoices = function () { hideBanner(); showBanner(); return false; };
+
+  var choice = read(KEY);
+  if (choice === 'granted') loadAnalytics();
+  else if (choice !== 'denied') {
+    if (document.body) showBanner();
+    else document.addEventListener('DOMContentLoaded', showBanner);
+  }
+})();
+</script>
+<!-- FB-CONSENT END -->
+  <style>
+    :root{--bg:#1a0e05;--bg2:#2a1a0a;--orange:#FF6600;--gold:#FFD700;--cream:#fff8ee;--muted:#a08060;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:var(--bg);color:var(--cream);font-family:'Nunito',sans-serif;line-height:1.7;}
+    nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 5vw;height:60px;background:rgba(26,14,5,0.92);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,102,0,0.18);}
+    .nav-logo{font-family:'Boogaloo',cursive;font-size:1.5rem;color:var(--gold);text-decoration:none;}
+    .nav-logo span{color:var(--orange);}
+    nav ul{list-style:none;display:flex;gap:2rem;}
+    nav ul a{color:var(--cream);text-decoration:none;font-weight:600;font-size:0.9rem;letter-spacing:0.05em;text-transform:uppercase;opacity:0.8;transition:opacity 0.2s,color 0.2s;}
+    nav ul a:hover{opacity:1;color:var(--gold);}
+    .container{max-width:760px;margin:0 auto;padding:100px 5vw 80px;}
+    h1{font-family:'Boogaloo',cursive;font-size:2.8rem;color:var(--gold);margin-bottom:0.5rem;}
+    h2{font-family:'Boogaloo',cursive;font-size:1.6rem;color:var(--orange);margin:2.5rem 0 0.75rem;}
+    p{color:#c8a880;margin-bottom:1.2rem;font-size:1rem;}
+    .divider{width:60px;height:3px;background:linear-gradient(90deg,var(--orange),var(--gold));border-radius:2px;margin:0 0 2.5rem;}
+    .character-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;margin:1.5rem 0;}
+    .character-card{background:var(--bg2);border:1px solid rgba(255,102,0,0.15);border-radius:16px;padding:1.5rem;text-align:center;}
+    .character-card img{width:100px;height:100px;object-fit:contain;margin-bottom:0.8rem;}
+    .character-icon{font-size:3rem;margin-bottom:0.8rem;}
+    .character-card h3{font-family:'Boogaloo',cursive;color:var(--orange);font-size:1.2rem;margin-bottom:0.5rem;}
+    .character-card p{color:var(--muted);font-size:0.9rem;margin:0;}
+    .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin:1.5rem 0;}
+    .stat{background:var(--bg2);border:1px solid rgba(255,215,0,0.12);border-radius:12px;padding:1.2rem;text-align:center;}
+    .stat-num{font-family:'Boogaloo',cursive;font-size:2rem;color:var(--gold);}
+    .stat-label{font-size:0.8rem;color:var(--muted);margin-top:0.2rem;}
+    .condiment-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:1rem;margin:1.5rem 0;}
+    .condiment{background:var(--bg2);border:1px solid rgba(255,215,0,0.12);border-radius:12px;padding:1rem;text-align:center;}
+    .condiment svg{margin-bottom:0.4rem;}
+    .condiment h4{color:var(--gold);font-size:0.9rem;margin-bottom:0.2rem;}
+    .condiment p{color:var(--muted);font-size:0.8rem;margin:0;}
+    .bonus-band{background:linear-gradient(135deg,rgba(255,102,0,0.12),rgba(255,215,0,0.06));border:1px solid rgba(255,102,0,0.2);border-radius:16px;padding:1.5rem;margin:1.5rem 0;}
+    .bonus-band h3{font-family:'Boogaloo',cursive;color:var(--orange);font-size:1.3rem;margin-bottom:0.5rem;}
+    .bonus-band p{color:#c8a880;margin:0;font-size:0.95rem;}
+    .btn-play{display:inline-block;background:var(--orange);color:#fff;font-family:'Boogaloo',cursive;font-size:1.4rem;padding:0.6em 2em;border-radius:50px;text-decoration:none;margin-top:1rem;}
+    footer{background:#110a02;border-top:1px solid rgba(255,255,255,0.06);text-align:center;padding:2rem 5vw;color:var(--muted);font-size:0.85rem;}
+    .social-links{display:flex;justify-content:center;align-items:center;gap:0.9rem;margin:0.25rem 0 1rem;}
+    .social-links .follow{color:var(--muted);font-weight:600;margin-right:0.2rem;}
+    .social-links a.soc{width:40px;height:40px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;transition:transform .15s;}
+    .social-links a.soc:hover{transform:scale(1.1);text-decoration:none;}
+    .social-links a.soc svg{width:22px;height:22px;}
+    .social-links a.ig{background:radial-gradient(circle at 30% 107%,#fdf497 0%,#fdf497 5%,#fd5949 45%,#d6249f 60%,#285AEB 90%);}
+    .social-links a.fb{background:#fff;color:#0866FF;}
+    .social-links a.fb svg{width:40px;height:40px;}
+    .social-links a.tt{background:#000;border:1px solid rgba(255,255,255,0.25);}
+    footer a{color:var(--orange);text-decoration:none;}
+    .container p a{color:#ffb347;}
+    .footer-links{margin-bottom:0.75rem;display:flex;justify-content:center;gap:2rem;flex-wrap:wrap;}
+    .hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px;background:none;border:none;}
+    .hamburger span{display:block;width:24px;height:2px;background:var(--cream);border-radius:2px;transition:all 0.3s;}
+    .mobile-menu{display:none;position:fixed;top:60px;left:0;right:0;background:rgba(26,14,5,0.98);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,102,0,0.2);z-index:99;padding:1rem 5vw 1.5rem;}
+    .mobile-menu a{display:block;color:var(--cream);text-decoration:none;font-weight:600;font-size:1rem;letter-spacing:0.05em;text-transform:uppercase;padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.06);}
+    .mobile-menu a:last-child{border-bottom:none;}
+    .mobile-menu a:hover{color:var(--gold);}
+    .mobile-menu.open{display:block;}
+    nav ul a{white-space:nowrap;}
+    @media(max-width:960px){nav ul{display:none;}.hamburger{display:flex;}}
+    .tldr{background:linear-gradient(135deg,rgba(255,102,0,0.12),rgba(255,215,0,0.06));border:1px solid rgba(255,102,0,0.2);border-radius:16px;padding:1.2rem 1.5rem;margin:0 0 1.5rem;}
+    .tldr p{margin:0;color:var(--cream);}
+    .toc{display:flex;flex-wrap:wrap;gap:0.5rem 1rem;margin:0 0 1rem;font-size:0.9rem;}
+    .toc a{color:#ffb347;text-decoration:none;}
+    .container h3{font-family:'Boogaloo',cursive;color:var(--gold);font-size:1.2rem;margin:1.2rem 0 0.3rem;}
+    .container ul{margin:0 0 1.2rem 1.2rem;color:#c8a880;}
+    .container li{margin-bottom:0.4rem;}
+    .container li strong,.container p strong{color:var(--cream);}
+    .container ul a{color:#ffb347;}
+    section{scroll-margin-top:70px;}
+    .container ol.steps{margin:0 0 1.2rem 1.4rem;color:#c8a880;}
+    .container ol.steps li{margin-bottom:0.45rem;padding-left:0.2rem;}
+    .container ol.steps a,.container p a.vlink{color:#ffb347;}
+    .stepdev{color:var(--gold);font-weight:700;margin:0.8rem 0 0.4rem;}
+    .container h3[id]{scroll-margin-top:70px;}
+    table.facts{width:100%;border-collapse:collapse;margin:0 0 1.2rem;font-size:0.95rem;}
+    table.facts th,table.facts td{text-align:left;padding:0.5rem 0.6rem;border-bottom:1px solid rgba(255,255,255,0.08);vertical-align:top;}
+    table.facts th{color:var(--gold);width:38%;font-weight:700;}
+    table.facts td{color:#c8a880;}
+    table.facts a{color:#ffb347;}
+    .updated{font-size:0.8rem;color:var(--muted);text-align:center;margin-top:2rem;}
+  </style>
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Franks &amp; Buns">
+  <meta property="og:title" content="Franks &amp; Buns: The Complete Guide">
+  <meta property="og:description" content="What Franks &amp; Buns is, how to play, scoring, costumes, BunBux, kitchens, Dog Houses and FAQ.">
+  <meta property="og:url" content="https://franksandbuns.com/guide">
+  <meta property="og:image" content="https://franksandbuns.com/og-image.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Franks &amp; Buns: The Complete Guide">
+  <meta name="twitter:description" content="What Franks &amp; Buns is, how to play, scoring, costumes, BunBux, kitchens, Dog Houses and FAQ.">
+  <meta name="twitter:image" content="https://franksandbuns.com/og-image.jpg">
+  <link rel="canonical" href="https://franksandbuns.com/guide">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "Organization",
+   "@id": "https://franksandbuns.com/#org",
+   "name": "SLAE Labs LLC",
+   "url": "https://franksandbuns.com/",
+   "email": "admin@slaelabs.com",
+   "address": {
+    "@type": "PostalAddress",
+    "addressRegion": "CA",
+    "addressCountry": "US"
+   },
+   "sameAs": [
+    "https://www.instagram.com/franksandbunsgame/",
+    "https://www.tiktok.com/@franksandbuns",
+    "https://www.facebook.com/profile.php?id=61596439395625"
+   ]
+  },
+  {
+   "@type": "VideoGame",
+   "@id": "https://franksandbuns.com/#game",
+   "name": "Franks & Buns",
+   "alternateName": "Franks and Buns",
+   "url": "https://franksandbuns.com/",
+   "description": "Franks & Buns is a free one-tap arcade game where you fly a runaway hot dog into scrolling buns, dodge the chef's fork, and chase high scores in your browser or on iPhone, iPad and Android.",
+   "genre": [
+    "Arcade",
+    "Casual"
+   ],
+   "playMode": "SinglePlayer",
+   "gamePlatform": [
+    "Web browser",
+    "iOS",
+    "iPadOS",
+    "Android"
+   ],
+   "applicationCategory": "GameApplication",
+   "operatingSystem": "Web, iOS, iPadOS, Android",
+   "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+   },
+   "publisher": {
+    "@id": "https://franksandbuns.com/#org"
+   },
+   "author": {
+    "@id": "https://franksandbuns.com/#org"
+   },
+   "image": "https://franksandbuns.com/how-to-play.jpg",
+   "trailer": {
+    "@type": "VideoObject",
+    "name": "How to play Franks & Buns",
+    "description": "A short gameplay clip showing how to fly the frank into buns.",
+    "contentUrl": "https://franksandbuns.com/how-to-play.mp4",
+    "thumbnailUrl": "https://franksandbuns.com/how-to-play.jpg",
+    "uploadDate": "2026-11-21"
+   },
+   "sameAs": [
+    "https://apps.apple.com/app/franks-buns/id6761290671",
+    "https://play.google.com/store/apps/details?id=com.franksandbuns.game"
+   ]
+  },
+  {
+   "@type": "MobileApplication",
+   "name": "Franks & Buns for iPhone and iPad",
+   "operatingSystem": "iOS, iPadOS",
+   "applicationCategory": "GameApplication",
+   "url": "https://apps.apple.com/app/franks-buns/id6761290671",
+   "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+   },
+   "publisher": {
+    "@id": "https://franksandbuns.com/#org"
+   }
+  },
+  {
+   "@type": "MobileApplication",
+   "name": "Franks & Buns for Android",
+   "operatingSystem": "Android",
+   "applicationCategory": "GameApplication",
+   "url": "https://play.google.com/store/apps/details?id=com.franksandbuns.game",
+   "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+   },
+   "publisher": {
+    "@id": "https://franksandbuns.com/#org"
+   }
+  },
+  {
+   "@type": "WebPage",
+   "@id": "https://franksandbuns.com/guide",
+   "url": "https://franksandbuns.com/guide",
+   "name": "Franks & Buns: The Complete Guide",
+   "about": {
+    "@id": "https://franksandbuns.com/#game"
+   },
+   "dateModified": "2026-11-26"
+  },
+  {
+   "@type": "FAQPage",
+   "url": "https://franksandbuns.com/guide#faq",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "Is Franks & Buns free?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. The whole game is free in the browser and in the apps. Optional purchases are cosmetic costumes only."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Do I need an account?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No. You can play right away. Dog Houses use a recovery code instead of an email or password."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How do I sync my Franks & Buns account across devices?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Use your recovery code. On the device you already play on: tap MY DOG HOUSES on the start screen, tap Recovery code, and write it down, screenshot it or tap Copy code. On your other device (the iPhone, iPad or Android app, or franksandbuns.com/game in a browser): tap MY DOG HOUSES, tap Already in Dog Houses on another device? (or Use a different recovery code), enter the code and tap Restore. Your Wienerboard name, Dog Houses, costumes and BunBux sync, and both devices stay signed in. Keep the code private."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is it pay to win?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No. Costumes and kitchens are cosmetic and never change scoring, speed or lives."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Can I buy BunBux?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No. BunBux are earned only by playing: packing boxes, finishing the Daily Challenge and keeping a day streak."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How often do new costumes come out?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "New themed Collections are released on Tuesdays."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Can I play sports instead of hot dogs?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. Tap GAME MODE on the start screen or after a game and pick Soccer, Basketball, Football, Water Polo, Golf, Baseball, Cricket or Ice Hockey. Your pick stays on until you change it."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Does it work offline?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes, the core game can run offline on your device. Features like BunBux, purchases and Dog Houses would require an internet connection."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Who makes Franks & Buns?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "SLAE Labs LLC, an independent studio in California. Contact admin@slaelabs.com."
+     }
+    }
+   ]
+  }
+ ]
+}
+</script>
+</head>
+<body>
+<nav>
+  <a class="nav-logo" href="/">Franks <span>&</span> Buns</a>
+  <ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="guide.html">Guide</a></li>
+    <li><a href="videos.html">Videos</a></li>
+    <li><a href="game.html">Play Now</a></li>
+    <li><a href="https://shop.franksandbuns.com">Merch</a></li>
+    <li><a href="privacy.html">Privacy</a></li>
+    <li><a href="terms.html">Terms</a></li>
+  </ul>
+  <button class="hamburger" id="hamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="/">Home</a>
+  <a href="about.html">About</a>
+  <a href="guide.html">Guide</a>
+  <a href="videos.html">Videos</a>
+  <a href="game.html">Play Now</a>
+  <a href="https://shop.franksandbuns.com">Merch</a>
+  <a href="privacy.html">Privacy</a>
+  <a href="terms.html">Terms</a>
+</div>
+
+<div class="container">
+<div style="border-top:1px solid rgba(255,215,0,0.3);padding-top:10px;margin:12px 0 16px;">
+  <p style="font-size:11px;color:#a08060;text-align:center;margin:0;line-height:1.6;">
+    <span style="color:#FFD700;font-weight:bold;">&#9888; Warning</span> This game may be difficult to stop playing for some users. Extended play may interfere with sleep, work, school or other activities. Take regular breaks and stop playing if you believe the game is affecting your health, responsibilities or relationships.
+  </p>
+</div>
+
+  <h1>Franks &amp; Buns: The Complete Guide 🌭</h1>
+  <div class="divider"></div>
+
+  <div class="tldr">
+    <p><strong>In one sentence:</strong> Franks &amp; Buns is a free one-tap arcade game where you fly a runaway hot dog into scrolling buns, dodge the chef's fork, and chase high scores, playable in any web browser at franksandbuns.com and as an app for iPhone, iPad and Android.</p>
+  </div>
+
+  <div class="toc" role="navigation" aria-label="On this page">
+    <a href="#what-is-it">What it is</a>
+    <a href="#how-to-play">How to play</a>
+    <a href="#game-modes">Game Modes</a>
+    <a href="#scoring">Scoring</a>
+    <a href="#costumes">Costumes &amp; Collections</a>
+    <a href="#bunbux">BunBux</a>
+    <a href="#kitchens">Kitchens</a>
+    <a href="#dog-houses">Dog Houses</a>
+    <a href="#sync">Sync across devices</a>
+    <a href="#platforms">Where to play</a>
+    <a href="#facts">Quick facts</a>
+    <a href="#faq">FAQ</a>
+  </div>
+
+  <section id="what-is-it">
+    <h2>What is Franks &amp; Buns?</h2>
+    <p>Franks &amp; Buns is a casual arcade game about a hot dog on the run. A sneaky dog steals a hot dog, the chef gives chase, and when the chef trips over the pup the frank goes flying. That airborne hot dog is you. You tap to keep it in the air and time your drops so it lands in buns as they scroll past.</p>
+    <p>Each run lasts a few minutes, uses a single control (tap, click or press Space), and gets faster the longer you survive. The game is free to play with no account needed. It is made by SLAE Labs LLC, a small independent studio in California.</p>
+  </section>
+
+  <section id="how-to-play">
+    <h2>How do you play Franks &amp; Buns?</h2>
+    <p>Hold or tap to boost your frank upward and let go to let gravity pull it down. Buns scroll from right to left on counters, shelves, ovens and fridges at different heights. Land the frank in a bun to score. Missing a bun, hitting the floor, or touching the chef's fork costs a life. You start with three lives.</p>
+    <ul>
+      <li><strong>Boxes:</strong> every 6 franks you land fills a box, earns a bonus and speeds up the kitchen.</li>
+      <li><strong>The chef's fork:</strong> it shoots up between buns without warning. Dodge it.</li>
+      <li><strong>The dog:</strong> after box 3 the dog shows up in play and is worth 1,000 points.</li>
+      <li><strong>Dog Parade:</strong> every 4 boxes, dogs stream across the screen for 5 seconds, worth 500 points each, and you earn an extra life afterward.</li>
+      <li><strong>Chili Rush:</strong> catch a floating chili dog and your frank is red-hot for 6 seconds, scoring double and shielded from losing a life.</li>
+      <li><strong>Grilled buns:</strong> after box 6, landing in a grilled bun gives a flat 1,000-point bonus.</li>
+      <li><strong>Stages:</strong> after each Dog Parade your run moves up a stage, with its own name and a bonus of 1,000 points for every stage past the first.</li>
+      <li><strong>Second Wind:</strong> once per run, when your last life is gone, you can spend 50 BunBux to keep playing.</li>
+    </ul>
+  </section>
+
+  <section id="game-modes">
+    <h2>What are Game Modes?</h2>
+    <p>Tap the <strong>GAME MODE</strong> button on the start screen or the Game Over screen to choose how you play. The mode you pick stays on, even after you close the game, until you choose another one. Every mode uses the same one-tap controls, scoring, BunBux and Wienerboards.</p>
+    <ul>
+      <li><strong>Classic:</strong> the original game. Fly the hot dog into the buns.</li>
+      <li><strong>Soccer:</strong> drop the ball into the goals in a night stadium. Pop-up: GOAL!</li>
+      <li><strong>Basketball:</strong> drop the ball through the hoops in a packed arena. Pop-up: SWISH!</li>
+      <li><strong>Football:</strong> drop the ball into a receiver's gloved hands on the gridiron. Pop-up: CAUGHT IT!</li>
+      <li><strong>Water Polo:</strong> drop the ball into floating goals at the pool. Pop-up: GOAL!</li>
+      <li><strong>Golf:</strong> drop the golf ball into the cups on floating greens. Pop-up: IN THE CUP!</li>
+      <li><strong>Baseball:</strong> drop the ball into catcher's mitts at the ballpark. Pop-up: STRIKE!</li>
+      <li><strong>Cricket:</strong> knock the bails off the stumps on a village green. Pop-up: HOWZAT!</li>
+      <li><strong>Ice Hockey:</strong> slap the puck into the nets at the rink. Pop-up: LIGHT THE LAMP!</li>
+    </ul>
+    <p>In each sport a player in a pinstriped number 25 home kit runs along under the ball, a rival tries to block it, the chili dog becomes a fire ball, and the stages have their own names. Sports modes always play in their own venue. Your costumes and kitchens come back when you switch to Classic.</p>
+  </section>
+
+  <section id="scoring">
+    <h2>How does scoring work?</h2>
+    <p>Every landed frank is worth 100 base points. Condiment buns multiply that: mustard 2x, ketchup 3x, relish 5x, cheese 5x and jalapeño 10x. Streaks stack on top: 3 landings in a row is <em>On A Roll</em> (1.5x), 5 in a row is <em>Franks On Fire</em> (2x), and 10 in a row is <em>Wiener Wizard</em> (3x). One miss resets the streak.</p>
+    <p>Your <strong>Wienerboard</strong> keeps your top 5 runs on the device you play on. For more detail, see <a href="about.html">How to Play &amp; Scoring</a>.</p>
+  </section>
+
+  <section id="costumes">
+    <h2>What are costumes and Collections?</h2>
+    <p>Costumes (also called skins) change how your hot dog looks in flight, in the bun and on the grill. They are cosmetic only and never change scoring or difficulty.</p>
+    <ul>
+      <li><strong>Free and earned costumes:</strong> a few are free from the start, and others unlock by hitting in-game goals, such as landing 10 in a row or reaching the Dog Parade.</li>
+      <li><strong>Collections:</strong> themed sets of 4 to 11 costumes, such as Holiday, Dogs, Cats, Sports and Deep Sea Dogs. New Collections are released on Tuesdays.</li>
+      <li><strong>Buying:</strong> costumes and whole Collections can be bought in the game. In the US a single costume is typically $0.99. Prices vary by store and region.</li>
+      <li><strong>Limited Edition:</strong> one or two costumes in most Collections are Limited Edition and can only be bought, not unlocked with BunBux.</li>
+    </ul>
+  </section>
+
+  <section id="bunbux">
+    <h2>What are BunBux?</h2>
+    <p>BunBux are the in-game currency of Franks &amp; Buns. They are earned by playing and cannot be bought with money.</p>
+    <ul>
+      <li>1 BunBux for each box you pack, up to 10 per game.</li>
+      <li>25 BunBux for completing the Daily Challenge, plus bonuses for playing on consecutive days (a day streak).</li>
+      <li>You can earn up to 100 BunBux per day.</li>
+      <li>Spend 300 BunBux to unlock most non-Limited costumes, or 500 BunBux to unlock a kitchen.</li>
+    </ul>
+  </section>
+
+  <section id="kitchens">
+    <h2>What are kitchens?</h2>
+    <p>Kitchens are the backgrounds you play in. Besides the Classic Kitchen there are around 50 themed kitchens grouped into US Cities, Europe, Latin America, Asia &amp; Middle East, Amusement and Campus towns. Examples include New York, San Francisco, Coney Island, Paris, Rome, Rio de Janeiro, Hong Kong, a Ballpark and a Golf Course. Some kitchens unlock by reaching a goal (for example, packing 6 boxes in one game), and the rest unlock for 500 BunBux. Kitchens are cosmetic and do not change the rules.</p>
+  </section>
+
+  <section id="dog-houses">
+    <h2>Can you play with friends?</h2>
+    <p>Yes. A <strong>Dog House</strong> is a private leaderboard for friends, family or coworkers. Create one with no email or password, then share a link or a 6-character code. Each Dog House has a This Week board (resets Monday at midnight UTC) and an All-Time board. Every game you play counts in all of your Dog Houses. You can join up to 5 Dog Houses, each with up to 50 players. Details are on the <a href="about.html">About page</a>.</p>
+    <p>&#9654; Watch <a class="vlink" href="videos/make-a-dog-house">Make a Dog House</a> (58 seconds): creating one, inviting a friend and letting them in, step by step.</p>
+  </section>
+
+  <section id="sync">
+    <h2>How do I sync my account across devices?</h2>
+    <p>Use your <strong>recovery code</strong>. It links the website and the iPhone, iPad and Android apps to one profile: your Wienerboard name, your Dog Houses, your costumes (won, unlocked with BunBux or bought) and your BunBux. There's no email or password.</p>
+    <p class="stepdev">On the device you already play on</p>
+    <ol class="steps">
+      <li>Open the game and tap <strong>&#127968; MY DOG HOUSES</strong> on the start screen.</li>
+      <li>Tap <strong>Recovery code</strong> near the bottom.</li>
+      <li>Write the code down, take a screenshot, or tap <strong>Copy code</strong>. It has 16 letters and numbers, like K7QF-2MXD-9PLA-4WZR.</li>
+    </ol>
+    <p class="stepdev">On your other device (the app, or <a href="game.html">franksandbuns.com/game</a> in a browser)</p>
+    <ol class="steps" start="4">
+      <li>Tap <strong>&#127968; MY DOG HOUSES</strong> on the start screen.</li>
+      <li>Tap <strong>Already in Dog Houses on another device?</strong> If you see <strong>Use a different recovery code</strong> instead, tap that.</li>
+      <li>Enter your code. Capital letters and dashes don't matter.</li>
+      <li>Tap <strong>Restore</strong>. You'll see &ldquo;Welcome back&rdquo; with your name and your Dog Houses.</li>
+    </ol>
+    <p>That's it. Both devices stay signed in, and games on either one count in all your Dog Houses. Do the same on as many devices as you like.</p>
+    <ul>
+      <li><strong>Costumes:</strong> costumes you won on the new device before restoring come with you. Costumes bought on the website or in the apps belong to your code too. If an app purchase is missing, tap Restore Purchases in the costume shop.</li>
+      <li><strong>BunBux:</strong> after restoring you see the balance saved with your code. BunBux this device had already earned on its own stay with its old profile.</li>
+      <li><strong>No Recovery code link?</strong> Nothing is saved online for you yet. Make or join a Dog House, or pack a box in a game to earn BunBux, and it appears.</li>
+      <li><strong>iPhone and iPad:</strong> the app also keeps your code in iCloud, so reinstalling the app, or a new iPhone with the same Apple ID, brings everything back by itself.</li>
+      <li><strong>Keep it private:</strong> anyone with your code can use your profile. If someone else has it, go to Recovery code and tap <em>Someone else has my code? Get a new one</em>, then enter the new code on your other devices. We can't look up a lost code, so keep a copy somewhere safe.</li>
+      <li><strong>&ldquo;Code not found&rdquo;?</strong> Check each character against your saved copy. If you got a new code, the old one no longer works anywhere.</li>
+    </ul>
+    <p>&#9654; Watch it start to finish: <a class="vlink" href="videos/sync-devices">Sync Across Devices</a> (49 seconds).</p>
+  </section>
+
+  <section id="platforms">
+    <h2>Where can you play Franks &amp; Buns?</h2>
+    <ul>
+      <li><strong>Web browser:</strong> <a href="game.html">franksandbuns.com/game</a> on any phone, tablet or computer. No download.</li>
+      <li><strong>iPhone and iPad:</strong> <a href="https://apps.apple.com/app/franks-buns/id6761290671" rel="noopener">Franks &amp; Buns on the App Store</a>.</li>
+      <li><strong>Android:</strong> <a href="https://play.google.com/store/apps/details?id=com.franksandbuns.game" rel="noopener">Franks &amp; Buns on Google Play</a>.</li>
+      <li><strong>Videos:</strong> gameplay clips are on the <a href="videos.html">Videos page</a>, <a href="https://www.tiktok.com/@franksandbuns" rel="noopener">TikTok</a>, <a href="https://www.instagram.com/franksandbunsgame/" rel="noopener">Instagram</a> and <a href="https://www.facebook.com/profile.php?id=61596439395625" rel="noopener">Facebook</a>.</li>
+      <li><strong>Merch:</strong> tees and hoodies at <a href="https://shop.franksandbuns.com">shop.franksandbuns.com</a>.</li>
+    </ul>
+  </section>
+
+  <section id="facts">
+    <h2>Quick facts</h2>
+    <table class="facts">
+      <tr><th>Name</th><td>Franks &amp; Buns (also written Franks and Buns)</td></tr>
+      <tr><th>Genre</th><td>Casual one-tap arcade game</td></tr>
+      <tr><th>Price</th><td>Free to play, with optional cosmetic purchases</td></tr>
+      <tr><th>Platforms</th><td>Web browser, iPhone, iPad, Android</td></tr>
+      <tr><th>Controls</th><td>One input: tap, click or Space bar</td></tr>
+      <tr><th>Game Modes</th><td>Classic, Soccer, Basketball, Football, Water Polo, Golf, Baseball, Cricket, Ice Hockey</td></tr>
+      <tr><th>Lives</th><td>3 to start, plus 1 after each Dog Parade</td></tr>
+      <tr><th>Max multiplier</th><td>10x (jalapeño bun), plus up to 3x streak bonus</td></tr>
+      <tr><th>In-game currency</th><td>BunBux (earn-only)</td></tr>
+      <tr><th>Age rating</th><td>Rated 4+ on the App Store and Everyone on Google Play. A general-audience game, not directed at children under 13.</td></tr>
+      <tr><th>Developer</th><td>SLAE Labs LLC, California, USA</td></tr>
+      <tr><th>Contact</th><td><a href="mailto:admin@slaelabs.com">admin@slaelabs.com</a></td></tr>
+    </table>
+  </section>
+
+  <section id="faq">
+    <h2>Frequently asked questions</h2>
+    <h3>Is Franks &amp; Buns free?</h3>
+    <p>Yes. The whole game is free in the browser and in the apps. Optional purchases are cosmetic costumes only.</p>
+    <h3>Do I need an account?</h3>
+    <p>No. You can play right away. Dog Houses use a recovery code instead of an email or password.</p>
+    <h3>How do I play on another device and keep my stuff?</h3>
+    <p>Use your recovery code. On the device you already play on, tap MY DOG HOUSES, then Recovery code, and save the code. On the other device, tap MY DOG HOUSES, then <em>Already in Dog Houses on another device?</em> (or <em>Use a different recovery code</em>), enter the code and tap Restore. Your name, Dog Houses, costumes and BunBux come with it. <a href="#sync">Step-by-step guide</a> &middot; <a href="videos/sync-devices">49-second video</a></p>
+    <h3>Is it pay to win?</h3>
+    <p>No. Costumes and kitchens are cosmetic and never change scoring, speed or lives.</p>
+    <h3>Can I buy BunBux?</h3>
+    <p>No. BunBux are earned only by playing: packing boxes, finishing the Daily Challenge and keeping a day streak.</p>
+    <h3>How often do new costumes come out?</h3>
+    <p>New themed Collections are released on Tuesdays.</p>
+    <h3>Can I play sports instead of hot dogs?</h3>
+    <p>Yes. Tap GAME MODE on the start screen or after a game and pick Soccer, Basketball, Football, Water Polo, Golf, Baseball, Cricket or Ice Hockey. Your pick stays on until you change it.</p>
+    <h3>Does it work offline?</h3>
+    <p>Yes, the core game can run offline on your device. Features like BunBux, purchases and Dog Houses would require an internet connection.</p>
+    <h3>Who makes Franks &amp; Buns?</h3>
+    <p>SLAE Labs LLC, an independent studio in California. Contact <a href="mailto:admin@slaelabs.com">admin@slaelabs.com</a>.</p>
+  </section>
+
+  <div style="text-align:center;margin-top:2.5rem;"><a class="btn-play" href="game.html">&#9654; Play Free</a></div>
+  <p class="updated">Last updated November 2026.</p>
+</div>
+
+<footer>
+  <div class="footer-links">
+    <a href="/">Home</a>
+    <a href="about.html">About</a>
+    <a href="guide.html">Guide</a>
+    <a href="videos.html">Videos</a>
+    <a href="game.html">Play the Game</a>
+    <a href="https://apps.apple.com/app/franks-buns/id6761290671" target="_blank" rel="noopener">iPhone &amp; iPad App</a>
+    <a href="https://play.google.com/store/apps/details?id=com.franksandbuns.game" target="_blank" rel="noopener">Android App</a>
+    <a href="https://shop.franksandbuns.com">Merch Shop</a>
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="terms.html">Terms of Service</a>
+    <a href="#" onclick="return fbPrivacyChoices()">Privacy choices</a>
+    <a href="mailto:admin@slaelabs.com">Contact</a>
+  </div>
+  <div class="social-links"><span class="follow">Follow us</span><a class="soc ig" href="https://www.instagram.com/franksandbunsgame/" target="_blank" rel="noopener" aria-label="Franks &amp; Buns on Instagram" title="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.3" cy="6.7" r="1.3" fill="currentColor"/></svg></a><a class="soc fb" href="https://www.facebook.com/profile.php?id=61596439395625" target="_blank" rel="noopener" aria-label="Franks &amp; Buns on Facebook" title="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"/></svg></a><a class="soc tt" href="https://www.tiktok.com/@franksandbuns" target="_blank" rel="noopener" aria-label="Franks &amp; Buns on TikTok" title="TikTok"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a></div>
+  <p>&copy; 2026 SLAE Labs LLC. All rights reserved.</p>
+</footer>
+
+<script>
+const hb = document.getElementById('hamburger');
+const mm = document.getElementById('mobileMenu');
+hb.addEventListener('click', () => mm.classList.toggle('open'));
+document.addEventListener('click', e => { if (!hb.contains(e.target) && !mm.contains(e.target)) mm.classList.remove('open'); });
+</script>
+</body>
+</html>

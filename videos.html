@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="google-adsense-account" content="ca-pub-4015428134622878">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4015428134622878" crossorigin="anonymous"></script>
-  <meta name="description" content="Short videos for Franks &amp; Buns, the free hot dog arcade game: how to play, what a Dog House is, a tour of the Dog House screen, and how your recovery code works.">
+  <meta name="description" content="Short videos for Franks &amp; Buns, the free hot dog arcade game: how to play, what a Dog House is, how to make one, a tour of the Dog House screen, your recovery code, and syncing across devices.">
   <title>Franks &amp; Buns Videos | How to Play, Dog Houses &amp; Recovery Codes</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
@@ -202,7 +202,7 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Franks &amp; Buns">
   <meta property="og:title" content="Franks &amp; Buns Videos">
-  <meta property="og:description" content="How to play, Dog Houses, and your recovery code, in under 40 seconds each.">
+  <meta property="og:description" content="How to play, making a Dog House, your recovery code and syncing across devices, in a minute or less each.">
   <meta property="og:url" content="https://franksandbuns.com/videos.html">
   <meta property="og:image" content="https://franksandbuns.com/how-to-play.jpg">
   <meta name="twitter:card" content="summary">
@@ -230,6 +230,16 @@
     .vid p{margin:0;font-size:.95rem;line-height:1.5}
     .vid .len{color:#a08060;font-size:.8rem;margin-top:6px}
     .container p a{color:#ffb347}
+    .vid{scroll-margin-top:80px;transition:box-shadow .3s,border-color .3s}
+    .vid.focus{border-color:#FFD700;box-shadow:0 0 0 3px rgba(255,215,0,.55),0 0 34px rgba(255,102,0,.45);animation:vidpulse 1.1s ease-in-out 3}
+    @keyframes vidpulse{50%{box-shadow:0 0 0 6px rgba(255,215,0,.25),0 0 44px rgba(255,102,0,.6)}}
+    .vid .share{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+    .vid .share button{flex:1;min-width:110px;font:700 .9rem 'Nunito',sans-serif;border-radius:999px;padding:8px 12px;cursor:pointer;border:1px solid #FF6600;background:transparent;color:#fff8ee;transition:background .15s}
+    .vid .share button:hover{background:rgba(255,102,0,.18)}
+    .vid .share button.primary{background:#FF6600;color:#fff}
+    .vid .share button.primary:hover{background:#ff7a1f}
+    .vid .share button.done{background:#2e7d32;border-color:#2e7d32;color:#fff}
+    @media (prefers-reduced-motion:reduce){.vid.focus{animation:none}}
   </style>
 </head>
 <body>
@@ -238,6 +248,7 @@
   <ul>
     <li><a href="/">Home</a></li>
     <li><a href="about.html">About</a></li>
+    <li><a href="guide.html">Guide</a></li>
     <li><a href="videos.html">Videos</a></li>
     <li><a href="game.html">Play Now</a></li>
     <li><a href="https://shop.franksandbuns.com">Merch</a></li>
@@ -251,6 +262,7 @@
 <div class="mobile-menu" id="mobileMenu">
   <a href="/">Home</a>
   <a href="about.html">About</a>
+  <a href="guide.html">Guide</a>
   <a href="videos.html">Videos</a>
   <a href="game.html">Play Now</a>
   <a href="https://shop.franksandbuns.com">Merch</a>
@@ -261,7 +273,7 @@
 <div class="container">
   <h1>Videos 🎬</h1>
   <div class="divider"></div>
-  <p>Quick videos on how Franks &amp; Buns works. Each one is under 40 seconds.</p>
+  <p>Quick videos on how Franks &amp; Buns works. Each one is a minute or less. Tap <strong>Copy link</strong> or <strong>Share</strong> under a video to send someone straight to it.</p>
 
   <div class="vids">
     <div class="vid" id="how-to-play">
@@ -276,6 +288,12 @@
       <p>A private leaderboard for your family or friends. You can be in up to 5 Dog Houses, with up to 50 players in each.</p>
       <div class="len">26 seconds</div>
     </div>
+    <div class="vid" id="make-a-dog-house">
+      <video src="videos/make-a-dog-house.mp4" poster="videos/make-a-dog-house.jpg" controls playsinline preload="none"></video>
+      <h2>Make a Dog House</h2>
+      <p>Step by step: create a Dog House, invite a friend, and let them in. From the start screen to both of you on the Wienerboard.</p>
+      <div class="len">58 seconds</div>
+    </div>
     <div class="vid" id="dog-house-tour">
       <video src="videos/dog-house-tour.mp4" poster="videos/dog-house-tour.jpg" controls playsinline preload="none"></video>
       <h2>Dog House Tour</h2>
@@ -288,6 +306,12 @@
       <p>Your code brings back your Dog Houses and costumes on a new phone or browser. Keep it safe and never share it.</p>
       <div class="len">32 seconds</div>
     </div>
+    <div class="vid" id="sync-devices">
+      <video src="videos/sync-devices.mp4" poster="videos/sync-devices.jpg" controls playsinline preload="none"></video>
+      <h2>Sync Across Devices</h2>
+      <p>Play on your phone, tablet and computer with the same name, Dog Houses, costumes and BunBux. Start to finish with your recovery code. <a href="guide.html#sync">Steps in writing</a></p>
+      <div class="len">49 seconds</div>
+    </div>
   </div>
 
   <a class="btn-play" href="game.html">&#9654; Play Now</a>
@@ -295,10 +319,73 @@
 </div>
 
 <script>
-// play one video at a time
+// play one video at a time; the address bar follows the playing video so it can be copied
 document.querySelectorAll('.vid video').forEach(v => v.addEventListener('play', () => {
   document.querySelectorAll('.vid video').forEach(o => { if (o !== v) o.pause(); });
+  const id = v.closest('.vid').id;
+  if (location.hash !== '#' + id) history.replaceState(null, '', '#' + id);
 }));
+
+// Direct links: franksandbuns.com/videos/<id> (with link previews, made by tools/make_video_links.py)
+// lands on videos.html#<id>, which scrolls to and highlights that video.
+function videoLink(id) { return location.origin + '/videos/' + id; }
+function focusVideo(smooth) {
+  const id = decodeURIComponent(location.hash.slice(1));
+  const card = id && document.getElementById(id);
+  if (!card || !card.classList.contains('vid')) return;
+  document.querySelectorAll('.vid.focus').forEach(c => c.classList.remove('focus'));
+  card.classList.add('focus');
+  const v = card.querySelector('video');
+  if (v && v.preload === 'none') v.preload = 'metadata';
+  card.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+}
+function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+  return new Promise((ok, fail) => {
+    const t = document.createElement('textarea');
+    t.value = text; t.setAttribute('readonly', ''); t.style.position = 'fixed'; t.style.opacity = '0';
+    document.body.appendChild(t); t.select();
+    try { document.execCommand('copy') ? ok() : fail(); } catch (e) { fail(e); }
+    t.remove();
+  });
+}
+function flash(btn, label) {
+  const old = btn.dataset.label || (btn.dataset.label = btn.textContent);
+  btn.textContent = label; btn.classList.add('done');
+  clearTimeout(btn._t);
+  btn._t = setTimeout(() => { btn.textContent = old; btn.classList.remove('done'); }, 2000);
+}
+document.querySelectorAll('.vid').forEach(card => {
+  const title = card.querySelector('h2').textContent;
+  const url = videoLink(card.id);
+  const row = document.createElement('div');
+  row.className = 'share';
+  const copy = document.createElement('button');
+  copy.type = 'button';
+  copy.textContent = '🔗 Copy link';
+  copy.setAttribute('aria-label', 'Copy link to ' + title);
+  copy.addEventListener('click', () => {
+    copyText(url).then(() => flash(copy, '✓ Link copied'), () => window.prompt('Copy this link:', url));
+  });
+  row.appendChild(copy);
+  if (navigator.share) {
+    const share = document.createElement('button');
+    share.type = 'button';
+    share.className = 'primary';
+    share.textContent = '📤 Share';
+    share.setAttribute('aria-label', 'Share ' + title);
+    share.addEventListener('click', () => {
+      navigator.share({ title: title + ' | Franks & Buns', text: 'Franks & Buns: ' + title, url }).catch(() => {});
+    });
+    row.appendChild(share);
+  }
+  card.appendChild(row);
+});
+window.addEventListener('hashchange', () => focusVideo(true));
+if (location.hash) {
+  focusVideo(false);
+  window.addEventListener('load', () => focusVideo(false));  // again once fonts and posters have settled the layout
+}
 </script>
 
 <footer>
@@ -313,10 +400,10 @@ document.querySelectorAll('.vid video').forEach(v => v.addEventListener('play', 
     <a href="privacy.html">Privacy Policy</a>
     <a href="terms.html">Terms of Service</a>
     <a href="#" onclick="return fbPrivacyChoices()">Privacy choices</a>
-    <a href="mailto:admin@slaelabs.com">Contact</a>
+    <a href="contact.html">Contact</a>
   </div>
   <div class="social-links"><span class="follow">Follow us</span><a class="soc ig" href="https://www.instagram.com/franksandbunsgame/" target="_blank" rel="noopener" aria-label="Franks &amp; Buns on Instagram" title="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.3" cy="6.7" r="1.3" fill="currentColor"/></svg></a><a class="soc fb" href="https://www.facebook.com/profile.php?id=61596439395625" target="_blank" rel="noopener" aria-label="Franks &amp; Buns on Facebook" title="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"/></svg></a><a class="soc tt" href="https://www.tiktok.com/@franksandbuns" target="_blank" rel="noopener" aria-label="Franks &amp; Buns on TikTok" title="TikTok"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a></div>
-  <p>&copy; 2026 Franks &amp; Buns. All rights reserved.</p>
+  <p>&copy; 2026 SLAE Labs LLC. All rights reserved.</p>
 </footer>
 
 <script>

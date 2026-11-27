@@ -41,11 +41,22 @@ FRAMES = {'bunny': ['bunny-a', 'bunny-b'], 'dragon': ['dragon-a', 'dragon-b'], '
           'tabby': ['cats/orange-tabby'], 'persian': ['cats/persian'], 'ragdoll': ['cats/ragdoll'],
           'siamese': ['cats/siamese'], 'sphynx': ['cats/sphynx'], 'tuxedo': ['cats/tuxedo']}
 # bun widths measured by hand where the costume hides the bun's top (poodle fluff)
-BUN_PX = {'poodle': 560, 'ragdoll': 600, 'persian': 600}
+BUN_PX = {'poodle': 560, 'ragdoll': 600, 'persian': 600, 'sad': 636, 'forgotthebuns': 613, 'wrongturn': 603, 'bunbandit': (628, 1048),
+          'gardengnome': (655, 1035, 633), 'laundryday': (631, 1076, 653), 'plantparent': (622, 1058, 633), 'lostluggage': (660, 1068, 650),
+          'rollerskate': (633, 1065, 630), 'officechair': (660, 1067, 540), 'airportsprinter': (530, 1075, 554), 'shoppingcartracer': (655, 1063, 532),
+          'brickstep': (560, 1020, 544), 'dieselengine': (670, 1083), 'bakedbeans': (554, 1058), 'lemonade': (542, 1056), 'tomatosoup': (536, 1059),
+          'dojochamp': (635, 1059.5), 'karatemaster': (639, 1066), 'nightninja': (605, 1080), 'chaosdad': (556, 1025, 626),
+          'sitcommom': (572, 1052, 590), 'trailerparkdad': (574, 1034, 583), 'trailerparkmom': (554, 1031, 590)}   # (width, centre x) where the colour check misses the bun   # sad: rain boots hang below the bun
 # Collections cut by automatic body measurement (folder -> skins); ids are the file names without hyphens
 AUTO_SETS = ['questionable-decisions', 'space-cases', 'tiny-terrors', 'deep-sea-dogs', 'final-boss-franks', 'mythical-misfits',
              'trash-pack', 'sports', 'snack-pack', 'cozy-crew', 'main-character-energy',
-             'academic', 'bugged-out', 'side-hustles', 'throwback-franks', 'wild-things']
+             'academic', 'bugged-out', 'side-hustles', 'throwback-franks', 'wild-things', 'emotions',
+             'game-night', 'career-day', 'oops-all-franks', 'brain-modes', 'weather-report',
+             'music-festival', 'mystery-and-mayhem', 'mythical-professions', 'retro-tech', 'everyday-icons', 'fantasy-foods', 'pirates-and-treasure',
+             'backyard-legends', 'rise-and-dine', 'cleanup-crew', 'dessert-disasters', 'dinos-in-disguise', 'hair-raising', 'wild-hobbies',
+             'magical-mishaps', 'mini-monsters', 'outdoor-adventure', 'pet-peeves', 'school-days', 'things-with-wheels', 'travel-troubles', 'unnecessary-accessories',
+             'all-aboard', 'blast-off', 'cans-and-bottles', 'campus-life', 'famous-sculptures', 'lunar-new-year', 'japanese-heroes',
+             'sitcom-families', 'fashion-couture', 'robot-rally']
 import glob, os
 for folder in AUTO_SETS:
     for f in sorted(glob.glob(f'{SRC}/{folder}/*.png')):
@@ -72,6 +83,16 @@ def runs(alpha):
         if v and s is None: s = x
         if not v and s is not None: out.append((s, x - 1)); s = None
     if s is not None: out.append((s, len(col) - 1))
+    # stray specks or a detached puff of steam: merge the smallest piece into its nearest neighbour
+    while len(out) > 3:
+        i = min(range(len(out)), key=lambda k: col[out[k][0]:out[k][1] + 1].sum())
+        gl = out[i][0] - out[i - 1][1] if i > 0 else 1e9; gr = out[i + 1][0] - out[i][1] if i < len(out) - 1 else 1e9
+        j = i - 1 if gl <= gr else i + 1; a, b = sorted((i, j))
+        out[a:b + 1] = [(out[a][0], out[b][1])]
+    # pictures that touch (a long dragon): split the widest piece at its thinnest column near the middle
+    while len(out) < 3:
+        i = max(range(len(out)), key=lambda k: out[k][1] - out[k][0]); a, b = out[i]; m = (b - a) // 5
+        x = a + m + int(np.argmin(col[a + m:b - m + 1])); out[i:i + 1] = [(a, x - 1), (x, b)]
     assert len(out) == 3, out
     return out
 
@@ -91,7 +112,9 @@ for skin, frames in FRAMES.items():
     # plain bun: scale and centre from the first frame; grilled bun uses the same scale,
     # centred the same distance from the picture's right (face) end, since grill marks upset the colour check
     bx0, bx1 = bun_box(ims[0], *rr[0][1])
-    if skin in BUN_PX: c = (bx0 + bx1) / 2; bx0, bx1 = c - BUN_PX[skin] / 2, c + BUN_PX[skin] / 2
+    if skin in BUN_PX:
+        v = BUN_PX[skin] if isinstance(BUN_PX[skin], tuple) else (BUN_PX[skin], (bx0 + bx1) / 2)
+        bw, c = v[:2]; bx0, bx1 = c - bw / 2, c + bw / 2
     elif skin not in BODY:   # automatic sets: cross-check the colour measurement against the bun's bottom edge
         x0_, x1_ = rr[0][1]; al = ims[0][:, x0_:x1_ + 1, 3]; bot = np.where((al > 20).any(1))[0].max()
         xs = np.where(al[bot - 70] > 200)[0]; edge = (xs.max() - xs.min()) * 1.035
@@ -99,17 +122,21 @@ for skin, frames in FRAMES.items():
             print(skin, 'bun colour', bx1 - bx0, '-> edge', round(edge), file=sys.stderr)
             c = x0_ + (xs.min() + xs.max()) / 2; bx0, bx1 = c - edge / 2, c + edge / 2   # centre from the bun's bottom edge too
     sb = BUN_W / (bx1 - bx0)
-    if skin not in BODY:   # keep the bun within 8% of what the body size predicts (1.01x across the hand-checked costumes)
+    if skin not in BODY and not isinstance(BUN_PX.get(skin), tuple):   # keep the bun within 8% of what the body size predicts (1.01x across the hand-checked costumes)
         ref = 1.01 * auto_body(ims[0], *rr[0][0])[0]
         if not 0.92 * ref <= sb <= 1.08 * ref:
             print(skin, 'bun scale', round(sb / ref, 2), '-> body-based', file=sys.stderr)
             sb = min(max(sb, 0.92 * ref), 1.08 * ref)
     bun_cx = {1: (bx0 + bx1) / 2}
+    # feet, wheels or chairs under the bun: (width, centre x, bun bottom y) measured by hand; lift both bun pictures to match
+    lift = 0
+    if isinstance(BUN_PX.get(skin), tuple) and len(BUN_PX[skin]) > 2:
+        lift = np.where((ims[0][:, rr[0][1][0]:rr[0][1][1] + 1, 3] > 20).any(1))[0].max() - BUN_PX[skin][2]
     gx0, gx1 = bun_box(ims[0], *rr[0][2])
     bun_cx[2] = (gx0 + gx1) / 2 if abs((gx1 - gx0) - (bx1 - bx0)) < 0.03 * (bx1 - bx0) else rr[0][2][1] - (rr[0][1][1] - bun_cx[1])
     for state, name in ((0, 'fly'), (1, 'bun'), (2, 'grill')):
         # one crop box shared by every frame of this state, so A/B frames don't jitter
-        x0 = min(r[state][0] for r in rr) - 4; x1 = max(r[state][1] for r in rr) + 4
+        x0 = max(0, min(r[state][0] for r in rr) - 4); x1 = min(ims[0].shape[1] - 1, max(r[state][1] for r in rr) + 4)   # art touching the edge
         ys = [np.where((im[:, r[state][0]:r[state][1] + 1, 3] > 20).any(1))[0] for im, r in zip(ims, rr)]
         y0 = max(0, min(y.min() for y in ys) - 4); y1 = min(ims[0].shape[0] - 1, max(y.max() for y in ys) + 4)
         if state == 0:
@@ -118,7 +145,7 @@ for skin, frames in FRAMES.items():
             dx, dy = (x0 - cx) * s, (y0 - cy) * s
         else:
             s = sb; cx = bun_cx[state]
-            bottom = max(y.max() for y in ys[:1])   # bun bottom in the first frame
+            bottom = max(y.max() for y in ys[:1]) - lift   # bun bottom in the first frame
             dx = (x0 - cx) * s; dy = BUN_BOTTOM - (bottom - y0) * s   # added to hh at draw time
         w, h = (x1 - x0 + 1) * s, (y1 - y0 + 1) * s
         for i, im in enumerate(ims):

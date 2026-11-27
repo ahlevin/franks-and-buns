@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Franks &amp; Buns Stats</title>
+<link rel="icon" href="favicon.ico">
+<!-- Private stats page. Reads /api/stats with the key in the link (#key). Nothing here identifies a player: see "play stats" in functions/api/[[path]].js -->
+<style>
+:root {
+  --bg: #faf7f2; --card: #ffffff; --ink: #2a1a0a; --muted: #7a6a58; --line: #eadfce;
+  --a: #e85d04; --a-soft: #f8c9a3; --b: #2b7a78; --c: #6c63c7; --good: #2e7d32; --warn: #b26a00;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #17110b; --card: #221910; --ink: #f3e3c3; --muted: #b39d82; --line: #3a2c1c; --a: #ff8a3d; --a-soft: #7a3d12; --b: #4fb3ae; --c: #9d96ff; --good: #7ccf80; --warn: #f0b35a; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+main { max-width: 1040px; margin: 0 auto; padding: 20px 16px 48px; }
+header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+h1 { margin: 0; font-size: 22px; }
+h2 { margin: 0 0 4px; font-size: 16px; }
+.sub { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+.range button { font: 600 13px inherit; font-family: inherit; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+.range button.on { background: var(--a); border-color: var(--a); color: #fff; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.tile { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.tile .k { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.tile .v { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tile .n { color: var(--muted); font-size: 12px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; min-width: 0; }
+.wide { grid-column: 1 / -1; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 5px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; white-space: normal; }
+th { color: var(--muted); font-weight: 600; }
+.scroll { overflow-x: auto; }
+.bars .row { display: grid; grid-template-columns: minmax(118px, 44%) 1fr 70px; gap: 8px; align-items: center; font-size: 13px; margin: 5px 0; }
+.bars .lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bars .track { height: 14px; background: var(--line); border-radius: 4px; overflow: hidden; }
+.bars .fill { height: 100%; background: var(--a); border-radius: 4px; }
+.bars .num { text-align: right; font-variant-numeric: tabular-nums; }
+.cols { display: flex; align-items: stretch; gap: 2px; height: 150px; padding-top: 6px; }
+.cols .c { flex: 1; display: flex; flex-direction: column-reverse; min-width: 3px; height: 100%; }
+.cols .one { background: var(--a); }
+.cols .c span { display: block; }
+.cols .new { background: var(--a); }
+.cols .ret { background: var(--a-soft); }
+.axis { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; margin-top: 4px; }
+.legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.muted { color: var(--muted); }
+.msg { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+.pct { color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div><h1>🌭 Franks &amp; Buns stats</h1><div class="sub" id="asof">Private page. Every player counted, no names or IDs.</div></div>
+    <div class="range" id="range"><button data-d="7">7 days</button> <button data-d="30" class="on">30 days</button> <button data-d="90">90 days</button></div>
+  </header>
+  <div id="out"><div class="msg">Loading…</div></div>
+</main>
+<script>
+(function () {
+  var KEY_STORE = 'fb_stats_key';
+  function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  var key = decodeURIComponent((location.hash || '').replace(/^#(key=)?/, ''));
+  if (key) { set(KEY_STORE, key); history.replaceState(null, '', location.pathname + location.search); } else key = get(KEY_STORE) || '';
+  var params = new URLSearchParams(location.search), days = parseInt(params.get('days') || '30', 10) || 30, test = params.get('test') === '1';
+  var out = document.getElementById('out');
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function num(n) { return (n || 0).toLocaleString('en-US'); }
+  function pct(a, b) { return b ? Math.round(100 * a / b) + '%' : '–'; }
+  function sum(list, f) { return list.reduce(function (t, r) { return t + (Number(r[f]) || 0); }, 0); }
+  function addDays(d, n) { var t = Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)) + n * 864e5; return new Date(t).toISOString().slice(0, 10); }
+  function short(d) { var m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+d.slice(5, 7) - 1]; return m + ' ' + (+d.slice(8, 10)); }
+  function bars(rows, label, value, note) {
+    var max = Math.max.apply(null, rows.map(value).concat([1]));
+    return '<div class="bars">' + rows.map(function (r) {
+      var v = value(r);
+      return '<div class="row"><div class="lbl" title="' + esc(label(r)) + '">' + esc(label(r)) + '</div><div class="track"><div class="fill" style="width:' + (100 * v / max).toFixed(1) + '%"></div></div><div class="num">' + num(v) + (note ? ' <span class="pct">' + note(r) + '</span>' : '') + '</div></div>';
+    }).join('') + '</div>';
+  }
+  function tile(k, v, n) { return '<div class="tile"><div class="k">' + k + '</div><div class="v">' + v + '</div><div class="n">' + (n || '&nbsp;') + '</div></div>'; }
+  var NAMES = { ios: 'iPhone', android: 'Android', web: 'Web' };
+
+  document.getElementById('range').addEventListener('click', function (e) {
+    var d = e.target.getAttribute && e.target.getAttribute('data-d'); if (!d) return;
+    params.set('days', d); location.search = params.toString();
+  });
+  [].forEach.call(document.querySelectorAll('#range button'), function (b) { b.classList.toggle('on', +b.getAttribute('data-d') === days); });
+
+  if (!key) { out.innerHTML = '<div class="msg">This page needs its private link. Open the link you were given (it ends with <b>#</b> and a key).</div>'; return; }
+  fetch('/api/stats?days=' + days + (test ? '&test=1' : ''), { headers: { 'X-Stats-Key': key }, cache: 'no-store' })
+    .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || 'Could not load the stats.'); return j; }); })
+    .then(render)
+    .catch(function (e) { out.innerHTML = '<div class="msg">' + esc(e.message) + '</div>'; });
+
+  function render(d) {
+    document.getElementById('asof').textContent = 'Last ' + d.days + ' days (' + short(d.since) + ' – ' + short(d.today) + ', Pacific time). Every player counted, no names or IDs.' + (d.test ? ' Showing PREVIEW test data only.' : '');
+    // days in range
+    var dayList = []; for (var x = d.since; x <= d.today; x = addDays(x, 1)) dayList.push(x);
+    var byDay = {}; dayList.forEach(function (x) { byDay[x] = { games: 0, players: 0, nw: 0, ios: 0, android: 0, web: 0 }; });
+    d.daily.forEach(function (r) { var b = byDay[r.day]; if (!b) return; b.games += r.games; b.players += r.players; b.nw += r.new_players; b[r.plat] = (b[r.plat] || 0) + r.players; });
+    var games = sum(d.daily, 'games'), playerDays = sum(d.daily, 'players'), newP = sum(d.daily, 'new_players');
+    var dlIn = d.store.filter(function (r) { return r.day >= d.since; });
+    var dlIos = sum(dlIn.filter(function (r) { return r.store === 'ios'; }), 'n'), dlAnd = sum(dlIn.filter(function (r) { return r.store === 'android'; }), 'n');
+    var dlAll = sum(d.store, 'n');
+    var h = '<div class="tiles">' +
+      tile('New players', num(newP), 'first game ever on a device') +
+      tile('Players per day', (playerDays / dayList.length).toFixed(1), num(playerDays) + ' player-days in all') +
+      tile('Games played', num(games), (playerDays ? (games / playerDays).toFixed(1) : '0') + ' games per player a day') +
+      tile('App downloads', num(dlIos + dlAnd), 'iPhone ' + num(dlIos) + ' · Android ' + num(dlAnd) + (dlAll ? ' · ' + num(dlAll) + ' all time' : '')) +
+      '</div><div class="grid">';
+
+    // players per day
+    var maxP = Math.max.apply(null, dayList.map(function (x) { return byDay[x].players; }).concat([1]));
+    h += '<div class="card wide"><h2>Players per day</h2><p class="sub">Devices that played at least one game that day. Darker = playing for the first time.</p><div class="cols">' +
+      dayList.map(function (x) { var b = byDay[x]; return '<div class="c" title="' + short(x) + ': ' + b.players + ' players (' + b.nw + ' new), ' + b.games + ' games · iPhone ' + b.ios + ', Android ' + b.android + ', web ' + b.web + '"><span class="new" style="height:' + (100 * b.nw / maxP) + '%"></span><span class="ret" style="height:' + (100 * (b.players - b.nw) / maxP) + '%"></span></div>'; }).join('') +
+      '</div><div class="axis"><span>' + short(dayList[0]) + '</span><span>max ' + maxP + '</span><span>' + short(dayList[dayList.length - 1]) + '</span></div>' +
+      '<div class="legend"><span><i style="background:var(--a)"></i>New</span><span><i style="background:var(--a-soft)"></i>Returning</span></div>';
+    var plat = { ios: 0, android: 0, web: 0 }, platNew = { ios: 0, android: 0, web: 0 };
+    d.daily.forEach(function (r) { plat[r.plat] += r.players; platNew[r.plat] += r.new_players; });
+    h += '<div class="scroll"><table><tr><th>Where</th><th>Player-days</th><th>New players</th></tr>' + ['ios', 'android', 'web'].map(function (p) { return '<tr><td>' + NAMES[p] + '</td><td>' + num(plat[p]) + '</td><td>' + num(platNew[p]) + '</td></tr>'; }).join('') + '</table></div></div>';
+
+    // funnel
+    var f1 = d.funnel.filter(function (r) { return r.first === 1; })[0] || {}, fa = { n: 0 };
+    ['n', 'f1', 'f2', 'f5', 'b1', 's2', 's3', 'le100', 'wind', 'named'].forEach(function (k) { fa[k] = sum(d.funnel, k); });
+    function funnel(r) {
+      var steps = [['Played a game', r.n], ['Landed 1 frank', r.f1], ['Landed 2 franks', r.f2], ['Landed 5 franks', r.f5], ['Packed a box', r.b1], ['Reached stage 2', r.s2], ['Reached stage 3', r.s3]];
+      return bars(steps, function (s) { return s[0]; }, function (s) { return s[1] || 0; }, function (s) { return pct(s[1] || 0, r.n); });
+    }
+    h += '<div class="card"><h2>How far a first game gets</h2><p class="sub">Each new player’s very first game. ' + pct(f1.le100 || 0, f1.n) + ' scored 100 or less. Average ' + num(f1.secs) + ' seconds.</p>' + funnel(f1) + '</div>';
+    h += '<div class="card"><h2>How far every game gets</h2><p class="sub">All games. ' + pct(fa.le100, fa.n) + ' scored 100 or less. Second Wind used in ' + num(fa.wind) + ' games; ' + pct(fa.named, fa.n) + ' played by someone with a Dog House name.</p>' + funnel(fa) + '</div>';
+
+    // return rate
+    var today = d.today;
+    h += '<div class="card"><h2>Do new players come back?</h2><p class="sub">Of the devices that first played on a day, how many played again exactly 1, 7 and 30 days later.</p><div class="scroll"><table><tr><th>First played</th><th>New</th><th>Day 1</th><th>Day 7</th><th>Day 30</th></tr>' +
+      d.cohorts.filter(function (r) { return r.n > 0; }).slice().reverse().map(function (r) {
+        function cell(v, n) { return addDays(r.day, n) > today ? '<span class="muted">not yet</span>' : addDays(r.day, n) === today ? v + ' <span class="pct">so far</span>' : v + ' <span class="pct">' + pct(v, r.n) + '</span>'; }
+        return '<tr><td>' + short(r.day) + '</td><td>' + r.n + '</td><td>' + cell(r.d1, 1) + '</td><td>' + cell(r.d7, 7) + '</td><td>' + cell(r.d30, 30) + '</td></tr>';
+      }).join('') + '</table></div>' + (d.cohorts.length ? '' : '<p class="muted">No new players yet in this range.</p>') + '</div>';
+
+    // scores
+    h += '<div class="card"><h2>Scores</h2><p class="sub">How many games ended in each score range (first games in brackets).</p>' +
+      bars(d.scores, function (r) { return r.k; }, function (r) { return r.n; }, function (r) { return '(' + r.nf + ')'; }) + '</div>';
+
+    // improving
+    var NB = { 1: '1st game', 2: 'Games 2–5', 3: 'Games 6–20', 4: 'Game 21+' };
+    h += '<div class="card"><h2>Do players get better?</h2><p class="sub">Grouped by how many games the device had played.</p><div class="scroll"><table><tr><th>Group</th><th>Games</th><th>Avg score</th><th>Avg franks</th><th>2+ franks</th><th>Avg secs</th></tr>' +
+      d.byGames.map(function (r) { return '<tr><td>' + (NB[r.nb] || r.nb) + '</td><td>' + num(r.n) + '</td><td>' + num(r.score) + '</td><td>' + r.franks + '</td><td>' + pct(r.f2, r.n) + '</td><td>' + r.secs + '</td></tr>'; }).join('') + '</table></div></div>';
+
+    function topCard(title, rows, sub) { return '<div class="card"><h2>' + title + '</h2><p class="sub">' + sub + '</p>' + (rows.length ? bars(rows, function (r) { return r.k; }, function (r) { return r.n; }) : '<p class="muted">Nothing yet.</p>') + '</div>'; }
+    h += topCard('Game modes', d.modes, 'Games played in each mode.');
+    h += topCard('Costumes worn', d.skins, 'Games played in each costume.');
+    h += topCard('Kitchens', d.kitchens, 'Games played in each kitchen or venue.');
+    h += topCard('Countries', d.countries, 'Games by country (from the network, not stored per player).');
+    var hrs = []; for (var i = 0; i < 24; i++) hrs.push(0);
+    d.hours.forEach(function (r) { hrs[r.k] = r.n; });
+    var maxH = Math.max.apply(null, hrs.concat([1]));
+    h += '<div class="card"><h2>Time of day</h2><p class="sub">Games by hour, Pacific time.</p><div class="cols">' +
+      hrs.map(function (n, i) { return '<div class="c" title="' + ((i % 12) || 12) + (i < 12 ? ' AM' : ' PM') + ': ' + n + ' games"><span class="one" style="height:' + (100 * n / maxH) + '%"></span></div>'; }).join('') +
+      '</div><div class="axis"><span>12 AM</span><span>6 AM</span><span>Noon</span><span>6 PM</span><span>11 PM</span></div></div>';
+
+    var ev = {}; d.events.forEach(function (r) { ev[r.name] = (ev[r.name] || 0) + r.n; });
+    var EVN = { closet_open: 'Opened the costume closet', skin_pick: 'Changed costume', game_mode: 'Changed game mode', howto_video: 'Watched how-to video', share_score: 'Shared a score', bux_intro: 'Saw the BunBux intro' };
+    var picks = d.events.filter(function (r) { return r.name === 'skin_pick' && r.val; }).slice(0, 8);
+    h += '<div class="card"><h2>Screens and taps</h2><p class="sub">Counts in this range.</p>' +
+      bars(Object.keys(EVN).map(function (k) { return { k: EVN[k], n: ev[k] || 0 }; }), function (r) { return r.k; }, function (r) { return r.n; }) +
+      (picks.length ? '<p class="sub" style="margin-top:10px">Costumes picked most: ' + picks.map(function (r) { return esc(r.val) + ' (' + r.n + ')'; }).join(', ') + '</p>' : '') + '</div>';
+
+    var dh = d.dogHouses || {};
+    h += '<div class="card"><h2>Dog Houses and BunBux</h2><p class="sub">From the Dog House database.</p><table>' +
+      '<tr><td>Dog Houses created in range</td><td>' + num(dh.packs_new) + '</td></tr>' +
+      '<tr><td>Dog House joins in range</td><td>' + num(dh.joins_new) + '</td></tr>' +
+      '<tr><td>Dog Houses in all</td><td>' + num(dh.packs) + '</td></tr>' +
+      '<tr><td>Players with a name (new in range)</td><td>' + num(dh.named) + ' (' + num(dh.named_new) + ')</td></tr>' +
+      '<tr><td>Daily challenge done in range (last day each)</td><td>' + num(dh.daily_done) + '</td></tr></table></div>';
+
+    // downloads
+    var dl = {}; d.store.forEach(function (r) { (dl[r.day] = dl[r.day] || { ios: 0, android: 0 })[r.store] = r.n; });
+    var dlDays = Object.keys(dl).sort().reverse();
+    h += '<div class="card"><h2>App downloads</h2><p class="sub">First-time downloads from App Store Connect and Play Console (copied in from the stores, all time).</p>' +
+      (dlDays.length ? '<div class="scroll" style="max-height:320px;overflow-y:auto"><table><tr><th>Day</th><th>iPhone</th><th>Android</th></tr>' + dlDays.map(function (x) { return '<tr><td>' + short(x) + '</td><td>' + dl[x].ios + '</td><td>' + dl[x].android + '</td></tr>'; }).join('') + '</table></div>' : '<p class="muted">No store numbers entered yet.</p>') + '</div>';
+
+    if (d.older.length) h += '<div class="card"><h2>Older days</h2><p class="sub">Daily totals kept after the detailed rows were deleted (90 days).</p><p>' + num(sum(d.older, 'games')) + ' games, ' + num(sum(d.older, 'new_players')) + ' new players.</p></div>';
+    h += '</div>';
+    out.innerHTML = h;
+  }
+})();
+</script>
+</body>
+</html>
