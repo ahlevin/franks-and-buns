@@ -116,6 +116,19 @@ const SCHEMA = [
   `CREATE INDEX IF NOT EXISTS requests_player ON requests (player_id)`,
   `CREATE INDEX IF NOT EXISTS weekly_week ON weekly (week, best)`,   // last week's top dog
   `CREATE INDEX IF NOT EXISTS limits_day ON limits (day)`,            // clearing old counters
+  // Anonymous play stats (see "play stats" below): one row per finished game, no player, device or IP of any kind
+  `CREATE TABLE IF NOT EXISTS plays (day TEXT NOT NULL, hr INTEGER NOT NULL, plat TEXT NOT NULL, cc TEXT NOT NULL, inst TEXT NOT NULL,
+     first INTEGER NOT NULL, today1 INTEGER NOT NULL, nb INTEGER NOT NULL, mode TEXT NOT NULL, score INTEGER NOT NULL, boxes INTEGER NOT NULL,
+     franks INTEGER NOT NULL, secs INTEGER NOT NULL, stage INTEGER NOT NULL, wind INTEGER NOT NULL, skin TEXT NOT NULL, kitchen TEXT NOT NULL,
+     named INTEGER NOT NULL, test INTEGER NOT NULL)`,
+  `CREATE INDEX IF NOT EXISTS plays_day ON plays (day)`,
+  `CREATE TABLE IF NOT EXISTS ev (day TEXT NOT NULL, plat TEXT NOT NULL, name TEXT NOT NULL, val TEXT NOT NULL, test INTEGER NOT NULL)`,
+  `CREATE INDEX IF NOT EXISTS ev_day ON ev (day)`,
+  // daily totals kept after the 90-day-old rows are deleted
+  `CREATE TABLE IF NOT EXISTS plays_daily (day TEXT NOT NULL, plat TEXT NOT NULL, games INTEGER NOT NULL, players INTEGER NOT NULL,
+     new_players INTEGER NOT NULL, avg_score INTEGER NOT NULL, PRIMARY KEY (day, plat))`,
+  // store download numbers, entered from App Store Connect / Play Console for the stats page
+  `CREATE TABLE IF NOT EXISTS store_dl (day TEXT NOT NULL, store TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (day, store))`,
 ];
 const MAX_WAITING_PER_PACK = 50, MAX_REQUESTS_PER_PLAYER = 5;
 let schemaReady = false;
@@ -125,8 +138,9 @@ async function ensureSchema(db) {
   // and the full setup below only when a table, column or index is missing.
   try {
     const r = await db.prepare(`SELECT (SELECT rc_id FROM players LIMIT 0) AS c, (SELECT bux_skins FROM players LIMIT 0) AS b,
-        (SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name IN ('weekly_week', 'limits_day', 'requests_player', 'members_player')) AS ix`).first();
-    if (r && r.ix === 4) { schemaReady = true; return; }
+        (SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name IN ('weekly_week', 'limits_day', 'requests_player', 'members_player', 'plays_day', 'ev_day')) AS ix,
+        (SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN ('plays_daily', 'store_dl')) AS tb`).first();
+    if (r && r.ix === 6 && r.tb === 2) { schemaReady = true; return; }
   } catch (e) {}
   await db.batch(SCHEMA.map(s => db.prepare(s)));
   // Packs made before "approve to join" existed get the column (it already exists everywhere after the first run)
@@ -669,7 +683,99 @@ async function route(request, env, path) {
     return { ok: true, score: run.score, weekBest, newWeekBest: run.score >= weekBest,
       packs: results.map(r => ({ id: r.id, name: r.name, rank: r.ahead + 1, players: r.players })) };
   }
+  if (method === 'POST' && path === 'm') return playStat(db, request, body, ip, now);
+  if (path === 'stats' || path === 'stats/store') return statsRoute(db, request, body, path, now);
   fail(404, 'Not found.');
+}
+
+// ---------- play stats ----------
+// Anonymous play statistics (privacy.html, "Anonymous gameplay statistics"). The game sends one short summary when a game ends,
+// plus a few screen events. Nothing in a row says who or which device sent it: no player, token, nickname, device ID or IP.
+// Day-1/day-7 return is worked out from the day each device first played (a date shared by everyone who started that day).
+// Switch: "metrics" in flags.json (the game stops sending when it's off). Rows older than 90 days are deleted; daily totals stay.
+const PLAY_STATS_PER_NET_PER_DAY = 400;   // stops one network filling the database (and the free plan's daily writes)
+const PLAY_STATS_KEEP_DAYS = 90;
+const STAT_EVENTS = new Set(['closet_open', 'skin_pick', 'howto_video', 'share_score', 'bux_intro', 'game_mode']);
+// The stats page's key is never stored here, only its SHA-256 (the key itself is in the link Alan was given).
+const STATS_KEY_SHA256 = '3a0e7575a0e889fac4d9ad68d2b5e708bf1e02887443c2fd175522f98c4f6d98';
+const mStr = (v, max) => { v = String(v == null ? '' : v).toLowerCase(); return /^[a-z0-9_-]{1,60}$/.test(v) ? v.slice(0, max || 40) : ''; };
+const mInt = (v, max) => { v = Math.floor(Number(v)); return v >= 0 && v <= max ? v : 0; };
+const pacHour = ms => Number(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', hourCycle: 'h23' }).format(new Date(ms))) % 24;
+async function playStat(db, request, body, ip, now) {
+  if (!(await underLimit(db, 'ps:' + (await sha256(netOf(ip) + today())).slice(0, 32), PLAY_STATS_PER_NET_PER_DAY))) return { ok: true };
+  const day = pacDay(now), plat = ['ios', 'android'].includes(body.p) ? body.p : 'web';
+  let test = 0;
+  try { const o = new URL(request.headers.get('Origin') || request.headers.get('Referer') || 'https://franksandbuns.com'); test = /franksandbuns\.com$/.test(o.hostname) || o.hostname === 'localhost' && plat !== 'web' ? 0 : 1; } catch (e) {}
+  if (body.e === 'game') {
+    const cc = request.cf && /^[A-Z]{2}$/.test(String(request.cf.country || '')) ? request.cf.country : '';
+    const inst = body.inst === 'old' ? 'old' : /^\d{4}-\d{2}-\d{2}$/.test(String(body.inst)) && body.inst >= '2026-01-01' && body.inst <= day ? body.inst : '';
+    const nb = mInt(body.nb, 4) || 1, first = inst !== 'old' && body.f === 1 ? 1 : 0;
+    await db.prepare(`INSERT INTO plays (day, hr, plat, cc, inst, first, today1, nb, mode, score, boxes, franks, secs, stage, wind, skin, kitchen, named, test)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+      .bind(day, pacHour(now), plat, cc, inst, first, body.t === 1 || first ? 1 : 0, nb, mStr(body.m, 20) || 'classic', mInt(body.s, 1e8), mInt(body.b, 1e5),
+        mInt(body.fr, 1e6), mInt(body.sec, 86400), mInt(body.st, 1000), body.w === 1 ? 1 : 0, mStr(body.sk), mStr(body.k), body.nm === 1 ? 1 : 0, test).run();
+  } else if (STAT_EVENTS.has(body.e)) {
+    await db.prepare('INSERT INTO ev (day, plat, name, val, test) VALUES (?, ?, ?, ?, ?)').bind(day, plat, body.e, mStr(body.v), test).run();
+  } else fail(400, 'Unknown stat.');
+  if (Math.random() < 0.01) {   // now and then: keep daily totals for old days, then delete their rows
+    const cutoff = pacDay(now - PLAY_STATS_KEEP_DAYS * 864e5);
+    await db.batch([
+      db.prepare(`INSERT OR IGNORE INTO plays_daily (day, plat, games, players, new_players, avg_score)
+          SELECT day, plat, COUNT(*), SUM(today1), SUM(first), CAST(AVG(score) AS INTEGER) FROM plays WHERE day < ? AND test = 0 GROUP BY day, plat`).bind(cutoff),
+      db.prepare('DELETE FROM plays WHERE day < ?').bind(cutoff),
+      db.prepare('DELETE FROM ev WHERE day < ?').bind(cutoff),
+    ]);
+  }
+  return { ok: true };
+}
+
+async function statsRoute(db, request, body, path, now) {
+  const key = String(request.headers.get('X-Stats-Key') || '');
+  if (!key || key.length > 100 || (await sha256('fb-stats:' + key)) !== STATS_KEY_SHA256) fail(403, 'This page needs its private link.');
+  if (path === 'stats/store') {   // { store: 'ios' | 'android', days: { 'YYYY-MM-DD': n } }: first-time downloads copied from the stores
+    if (request.method !== 'POST') fail(405, 'Use POST.');
+    const store = body.store === 'android' ? 'android' : body.store === 'ios' ? 'ios' : fail(400, 'store must be ios or android');
+    const rows = Object.entries(body.days || {}).filter(([d, n]) => /^\d{4}-\d{2}-\d{2}$/.test(d) && Number.isInteger(n) && n >= 0 && n < 1e7).slice(0, 400);
+    for (let i = 0; i < rows.length; i += 50) await db.batch(rows.slice(i, i + 50).map(([d, n]) =>
+      db.prepare('INSERT INTO store_dl (day, store, n) VALUES (?, ?, ?) ON CONFLICT (day, store) DO UPDATE SET n = excluded.n').bind(d, store, n)));
+    return { ok: true, saved: rows.length };
+  }
+  const u = new URL(request.url), days = Math.min(90, Math.max(1, parseInt(u.searchParams.get('days') || '30', 10) || 30));
+  const test = u.searchParams.get('test') === '1' ? 1 : 0;   // test=1: only rows from preview copies of the site
+  const since = pacDay(now - (days - 1) * 864e5), sinceMs = now - days * 864e5;
+  const q = (sql, ...a) => db.prepare(sql).bind(...a);
+  const W = 'day >= ? AND test = ?';
+  const top = col => q(`SELECT ${col} AS k, COUNT(*) AS n FROM plays WHERE ${W} AND ${col} != '' GROUP BY ${col} ORDER BY n DESC LIMIT 12`, since, test);
+  const res = await db.batch([
+    q(`SELECT day, plat, COUNT(*) AS games, SUM(today1) AS players, SUM(first) AS new_players, CAST(AVG(score) AS INTEGER) AS avg_score
+       FROM plays WHERE ${W} GROUP BY day, plat ORDER BY day`, since, test),
+    q(`SELECT inst AS day, SUM(first) AS n,
+         SUM(CASE WHEN today1 = 1 AND day = date(inst, '+1 day') THEN 1 ELSE 0 END) AS d1,
+         SUM(CASE WHEN today1 = 1 AND day = date(inst, '+7 day') THEN 1 ELSE 0 END) AS d7,
+         SUM(CASE WHEN today1 = 1 AND day = date(inst, '+30 day') THEN 1 ELSE 0 END) AS d30
+       FROM plays WHERE ${W} AND inst >= ? GROUP BY inst ORDER BY inst`, since, test, since),
+    q(`SELECT first, COUNT(*) AS n, SUM(franks >= 1) AS f1, SUM(franks >= 2) AS f2, SUM(franks >= 5) AS f5, SUM(boxes >= 1) AS b1,
+         SUM(stage >= 2) AS s2, SUM(stage >= 3) AS s3, SUM(score <= 100) AS le100, SUM(wind) AS wind, SUM(named) AS named,
+         CAST(AVG(secs) AS INTEGER) AS secs, CAST(AVG(score) AS INTEGER) AS score
+       FROM plays WHERE ${W} GROUP BY first`, since, test),
+    q(`SELECT CASE WHEN score = 0 THEN '0' WHEN score <= 100 THEN '1-100' WHEN score <= 300 THEN '101-300' WHEN score <= 1000 THEN '301-1K'
+         WHEN score <= 5000 THEN '1K-5K' WHEN score <= 20000 THEN '5K-20K' WHEN score <= 100000 THEN '20K-100K' ELSE '100K+' END AS k,
+         MIN(score) AS lo, COUNT(*) AS n, SUM(first) AS nf FROM plays WHERE ${W} GROUP BY k ORDER BY lo`, since, test),
+    q(`SELECT nb, COUNT(*) AS n, CAST(AVG(score) AS INTEGER) AS score, ROUND(AVG(franks), 1) AS franks, CAST(AVG(secs) AS INTEGER) AS secs,
+         SUM(franks >= 2) AS f2 FROM plays WHERE ${W} GROUP BY nb ORDER BY nb`, since, test),
+    top('mode'), top('skin'), top('kitchen'), top('cc'),
+    q(`SELECT hr AS k, COUNT(*) AS n FROM plays WHERE ${W} GROUP BY hr ORDER BY hr`, since, test),
+    q(`SELECT name, val, COUNT(*) AS n FROM ev WHERE ${W} GROUP BY name, val ORDER BY n DESC LIMIT 60`, since, test),
+    q('SELECT day, store, n FROM store_dl ORDER BY day'),
+    q(`SELECT (SELECT COUNT(*) FROM packs WHERE created_at >= ?) AS packs_new, (SELECT COUNT(*) FROM members WHERE joined_at >= ?) AS joins_new,
+         (SELECT COUNT(*) FROM packs) AS packs, (SELECT COUNT(*) FROM players WHERE nickname != '') AS named,
+         (SELECT COUNT(*) FROM players WHERE nickname != '' AND created_at >= ?) AS named_new,
+         (SELECT COUNT(*) FROM players WHERE daily_last >= ?) AS daily_done`, sinceMs, sinceMs, sinceMs, since),
+    q('SELECT day, plat, games, players, new_players, avg_score FROM plays_daily ORDER BY day'),
+  ]);
+  const r = i => res[i].results;
+  return { days, since, today: pacDay(now), test: !!test, daily: r(0), cohorts: r(1), funnel: r(2), scores: r(3), byGames: r(4),
+    modes: r(5), skins: r(6), kitchens: r(7), countries: r(8), hours: r(9), events: r(10), store: r(11), dogHouses: r(12)[0] || {}, older: r(13) };
 }
 
 function corsHeaders(request) {
