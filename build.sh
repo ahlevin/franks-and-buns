@@ -26,6 +26,11 @@ if [ -d social ]; then
   cp -R social dist/
 fi
 
+# App Store review screenshots for in-app purchases (App Store Connect reads them; not linked from any page)
+if [ -d review-shots ]; then
+  cp -R review-shots dist/
+fi
+
 # Game sound files (WAV effects, intro, music) and their attribution
 if [ -d audio ]; then
   cp -R audio dist/
