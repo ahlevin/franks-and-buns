@@ -50,3 +50,7 @@
   Cache-Control: no-store
   Referrer-Policy: no-referrer
 
+
+/review-shots/*
+  Access-Control-Allow-Origin: https://appstoreconnect.apple.com
+  X-Robots-Tag: noindex
