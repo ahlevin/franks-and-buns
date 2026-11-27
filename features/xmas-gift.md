@@ -4,7 +4,7 @@ Every player can pick **one** costume that BunBux could unlock, for free. Limite
 It runs from **Dec 24 2026 00:00 to Jan 1 2027 23:59:59, California time**. It starts and stops on its own, with no deploy needed.
 
 ## What players see
-- On the start screen, the first time the game opens each day during the gift: a "Merry Christmas!" pop-up with **Pick my gift** and **Later**. After it has shown once, it waits until the next day.
+- On the start screen, the first time the game opens each day during the gift: a "Your free gift from Franks and Buns!" pop-up (wording avoids "Christmas" so nobody thinks it is a Christmas-themed costume) with **Pick my gift** and **Later**. After it has shown once, it waits until the next day.
 - Until they claim it, there is a red **FREE GIFT** tag on the SKINS button and a gift row at the top of the costume screen.
 - **Pick my gift** shows the costumes they can choose. They pick one, confirm it, and then see a thank-you screen. The costume is unlocked like a BunBux unlock and they start wearing it right away.
 - If the game can't reach the server (offline), nothing about the gift shows.

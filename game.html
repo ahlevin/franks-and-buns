@@ -4704,7 +4704,7 @@ function giftMaybe() {
   safeSet('fb_gift_day', fbDay());
   let b = document.getElementById('fb-gift');
   if (!b) {
-    b = document.createElement('div'); b.id = 'fb-gift'; b.setAttribute('role', 'dialog'); b.setAttribute('aria-label', 'Merry Christmas');
+    b = document.createElement('div'); b.id = 'fb-gift'; b.setAttribute('role', 'dialog'); b.setAttribute('aria-label', 'Your free gift from Franks and Buns');
     b.style.cssText = 'position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(10,5,0,.86);padding:16px;box-sizing:border-box';
     b.addEventListener('click', e => {
       const a = e.target.closest('[data-a]'), k = a && a.getAttribute('data-a');
@@ -4716,9 +4716,9 @@ function giftMaybe() {
     (document.body || document.documentElement).appendChild(b);
   }
   b.innerHTML = '<div style="max-width:360px;width:100%;background:linear-gradient(180deg,#3a0f0f,#2a1a0a 55%);border:2px solid #FFD700;box-shadow:0 0 0 4px #1f6b32;border-radius:18px;padding:20px 18px 14px;box-sizing:border-box;color:#f3e3c8;font:15px/1.4 Arial;max-height:100%;overflow-y:auto;text-align:center">' +
-    '<div style="font-size:40px;line-height:1">🎄🎁</div>' +
-    '<h2 style="margin:8px 0 6px;color:#FFD700;font:bold 26px Arial">Merry Christmas!</h2>' +
-    '<p style="margin:0 0 12px">Pick any BunBux costume, <b style="color:#9be29b">free</b> — our gift to you. Ends ' + packsEsc(giftEnds()) + '.</p>' +
+    '<div style="font-size:40px;line-height:1">🎁</div>' +
+    '<h2 style="margin:8px 0 6px;color:#FFD700;font:bold 22px Arial">Your free gift from Franks and Buns!</h2>' +
+    '<p style="margin:0 0 12px">Pick any BunBux costume and it’s yours, <b style="color:#9be29b">free</b>. Ends ' + packsEsc(giftEnds()) + '.</p>' +
     '<div style="display:flex;justify-content:center;gap:4px;margin:0 0 6px">' + list.slice(0, 4).map(s => '<img src="' + skinsPic(s) + '" alt="" style="width:70px;height:46px;object-fit:contain">').join('') + '</div>' +
     '<p style="margin:0;font-size:12px;color:#c8a878">One pick per player · ★ Limited Edition costumes aren’t included</p>' +
     '<button type="button" data-a="pick" style="display:block;width:100%;margin:14px 0 0;font:bold 17px Arial;border-radius:999px;padding:12px;border:none;background:#ff6600;color:#fff;cursor:pointer">🎁 Pick my gift</button>' +
@@ -4736,27 +4736,27 @@ const GIFT_ROW = 'border-color:#FFD700;background:linear-gradient(135deg,rgba(19
 function giftRowHtml() {   // the costume screen's way back to the gift
   if (giftLive() && !giftSt && !giftLoading && Date.now() - giftAt >= 120000) giftLoad().then(j => { if (j && skinsIsOpen() && !skinsTab) skinsRender(); });
   const list = giftChoices(); if (!list.length) return '';
-  return '<button type="button" class="fbs-col" data-tab="gift" style="' + GIFT_ROW + '"><span class="fbs-col-t"><b>🎁 Your free Christmas costume</b>' +
+  return '<button type="button" class="fbs-col" data-tab="gift" style="' + GIFT_ROW + '"><span class="fbs-col-t"><b>🎁 Your free gift from Franks and Buns</b>' +
     '<small style="color:#f3e3c3">Pick any BunBux costume, free · ends ' + packsEsc(giftEnds()) + '</small></span><span class="fbs-col-p">' +
     list.slice(0, 3).map(s => '<img src="' + skinsPic(s) + '" alt="" loading="lazy">').join('') + '</span><span class="fbs-col-a">›</span></button>';
 }
 function giftPickHtml(msg) {
   if (giftDone) {   // thank-you
     const s = skinById(giftDone);
-    return '<div class="fbs-buy"><div style="font-size:34px">🎄</div><img src="' + skinsPic(s) + '" alt="" style="width:200px;height:116px"><h3>' + packsEsc(s.name) + ' is yours!</h3>' +
-      '<p>You’re wearing it now. Thank you for playing Franks &amp; Buns, and Merry Christmas! 🎁</p>' +
+    return '<div class="fbs-buy"><div style="font-size:34px">🎁</div><img src="' + skinsPic(s) + '" alt="" style="width:200px;height:116px"><h3>' + packsEsc(s.name) + ' is yours!</h3>' +
+      '<p>You’re wearing it now. Enjoy your free gift, and thank you for playing Franks &amp; Buns! 🎁</p>' +
       '<button type="button" class="fbs-go" data-a="close">Let’s play!</button></div>';
   }
   if (giftPick) {   // confirm
     const s = skinById(giftPick);
     return '<div class="fbs-buy"><img src="' + skinsPic(s) + '" alt="" style="width:200px;height:116px"><h3>' + packsEsc(s.name) + '</h3>' +
-      '<p>Make <b>' + packsEsc(s.name) + '</b> your free Christmas gift?<br><span style="font-size:12px;color:#c8a878">You get one pick, and it’s yours to keep.</span></p>' +
+      '<p>Make <b>' + packsEsc(s.name) + '</b> your free gift?<br><span style="font-size:12px;color:#c8a878">You get one pick, and it’s yours to keep.</span></p>' +
       '<button type="button" class="fbs-go" data-a="giftok"' + (skinsBusy ? ' disabled' : '') + '>' + (skinsBusy ? 'One moment…' : '🎁 Yes, this is my gift') + '</button>' +
       '<button type="button" class="fbs-link" data-a="home">Pick a different one</button>' + msg + '</div>';
   }
   const list = giftChoices();
-  if (!list.length) return '<p class="fbs-sub">' + (giftSt && giftSt.claimed ? 'You already picked your gift. Merry Christmas! 🎄' : 'Checking your gift…') + '</p>' + msg;
-  return '<p class="fbs-sub">Pick any one of these costumes, free. Our gift to you, until ' + packsEsc(giftEnds()) + '.</p>' + msg +
+  if (!list.length) return '<p class="fbs-sub">' + (giftSt && giftSt.claimed ? 'You already picked your free gift. Enjoy! 🎁' : 'Checking your gift…') + '</p>' + msg;
+  return '<p class="fbs-sub">Your free gift from Franks and Buns: pick any one of these costumes, until ' + packsEsc(giftEnds()) + '.</p>' + msg +
     '<div class="fbs-grid">' + list.map(s => '<button type="button" class="fbs-skin" data-gift="' + s.id + '">' + skinsShineImg(s) + packsEsc(s.name) +
       '<small><span class="fbs-p" style="background:#1f9d4a">FREE</span></small></button>').join('') + '</div>';
 }
