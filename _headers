@@ -50,5 +50,3 @@
   Cache-Control: no-store
   Referrer-Policy: no-referrer
 
-/social/*
-  Access-Control-Allow-Origin: https://www.tiktok.com
