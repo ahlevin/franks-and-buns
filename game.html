@@ -4930,6 +4930,14 @@ function skinsOpen() {
       '#fb-skins .fbs-col.on{border-color:#FFD700}#fb-skins .fbs-col-t{flex:1;min-width:0;display:flex;flex-direction:column;font:15px Arial}#fb-skins .fbs-col-t b{color:#FFD700}' +
       '#fb-skins .fbs-col-t small{font:12px Arial;color:#c8a878;margin-top:2px}#fb-skins .fbs-col-p{display:flex;flex:none}#fb-skins .fbs-col-p img{width:46px;height:30px;object-fit:contain;margin-left:-6px}' +
       '#fb-skins .fbs-col-a{flex:none;color:#ffb347;font:bold 22px Arial}' +
+      '#fb-skins .fbs-khead{margin:4px 2px 6px}' +
+      '#fb-skins .fbs-kitrow{position:relative;margin-bottom:14px;padding:12px 14px;border:3px solid #3fe0ff;background:linear-gradient(135deg,rgba(40,90,170,.45),rgba(120,50,170,.35));box-shadow:0 0 12px rgba(63,224,255,.55);animation:fbsKGlow 2.4s ease-in-out infinite}' +
+      '#fb-skins .fbs-kitrow .fbs-col-t b{color:#fff;font-size:18px}#fb-skins .fbs-kitrow .fbs-col-t small{color:#bfe9ff}' +
+      '#fb-skins .fbs-kn{display:inline-block;background:#3fe0ff;color:#08203a;border-radius:999px;padding:1px 7px;font:bold 11px Arial;vertical-align:3px;margin-left:6px}' +
+      '#fb-skins .fbs-kpics{display:flex;gap:6px;margin-top:8px}#fb-skins .fbs-kpics img.fbs-kimg{flex:1;min-width:0;height:52px;object-fit:cover;border-radius:8px;border:2px solid rgba(255,255,255,.6)}' +
+      '#fb-skins .fbs-kgo{margin-top:8px;align-self:flex-start;background:#3fe0ff;color:#08203a;border-radius:999px;padding:5px 12px;font:bold 13px Arial}' +
+      '@keyframes fbsKGlow{0%,100%{box-shadow:0 0 8px rgba(63,224,255,.45)}50%{box-shadow:0 0 18px rgba(63,224,255,.9)}}' +
+      '@media (prefers-reduced-motion:reduce){#fb-skins .fbs-kitrow{animation:none}}' +
       '#fb-skins .fbs-body{overflow-y:auto;flex:1;min-height:0;-webkit-overflow-scrolling:touch}' +
       '#fb-skins .fbs-sub{text-align:center;color:#c8a878;font-size:13px;margin:0 0 12px}' +
       '#fb-skins .fbs-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}' +
@@ -5074,9 +5082,14 @@ let kitchenBuy = null;   // id of the kitchen on the BunBux confirm screen
 function kitchenLockText(k) { return k.how === 'earn' ? '🔒 ' + k.goal.text : k.how === 'bux' ? k.cost + ' BunBux' : ''; }
 function kitchensRowHtml() {
   const open = KITCHENS.filter(kitchenUnlocked).length, cur = SPORT ? kitchenPicked() : kitchenById(kitchenCur || 'classic');   // Soccer mode shows the kitchen picked for the normal game
-  return '<button type="button" class="fbs-col' + (skinsTab === 'kitchens' ? ' on' : '') + '" data-tab="kitchens"><span class="fbs-col-t"><b>🏙️ Kitchens</b>' +
-    '<small>Using: ' + packsEsc(cur.name) + ' · ' + open + ' of ' + KITCHENS.length + ' unlocked</small></span>' +
-    '<span class="fbs-col-p"><img class="fbs-kimg" src="' + kitchenPreview(cur) + '" alt=""></span><span class="fbs-col-a">›</span></button>';
+  // Highlighted card (cool cyan glow, three kitchen pictures) so players notice they can change where they play
+  const pics = [cur].concat(['nyc', 'vegas', 'sf', 'miami'].map(kitchenById).filter(k => k && k !== cur)).slice(0, 3);
+  return '<h4 class="fbs-kcat fbs-khead">🏙️ Where you play</h4>' +
+    '<button type="button" class="fbs-col fbs-kitrow' + (skinsTab === 'kitchens' ? ' on' : '') + '" data-tab="kitchens"><span class="fbs-col-t"><b>Kitchens <span class="fbs-kn">' + KITCHENS.length + ' places</span></b>' +
+    '<small>Using: ' + packsEsc(cur.name) + ' · ' + open + ' of ' + KITCHENS.length + ' unlocked</small>' +
+    '<span class="fbs-kpics">' + pics.map(k => '<img class="fbs-kimg" src="' + kitchenPreview(k) + '" alt="" loading="lazy">').join('') + '</span>' +
+    '<span class="fbs-kgo">Change your kitchen ›</span></span></button>' +
+    '<h4 class="fbs-kcat fbs-khead">👕 Costumes</h4>';
 }
 function kitchensListHtml(msg) {
   const promo = kitchenPromo() && !SKINS_ALL;
