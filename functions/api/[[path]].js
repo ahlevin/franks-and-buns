@@ -83,6 +83,8 @@ const BUX_DROPS = [
   [Date.UTC(2027, 9, 26, 8), ['bunnyhat', 'frogprince', 'potionexplosion', 'spellcheckwizard']],   // magicalmishaps
   [Date.UTC(2027, 10, 30, 8), ['bullettrain', 'dieselengine', 'holidaytrain', 'maglev', 'steamengine', 'subwaytrain']],   // allaboard
 ];
+// Adds one id to bux_skins (binds the id twice): the BunBux unlock and the Christmas gift grant costumes the same way
+const ADD_BUX_SKIN = "bux_skins = CASE WHEN bux_skins = '' THEN ? ELSE bux_skins || ',' || ? END";
 function buxSkinOk(id, now) {
   if (BUX_SKINS.has(id)) return true;
   return BUX_DROPS.some(([from, ids]) => now >= from && ids.indexOf(id) >= 0);
@@ -129,6 +131,9 @@ const SCHEMA = [
      new_players INTEGER NOT NULL, avg_score INTEGER NOT NULL, PRIMARY KEY (day, plat))`,
   // store download numbers, entered from App Store Connect / Play Console for the stats page
   `CREATE TABLE IF NOT EXISTS store_dl (day TEXT NOT NULL, store TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (day, store))`,
+  // free costume gifts (see "gift" below): one row per player per gift, so each gift can only be claimed once
+  `CREATE TABLE IF NOT EXISTS gift_claims (player_id TEXT NOT NULL, gift_id TEXT NOT NULL, skin TEXT NOT NULL, claimed_at INTEGER NOT NULL,
+     PRIMARY KEY (player_id, gift_id))`,
 ];
 const MAX_WAITING_PER_PACK = 50, MAX_REQUESTS_PER_PLAYER = 5;
 let schemaReady = false;
@@ -139,8 +144,8 @@ async function ensureSchema(db) {
   try {
     const r = await db.prepare(`SELECT (SELECT rc_id FROM players LIMIT 0) AS c, (SELECT bux_skins FROM players LIMIT 0) AS b,
         (SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name IN ('weekly_week', 'limits_day', 'requests_player', 'members_player', 'plays_day', 'ev_day')) AS ix,
-        (SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN ('plays_daily', 'store_dl')) AS tb`).first();
-    if (r && r.ix === 6 && r.tb === 2) { schemaReady = true; return; }
+        (SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN ('plays_daily', 'store_dl', 'gift_claims')) AS tb`).first();
+    if (r && r.ix === 6 && r.tb === 3) { schemaReady = true; return; }
   } catch (e) {}
   await db.batch(SCHEMA.map(s => db.prepare(s)));
   // Packs made before "approve to join" existed get the column (it already exists everywhere after the first run)
@@ -300,7 +305,12 @@ async function mergeOnRecover(db, p, old) {
   const skins = union(skinList(p), skinList(old)).slice(0, MAX_SKINS).join(',');
   const stmts = [];
   if (!old.nickname) {
-    const bs = union(buxOf(p).skins, buxOf(old).skins).join(',').slice(0, 8000);
+    // free gifts: the claim moves over with the profile, but a gift both profiles claimed stays one gift (the folded-in one's costume is left out)
+    const gifts = (await db.prepare('SELECT player_id, gift_id, skin FROM gift_claims WHERE player_id IN (?, ?)').bind(p.id, old.id).all()).results || [];
+    const dupe = gifts.filter(g => g.player_id === old.id && gifts.some(h => h.player_id === p.id && h.gift_id === g.gift_id)).map(g => g.skin);
+    const bs = union(buxOf(p).skins, buxOf(old).skins.filter(x => dupe.indexOf(x) < 0)).join(',').slice(0, 8000);
+    stmts.push(db.prepare('UPDATE OR IGNORE gift_claims SET player_id = ? WHERE player_id = ?').bind(p.id, old.id),
+      db.prepare('DELETE FROM gift_claims WHERE player_id = ?').bind(old.id));
     stmts.push(db.prepare('UPDATE players SET skins = ?, bux_skins = ?, bux = bux + COALESCE((SELECT bux FROM players WHERE id = ?), 0) WHERE id = ?')
         .bind(skins, bs, old.id, p.id),
       db.prepare('DELETE FROM requests WHERE player_id = ?').bind(old.id),
@@ -498,7 +508,7 @@ async function route(request, env, path) {
     const kitchen = Object.prototype.hasOwnProperty.call(BUX_KITCHENS, id), cost = kitchen ? BUX_KITCHENS[id] : BUX.cost, what = kitchen ? 'kitchen' : 'costume';
     if (BUX_LIMITED.has(id)) fail(400, 'Limited Edition costumes can only be bought, not unlocked with BunBux.');
     if (!kitchen && !buxSkinOk(id, Date.now())) fail(400, 'That costume can’t be unlocked with BunBux.');
-    const r = await db.prepare(`UPDATE players SET bux = bux - ${cost}, bux_skins = CASE WHEN bux_skins = '' THEN ? ELSE bux_skins || ',' || ? END
+    const r = await db.prepare(`UPDATE players SET bux = bux - ${cost}, ${ADD_BUX_SKIN}
         WHERE id = ? AND bux >= ${cost} AND instr(',' || bux_skins || ',', ?) = 0 AND length(bux_skins) < 8000
         RETURNING bux, bux_skins, daily_last, daily_streak`).bind(id, id, p.id, ',' + id + ',').first();
     if (r) return { bux: buxOf(r), unlocked: id };
@@ -529,6 +539,7 @@ async function route(request, env, path) {
       db.prepare('DELETE FROM weekly WHERE player_id = ?').bind(p.id),
       db.prepare('DELETE FROM requests WHERE player_id = ?').bind(p.id),
       db.prepare('DELETE FROM limits WHERE k = ?').bind('nk:' + p.id),
+      db.prepare('DELETE FROM gift_claims WHERE player_id = ?').bind(p.id),
       db.prepare('DELETE FROM players WHERE id = ?').bind(p.id),
     ]);
     // RevenueCat keeps a customer record per buyer id. Remove it too (Cloudflare Pages secret RC_SECRET_KEY, a RevenueCat
@@ -683,9 +694,71 @@ async function route(request, env, path) {
     return { ok: true, score: run.score, weekBest, newWeekBest: run.score >= weekBest,
       packs: results.map(r => ({ id: r.id, name: r.name, rank: r.ahead + 1, players: r.players })) };
   }
+  if (path === 'gift' || path === 'gift/claim') return giftRoute(db, request, env, body, path, now);
   if (method === 'POST' && path === 'm') return playStat(db, request, body, ip, now);
   if (path === 'stats' || path === 'stats/store') return statsRoute(db, request, body, path, now);
   fail(404, 'Not found.');
+}
+
+// ---------- free costume gift (Christmas 2026) ----------
+// Each player can pick ONE BunBux costume for free while the gift is on (switch: "xmasgift" in flags.json, dates: "xmasgiftwindow",
+// both read from the site's own flags.json). The window is in UTC: Dec 24 2026 00:00 to the end of Jan 1 2027, California time.
+// The costume is granted exactly like a BunBux unlock (bux_skins), minus the BunBux. gift_claims keeps one row per player per gift.
+// Test copies only (pages.dev, localhost): the game sends test=1 for ?xmasgift=test and the gift counts as on and open.
+const GIFT_DEFAULT = { id: 'xmas2026', start: '2026-12-24T08:00:00Z', end: '2027-01-02T08:00:00Z' };   // end: the moment it stops
+let giftFlags = null, giftFlagsAt = 0;
+async function giftConfig(request, env, now) {
+  if (!giftFlags || now - giftFlagsAt > 60000) {
+    let f = null;
+    try {
+      const u = new URL('/flags.json', request.url);
+      const r = env.ASSETS ? await env.ASSETS.fetch(u.toString()) : await fetch(u.toString());
+      if (r.ok) f = await r.json();
+    } catch (e) {}
+    if (f || !giftFlags) { giftFlags = f || {}; giftFlagsAt = now; }
+  }
+  const w = giftFlags.xmasgiftwindow && typeof giftFlags.xmasgiftwindow === 'object' ? giftFlags.xmasgiftwindow : {};
+  const id = /^[a-z0-9_-]{1,30}$/.test(String(w.id || '')) ? w.id : GIFT_DEFAULT.id;
+  const start = Date.parse(w.start || GIFT_DEFAULT.start), end = Date.parse(w.end || GIFT_DEFAULT.end);
+  let test = false;
+  try { test = /\.pages\.dev$|^localhost$|^127\.0\.0\.1$/.test(new URL(request.url).hostname); } catch (e) {}
+  const force = test && (new URL(request.url).searchParams.get('test') === '1');
+  const open = force || (giftFlags.xmasgift === true && start > 0 && end > start && now >= start && now < end);
+  return { id, start, end, open, test: force };
+}
+// Costumes the gift can be: the same ones BunBux can unlock today (BUX_SKINS plus dropped Collections), never Limited Edition
+function giftEligible(now) {
+  const out = [...BUX_SKINS];
+  BUX_DROPS.forEach(([from, ids]) => { if (now >= from) ids.forEach(id => { if (!BUX_LIMITED.has(id) && out.indexOf(id) < 0) out.push(id); }); });
+  return out;
+}
+async function giftRoute(db, request, env, body, path, now) {
+  const g = await giftConfig(request, env, now);
+  if (path === 'gift' && request.method === 'GET') {   // is there a gift to claim? (works without a profile: nothing claimed yet)
+    const p = await authPlayer(db, request);
+    const c = p && await db.prepare('SELECT skin FROM gift_claims WHERE player_id = ? AND gift_id = ?').bind(p.id, g.id).first();
+    const owned = p ? buxOf(p).skins.concat(skinList(p)) : [];
+    return { gift: g.id, open: g.open, start: g.start, end: g.end, claimed: !!c, skin: c ? c.skin : '',
+      eligible: g.open && !c ? giftEligible(now).filter(id => owned.indexOf(id) < 0) : [] };
+  }
+  if (path !== 'gift/claim' || request.method !== 'POST') fail(404, 'Not found.');
+  if (!g.open) fail(403, 'The holiday gift isn’t available right now.');
+  const p = await needPlayer(db, request);
+  const id = String(body.skin || '');
+  if (!/^[a-z]{2,24}$/.test(id) || BUX_LIMITED.has(id) || !buxSkinOk(id, now)) fail(400, 'That costume can’t be your gift. Pick one you could unlock with BunBux.');
+  const c = await db.prepare('SELECT skin FROM gift_claims WHERE player_id = ? AND gift_id = ?').bind(p.id, g.id).first();
+  if (c) fail(409, 'You already picked your free gift.');
+  if (buxOf(p).skins.concat(skinList(p)).indexOf(id) >= 0) fail(409, 'You already have that costume. Pick another one.');
+  // one transaction: the claim row first (the primary key stops a second claim), then the costume, only for the claim just made
+  const res = await db.batch([
+    db.prepare('INSERT OR IGNORE INTO gift_claims (player_id, gift_id, skin, claimed_at) VALUES (?, ?, ?, ?)').bind(p.id, g.id, id, now),
+    db.prepare(`UPDATE players SET ${ADD_BUX_SKIN} WHERE id = ? AND instr(',' || bux_skins || ',', ?) = 0 AND length(bux_skins) < 8000
+        AND (SELECT skin FROM gift_claims WHERE player_id = ? AND gift_id = ? AND claimed_at = ?) = ?
+        RETURNING bux, bux_skins, daily_last, daily_streak`).bind(id, id, p.id, ',' + id + ',', p.id, g.id, now, id),
+  ]);
+  const r = res[1].results && res[1].results[0];
+  if (!r) fail(409, 'You already picked your free gift.');
+  return { bux: buxOf(r), unlocked: id, gift: g.id, claimed: true, skin: id };
 }
 
 // ---------- play stats ----------
