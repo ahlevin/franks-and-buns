@@ -2853,8 +2853,9 @@ if (!(bestScore >= 0 && bestScore < 1e9)) bestScore = 0;
 // mergecode: entering a recovery code brings along what this device already had (BunBux, costumes, best score) instead of leaving it behind.
 // firsttips starts on, so a brand-new player gets the tips even before flags.json arrives; flags.json can still turn it off.
 // metrics: anonymous play stats (one short summary per finished game, see "Anonymous play stats" below).
+// realms: secret passages to timed bonus realms mid-run (see "Secret Realms"); test copies: ?realms=on, ?realm=test.
 // xmasgift: one free BunBux costume per player, only between the dates in "xmasgiftwindow" (see "Christmas gift" below).
-const FEAT = { xmasgift: false, metrics: false, stages: false, secondwind: false, firsttips: true, mergecode: false, christmas: false, soccer: false, basketball: false, football: false, waterpolo: false, golf: false, baseball: false, cricket: false, hockey: false };
+const FEAT = { xmasgift: false, metrics: false, stages: false, secondwind: false, firsttips: true, mergecode: false, christmas: false, realms: false, soccer: false, basketball: false, football: false, waterpolo: false, golf: false, baseball: false, cricket: false, hockey: false };
 // sportdates: optional windows for the sports, e.g. { "soccer": { "from": "2026-12-01", "until": "2027-01-05" } } (dates on the
 // player's clock, both days included). A sport shows only while its switch is on AND today is inside its window (no window = always).
 // sportstag: the badge on every sport card in the picker ("" hides it). Kept apart from the true/false switches so older copies ignore them.
@@ -3258,6 +3259,251 @@ function drawStageBanner() {
   ctx.fillStyle = '#FFD700'; ctx.font = 'bold 15px Arial'; ctx.fillText('STAGE ' + stage, W/2, y - 14);
   ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 24px Arial'; ctx.fillText(stageName(stage).toUpperCase(), W/2, y + 16);
   ctx.restore();
+}
+
+// --- Secret Realms (switch: FEAT.realms in flags.json). Now and then, mid-run, a faint flickering "passage" drifts through the
+// kitchen at a random height. It is not announced: the only hint is a few glowing characters that drip down the right edge just
+// before it arrives. Fly the hot dog into it and the run leaves the kitchen for a realm: a short timed stay (REALM.frames) where every
+// bun pays a big multiplier that grows with each landing in a row (x5, x10, x15 ... up to REALM.maxMult). In a realm a miss or the floor
+// costs no life, it only drops the multiplier back to the start. Then the run comes back to the kitchen where it left off, with a
+// moment of grace. Realm landings don't fill boxes (so a Dog Parade can't start inside a realm), but they do count for streaks.
+// Points stay inside the server's score check: plain realm buns are 100 x mult x streak (at most 100 x 25 x 3 = 7,500 a bun).
+// Test copies (any *.pages.dev preview, localhost): ?realms=on|off forces the switch, ?realm=test also makes the passage show up
+// about 4 s into every run and again soon after each visit, with no limit on visits.
+const REALMS = {
+  code: { id: 'code', name: 'THE CODE REALM', frames: 720, maxMult: 25, startMult: 5, step: 5,
+          glyphs: '01FRANKBUNS01<>{}[]/=+*01HOTDOG', ink: '#39FF6A', inkDim: '57,255,106', bg: '#020a04' },
+};
+const REALM_ORDER = ['code'];          // future realms join this list (see the PR for the ideas)
+const REALM_IN = 75, REALM_OUT = 75;   // transition frames in and out
+const REALM_MAX_VISITS = 2;            // per run
+const REALM_TESTHOST = /\.pages\.dev$|^localhost$|^127\.0\.0\.1$/.test(location.hostname);
+const REALM_Q = REALM_TESTHOST ? new URLSearchParams(location.search) : null;
+const REALM_TEST = !!(REALM_Q && REALM_Q.get('realm') === 'test');
+const REALM_FORCE = REALM_Q && (REALM_Q.get('realms') === 'on' || REALM_Q.get('realms') === 'off') ? REALM_Q.get('realms') === 'on' : null;
+function realmsOn() { return REALM_TEST || (REALM_FORCE !== null ? REALM_FORCE : !!FEAT.realms); }
+let realm = null, passage = null, realmWait = 0, realmHint = 0, realmHintY = 0, realmVisits = 0, realmRain = null, realmLastTotal = 0;
+function realmFirstWait() { return REALM_TEST ? 240 : 1500 + Math.floor(Math.random() * 1500); }    // 25-50 s of play (after the first box)
+function realmNextWait() { return REALM_TEST ? 600 : 2400 + Math.floor(Math.random() * 1800); }   // 40-70 s
+function realmReset() { realm = null; passage = null; realmHint = 0; realmVisits = 0; realmLastTotal = 0; realmWait = realmFirstWait(); }
+function realmCur() { return REALMS[REALM_ORDER[(realmVisits - 1 + REALM_ORDER.length) % REALM_ORDER.length]] || REALMS.code; }
+function realmNextDef() { return REALMS[REALM_ORDER[realmVisits % REALM_ORDER.length]] || REALMS.code; }
+// the passage: count down while playing, hint, then drift in from the right
+function realmPassageUpdate() {
+  if (!realmsOn() || realm) return;
+  if (passage) {
+    passage.x -= scrollSpeed; passage.t++;
+    if (frank.alive && Math.abs(frank.x - passage.x) < 18 + frankGrowX() && Math.abs(frank.y - passage.y) < 44) { enterRealm(); return; }
+    if (passage.x < -40) { passage = null; realmWait = realmNextWait(); }
+    return;
+  }
+  if (!REALM_TEST && (boxesCompleted < 1 || realmVisits >= REALM_MAX_VISITS)) return;
+  if (realmHint > 0) {
+    if (--realmHint === 0) {
+      if (forks.some(f => f.x > W - 140)) { realmHint = 1; return; }   // never arrive on top of a fork: wait a moment
+      passage = { x: W + 30, y: realmHintY, t: 0, def: realmNextDef() };
+    }
+    return;
+  }
+  if (--realmWait <= 0) { realmHint = 80; realmHintY = H * (0.2 + Math.random() * 0.4); }
+}
+function enterRealm() {
+  const def = passage ? passage.def : REALMS.code;
+  realmVisits++;
+  realm = { def: def, phase: 'in', t: 0, mult: def.startMult, chain: 0, total: 0, best: def.startMult };
+  passage = null; realmHint = 0;
+  buns = []; forks = []; gameDogs = []; chili = null;
+  frank.vy = 0;
+  realmRainInit();
+  sndRealmIn(); shakeAmount = 6;
+}
+function exitRealmDone() {
+  realmLastTotal = realm ? realm.total : 0;
+  realm = null; realmWait = realmNextWait();
+  buns = []; nextBunDist = 150; nextForkDist = Math.max(nextForkDist, 420);
+  gracePeriod = Math.max(gracePeriod, 120);
+  frank.vy = -2;
+}
+// returns true while a transition holds the run still (update() then stops there)
+function realmUpdate() {
+  if (!realm) return false;
+  realm.t++;
+  realmRainStep(realm.phase === 'stay' ? 1 : 2.2);
+  if (realm.phase === 'in') {
+    realmFxStep();
+    if (realm.t >= REALM_IN) {
+      realm.phase = 'stay'; realm.t = 0; realmSpawnBun(W * 0.62); nextBunDist = 120;   // the first bun is already on its way
+      frank.y = Math.min(Math.max(frank.y, H * 0.25), H * 0.6);
+      addFloatingText(W / 2, H * 0.42, realm.def.name, realm.def.ink, 28);
+      addFloatingText(W / 2, H * 0.42 + 34, 'EVERY BUN x' + realm.def.startMult + ' AND CLIMBING', '#FFFFFF', 16);
+    }
+    return true;
+  }
+  if (realm.phase === 'out') {
+    realmFxStep();
+    if (realm.t === 1) { addFloatingText(W / 2, H * 0.42, 'BACK TO THE KITCHEN', '#FFFFFF', 24); addFloatingText(W / 2, H * 0.42 + 32, 'REALM TOTAL +' + realm.total.toLocaleString(), realm.def.ink, 22); }
+    if (realm.t >= REALM_OUT) exitRealmDone();
+    return true;
+  }
+  if (realm.t >= realm.def.frames) { realm.phase = 'out'; realm.t = 0; buns = []; sndRealmOut(); shakeAmount = 6; return true; }
+  return false;
+}
+function realmFxStep() {   // particles and floating texts keep moving during a transition
+  for (let i = particles.length - 1; i >= 0; i--) { const p = particles[i]; p.x += p.vx; p.y += p.vy; p.vy += 0.1; if (--p.life <= 0) particles.splice(i, 1); }
+  for (let i = floatingTexts.length - 1; i >= 0; i--) { const ft = floatingTexts[i]; ft.y += ft.vy * 0.4; if (--ft.life <= 0) floatingTexts.splice(i, 1); }
+  shakeAmount *= 0.85; if (shakeAmount < 0.5) shakeAmount = 0;
+}
+function realmSpawnBun(x0) {
+  const x = x0 || W + 60, prev = buns.length ? buns[buns.length - 1] : null;
+  let y = H * (0.2 + Math.random() * 0.5);
+  if (prev) { const n = Math.max((x - prev.x) / scrollSpeed, 1); y = Math.min(Math.max(y, prev.y - 3 * n), prev.y + 2.2 * n); }
+  y = Math.min(Math.max(y, H * 0.16), H * 0.72);
+  buns.push({ x: x, y: y, type: { name: 'realm', label: null, multiplier: 1, color: '#2a6' }, condiment: null, scored: false, missed: false,
+    bobPhase: Math.random() * Math.PI * 2, moveY: null, moveDir: 1, grillTimer: 0, grilled: false, realm: true });
+}
+function realmLand(bun) {
+  streak++; franksLanded++; if (streak > bestStreak) bestStreak = streak;
+  const sm = streak >= 10 ? 3 : streak >= 5 ? 2 : streak >= 3 ? 1.5 : 1;
+  const pts = Math.floor(100 * realm.mult * sm);
+  score += pts; realm.total += pts;
+  addFloatingText(bun.x, bun.y - 22, '+' + pts.toLocaleString() + ' x' + realm.mult, realm.def.ink, 22);
+  addParticles(bun.x, bun.y, realm.def.ink, 14); shakeAmount = 4; sndLand(); sndRealmBlip(realm.chain);
+  realm.chain++; realm.mult = Math.min(realm.def.maxMult, realm.def.startMult + realm.chain * realm.def.step);
+  if (realm.mult > realm.best) realm.best = realm.mult;
+  frank.vy = FLAP_POWER * 0.7; frank.squash = 0.7; frank.stretch = 1.4;
+}
+function realmMiss() {   // no life lost in a realm: the multiplier starts over
+  streak = 0;
+  if (realm.chain > 0) addFloatingText(Math.max(frank.x + 60, 120), frank.y - 30, 'x' + realm.def.startMult, '#BBBBBB', 20);
+  realm.chain = 0; realm.mult = realm.def.startMult;
+}
+function realmFloor() { frank.vy = FLAP_POWER; frank.squash = 1.3; frank.stretch = 0.7; if (realm.phase === 'stay') realmMiss(); }
+// sounds (drawn from tones, no files)
+function sndRealmIn() { [880, 660, 494, 370, 277, 208].forEach((f, i) => setTimeout(() => playTone(f, 0.09, 'square', 0.07), i * 55)); setTimeout(() => playTone(110, 0.5, 'sawtooth', 0.06), 330); }
+function sndRealmOut() { [208, 277, 370, 494, 660, 880].forEach((f, i) => setTimeout(() => playTone(f, 0.09, 'square', 0.07), i * 55)); }
+function sndRealmBlip(n) { const f = 520 * Math.pow(1.122, Math.min(n, 8)); playTone(f, 0.06, 'square', 0.06); setTimeout(() => playTone(f * 1.5, 0.08, 'square', 0.05), 60); }
+// --- drawing: falling characters, made in code (no image files)
+function realmRainInit() {
+  const g = (realm ? realm.def : REALMS.code).glyphs, cols = Math.ceil(W / 16) + 1;
+  realmRain = [];
+  for (let i = 0; i < cols; i++) realmRain.push({ x: i * 16 + 8, y: -Math.random() * H, sp: 2 + Math.random() * 3.5, len: 8 + Math.floor(Math.random() * 12),
+    ch: Array.from({ length: 22 }, () => g[Math.floor(Math.random() * g.length)]) });
+}
+function realmRainStep(k) {
+  if (!realmRain) return;
+  const g = realm ? realm.def.glyphs : REALMS.code.glyphs;
+  for (const c of realmRain) {
+    c.y += c.sp * k;
+    if (c.y - c.len * 16 > H) { c.y = -Math.random() * 120; c.sp = 2 + Math.random() * 3.5; }
+    if (Math.random() < 0.08) c.ch[Math.floor(Math.random() * c.ch.length)] = g[Math.floor(Math.random() * g.length)];
+  }
+}
+function drawRealmRain(alpha) {
+  if (!realmRain) return;
+  const d = realm ? realm.def : REALMS.code;
+  ctx.save(); ctx.font = 'bold 15px "Courier New", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (const c of realmRain) {
+    for (let k = 0; k < c.len; k++) {
+      const y = c.y - k * 16; if (y < -16 || y > H + 16) continue;
+      if (k === 0) ctx.fillStyle = `rgba(220,255,225,${alpha})`;
+      else ctx.fillStyle = `rgba(${d.inkDim},${alpha * 0.55 * (1 - k / c.len)})`;
+      ctx.fillText(c.ch[(k + Math.floor(c.y / 16)) % c.ch.length], c.x, y);
+    }
+  }
+  ctx.restore();
+}
+function realmInView() { return !!realm && !(realm.phase === 'in' && realm.t < 40) && !(realm.phase === 'out' && realm.t >= 38); }
+function drawRealmBG() {
+  const d = realm.def;
+  ctx.fillStyle = d.bg; ctx.fillRect(0, 0, W, H);
+  // a faint scrolling grid floor gives the sense of speed
+  ctx.save(); ctx.strokeStyle = `rgba(${d.inkDim},0.10)`; ctx.lineWidth = 1;
+  for (let gx = -(scrollX % 40); gx < W; gx += 40) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke(); }
+  for (let gy = 20; gy < H; gy += 40) { ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke(); }
+  ctx.restore();
+  drawRealmRain(0.75);
+  ctx.fillStyle = 'rgba(0,0,0,0.18)'; for (let y = 0; y < H; y += 4) ctx.fillRect(0, y, W, 1);   // scanlines
+  const g = ctx.createLinearGradient(0, 0, 0, 110); g.addColorStop(0, 'rgba(0,0,0,0.85)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, 110);   // keeps the score readable
+  if (frank.alive) {   // soft glow behind the hot dog so it pops on the dark screen
+    const fg = ctx.createRadialGradient(frank.x, frank.y, 4, frank.x, frank.y, 52);
+    fg.addColorStop(0, `rgba(${d.inkDim},0.35)`); fg.addColorStop(1, `rgba(${d.inkDim},0)`);
+    ctx.fillStyle = fg; ctx.fillRect(frank.x - 52, frank.y - 52, 104, 104);
+  }
+}
+function drawRealmBun(b) {
+  const d = realm ? realm.def : REALMS.code, x = b.x, y = b.y + Math.sin(b.bobPhase) * 3, hw = BUN_W / 2, hh = BUN_H / 2;
+  ctx.save(); ctx.translate(x, y);
+  ctx.beginPath(); ctx.moveTo(-hw + 7, 1); ctx.lineTo(hw - 7, 1); ctx.bezierCurveTo(hw + 5, 1, hw + 5, hh + 5, hw - 7, hh + 5); ctx.lineTo(-hw + 7, hh + 5); ctx.bezierCurveTo(-hw - 5, hh + 5, -hw - 5, 1, -hw + 7, 1); ctx.closePath();
+  ctx.fillStyle = 'rgba(0,40,12,0.9)'; ctx.fill();
+  ctx.shadowColor = d.ink; ctx.shadowBlur = b.scored ? 4 : 12; ctx.strokeStyle = d.ink; ctx.lineWidth = 2; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-hw + 2, -2); ctx.bezierCurveTo(-hw + 2, -hh - 6, hw - 2, -hh - 6, hw - 2, -2); ctx.stroke();   // top half, open
+  ctx.shadowBlur = 0; ctx.strokeStyle = `rgba(${d.inkDim},0.45)`; ctx.lineWidth = 1;
+  for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.moveTo(i * 10, 3); ctx.lineTo(i * 10, hh + 3); ctx.stroke(); }
+  if (!b.scored && realm && realm.phase === 'stay') {
+    ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 13px "Courier New", monospace'; ctx.textAlign = 'center';
+    ctx.fillText('x' + realm.mult, 0, -hh - 10);
+  }
+  ctx.restore();
+}
+function drawPassage() {
+  if (!realmsOn()) return;
+  const d = (passage && passage.def) || realmNextDef();
+  ctx.save(); ctx.font = 'bold 13px "Courier New", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  if (realmHint > 0 && !passage) {   // the only hint: a few characters dripping down the right edge
+    const t = 80 - realmHint;
+    for (let i = 0; i < 4; i++) {
+      const yy = t * 4 - i * 15; if (yy < 0) continue;
+      ctx.fillStyle = `rgba(${d.inkDim},${0.7 - i * 0.15})`;
+      ctx.fillText(d.glyphs[(i + Math.floor(t / 6)) % d.glyphs.length], W - 14, Math.min(yy, realmHintY));
+    }
+  }
+  if (passage) {
+    const p = passage, flick = 0.45 + 0.35 * ((Math.floor(p.t / 3) * 7919) % 10) / 10;
+    const jx = (Math.floor(p.t / 4) % 9 === 0) ? (Math.random() - 0.5) * 8 : 0;
+    ctx.globalAlpha = flick;
+    ctx.fillStyle = 'rgba(0,12,4,0.75)'; ctx.fillRect(p.x - 13 + jx, p.y - 42, 26, 84);
+    ctx.beginPath(); ctx.rect(p.x - 13 + jx, p.y - 42, 26, 84); ctx.clip();
+    for (let i = 0; i < 7; i++) {
+      const yy = p.y - 42 + ((p.t * 2.5 + i * 13) % 98) - 7;
+      ctx.fillStyle = i % 3 === 0 ? 'rgba(220,255,225,0.95)' : `rgba(${d.inkDim},0.85)`;
+      ctx.fillText(d.glyphs[(i * 5 + Math.floor(p.t / 5)) % d.glyphs.length], p.x + jx + (i % 2 ? 4 : -4), yy);
+    }
+    ctx.restore(); ctx.save(); ctx.globalAlpha = flick;
+    ctx.strokeStyle = d.ink; ctx.lineWidth = 1; ctx.strokeRect(p.x - 13 + jx + 0.5, p.y - 42 + 0.5, 25, 83);
+  }
+  ctx.restore();
+}
+function drawRealmOverlay() {   // the transitions in and out, and the timer bar while inside
+  if (!realm) return;
+  const d = realm.def, t = realm.t;
+  if (realm.phase === 'in' || realm.phase === 'out') {
+    let dark;
+    if (realm.phase === 'in') dark = t < 40 ? t / 40 : 1 - (t - 40) / 35;
+    else dark = t < 38 ? t / 38 : 1 - (t - 38) / 37;
+    // glitch: shift a few bands of the picture sideways
+    const k = canvas.width / W;
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+    for (let i = 0; i < 5; i++) {
+      const sy = Math.floor(Math.random() * H), sh = 6 + Math.floor(Math.random() * 26), dx = (Math.random() - 0.5) * 40 * Math.sin(Math.PI * Math.min(1, dark + 0.1));
+      try { ctx.drawImage(canvas, 0, sy * k, canvas.width, sh * k, dx * k, sy * k, canvas.width, sh * k); } catch (e) {}
+    }
+    ctx.restore();
+    ctx.fillStyle = `rgba(0,0,0,${Math.max(0, Math.min(1, dark)) * 0.92})`; ctx.fillRect(0, 0, W, H);
+    drawRealmRain(Math.min(1, dark * 1.4));
+    if (realm.phase === 'in' && t < 50) {
+      ctx.save(); ctx.globalAlpha = Math.min(1, t / 10, (50 - t) / 10); ctx.textAlign = 'center';
+      ctx.fillStyle = d.ink; ctx.font = 'bold 22px "Courier New", monospace';
+      ctx.fillText('SECRET PASSAGE FOUND', W / 2, H * 0.36);
+      ctx.restore();
+    }
+    return;
+  }
+  const bx = 12, by = 76, bw = W - 24, bh = 8, left = Math.max(0, 1 - t / d.frames);
+  ctx.fillStyle = 'rgba(0,0,0,0.5)'; rrect(bx, by, bw, bh, 4); ctx.fill();
+  ctx.fillStyle = d.ink; rrect(bx, by, bw * left, bh, 4); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 11px "Courier New", monospace'; ctx.textAlign = 'center';
+  ctx.fillText(d.name + ' · x' + realm.mult + ' · ' + Math.ceil((d.frames - t) / 60) + 's', W / 2, by + 21);
 }
 
 // --- Second Wind: once a run, after the last life, spend BunBux to keep going (switch: FEAT.secondwind)
@@ -3725,7 +3971,7 @@ function resetGame() {
   buns=[]; splats=[]; particles=[]; glints=[]; floatingTexts=[]; forks=[]; gameDogs=[];
   score=0; runFrames=0; packsResult=null; buxResult=null; lives=3; streak=0; bestStreak=0; chiliCaught=0;
   franksLanded=0; boxFranks=0; boxesCompleted=0; boxFlash=0;
-  stage=1; stageBanner=0; windUsed=false; windTimer=0; windBusy=false; windMsg='';
+  stage=1; stageBanner=0; realmReset(); windUsed=false; windTimer=0; windBusy=false; windMsg='';
   scrollSpeed=2.2; scrollX=0; nextBunDist=0;
   shakeAmount=0; streakText=''; streakTimer=0; gameOverDelay=0; gracePeriod=0;
   nextForkDist = 320; nextDogDist = 9999;
@@ -4050,18 +4296,22 @@ function update() {
   if (state === STATE.WIND) { if (!windBusy && --windTimer <= 0) finishRun(); return; }
   if (stageBanner > 0) stageBanner--;
   if (state !== STATE.PLAYING) { if (state === STATE.GAMEOVER) gameOverDelay++; return; }
+  if (realmUpdate()) return;   // a Secret Realm transition holds the run still
 
   frank.vy += GRAVITY; frank.y += frank.vy;
   frank.squash += (1-frank.squash)*0.15;
   frank.stretch += (1-frank.stretch)*0.15;
   if (frank.y < 10) { frank.y=10; frank.vy=0.5; }
-  if (frank.y > H-30) { frank.y=H-30; frank.vy=0; loseLife(); }
+  if (frank.y > H-30) { frank.y=H-30; frank.vy=0; if (realm) realmFloor(); else loseLife(); }
 
   scrollX += scrollSpeed;
   nextBunDist -= scrollSpeed;
   if (nextBunDist <= 0) {
+    if (realm) { realmSpawnBun(); nextBunDist = Math.max(140 + Math.random() * 70, scrollSpeed * 32); }
+    else {
     spawnBun();
     nextBunDist = Math.max(160+Math.random()*100-Math.min(boxesCompleted*5,40), 100, scrollSpeed*30);   // at least half a second between buns
+    }
   }
 
   for (let i=buns.length-1; i>=0; i--) {
@@ -4080,13 +4330,11 @@ function update() {
       }
     }
     if (i >= buns.length) break; // safety check if buns was cleared mid-loop
-    if (!b.scored && !b.missed && b.x < frank.x-BUN_W) { b.missed=true; loseLife(); }
+    if (!b.scored && !b.missed && b.x < frank.x-BUN_W) { b.missed=true; if (realm) realmMiss(); else loseLife(); }
     if (b.x < -100) buns.splice(i, 1);
   }
 
-  updateForks();
-  updateGameDogs();
-  updateChili();
+  if (!realm) { updateForks(); updateGameDogs(); updateChili(); realmPassageUpdate(); }
 
   shakeAmount *= 0.85; if (shakeAmount < 0.5) shakeAmount = 0;
   if (streakTimer > 0) streakTimer--;
@@ -4172,6 +4420,7 @@ function drawChiliRushOverlay() {
 }
 
 function landFrank(bun) {
+  if (realm) { realmLand(bun); return; }
   let mult = bun.type.multiplier||1;
   if (SPORT) { soccerCheerUntil = frameCount + 40; addFloatingText(Math.min(Math.max(bun.x, 120), W - 120), bun.y - (bun.grilled ? 82 : 52), SPORT.score, '#FFFFFF', 28); }   // long words stay on screen
   if (bun.grilled) {
@@ -5635,13 +5884,12 @@ function draw() {
   if (state===STATE.BONUS) { drawBonusRound(); drawMuteBtn(); return; }
   ctx.save();
   if (shakeAmount>0) ctx.translate((Math.random()-0.5)*shakeAmount,(Math.random()-0.5)*shakeAmount);
-  drawKitchenBG();
-  if (SPORT && state===STATE.PLAYING) drawSoccerPlayer();
-  drawSplats();
-  for (const b of buns) drawBun(b);
-  drawForks();
-  drawGameDogs();
-  drawChili();
+  const inRealm = realmInView();
+  if (inRealm) drawRealmBG(); else drawKitchenBG();
+  if (SPORT && state===STATE.PLAYING && !inRealm) drawSoccerPlayer();
+  if (!inRealm) drawSplats();
+  for (const b of buns) { if (b.realm) drawRealmBun(b); else drawBun(b); }
+  if (!realm) { drawForks(); drawGameDogs(); drawChili(); if (state===STATE.PLAYING) drawPassage(); }
   if (state===STATE.PLAYING&&frank.alive) {
     drawSafeGlow();
     drawFrank(frank.x,frank.y,frank.squash,frank.stretch);
@@ -5649,9 +5897,10 @@ function draw() {
     if (Math.abs(frank.vy)>3) { ctx.globalAlpha=0.25; drawFrank(frank.x,frank.y-frank.vy*1.5,frank.squash*0.9,frank.stretch*0.9); ctx.globalAlpha=1; }
   }
   drawParticles(); fxDraw(); drawFloatingTexts();
-  if (state===STATE.PLAYING) drawChiliRushOverlay();
+  if (state===STATE.PLAYING && !realm) drawChiliRushOverlay();
   if (state===STATE.PLAYING) drawHUD();
   if (state===STATE.PLAYING) drawStageBanner();
+  if (state===STATE.PLAYING) drawRealmOverlay();
   ctx.restore();
   if (state===STATE.WIND) drawWind();
   if (state===STATE.MENU) drawMenu();
