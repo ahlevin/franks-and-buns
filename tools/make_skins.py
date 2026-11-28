@@ -56,7 +56,8 @@ AUTO_SETS = ['questionable-decisions', 'space-cases', 'tiny-terrors', 'deep-sea-
              'backyard-legends', 'rise-and-dine', 'cleanup-crew', 'dessert-disasters', 'dinos-in-disguise', 'hair-raising', 'wild-hobbies',
              'magical-mishaps', 'mini-monsters', 'outdoor-adventure', 'pet-peeves', 'school-days', 'things-with-wheels', 'travel-troubles', 'unnecessary-accessories',
              'all-aboard', 'blast-off', 'cans-and-bottles', 'campus-life', 'famous-sculptures', 'lunar-new-year', 'japanese-heroes',
-             'sitcom-families', 'fashion-couture', 'robot-rally', 'definitely-ai', 'decades', 'condiment-council', 'sleepover', 'road-trip', 'tiny-villains']
+             'sitcom-families', 'fashion-couture', 'robot-rally', 'definitely-ai', 'decades', 'condiment-council', 'sleepover', 'road-trip', 'tiny-villains',
+             'christmas-edition']
 import glob, os
 for folder in AUTO_SETS:
     for f in sorted(glob.glob(f'{SRC}/{folder}/*.png')):

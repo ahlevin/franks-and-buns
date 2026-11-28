@@ -566,6 +566,19 @@ function drawKitchenPasser(wallH) {
   ctx.save(); ctx.globalAlpha = 0.92; ctx.drawImage(im, kitchenPasserX, y, w, h); ctx.restore();
 }
 
+// Christmas Edition: Santa's sleigh and reindeer cross the sky every 15 to 30 seconds
+const skySleigh = { im: null, x: null, wait: 420 };
+function drawSkySleigh(wallH) {
+  if (!skySleigh.im) { skySleigh.im = new Image(); skySleigh.im.src = 'christmas-reindeer.png'; }
+  const im = skySleigh.im; if (!im.complete || !im.naturalWidth) return;
+  if (skySleigh.x === null) { if (state === STATE.PLAYING && --skySleigh.wait <= 0) skySleigh.x = W + 10; else return; }
+  const w = Math.min(W * 0.55, 330), h = w * im.naturalHeight / im.naturalWidth;
+  skySleigh.x -= 2.2;
+  if (skySleigh.x < -w - 10) { skySleigh.x = null; skySleigh.wait = 900 + Math.floor(Math.random() * 900); return; }
+  const y = wallH * 0.1 + Math.sin(skySleigh.x / 60) * 6;
+  ctx.save(); ctx.globalAlpha = 0.95; ctx.drawImage(im, skySleigh.x, y, w, h); ctx.restore();
+}
+
 // --- Stand-in art for City Kitchens, drawn once into pictures the same sizes as the real art ---
 const kitchenStandinCache = {};
 function kitchenStandin(id, part) {
@@ -781,6 +794,7 @@ const SKINS = [
   { id: 'superhero', name: 'Superhero', goal: { stat: 'streak', n: 10, text: 'Land 10 in a row' }, frames: 1, fly: [-47.1, -24.5, 85.8, 41.2], bun: [-48.2, -54.3, 92.7, 56.2], grill: [-48.0, -69.9, 92.4, 71.9] },
   { id: 'rocket', name: 'Rocket', goal: { stat: 'boxes', n: 4, text: 'Reach the Dog Parade' }, frames: 1, fly: [-56.9, -22.7, 96.8, 43.6], bun: [-51.6, -52.4, 99.0, 54.4], grill: [-51.8, -67.4, 99.1, 69.4] },
   { id: 'unicorn', name: 'Unicorn', goal: { stat: 'streak', n: 20, text: 'Land 20 in a row' }, frames: 1, fly: [-46.0, -33.3, 86.6, 46.9], bun: [-45.2, -54.3, 89.6, 56.3], grill: [-45.6, -66.3, 90.0, 68.2] },
+  { id: 'reindeerfrank', name: 'Reindeer Frank', special: true, goal: { stat: 'xmas', n: 2, text: 'Pack 2 boxes in Christmas mode' }, frames: 1, fly: [-50.0, -48.7, 93.8, 71.0], bun: [-46.2, -68.8, 92.3, 70.8], grill: [-46.5, -69.1, 92.6, 71.1] },
   { id: 'dragon', name: 'Dragon', goal: { stat: 'boxes', n: 8, text: 'Pack 8 boxes in a game' }, frames: 2, fly: [-56.6, -36.9, 108.5, 51.6], bun: [-53.6, -60.3, 109.9, 62.6], grill: [-54.1, -74.8, 111.7, 77.0] },
   { id: 'midnight', name: 'Midnight Frank', group: 'holiday', note: 'New Year\'s', frames: 1, fly: [-48.6, -31.7, 91.8, 47.6], bun: [-43.8, -54.7, 89.5, 56.6], grill: [-45.6, -61.2, 92.0, 63.1] },
   { id: 'cupid', name: 'Love at First Bite', group: 'holiday', note: 'Valentine\'s Day', frames: 1, fly: [-46.7, -27.9, 85.8, 47.1], bun: [-46.1, -54.1, 90.3, 56.1], grill: [-46.8, -66.2, 90.3, 68.1] },
@@ -1331,8 +1345,8 @@ function skinNudge() {
   return 'Next costume: ' + best.s.name + ' · ' + g.text;
 }
 // earned costumes come in order (Superhero, Rocket, Unicorn, Dragon), at most one per game
-function skinNext() { const won = skinsWon(); return SKINS.find(s => skinHow(s) === 'earn' && s.goal && won.indexOf(s.id) < 0) || null; }
-function skinPrev(s) { const list = SKINS.filter(k => skinHow(k) === 'earn' && k.goal), i = list.indexOf(s); return i > 0 ? list[i - 1] : null; }
+function skinNext() { const won = skinsWon(); return SKINS.find(s => skinHow(s) === 'earn' && s.goal && !s.special && won.indexOf(s.id) < 0) || null; }
+function skinPrev(s) { const list = SKINS.filter(k => skinHow(k) === 'earn' && k.goal && !k.special), i = list.indexOf(s); return i > 0 ? list[i - 1] : null; }
 // Costumes are also saved with the player's Packs profile, so the recovery code brings them back on any device.
 // A player with no profile gets a nameless one made quietly the first time they win a costume.
 let skinsPushing = false;
@@ -1376,7 +1390,8 @@ async function skinsSyncOnLoad() {
 }
 window.addEventListener('load', () => setTimeout(skinsSyncOnLoad, 1500));
 function skinsAward(st) {
-  const won = skinsWon(), nx = skinNext(), fresh = nx && skinGoalMet(nx, st) ? [nx] : [];
+  const won = skinsWon(), nx = skinNext(), fresh = (nx && skinGoalMet(nx, st) ? [nx] : [])
+    .concat(SKINS.filter(s => s.special && won.indexOf(s.id) < 0 && skinGoalMet(s, st)));   // special costumes (Reindeer Frank) come on their own
   if (fresh.length) { safeSet('fb_skins_earned', JSON.stringify(won.concat(fresh.map(s => s.id)))); skinsPush(); }
   return fresh;
 }
@@ -2839,7 +2854,7 @@ if (!(bestScore >= 0 && bestScore < 1e9)) bestScore = 0;
 // firsttips starts on, so a brand-new player gets the tips even before flags.json arrives; flags.json can still turn it off.
 // metrics: anonymous play stats (one short summary per finished game, see "Anonymous play stats" below).
 // xmasgift: one free BunBux costume per player, only between the dates in "xmasgiftwindow" (see "Christmas gift" below).
-const FEAT = { xmasgift: false, metrics: false, stages: false, secondwind: false, firsttips: true, mergecode: false, soccer: false, basketball: false, football: false, waterpolo: false, golf: false, baseball: false, cricket: false, hockey: false };
+const FEAT = { xmasgift: false, metrics: false, stages: false, secondwind: false, firsttips: true, mergecode: false, christmas: false, soccer: false, basketball: false, football: false, waterpolo: false, golf: false, baseball: false, cricket: false, hockey: false };
 // sportdates: optional windows for the sports, e.g. { "soccer": { "from": "2026-12-01", "until": "2027-01-05" } } (dates on the
 // player's clock, both days included). A sport shows only while its switch is on AND today is inside its window (no window = always).
 // sportstag: the badge on every sport card in the picker ("" hides it). Kept apart from the true/false switches so older copies ignore them.
@@ -2882,10 +2897,28 @@ const SPORT_VENUE = { how: 'free', art: true, mirror: true, passerY: 0.985, pass
 var STADIUM = Object.assign({ id: 'stadium', name: 'Stadium' }, SPORT_VENUE);
 var SPORT_VENUES = [STADIUM, Object.assign({ id: 'arena', name: 'Arena' }, SPORT_VENUE), Object.assign({ id: 'gridiron', name: 'Gridiron' }, SPORT_VENUE),
   Object.assign({ id: 'pool', name: 'Pool' }, SPORT_VENUE), Object.assign({ id: 'diamond', name: 'Ballpark' }, SPORT_VENUE),
-  Object.assign({ id: 'green', name: 'Cricket Green' }, SPORT_VENUE), Object.assign({ id: 'rink', name: 'Rink' }, SPORT_VENUE)];
+  Object.assign({ id: 'green', name: 'Cricket Green' }, SPORT_VENUE), Object.assign({ id: 'rink', name: 'Rink' }, SPORT_VENUE),
+  Object.assign({ id: 'northpole', name: 'North Pole' }, SPORT_VENUE, { passerY: 0.975, passerH: 0.15 })];
 const SPORT_CHEER = ['"Total team effort!"', '"The crowd wants a rematch!"'];
 // tg: where each target picture is drawn, relative to the bun's centre (goal: empty, goal-hot: hot, goal-ball / goal-hot-ball: scored)
 var SPORTS = {
+  // Christmas Edition (FEAT.christmas, dates in "sportdates"): the hot dog is a wrapped present, the buns are Santa's sleighs and his
+  // open gift bag (the hot target), Mrs. Claus is the chef and her candy cane the fork, the dog wears antlers, Rudolph is the
+  // chili dog, an elf runs under the present and Christmas treats replace the condiments. Art: new-art/christmas, cut by
+  // tools/make_christmas.py. Test copies: ?christmas=on.
+  christmas: { id: 'christmas', name: 'Christmas', icon: '🎄', sub: 'Drop the presents in Santa’s sleigh', ballWord: 'present', targets: 'sleighs', tip: 'Drop it in the sleigh!',
+    score: 'DELIVERED!', hot: 'INTO SANTA’S BAG!', fire: 'RUDOLPH RUSH', fireIcon: '🦌', smash: 'CANDY CANE SNAPPED!', count: 'Presents', countLong: 'Presents Delivered', kitchen: 'northpole',
+    snd: 'jingle', whistle: false, spin: 0, picks: true, skySleigh: true,
+    labels: { mustard: 'CANDY CANE', ketchup: 'GINGERBREAD', relish: 'HOT COCOA', cheese: 'ORNAMENT', jalapeno: 'STAR COOKIE' },
+    puff: ['rgba(255,255,255,0.95)', 'rgba(215,235,255,0.85)', 'rgba(170,200,240,0.3)', '#FFFFFF', '#E53935'],
+    skin: { fly: [-30, -16, 60, 32], bun: [-46, -59, 92, 64], grill: [-39.4, -71, 78.8, 76] },
+    tg: { goal: [-45.9, -44, 91.8, 62], 'goal-ball': [-46, -46, 92, 64], 'goal-hot': [-39.4, -58, 78.8, 76], 'goal-hot-ball': [-39.4, -58, 78.8, 76] },
+    quips: ['"Ho ho ho!"', '"Santa’s checking that list twice."', '"That one’s going on the naughty list."', '"Every miss is another present to wrap."',
+      '"The elves want a rematch!"', '"Mrs. Claus has cookies waiting."'],
+    stages: ['First Snow', 'Wrapping Room', 'Kyle’s Candy Canes', 'Stacia’s Stockings', 'Cookie Kitchen', 'Toy Workshop', 'Reindeer Stables', 'Snowball Alley',
+      'Gingerbread Lane', 'Tinsel Town', 'Mistletoe Corner', 'Hot Cocoa Hill', 'Sleigh Bell Square', 'Ornament Avenue', 'Elf Express', 'Frosty Fields',
+      'Chimney Row', 'Stocking Street', 'Candy Cane Forest', 'Northern Lights', 'Present Pile', 'Sugarplum Station', 'Jingle Junction', 'Santa’s Checklist',
+      'Twas the Night', 'Rooftop Run', 'Midnight Ride', 'Christmas Eve', 'Christmas Morning', 'Victory Lap', 'Legends Night', 'Hall of Fame'] },
   soccer: { id: 'soccer', name: 'Soccer', icon: '⚽', sub: 'Drop the ball in the goals', ballWord: 'ball', targets: 'goals', tip: 'Drop it in the goal!',
     score: 'GOAL!', hot: 'HOT GOAL!', fire: 'FIRE BALL', smash: 'GLOVE SMASHED!', count: 'Goals', countLong: 'Goals Scored', kitchen: 'stadium',
     snd: 'kick', whistle: true, spin: 0.14, picks: true, cards: true,
@@ -2971,7 +3004,7 @@ var SPORTS = {
       'Hat Trick', 'Empty Net', 'Fresh Sheet', 'Rivalry Night', 'Outdoor Classic', 'Conference Clash', 'Senior Night', 'Quarterfinals',
       'Semifinals', 'Championship Night', 'Sudden Death', 'Shootout', 'Trophy Lift', 'Victory Lap', 'Legends Night', 'Hall of Fame'] },
 };
-const SPORT_ORDER = ['soccer', 'basketball', 'football', 'waterpolo', 'golf', 'baseball', 'cricket', 'hockey'];
+const SPORT_ORDER = ['christmas', 'soccer', 'basketball', 'football', 'waterpolo', 'golf', 'baseball', 'cricket', 'hockey'];
 SPORT_ORDER.forEach(id => { const s = SPORTS[id]; s.skin = Object.assign({ id: id, name: s.name + ' Ball', frames: 1 }, s.skin); });
 const sportArt = {}, sportNormal = { sp: {}, imgs: {} };
 let soccerCheerUntil = 0, soccerKickUntil = 0;
@@ -3002,7 +3035,7 @@ function sportCurId() { const m = modePicked(); return SPORTS[m] && sportAvailab
 // the mode a player picked stays picked (fb_mode) until they pick another; older copies saved fb_soccer
 function modePicked() { const m = safeGet('fb_mode'); return m || (safeGet('fb_soccer') === '1' ? 'soccer' : 'classic'); }
 function sportT(normal, key) { return SPORT ? SPORT[key] : normal; }   // words that change in a sports mode
-function condLabel(c) { return SPORT && SPORT.picks && SOCCER_LABELS[c.name] || c.label; }
+function condLabel(c) { return SPORT && SPORT.picks && (SPORT.labels || SOCCER_LABELS)[c.name] || c.label; }
 function sportSpMap(s) {
   const p = s.id, m = { bun: p + '-goal', grilled: p + '-goal-hot', 'bun-frank': p + '-goal-ball', 'grilled-frank': p + '-goal-hot-ball',
     'dog-a': p + (s.cards ? '-dog-yellow' : '-dog-a'), 'dog-b': p + (s.cards ? '-dog-red' : '-dog-b'), 'chili-a': p + '-fireball-a', 'chili-b': p + '-fireball-b' };
@@ -3067,6 +3100,11 @@ function sndSport(ev) {   // ev: 'flap', 'land' or 'miss'
     if (ev === 'flap') playTone(820, 0.05, 'triangle', 0.13);
     else if (ev === 'land') { [0, 70, 150].forEach((d, i) => setTimeout(() => playTone(700 - i * 120, 0.05, 'triangle', 0.12), d)); sndClap(); }
     else { playTone(140, 0.15, 'sine', 0.18); groan(); }
+  } else if (k === 'jingle') {   // Christmas: sleigh bells on each tap, a chime and a cheer for a delivery
+    const bell = (f, d) => setTimeout(() => { playTone(f, 0.18, 'triangle', 0.07); playTone(f * 2.76, 0.12, 'sine', 0.03); }, d);
+    if (ev === 'flap') { bell(1568, 0); bell(1760, 45); }
+    else if (ev === 'land') { [1047, 1319, 1568, 2093].forEach((f, i) => bell(f, i * 70)); sndCheer2(); }
+    else { playTone(196, 0.25, 'sine', 0.15); groan(); }
   } else if (k === 'puck') {   // hockey: a slap shot, the goal horn, a thud on the boards
     if (ev === 'flap') { playNoise(0.06, 'highpass', 2500, 1800, 0.08, 0.7); playTone(180, 0.06, 'sine', 0.15); }
     else if (ev === 'land') { playTone(150, 0.7, 'sawtooth', 0.05); playTone(190, 0.7, 'sawtooth', 0.035); sndCheer2(); }
@@ -4130,7 +4168,7 @@ function drawChiliRushOverlay() {
   ctx.fillStyle = 'rgba(0,0,0,0.4)'; rrect(bx, by, bw, bh, 4); ctx.fill();
   ctx.fillStyle = '#FF3300'; rrect(bx, by, Math.max(bw * chiliRush / CHILI_RUSH_FRAMES, 0), bh, 4); ctx.fill();
   ctx.fillStyle = '#fff'; ctx.font = 'bold 10px Arial'; ctx.textAlign = 'center';
-  ctx.fillText((SPORT ? '🔥 ' + SPORT.fire : '🌶 CHILI RUSH') + ' · x2 · SHIELD', W / 2, by + 20);
+  ctx.fillText((SPORT ? (SPORT.fireIcon || '🔥') + ' ' + SPORT.fire : '🌶 CHILI RUSH') + ' · x2 · SHIELD', W / 2, by + 20);
 }
 
 function landFrank(bun) {
@@ -4231,7 +4269,7 @@ function finishRun() {   // the run is over: Game Over, saves and awards
     const wasBest = score>bestScore && bestScore>0;
     if (score>bestScore) { bestScore=score; safeSet('fb_best',bestScore.toString()); }
     reviewMaybeAsk(wasBest);
-    const fresh = SKINS_ALL ? [] : skinsAward({ chili: chiliCaught, streak: bestStreak, boxes: boxesCompleted });
+    const fresh = SKINS_ALL ? [] : skinsAward({ chili: chiliCaught, streak: bestStreak, boxes: boxesCompleted, xmas: SPORT && SPORT.id === 'christmas' ? boxesCompleted : 0 });
     skinNew = fresh.length ? fresh : null;
     fresh.forEach(skinPreload);
     const freshK = kitchensAward({ boxes: boxesCompleted, streak: bestStreak, franks: franksLanded });
@@ -4458,6 +4496,7 @@ function drawKitchenBG() {
     const g = ctx.createLinearGradient(0, 0, 0, 110); g.addColorStop(0, 'rgba(20,10,4,0.8)'); g.addColorStop(0.6, 'rgba(20,10,4,0.45)'); g.addColorStop(1, 'rgba(20,10,4,0)');
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, 110);
     drawKitchenPasser(wallH);
+    if (SPORT && SPORT.skySleigh) drawSkySleigh(wallH);
     const ci = bgArt.counter, ch = H - wallH, cw = ci.naturalWidth * ch / ci.naturalHeight;
     drawKitchenTiles(ci, scrollX, cw, wallH, ch, mirror);
     return;
