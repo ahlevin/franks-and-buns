@@ -91,8 +91,10 @@ def build():
         j = ms.bottom_scaled(rd[c_], sc); save(canvas_of(j, 320, 255, (320 - j.width) // 2, 255 - j.height), 'christmas-fireball-%s.png' % n)
     # the dog in antlers: two running frames with a present, and standing without
     d = sheet('dog', 3, holes=True)
-    save(ms.place((512, 512), d[(0, 0)], (14, 104, 468, 404)), 'christmas-dog.png')
-    save(ms.place((512, 512), d[(0, 2)], (60, 70, 452, 420)), 'christmas-dognodog.png')
+    # the intro dogs face right like dog.png (the art faces left, like the bonus dogs sp-dog-a / -b, which stay as drawn)
+    flip = lambda im: im.transpose(Image.FLIP_LEFT_RIGHT)
+    save(ms.place((512, 512), flip(d[(0, 0)]), (14, 104, 468, 404)), 'christmas-dog.png')
+    save(ms.place((512, 512), flip(d[(0, 2)]), (60, 70, 452, 420)), 'christmas-dognodog.png')
     sc = min(280 / max(d[(0, 0)].width, d[(0, 1)].width), 164 / max(d[(0, 0)].height, d[(0, 1)].height))
     for c_, n in [((0, 0), 'a'), ((0, 1), 'b')]:
         j = ms.bottom_scaled(d[c_], sc); save(canvas_of(j, 280, 208, (280 - j.width) // 2, 186 - j.height), 'christmas-dog-%s.png' % n)
