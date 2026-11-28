@@ -2908,7 +2908,7 @@ var SPORTS = {
   // tools/make_christmas.py. Test copies: ?christmas=on.
   christmas: { id: 'christmas', name: 'Christmas', icon: '🎄', sub: 'Drop the presents in Santa’s sleigh', ballWord: 'present', targets: 'sleighs', tip: 'Drop it in the sleigh!',
     score: 'DELIVERED!', hot: 'INTO SANTA’S BAG!', fire: 'RUDOLPH RUSH', fireIcon: '🦌', smash: 'CANDY CANE SNAPPED!', count: 'Presents', countLong: 'Presents Delivered', kitchen: 'northpole',
-    snd: 'jingle', whistle: false, spin: 0, picks: true, skySleigh: true, v: 2,
+    snd: 'jingle', whistle: false, spin: 0, picks: true, skySleigh: true, v: 2, streaks: ['SLEIGHING IT!', 'SANTA’S #1 ELF!'],
     labels: { mustard: 'CANDY CANE', ketchup: 'GINGERBREAD', relish: 'HOT COCOA', cheese: 'ORNAMENT', jalapeno: 'STAR COOKIE' },
     puff: ['rgba(255,255,255,0.95)', 'rgba(215,235,255,0.85)', 'rgba(170,200,240,0.3)', '#FFFFFF', '#E53935'],
     skin: { fly: [-30, -16, 60, 32], bun: [-46, -59, 92, 64], grill: [-39.4, -71, 78.8, 76] },
@@ -4181,8 +4181,8 @@ function landFrank(bun) {
   if (bun.condiment) { mult *= bun.condiment.multiplier; sndCondiment(); addParticles(bun.x,bun.y,bun.condiment.color,15); }
   streak++; franksLanded++; if (streak>bestStreak) bestStreak=streak;
   let sm=1;
-  if      (streak>=10){sm=3;streakText='WIENER WIZARD!';streakTimer=90;if (!(streak === 10 && playWavEffect('wiener-wizard', .14))) sndStreak();gcAchieve('wienerwizard');}
-  else if (streak>=5) {sm=2;streakText='FRANKS ON FIRE!';streakTimer=60;sndStreak();}
+  if      (streak>=10){sm=3;streakText=SPORT && SPORT.streaks ? SPORT.streaks[1] : 'WIENER WIZARD!';streakTimer=90;if (!(streak === 10 && !(SPORT && SPORT.streaks) && playWavEffect('wiener-wizard', .14))) sndStreak();gcAchieve('wienerwizard');}
+  else if (streak>=5) {sm=2;streakText=SPORT && SPORT.streaks ? SPORT.streaks[0] : 'FRANKS ON FIRE!';streakTimer=60;sndStreak();}
   else if (streak>=3) {sm=1.5;streakText='ON A ROLL!';streakTimer=45;sndStreak();}
   if (streak === 3 || streak === 5 || streak === 10) sndCheer(streak === 10);   // crowd cheer when a streak level is reached
   const rushMult = chiliRush > 0 ? 2 : 1;
