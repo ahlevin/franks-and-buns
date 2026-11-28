@@ -2908,7 +2908,7 @@ var SPORTS = {
   // tools/make_christmas.py. Test copies: ?christmas=on.
   christmas: { id: 'christmas', name: 'Christmas', icon: '🎄', sub: 'Drop the presents in Santa’s sleigh', ballWord: 'present', targets: 'sleighs', tip: 'Drop it in the sleigh!',
     score: 'DELIVERED!', hot: 'INTO SANTA’S BAG!', fire: 'RUDOLPH RUSH', fireIcon: '🦌', smash: 'CANDY CANE SNAPPED!', count: 'Presents', countLong: 'Presents Delivered', kitchen: 'northpole',
-    snd: 'jingle', whistle: false, spin: 0, picks: true, skySleigh: true,
+    snd: 'jingle', whistle: false, spin: 0, picks: true, skySleigh: true, v: 2,
     labels: { mustard: 'CANDY CANE', ketchup: 'GINGERBREAD', relish: 'HOT COCOA', cheese: 'ORNAMENT', jalapeno: 'STAR COOKIE' },
     puff: ['rgba(255,255,255,0.95)', 'rgba(215,235,255,0.85)', 'rgba(170,200,240,0.3)', '#FFFFFF', '#E53935'],
     skin: { fly: [-30, -16, 60, 32], bun: [-46, -59, 92, 64], grill: [-39.4, -71, 78.8, 76] },
@@ -3045,7 +3045,7 @@ function sportSpMap(s) {
 function sportLoad(s) {
   if (sportArt[s.id]) return sportArt[s.id];
   const a = sportArt[s.id] = { sp: {}, imgs: {}, player: {}, pics: {} }, p = s.id;
-  const img = src => { const im = new Image(); im.src = src + '.png'; return im; };
+  const img = src => { const im = new Image(); im.src = src + '.png' + (s.v ? '?v=' + s.v : ''); return im; };   // v: bumped when the art changes (pictures are cached for hours)
   const spm = sportSpMap(s); for (const k in spm) a.sp[k] = img(spm[k]);
   const im = { chef: p + '-keeper', chefarm: p + '-keeper-arm', dog: p + '-dog', dognodog: p + '-dognodog', gamedog: p + '-dognodog', hotdog: p + '-ball' };
   for (const k in im) a.imgs[k] = img(im[k]);
